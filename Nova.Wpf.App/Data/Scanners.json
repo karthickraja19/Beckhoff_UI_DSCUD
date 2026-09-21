@@ -1,0 +1,14 @@
+﻿[
+  {
+    "EnumName": "Barcode_Scanner1",
+    "Name": "Barcode_Scanner1",
+    "IPAddress": "192.168.250.11",
+    "Port": "23"
+  },
+  {
+    "EnumName": "Barcode_Scanner2",
+    "Name": "Barcode_Scanner2",
+    "IPAddress": "192.168.250.13",
+    "Port": "23"
+  }
+]

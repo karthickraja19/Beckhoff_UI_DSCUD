@@ -1,0 +1,38 @@
+<UserControl x:Class="Nova.Wpf.App.Views.Pages.Recipe.RecipeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:recipeVm="clr-namespace:Nova.ViewModels.Pages.Recipe;assembly=Nova.ViewModels"
+             xmlns:local="clr-namespace:Nova.Wpf.App.Views.Pages.Recipe"
+             Background="Transparent">
+
+    <!-- Connected-tab look + icon/label header come from the shared implicit
+         TabControl/TabItem styles (Nova.Wpf.UI/Styles/TabStyles.xaml). -->
+    <Grid Margin="6">
+        <TabControl ItemsSource="{Binding Tabs}"
+                    SelectedItem="{Binding SelectedTab}">
+            <TabControl.Resources>
+                <!-- Content templates -->
+                <DataTemplate DataType="{x:Type recipeVm:GantryRecipeViewModel}">
+                    <local:GantryRecipeView/>
+                </DataTemplate>
+
+                <DataTemplate DataType="{x:Type recipeVm:RobotRecipeViewModel}">
+                    <local:RobotRecipeView/>
+                </DataTemplate>
+
+                <DataTemplate DataType="{x:Type recipeVm:LightRecipeViewModel}">
+                    <local:LightRecipeView/>
+                </DataTemplate>
+
+                <DataTemplate DataType="{x:Type recipeVm:RecipePlaceholderViewModel}">
+                    <Border Background="{DynamicResource RegionBrush}" CornerRadius="6"
+                            Padding="20" Margin="0,8,0,0" Effect="{StaticResource EffectShadow1}">
+                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center"
+                                   FontSize="{DynamicResource Nova.FontSize.Heading}" Foreground="{DynamicResource SecondaryTextBrush}"
+                                   Text="{Binding Title, StringFormat='{}{0} — not yet implemented'}"/>
+                    </Border>
+                </DataTemplate>
+            </TabControl.Resources>
+        </TabControl>
+    </Grid>
+</UserControl>

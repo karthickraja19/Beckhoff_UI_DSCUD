@@ -1,0 +1,26 @@
+﻿[
+  {
+    "EnumName": "CCD1",
+    "Name": "CCD1",
+    "IPAddress": "127.0.0.1",
+    "Port": "8500"
+  },
+  {
+    "EnumName": "CCD2",
+    "Name": "CCD2",
+    "IPAddress": "127.0.0.1",
+    "Port": "8501"
+  },
+  {
+    "EnumName": "CCD3",
+    "Name": "CCD3",
+    "IPAddress": "127.0.0.1",
+    "Port": "8502"
+  },
+  {
+    "EnumName": "CCD4",
+    "Name": "CCD4",
+    "IPAddress": "127.0.0.1",
+    "Port": "8503"
+  }
+]

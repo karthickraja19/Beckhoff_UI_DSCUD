@@ -1,0 +1,408 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <!-- ================================================================== -->
+    <!-- AUDIO/HOME SW DFM v5.4 - DESIGN TOKENS                             -->
+    <!--                                                                    -->
+    <!-- Two sources feed this file and nothing else does:                  -->
+    <!--                                                                    -->
+    <!--   1. Audio SW DFM v5.4, slide 40 "Color Definitions" and slide 39  -->
+    <!--      "Indicator Legend". Those values are NORMATIVE - the machine  -->
+    <!--      is audited against them, so they are reproduced here exactly  -->
+    <!--      as stated, with the DFM's own RGB triplet in the comment so a -->
+    <!--      reviewer can check them against the slide without opening the -->
+    <!--      XAML in a colour picker.                                      -->
+    <!--                                                                    -->
+    <!--   2. Apple Human Interface Guidelines - system colours, the 8pt    -->
+    <!--      spacing grid, the 44pt minimum hit target and the light-mode  -->
+    <!--      surface ramp. Used for everything the DFM does NOT pin down   -->
+    <!--      (surfaces, separators, text, accents), so the parts of the UI -->
+    <!--      the spec is silent on still read as one system.               -->
+    <!--                                                                    -->
+    <!-- NOT A PALETTE. Audio.* keys are the DFM's own audited colours and  -->
+    <!-- never appear in Themes/AudioPalette.xaml: "Downtime" has to be     -->
+    <!-- #EB7373 on every station on the line, so these are always merged   -->
+    <!-- and fixed. (The runtime theme switcher that once made this         -->
+    <!-- distinction load-bearing has since been removed - the app now      -->
+    <!-- ships a single palette - but the separation still holds: DFM       -->
+    <!-- colours are spec, palette colours are chrome.)                     -->
+    <!--                                                                    -->
+    <!-- Light-mode only, because the DFM defines one appearance. HIG asks  -->
+    <!-- for a dark variant; adding one would mean inventing values for     -->
+    <!-- every normative colour above, so it is left for a spec revision    -->
+    <!-- rather than guessed at here.                                       -->
+    <!-- ================================================================== -->
+
+
+    <!-- ================================================================== -->
+    <!-- 1. HIVE MACHINE STATE          DFM slide 40, state colour table    -->
+    <!-- ================================================================== -->
+
+    <!-- State 1. DFM: R 211 G 235 B 115 -->
+    <Color x:Key="Audio.State.RunningColor">#FFD3EB73</Color>
+    <!-- State 2. DFM: R 235 G 255 B 254 -->
+    <Color x:Key="Audio.State.IdleColor">#FFEBFFFE</Color>
+    <!-- State 5. DFM: R 235 G 115 B 115 -->
+    <Color x:Key="Audio.State.DowntimeColor">#FFEB7373</Color>
+
+    <SolidColorBrush x:Key="Audio.State.RunningBrush"  Color="{StaticResource Audio.State.RunningColor}"/>
+    <SolidColorBrush x:Key="Audio.State.IdleBrush"     Color="{StaticResource Audio.State.IdleColor}"/>
+    <SolidColorBrush x:Key="Audio.State.DowntimeBrush" Color="{StaticResource Audio.State.DowntimeColor}"/>
+
+    <!-- The indicator bar goes red while the machine is down (DFM slide 42,
+         "Downtime state turns indicator bar background red"). Held at the full
+         normative colour: this is the one tint on screen that has to be
+         unmistakable from across the line, so it is not softened. -->
+    <SolidColorBrush x:Key="Audio.IndicatorBar.DowntimeBrush" Color="{StaticResource Audio.State.DowntimeColor}"/>
+
+
+    <!-- ================================================================== -->
+    <!-- 2. UNIT SERIAL NUMBER BANNER   DFM slide 40 + slide 43             -->
+    <!-- ================================================================== -->
+
+    <!-- Passing unit. DFM: R 0 G 249 B 0 -->
+    <Color x:Key="Audio.UnitSn.PassColor">#FF00F900</Color>
+    <!-- Failing unit - "Failed units turn SN background red". DFM: R 236 G 93 B 87 -->
+    <Color x:Key="Audio.UnitSn.FailColor">#FFEC5D57</Color>
+
+    <SolidColorBrush x:Key="Audio.UnitSn.PassBrush" Color="{StaticResource Audio.UnitSn.PassColor}"/>
+    <SolidColorBrush x:Key="Audio.UnitSn.FailBrush" Color="{StaticResource Audio.UnitSn.FailColor}"/>
+
+    <!-- The SN itself is set on those two fills. #00F900 is a very light green
+         (relative luminance ~0.72), so black text is the only one that clears
+         WCAG AA on it; the red fill is mid-dark and takes white. Both are
+         checked against the fills above, not chosen to match each other. -->
+    <SolidColorBrush x:Key="Audio.UnitSn.PassForegroundBrush" Color="#FF1C1C1E"/>
+    <SolidColorBrush x:Key="Audio.UnitSn.FailForegroundBrush" Color="#FFFFFFFF"/>
+
+
+    <!-- ================================================================== -->
+    <!-- 3. PRODUCT SKU / STATION ID    DFM slide 40 + slide 42             -->
+    <!--                                                                    -->
+    <!-- "Products with multiple SKUs have colored background on station ID -->
+    <!-- to indicate SKU." Rendered from these tokens rather than from the   -->
+    <!-- supplied Product type PNGs, because the station ID printed on the   -->
+    <!-- chip is per-install and cannot be baked into an image.              -->
+    <!-- ================================================================== -->
+
+    <!-- Normal (E/M). DFM: R 57 G 130 B 81 -->
+    <Color x:Key="Audio.Sku.NormalColor">#FF398251</Color>
+    <!-- M-SKU. DFM: R 121 G 132 B 231 -->
+    <Color x:Key="Audio.Sku.MColor">#FF7984E7</Color>
+    <!-- E-SKU. DFM: R 246 G 174 B 66 -->
+    <Color x:Key="Audio.Sku.EColor">#FFF6AE42</Color>
+
+    <SolidColorBrush x:Key="Audio.Sku.NormalBrush" Color="{StaticResource Audio.Sku.NormalColor}"/>
+    <SolidColorBrush x:Key="Audio.Sku.MBrush"      Color="{StaticResource Audio.Sku.MColor}"/>
+    <SolidColorBrush x:Key="Audio.Sku.EBrush"      Color="{StaticResource Audio.Sku.EColor}"/>
+
+    <!-- All three SKU fills are mid-to-dark and carry white, as drawn on slide 42. -->
+    <SolidColorBrush x:Key="Audio.Sku.ForegroundBrush" Color="#FFFFFFFF"/>
+
+    <!-- "Common" product: no SKU, so no fill. The station ID shows as the
+         watermark on slides 42/43 - DFM slide 40 "STATION ID  Text R 204 G 204 B 204". -->
+    <Color x:Key="Audio.StationId.PlaceholderColor">#FFCCCCCC</Color>
+    <SolidColorBrush x:Key="Audio.StationId.PlaceholderBrush" Color="{StaticResource Audio.StationId.PlaceholderColor}"/>
+
+
+    <!-- ================================================================== -->
+    <!-- 4. STATION CARD                DFM slide 40                        -->
+    <!-- ================================================================== -->
+
+    <!-- Station card background while the machine is under remote
+         qualification. DFM: R 255 G 143 B 0 -->
+    <Color x:Key="Audio.StationCard.RemoteQualColor">#FFFF8F00</Color>
+    <SolidColorBrush x:Key="Audio.StationCard.RemoteQualBrush" Color="{StaticResource Audio.StationCard.RemoteQualColor}"/>
+
+    <!-- Connection strip under the station card: "HIVE Connected / MES Connected"
+         in green, "PDCA Disconnected" in red (DFM slide 43). HIG systemGreen /
+         systemRed, darkened one step so they stay AA on a white card. -->
+    <SolidColorBrush x:Key="Audio.Link.ConnectedBrush"    Color="#FF248A3D"/>
+    <SolidColorBrush x:Key="Audio.Link.DisconnectedBrush" Color="#FFD70015"/>
+
+
+    <!-- ================================================================== -->
+    <!-- 5. DOWNTIME STATISTICS TOP 10  DFM slide 40, Top10 table           -->
+    <!--                                                                    -->
+    <!-- Ordinal, not semantic: Top 1 is the largest slice, not "the worst   -->
+    <!-- kind of error". Consumed in order by the Alarm page pie chart and   -->
+    <!-- the Home page state-change bars.                                   -->
+    <!-- ================================================================== -->
+
+    <Color x:Key="Audio.Top10.Color1">#FF6F7980</Color>
+    <Color x:Key="Audio.Top10.Color2">#FF5497C1</Color>
+    <Color x:Key="Audio.Top10.Color3">#FF53AC7A</Color>
+    <Color x:Key="Audio.Top10.Color4">#FFF8C35C</Color>
+    <Color x:Key="Audio.Top10.Color5">#FFF3965B</Color>
+    <Color x:Key="Audio.Top10.Color6">#FFE45E69</Color>
+    <Color x:Key="Audio.Top10.Color7">#FF7D72BB</Color>
+    <Color x:Key="Audio.Top10.Color8">#FF4CAAE9</Color>
+    <Color x:Key="Audio.Top10.Color9">#FF66D938</Color>
+    <Color x:Key="Audio.Top10.Color10">#FFC24886</Color>
+
+    <SolidColorBrush x:Key="Audio.Top10.Brush1"  Color="{StaticResource Audio.Top10.Color1}"/>
+    <SolidColorBrush x:Key="Audio.Top10.Brush2"  Color="{StaticResource Audio.Top10.Color2}"/>
+    <SolidColorBrush x:Key="Audio.Top10.Brush3"  Color="{StaticResource Audio.Top10.Color3}"/>
+    <SolidColorBrush x:Key="Audio.Top10.Brush4"  Color="{StaticResource Audio.Top10.Color4}"/>
+    <SolidColorBrush x:Key="Audio.Top10.Brush5"  Color="{StaticResource Audio.Top10.Color5}"/>
+    <SolidColorBrush x:Key="Audio.Top10.Brush6"  Color="{StaticResource Audio.Top10.Color6}"/>
+    <SolidColorBrush x:Key="Audio.Top10.Brush7"  Color="{StaticResource Audio.Top10.Color7}"/>
+    <SolidColorBrush x:Key="Audio.Top10.Brush8"  Color="{StaticResource Audio.Top10.Color8}"/>
+    <SolidColorBrush x:Key="Audio.Top10.Brush9"  Color="{StaticResource Audio.Top10.Color9}"/>
+    <SolidColorBrush x:Key="Audio.Top10.Brush10" Color="{StaticResource Audio.Top10.Color10}"/>
+
+
+    <!-- ================================================================== -->
+    <!-- 6. ACCESS LEVEL                DFM slide 39 + slide 53             -->
+    <!--                                                                    -->
+    <!-- The level chip itself is Assets/Icons/Level{1,2,3}.png - the text   -->
+    <!-- is baked into the supplied art. These tokens are the same fills     -->
+    <!-- sampled from that art, for anything that has to AGREE with the chip -->
+    <!-- without being the chip (a level-gated field's edit affordance, a    -->
+    <!-- "requires Level 3" hint).                                          -->
+    <!-- ================================================================== -->
+
+    <Color x:Key="Audio.Level1Color">#FFD3EB73</Color>
+    <Color x:Key="Audio.Level2Color">#FFCCABD8</Color>
+    <Color x:Key="Audio.Level3Color">#FFEB7373</Color>
+
+    <SolidColorBrush x:Key="Audio.Level1Brush" Color="{StaticResource Audio.Level1Color}"/>
+    <SolidColorBrush x:Key="Audio.Level2Brush" Color="{StaticResource Audio.Level2Color}"/>
+    <SolidColorBrush x:Key="Audio.Level3Brush" Color="{StaticResource Audio.Level3Color}"/>
+
+
+    <!-- ================================================================== -->
+    <!-- 7. INDICATOR BUTTON STATES     DFM slide 39 "Indicator Legend"     -->
+    <!--                                                                    -->
+    <!-- The buttons are drawn from the supplied PNGs, which already carry   -->
+    <!-- these fills. Repeated here because the PAGE each button opens tints -->
+    <!-- its own accents to match its button, and because the de-energized / -->
+    <!-- disabled greys are needed by controls that have no PNG.            -->
+    <!-- ================================================================== -->
+
+    <!-- Energized (page open / control active), sampled from the DFM art. -->
+    <SolidColorBrush x:Key="Audio.Accent.HomeBrush"    Color="#FFF3D358"/>
+    <SolidColorBrush x:Key="Audio.Accent.AlarmBrush"   Color="#FF86C45A"/>
+    <SolidColorBrush x:Key="Audio.Accent.AlertedBrush" Color="#FFE66986"/>
+    <SolidColorBrush x:Key="Audio.Accent.ConfigBrush"  Color="#FF9BA3B5"/>
+    <SolidColorBrush x:Key="Audio.Accent.DataBrush"    Color="#FF5299E8"/>
+    <SolidColorBrush x:Key="Audio.Accent.VisionBrush"  Color="#FFB974DD"/>
+    <SolidColorBrush x:Key="Audio.Accent.SettingBrush" Color="#FF8F9297"/>
+
+    <!-- Machine controls: Running / Paused / Stopped, energized. -->
+    <SolidColorBrush x:Key="Audio.Accent.RunningBrush" Color="#FF86C45A"/>
+    <SolidColorBrush x:Key="Audio.Accent.PausedBrush"  Color="#FF5299E8"/>
+    <SolidColorBrush x:Key="Audio.Accent.StoppedBrush" Color="#FFE66986"/>
+
+    <!-- De-energized: enabled and pressable, just not the active one. #CCCCCC
+         in the DFM art, the same grey as the station-ID watermark. -->
+    <Color x:Key="Audio.DeEnergizedColor">#FFCCCCCC</Color>
+    <SolidColorBrush x:Key="Audio.DeEnergizedBrush" Color="{StaticResource Audio.DeEnergizedColor}"/>
+
+    <!-- Disabled: the DFM art is the de-energized glyph at half alpha. Applied
+         as an opacity on the whole button so the icon, any label and the fill
+         fade together, which is also what HIG asks for. -->
+    <sys:Double x:Key="Audio.DisabledOpacity">0.5</sys:Double>
+
+
+    <!-- ================================================================== -->
+    <!-- 8. SURFACES AND TEXT           Apple HIG, light mode               -->
+    <!--                                                                    -->
+    <!-- The DFM mockups are screenshots of an older macOS grey chrome. HIG  -->
+    <!-- light mode is used instead: it is the current guidance, it is what  -->
+    <!-- "prioritize content over chrome" means in practice, and every       -->
+    <!-- normative DFM colour above sits on it unchanged. Named for the HIG   -->
+    <!-- semantic role, not for the grey, so a later dark set can slot in.   -->
+    <!-- ================================================================== -->
+
+    <!-- systemGroupedBackground - the window backdrop behind cards. -->
+    <Color x:Key="Audio.Surface.GroupedColor">#FFF2F2F7</Color>
+    <SolidColorBrush x:Key="Audio.Surface.GroupedBrush" Color="{StaticResource Audio.Surface.GroupedColor}"/>
+
+    <!-- secondarySystemGroupedBackground - a card on that backdrop. -->
+    <Color x:Key="Audio.Surface.CardColor">#FFFFFFFF</Color>
+    <SolidColorBrush x:Key="Audio.Surface.CardBrush" Color="{StaticResource Audio.Surface.CardColor}"/>
+
+    <!-- tertiarySystemGroupedBackground - a recess inside a card: a table
+         header bar, a chart plot area, a read-only field. -->
+    <Color x:Key="Audio.Surface.RecessedColor">#FFF2F2F7</Color>
+    <SolidColorBrush x:Key="Audio.Surface.RecessedBrush" Color="{StaticResource Audio.Surface.RecessedColor}"/>
+
+    <!-- The indicator bar. A chrome surface, so it is the one place that gets
+         a material rather than a card fill: systemGray6 lifted to near-white so
+         the coloured buttons on it stay the brightest thing in the bar. -->
+    <Color x:Key="Audio.Surface.ChromeColor">#FFF7F7FA</Color>
+    <SolidColorBrush x:Key="Audio.Surface.ChromeBrush" Color="{StaticResource Audio.Surface.ChromeColor}"/>
+
+    <!-- opaqueSeparator. Hairline - HIG wants separators, not borders. -->
+    <Color x:Key="Audio.SeparatorColor">#FFC6C6C8</Color>
+    <SolidColorBrush x:Key="Audio.SeparatorBrush" Color="{StaticResource Audio.SeparatorColor}"/>
+
+    <!-- A lighter rule for inside a card, where a full separator is too loud. -->
+    <SolidColorBrush x:Key="Audio.Separator.SubtleBrush" Color="#FFE5E5EA"/>
+
+    <!-- label / secondaryLabel / tertiaryLabel / quaternaryLabel.
+         HIG defines these as black at 100 / 60 / 30 / 18 percent; written out
+         as opaque values so they composite identically on every surface. -->
+    <Color x:Key="Audio.Text.PrimaryColor">#FF000000</Color>
+    <SolidColorBrush x:Key="Audio.Text.PrimaryBrush"      Color="{StaticResource Audio.Text.PrimaryColor}"/>
+    <SolidColorBrush x:Key="Audio.Text.SecondaryBrush"    Color="#FF3C3C43" Opacity="0.60"/>
+    <SolidColorBrush x:Key="Audio.Text.TertiaryBrush"     Color="#FF3C3C43" Opacity="0.30"/>
+    <SolidColorBrush x:Key="Audio.Text.QuaternaryBrush"   Color="#FF3C3C43" Opacity="0.18"/>
+    <!-- Text on a filled accent. -->
+    <SolidColorBrush x:Key="Audio.Text.OnAccentBrush"     Color="#FFFFFFFF"/>
+
+
+    <!-- ================================================================== -->
+    <!-- 9. SYSTEM COLOURS              Apple HIG, light mode sRGB          -->
+    <!--                                                                    -->
+    <!-- For interface the DFM does not colour: the default action, a        -->
+    <!-- destructive action, a validation warning. Not used to restate any   -->
+    <!-- machine state - those come from section 1.                         -->
+    <!-- ================================================================== -->
+
+    <Color x:Key="Audio.System.BlueColor">#FF007AFF</Color>
+    <SolidColorBrush x:Key="Audio.System.BlueBrush"   Color="{StaticResource Audio.System.BlueColor}"/>
+    <SolidColorBrush x:Key="Audio.System.GreenBrush"  Color="#FF34C759"/>
+    <SolidColorBrush x:Key="Audio.System.RedBrush"    Color="#FFFF3B30"/>
+    <SolidColorBrush x:Key="Audio.System.OrangeBrush" Color="#FFFF9500"/>
+    <SolidColorBrush x:Key="Audio.System.PurpleBrush" Color="#FFAF52DE"/>
+    <SolidColorBrush x:Key="Audio.System.GrayBrush"   Color="#FF8E8E93"/>
+    <SolidColorBrush x:Key="Audio.System.Gray3Brush"  Color="#FFC7C7CC"/>
+    <SolidColorBrush x:Key="Audio.System.Gray5Brush"  Color="#FFE5E5EA"/>
+    <SolidColorBrush x:Key="Audio.System.Gray6Brush"  Color="#FFF2F2F7"/>
+
+    <!-- Keyboard focus ring: HIG draws it as the accent colour at partial
+         opacity, outside the control's own edge. -->
+    <SolidColorBrush x:Key="Audio.FocusRingBrush" Color="{StaticResource Audio.System.BlueColor}" Opacity="0.55"/>
+
+
+    <!-- ================================================================== -->
+    <!-- 10. SPACING                    Apple HIG 8pt grid                  -->
+    <!--                                                                    -->
+    <!-- Every margin and gap in the Audio UI is one of these. A view that   -->
+    <!-- needs a value that is not here is mis-measured, not missing a step. -->
+    <!-- ================================================================== -->
+
+    <sys:Double x:Key="Audio.Space.XS">4</sys:Double>
+    <sys:Double x:Key="Audio.Space.S">8</sys:Double>
+    <sys:Double x:Key="Audio.Space.M">12</sys:Double>
+    <sys:Double x:Key="Audio.Space.L">16</sys:Double>
+    <sys:Double x:Key="Audio.Space.XL">20</sys:Double>
+    <sys:Double x:Key="Audio.Space.XXL">32</sys:Double>
+
+    <!-- Standard content inset from a window or card edge (HIG layout margins). -->
+    <!-- Tighter at the top than the sides: the indicator bar already carries its
+         own 10px of vertical padding, so a full 16 above the first control read as
+         a gap between the bar and the page rather than as page margin. -->
+    <Thickness x:Key="Audio.Margin.Content">16,6,16,12</Thickness>
+    <Thickness x:Key="Audio.Margin.Card">16</Thickness>
+    <!-- Gap between sibling cards. Applied as a half-gap on each card so a
+         grid of them stays evenly spaced without per-cell margins. -->
+    <Thickness x:Key="Audio.Margin.CardGap">4</Thickness>
+
+
+    <!-- ================================================================== -->
+    <!-- 11. SHAPE                                                          -->
+    <!--                                                                    -->
+    <!-- Three radii, largest container to smallest control, so nesting      -->
+    <!-- always steps down and concentric corners stay concentric.           -->
+    <!-- ================================================================== -->
+
+    <CornerRadius x:Key="Audio.Radius.Card">12</CornerRadius>
+    <CornerRadius x:Key="Audio.Radius.Control">10</CornerRadius>
+    <CornerRadius x:Key="Audio.Radius.Field">8</CornerRadius>
+    <CornerRadius x:Key="Audio.Radius.Small">6</CornerRadius>
+    <!-- Focus ring sits 2px outside a Control-radius edge. -->
+    <CornerRadius x:Key="Audio.Radius.FocusRing">12</CornerRadius>
+
+    <Thickness x:Key="Audio.Hairline">1</Thickness>
+    <!-- Thickness, not Double. Every use of this key is a Border.BorderThickness,
+         and that property will not accept a Double. Because the uses are
+         DynamicResource, the mismatch is not caught when the XAML is compiled or
+         even when the dictionary loads - it throws InvalidOperationException the
+         first time one of these focus rings is measured, which took down the whole
+         application the moment a page carrying one was opened. -->
+    <Thickness x:Key="Audio.FocusRingThickness">3</Thickness>
+
+
+    <!-- ================================================================== -->
+    <!-- 12. CONTROL METRICS            HIG hit targets + DFM slide 42      -->
+    <!-- ================================================================== -->
+
+    <!-- HIG minimum hit target is 44x44pt. Nothing pressable in the Audio UI
+         goes below it; the indicator bar deliberately goes well above, because
+         it is operated standing at the machine, often gloved. -->
+    <sys:Double x:Key="Audio.HitTarget.Min">44</sys:Double>
+
+    <!-- Segmented-strip metrics. BOTH tab mechanisms resolve these - the ListBox
+         segmented control (Audio.SegmentedItem) and the implicit TabItem in
+         Styles/TabStyles.xaml - so the Main|Vendor strip and the Manual device strip
+         cannot drift apart in height or baseline. They previously carried their own
+         hardcoded numbers in two files, which is the actual reason they disagreed.
+
+         RowHeight is the hit area and the track height; ChipHeight is the visible
+         rounded rect, centred inside it.
+
+         RowHeight is held at the 44px HIT TARGET above because this HMI is operated
+         by finger on a panel PC, not by mouse. That is a deliberate departure from
+         the DFM, which draws this strip compact on slides 59/60 - a touch target is
+         a safety property on a machine and it outranks the drawing.
+
+         ChipHeight is raised with it rather than left at the compact 26: an operator
+         aims at the rounded rect they can see, so a small chip floating in a tall
+         band would put the visible target and the real one out of step, and would
+         leave the dead space above and below that made these strips look unaligned
+         in the first place. 6px of track shows around the chip. -->
+    <sys:Double x:Key="Audio.Segment.RowHeight">44</sys:Double>
+    <sys:Double x:Key="Audio.Segment.ChipHeight">32</sys:Double>
+
+    <!-- DFM slide 42: "Fixed gap between each button, each button is the same
+         size", dimensioned on the slide as L wide with a 20%*L gap. L is set
+         here; the gap is derived below so the two can never drift apart. -->
+    <sys:Double x:Key="Audio.IndicatorButton.Size">56</sys:Double>
+    <!-- 20% of 56. -->
+    <sys:Double x:Key="Audio.IndicatorButton.Gap">11.2</sys:Double>
+    <!-- Half-gap per side, so a row of buttons self-spaces. -->
+    <Thickness x:Key="Audio.IndicatorButton.Margin">5.6,0</Thickness>
+    <!-- The glyph inside the button. The supplied PNGs already include their
+         own rounded-square plate, so the image IS the button face. -->
+    <sys:Double x:Key="Audio.IndicatorButton.GlyphSize">56</sys:Double>
+
+    <!-- Indicator bar: button + a standard inset above and below. -->
+    <sys:Double x:Key="Audio.IndicatorBar.Height">76</sys:Double>
+    <Thickness x:Key="Audio.IndicatorBar.Padding">12,10</Thickness>
+
+    <!-- Level and HIVE chips stack in one 56px-tall column on the right of the
+         bar, matching the button height beside them (DFM slide 42). -->
+    <sys:Double x:Key="Audio.StatusChip.Width">96</sys:Double>
+    <sys:Double x:Key="Audio.StatusChip.Height">26</sys:Double>
+
+    <!-- The Audio wordmark, far right of the bar. -->
+    <sys:Double x:Key="Audio.Logo.Height">46</sys:Double>
+
+    <sys:Double x:Key="Audio.Button.Height">32</sys:Double>
+    <sys:Double x:Key="Audio.Button.MinWidth">88</sys:Double>
+    <Thickness x:Key="Audio.Button.Padding">14,0</Thickness>
+
+    <sys:Double x:Key="Audio.Field.Height">28</sys:Double>
+    <sys:Double x:Key="Audio.Segmented.Height">26</sys:Double>
+    <sys:Double x:Key="Audio.Row.Height">32</sys:Double>
+    <sys:Double x:Key="Audio.TableHeader.Height">34</sys:Double>
+
+
+    <!-- ================================================================== -->
+    <!-- 13. MOTION                     Apple HIG                           -->
+    <!--                                                                    -->
+    <!-- Short and functional: a state change should be perceptible without   -->
+    <!-- being waited on. Nothing in this UI animates position or scale, so   -->
+    <!-- there is no Reduce Motion hazard - every transition is already the   -->
+    <!-- crossfade HIG asks to fall back to.                                 -->
+    <!-- ================================================================== -->
+
+    <Duration x:Key="Audio.Duration.Fast">0:0:0.12</Duration>
+    <Duration x:Key="Audio.Duration.Standard">0:0:0.22</Duration>
+
+</ResourceDictionary>

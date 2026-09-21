@@ -1,0 +1,41 @@
+<UserControl x:Class="Nova.Wpf.App.Views.Pages.Audio.AudioPlaceholderView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             FontFamily="{DynamicResource Audio.FontFamily}"
+             Background="Transparent">
+
+    <!-- ================================================================== -->
+    <!-- NOT-YET-BUILT PAGE -->
+    <!-- Shown behind the five indicator-bar tabs whose pages have not been -->
+    <!-- built (Alarm, Config, Data, Vision, Setting). It states what the page -->
+    <!-- will hold and which slide specifies it, rather than rendering blank: -->
+    <!-- anyone opening the tab should be able to tell "not built yet" from -->
+    <!-- "built and broken", without reading the source. -->
+    <!-- ================================================================== -->
+
+    <Border Style="{StaticResource Audio.Card}">
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                    MaxWidth="560" Margin="32">
+
+            <TextBlock Style="{StaticResource Audio.Title2}"
+                       Text="{Binding Title}"
+                       HorizontalAlignment="Center"/>
+
+            <Border Background="{DynamicResource Audio.System.Gray5Brush}"
+                    CornerRadius="{DynamicResource Audio.Radius.Small}"
+                    Padding="10,3" Margin="0,10,0,0"
+                    HorizontalAlignment="Center">
+                <TextBlock Style="{StaticResource Audio.Footnote}" Text="Not built yet"/>
+            </Border>
+
+            <TextBlock Style="{StaticResource Audio.EmptyState}"
+                       Text="{Binding Summary}"
+                       Margin="0,16,0,0"/>
+
+            <TextBlock Style="{StaticResource Audio.Caption1}"
+                       Text="{Binding SpecReference}"
+                       HorizontalAlignment="Center"
+                       Margin="0,16,0,0"/>
+        </StackPanel>
+    </Border>
+</UserControl>

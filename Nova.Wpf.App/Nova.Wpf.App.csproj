@@ -1,0 +1,68 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <OutputType>WinExe</OutputType>
+    <!-- AnyCPU: TwinCAT ADS is managed TCP, so the x86 lock V3 needed for the
+         32-bit Advantech driver no longer applies. -->
+    <LangVersion>7.3</LangVersion>
+    <UseWPF>true</UseWPF>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
+    <NoWarn>NU1605;$(NoWarn)</NoWarn>
+    <AssemblyName>Nova.Wpf.App</AssemblyName>
+    <RootNamespace>Nova.Wpf.App</RootNamespace>
+    <StartupObject>Nova.Wpf.App.App</StartupObject>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Same TwinCAT ADS version the Beckhoff library is built against. -->
+    <PackageReference Include="Beckhoff.TwinCAT.Ads" Version="7.0.317" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="HandyControl" Version="3.5.1" />
+    <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" Version="2.0.4" />
+    <PackageReference Include="MahApps.Metro.IconPacks.Lucide" Version="6.2.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.9" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <!-- Teal.Library.Log binds NLog 6.x; without it every Logger.WriteLog throws
+         FileNotFoundException at the first call. -->
+    <PackageReference Include="NLog" Version="6.1.0" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="10.0.9" />
+    <PackageReference Include="System.Text.Json" Version="10.0.7" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Beckhoff library, built from source into References\Beckhoff. After changing the
+         library, run References\Beckhoff\Update-BeckhoffLibrary.ps1 and rebuild.
+         Teal.Library.Log is also the queue RunningLogService drains into the Home screen. -->
+    <Reference Include="Teal.Library.Contracts">
+      <HintPath>..\References\Beckhoff\Teal.Library.Contracts.dll</HintPath>
+    </Reference>
+    <Reference Include="Teal.Library.Log">
+      <HintPath>..\References\Beckhoff\Teal.Library.Log.dll</HintPath>
+    </Reference>
+    <Reference Include="Teal.Library.Twincat">
+      <HintPath>..\References\Beckhoff\Teal.Library.Twincat.dll</HintPath>
+    </Reference>
+    <Reference Include="Teal.Library.Stepper">
+      <HintPath>..\References\Beckhoff\Teal.Library.Stepper.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Nova.Abstractions\Nova.Abstractions.csproj" />
+    <ProjectReference Include="..\Nova.ViewModels\Nova.ViewModels.csproj" />
+    <ProjectReference Include="..\Nova.Wpf.UI\Nova.Wpf.UI.csproj" />
+    <ProjectReference Include="..\Master.Repository\Master.Repository.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\app.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- NLog targets (running / alarm CSV logs under C:\TEAL_Log_Data) for Teal.Library.Log. -->
+    <None Update="NLog.config" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Machine profile, recipes and settings, deployed next to the exe. -->
+    <None Update="Data\**\*.json;Data\**\*.xml;Data\**\*.csv;Data\**\*.txt" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Same as V3: the recipe and settings JSON the screens edit are re-copied on every build. -->
+    <None Update="Data\Settings\*.json;Data\Gantry*.json;Data\RobotRecipe.json;Data\LightRecipe.json" CopyToOutputDirectory="Always" />
+  </ItemGroup>
+</Project>

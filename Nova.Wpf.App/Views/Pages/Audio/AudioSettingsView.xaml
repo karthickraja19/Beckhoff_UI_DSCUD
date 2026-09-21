@@ -1,0 +1,172 @@
+<UserControl x:Class="Nova.Wpf.App.Views.Pages.Audio.AudioSettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:Nova.Wpf.App.Converters"
+             FontFamily="{DynamicResource Audio.FontFamily}"
+             Background="Transparent">
+
+    <!-- ================================================================== -->
+    <!-- SETTING PAGE   Audio SW DFM v5.4 slides 62 to 64                   -->
+    <!-- General block + Change Config on the left, the machine's resolved   -->
+    <!-- hardware configuration on the right.                                -->
+    <!--                                                                    -->
+    <!-- Every field is a ComboBox and there is no TextBox anywhere on this  -->
+    <!-- page. Slide 62: "Any change should be selected through the menu     -->
+    <!-- bar. Manually key-in is NOT allowed."                               -->
+    <!-- ================================================================== -->
+
+    <UserControl.Resources>
+        <converters:SkuToLabelConverter x:Key="SkuToLabel"/>
+        <converters:AudioBoolToVisibilityConverter x:Key="BoolToVisibility"/>
+
+        <Style x:Key="FieldRow" TargetType="Grid">
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>   <!-- General + Hardware Setting -->
+            <ColumnDefinition Width="*"/>      <!-- resolved config -->
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0" Style="{StaticResource Audio.Card}" Width="380">
+            <Grid Margin="16,12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>   <!-- General -->
+                    <RowDefinition Height="Auto"/>   <!-- access hint -->
+                    <RowDefinition Height="*"/>      <!-- spacer -->
+                    <RowDefinition Height="Auto"/>   <!-- Hardware Setting -->
+                    <RowDefinition Height="Auto"/>   <!-- Save / Revert -->
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0">
+                    <TextBlock Style="{StaticResource Audio.Title3}" Text="General" Margin="0,0,0,12"/>
+
+                    <Grid Style="{StaticResource FieldRow}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="100"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Style="{StaticResource Audio.FieldLabel}" Text="Site:"/>
+                        <ComboBox Grid.Column="1" Style="{StaticResource Audio.ComboBox}"
+                                  ItemsSource="{Binding Sites}"
+                                  SelectedItem="{Binding Site, Mode=TwoWay}"
+                                  IsEnabled="{Binding CanEditIdentity}"/>
+                    </Grid>
+
+                    <Grid Style="{StaticResource FieldRow}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="100"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Style="{StaticResource Audio.FieldLabel}" Text="Prod Type:"/>
+                        <ComboBox Grid.Column="1" Style="{StaticResource Audio.ComboBox}"
+                                  ItemsSource="{Binding ProductTypes}"
+                                  SelectedItem="{Binding ProductType, Mode=TwoWay}"
+                                  IsEnabled="{Binding CanEditIdentity}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <!-- The enum's own names are M / E / Normal / Common;
+                                         the menu has to read as the slide letters it. -->
+                                    <TextBlock Text="{Binding Converter={StaticResource SkuToLabel}}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </Grid>
+
+                    <Grid Style="{StaticResource FieldRow}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="100"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Style="{StaticResource Audio.FieldLabel}" Text="Line:"/>
+                        <ComboBox Grid.Column="1" Style="{StaticResource Audio.ComboBox}"
+                                  ItemsSource="{Binding Lines}"
+                                  SelectedItem="{Binding Line, Mode=TwoWay}"
+                                  IsEnabled="{Binding CanEditIdentity}"/>
+                    </Grid>
+
+                    <Grid Style="{StaticResource FieldRow}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="100"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Style="{StaticResource Audio.FieldLabel}" Text="Station:"/>
+                        <ComboBox Grid.Column="1" Style="{StaticResource Audio.ComboBox}"
+                                  ItemsSource="{Binding Stations}"
+                                  SelectedItem="{Binding Station, Mode=TwoWay}"
+                                  IsEnabled="{Binding CanEditIdentity}"/>
+                    </Grid>
+
+                    <Grid Style="{StaticResource FieldRow}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="100"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Style="{StaticResource Audio.FieldLabel}" Text="Machine#:"/>
+                        <ComboBox Grid.Column="1" Style="{StaticResource Audio.ComboBox}"
+                                  ItemsSource="{Binding MachineNumbers}"
+                                  SelectedItem="{Binding MachineNumber, Mode=TwoWay}"
+                                  IsEnabled="{Binding CanEditIdentity}"/>
+                    </Grid>
+
+                    <Grid Style="{StaticResource FieldRow}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="100"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Style="{StaticResource Audio.FieldLabel}" Text="Language:"/>
+                        <!-- The one field slide 62 allows below Level 3. -->
+                        <ComboBox Grid.Column="1" Style="{StaticResource Audio.ComboBox}"
+                                  ItemsSource="{Binding Languages}"
+                                  SelectedItem="{Binding Language, Mode=TwoWay}"
+                                  IsEnabled="{Binding CanEditLanguage}"/>
+                    </Grid>
+                </StackPanel>
+
+                <Border Grid.Row="1"
+                        Background="{DynamicResource Audio.Surface.RecessedBrush}"
+                        CornerRadius="{DynamicResource Audio.Radius.Field}"
+                        Padding="10,6" Margin="0,4,0,0">
+                    <TextBlock Style="{StaticResource Audio.Caption1}"
+                               Text="{Binding AccessHint}" TextWrapping="Wrap"/>
+                </Border>
+
+                <StackPanel Grid.Row="3">
+                    <TextBlock Style="{StaticResource Audio.Title3}" Text="Hardware Setting"
+                               Margin="0,0,0,10"/>
+                    <Button Style="{StaticResource Audio.Button}"
+                            Content="Change Config"
+                            Height="56" HorizontalAlignment="Stretch"
+                            Command="{Binding ChangeConfigCommand}"
+                            ToolTip="Hardware configuration requires Level 3"/>
+                </StackPanel>
+
+                <Grid Grid.Row="4" Margin="0,16,0,0"
+                      Visibility="{Binding IsDirty, Converter={StaticResource BoolToVisibility}}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="0" Style="{StaticResource Audio.Button}"
+                            Content="Revert" Command="{Binding RevertCommand}"/>
+                    <Button Grid.Column="2" Style="{StaticResource Audio.FilledButton}"
+                            Content="Save" Command="{Binding SaveCommand}"/>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <!-- Resolved configuration. Slide 64: "Once saved, the actual config of this
+             machine will show here". -->
+        <Border Grid.Column="1" Style="{StaticResource Audio.Card}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="16,12">
+                <TextBlock Style="{StaticResource Audio.Caption1Mono}"
+                           Foreground="{DynamicResource Audio.Text.PrimaryBrush}"
+                           Text="{Binding ResolvedConfig}"
+                           TextTrimming="None"/>
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</UserControl>

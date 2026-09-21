@@ -1,0 +1,19 @@
+[
+  {
+    "EnumName": "IOStepper1",
+    "Name": "IO Stepper 1",
+    "IsAxisEnabled": false,
+    "CardId": 0,
+    "Id": 1,
+    "Pitch": 0,
+    "Pulse": 0,
+    "PPR": 0,
+    "Acceleration": 0,
+    "Deceleration": 0,
+    "Speed": 100,
+    "ForwardCommand": "",
+    "ReverseCommand": "",
+    "AlarmResetCommand": "",
+    "AlarmSignal": ""
+  }
+]

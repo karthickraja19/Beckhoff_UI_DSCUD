@@ -1,0 +1,19 @@
+{
+  "Title": "TCP IP Settings",
+  "Columns": [
+    { "Key": "Name", "Title": "Name", "IsReadOnly": true, "IsIdentifier": true, "DataType": "Text" },
+    { "Key": "IpAddress", "Title": "IP Address", "DataType": "Text" },
+    { "Key": "Port", "Title": "Port", "DataType": "NonNegative" }
+  ],
+  "Rows": [
+    { "Name": "CCD1", "IpAddress": "192.168.1.10", "Port": "0" },
+    { "Name": "CCD3", "IpAddress": "127.0.0.1", "Port": "5000" },
+    { "Name": "CCD4", "IpAddress": "169.254.0.1", "Port": "6" },
+    { "Name": "CCD5", "IpAddress": "169.254.0.1", "Port": "5" },
+    { "Name": "Robot", "IpAddress": "2", "Port": "5" },
+    { "Name": "Robot_Auto", "IpAddress": "32", "Port": "5" },
+    { "Name": "Robot_Error", "IpAddress": "4", "Port": "5" },
+    { "Name": "Barcode_Scanner", "IpAddress": "5", "Port": "5" },
+    { "Name": "SFC_PDCA", "IpAddress": "6", "Port": "5" }
+  ]
+}

@@ -1,0 +1,701 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib"
+    xmlns:components="clr-namespace:Nova.Wpf.UI.Components">
+
+    <!-- ================================================================== -->
+    <!-- AUDIO/HOME - CONTROL STYLES                                        -->
+    <!--                                                                    -->
+    <!-- Every style here is keyed (x:Key) and none is implicit, so merging  -->
+    <!-- this file cannot restyle the pre-existing Nova pages. Only the      -->
+    <!-- Audio shell and its six pages opt in.                               -->
+    <!--                                                                    -->
+    <!-- Two rules run through all of it, both from Apple HIG:               -->
+    <!--                                                                    -->
+    <!--   Content over chrome. Grouping is done with a surface step and a   -->
+    <!--   hairline separator, not with a border round everything. Cards get -->
+    <!--   a fill and a 1px #C6C6C8 edge; nothing else gets an outline       -->
+    <!--   unless it is editable or pressable.                               -->
+    <!--                                                                    -->
+    <!--   Nothing pressable is under 44x44. Where a control's own box is    -->
+    <!--   smaller than that (a 26px segmented control, a 28px field), the   -->
+    <!--   hit area is padded out to 44 rather than the visual being grown.  -->
+    <!-- ================================================================== -->
+
+
+    <!-- ================================================================== -->
+    <!-- SHARED PIECES                                                      -->
+    <!-- ================================================================== -->
+
+    <!-- HIG draws keyboard focus as a ring OUTSIDE the control's own edge,
+         rather than by recolouring the control. Dropped into a template as a
+         sibling of the control's border, collapsed until IsKeyboardFocused. -->
+    <ControlTemplate x:Key="Audio.FocusRing">
+        <Border BorderBrush="{DynamicResource Audio.FocusRingBrush}"
+                BorderThickness="{DynamicResource Audio.FocusRingThickness}"
+                CornerRadius="{DynamicResource Audio.Radius.FocusRing}"
+                Margin="-3"
+                SnapsToDevicePixels="False"
+                IsHitTestVisible="False"/>
+    </ControlTemplate>
+
+    <Style x:Key="Audio.Separator.Horizontal" TargetType="Rectangle">
+        <Setter Property="Height" Value="1"/>
+        <Setter Property="Fill" Value="{DynamicResource Audio.Separator.SubtleBrush}"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+    </Style>
+
+    <!-- The rule between the nav buttons and the machine controls in the
+         indicator bar (drawn on DFM slide 42). -->
+    <Style x:Key="Audio.Separator.Vertical" TargetType="Rectangle">
+        <Setter Property="Width" Value="1"/>
+        <Setter Property="Fill" Value="{DynamicResource Audio.SeparatorBrush}"/>
+        <Setter Property="VerticalAlignment" Value="Stretch"/>
+        <Setter Property="Margin" Value="{DynamicResource Audio.IndicatorButton.Margin}"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+    </Style>
+
+
+    <!-- ================================================================== -->
+    <!-- CARD                                                               -->
+    <!--                                                                    -->
+    <!-- The one container in the Audio UI. Every panel the DFM draws with a -->
+    <!-- box - Machine State, Error Statistics, I/O Summary, Parameter        -->
+    <!-- Dashboard, the station card, Spec Limits - is one of these.          -->
+    <!-- ================================================================== -->
+
+    <Style x:Key="Audio.Card" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource Audio.Surface.CardBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Audio.SeparatorBrush}"/>
+        <Setter Property="BorderThickness" Value="{DynamicResource Audio.Hairline}"/>
+        <Setter Property="CornerRadius" Value="{DynamicResource Audio.Radius.Card}"/>
+        <Setter Property="Margin" Value="{DynamicResource Audio.Margin.CardGap}"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+    </Style>
+
+    <!-- A card the operator can click through to another page. The DFM asks for
+         three of these on Home ("Click space areas to jump to data tab" /
+         "... error tab", slide 54). Same surface, plus the affordances that make
+         a whole panel read as a target: a pointer, a lift on hover, and a focus
+         ring so it is reachable from the keyboard. -->
+    <Style x:Key="Audio.CardButton" TargetType="Button">
+        <Setter Property="Background" Value="{DynamicResource Audio.Surface.CardBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Audio.SeparatorBrush}"/>
+        <Setter Property="BorderThickness" Value="{DynamicResource Audio.Hairline}"/>
+        <Setter Property="Margin" Value="{DynamicResource Audio.Margin.CardGap}"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid>
+                        <Border x:Name="Plate"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="{DynamicResource Audio.Radius.Card}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                        <Border x:Name="Ring" Visibility="Collapsed"
+                                BorderBrush="{DynamicResource Audio.FocusRingBrush}"
+                                BorderThickness="{DynamicResource Audio.FocusRingThickness}"
+                                CornerRadius="{DynamicResource Audio.Radius.FocusRing}"
+                                Margin="-3" IsHitTestVisible="False"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Plate" Property="BorderBrush"
+                                    Value="{DynamicResource Audio.System.BlueBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="Ring" Property="Visibility" Value="Visible"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Plate" Property="Background"
+                                    Value="{DynamicResource Audio.Surface.RecessedBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+
+    <!-- ================================================================== -->
+    <!-- INDICATOR BAR - NAVIGATION BUTTONS         DFM slide 42            -->
+    <!--                                                                    -->
+    <!-- "Fixed gap between each button, each button is the same size."      -->
+    <!--                                                                    -->
+    <!-- The button face IS the supplied artwork: each PNG already carries   -->
+    <!-- its own rounded-square plate in the right colour for its state, so  -->
+    <!-- this template deliberately draws NO background and NO border. Doing -->
+    <!-- otherwise would put a second plate behind the one in the image.     -->
+    <!-- Which artwork shows is the view model's call (AudioIconState), not  -->
+    <!-- a trigger's, because the DFM's rules are access rules.              -->
+    <!-- ================================================================== -->
+
+    <Style x:Key="Audio.IndicatorButton" TargetType="Button">
+        <Setter Property="Width" Value="{DynamicResource Audio.IndicatorButton.Size}"/>
+        <Setter Property="Height" Value="{DynamicResource Audio.IndicatorButton.Size}"/>
+        <Setter Property="Margin" Value="{DynamicResource Audio.IndicatorButton.Margin}"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid Background="Transparent">
+                        <ContentPresenter x:Name="Glyph"
+                                          HorizontalAlignment="Stretch"
+                                          VerticalAlignment="Stretch"/>
+                        <Border x:Name="Ring" Visibility="Collapsed"
+                                BorderBrush="{DynamicResource Audio.FocusRingBrush}"
+                                BorderThickness="{DynamicResource Audio.FocusRingThickness}"
+                                CornerRadius="{DynamicResource Audio.Radius.FocusRing}"
+                                Margin="-3" IsHitTestVisible="False"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <!-- Hover and press are the only feedback the template adds.
+                             They are opacity, not colour, so they compose with
+                             whichever of the four state images is showing. -->
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Glyph" Property="Opacity" Value="0.82"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Glyph" Property="Opacity" Value="0.65"/>
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="Ring" Property="Visibility" Value="Visible"/>
+                        </Trigger>
+                        <!-- No opacity change when disabled: the *_Disabled artwork
+                             is already the de-energized glyph at half alpha, so
+                             fading it again would halve it twice. The cursor and
+                             hit-testing still go, which is what matters. -->
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Cursor" Value="Arrow"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Level and HIVE chips. Labels, not buttons, at no-login and Level 1
+         ("HIVE indicator shows current machine state (read only for no login and
+         L1)", slide 42) - so the pressable version is a separate style below and
+         a view picks one by whether the operator may change state. -->
+    <Style x:Key="Audio.StatusChip" TargetType="components:AudioIcon">
+        <Setter Property="Width" Value="{DynamicResource Audio.StatusChip.Width}"/>
+        <Setter Property="Height" Value="{DynamicResource Audio.StatusChip.Height}"/>
+        <Setter Property="HorizontalAlignment" Value="Right"/>
+    </Style>
+
+    <!-- The same chip when it is the control that changes HIVE state (Level 2/3:
+         "HIVE status bar shows current status. Click to change state.", slide 49).
+         Padded to a 44px hit target without growing the 26px chip. -->
+    <Style x:Key="Audio.StatusChipButton" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="0,4"/>
+        <Setter Property="MinHeight" Value="34"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="HorizontalContentAlignment" Value="Right"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Grid Background="Transparent">
+                        <ContentPresenter x:Name="Chip" Margin="{TemplateBinding Padding}"/>
+                        <Border x:Name="Ring" Visibility="Collapsed"
+                                BorderBrush="{DynamicResource Audio.FocusRingBrush}"
+                                BorderThickness="2"
+                                CornerRadius="{DynamicResource Audio.Radius.Small}"
+                                Margin="0,2" IsHitTestVisible="False"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Chip" Property="Opacity" Value="0.82"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Chip" Property="Opacity" Value="0.65"/>
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="Ring" Property="Visibility" Value="Visible"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Cursor" Value="Arrow"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+
+    <!-- ================================================================== -->
+    <!-- STATION ID                                 DFM slide 42            -->
+    <!--                                                                    -->
+    <!-- Centred in the bar. Filled and white-on-colour when the product has -->
+    <!-- a SKU, otherwise the #CCCCCC watermark. The fill is bound by the     -->
+    <!-- caller from Audio.Sku.*Brush, so this style only sets the shape.     -->
+    <!-- ================================================================== -->
+
+    <Style x:Key="Audio.StationIdPlate" TargetType="Border">
+        <Setter Property="CornerRadius" Value="{DynamicResource Audio.Radius.Control}"/>
+        <Setter Property="MinWidth" Value="240"/>
+        <Setter Property="Height" Value="{DynamicResource Audio.IndicatorButton.Size}"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Padding" Value="24,0"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+    </Style>
+
+
+    <!-- ================================================================== -->
+    <!-- BUTTONS                                                            -->
+    <!--                                                                    -->
+    <!-- Three roles, matching HIG's filled / tinted-grey / plain. Query,    -->
+    <!-- Save, Edit, Export, Machine Log, HIVE Log and Change Config all map -->
+    <!-- onto one of them.                                                    -->
+    <!-- ================================================================== -->
+
+    <ControlTemplate x:Key="Audio.ButtonTemplate" TargetType="Button">
+        <Grid>
+            <Border x:Name="Plate"
+                    Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    CornerRadius="{DynamicResource Audio.Radius.Field}"
+                    SnapsToDevicePixels="True">
+                <ContentPresenter HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"
+                                  Margin="{TemplateBinding Padding}"
+                                  RecognizesAccessKey="True"/>
+            </Border>
+            <Border x:Name="Ring" Visibility="Collapsed"
+                    BorderBrush="{DynamicResource Audio.FocusRingBrush}"
+                    BorderThickness="{DynamicResource Audio.FocusRingThickness}"
+                    CornerRadius="{DynamicResource Audio.Radius.Control}"
+                    Margin="-3" IsHitTestVisible="False"/>
+        </Grid>
+        <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="Plate" Property="Opacity" Value="0.86"/>
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+                <Setter TargetName="Plate" Property="Opacity" Value="0.7"/>
+            </Trigger>
+            <Trigger Property="IsKeyboardFocused" Value="True">
+                <Setter TargetName="Ring" Property="Visibility" Value="Visible"/>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+                <Setter Property="Opacity" Value="{DynamicResource Audio.DisabledOpacity}"/>
+                <Setter Property="Cursor" Value="Arrow"/>
+            </Trigger>
+        </ControlTemplate.Triggers>
+    </ControlTemplate>
+
+    <!-- The default action in a group. One per group, at most. -->
+    <Style x:Key="Audio.FilledButton" TargetType="Button">
+        <Setter Property="Template" Value="{StaticResource Audio.ButtonTemplate}"/>
+        <Setter Property="Background" Value="{DynamicResource Audio.System.BlueBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Audio.Text.OnAccentBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="FontFamily" Value="{DynamicResource Audio.FontFamily}"/>
+        <Setter Property="FontSize" Value="{DynamicResource Audio.FontSize.Subheadline}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Height" Value="{DynamicResource Audio.Button.Height}"/>
+        <Setter Property="MinWidth" Value="{DynamicResource Audio.Button.MinWidth}"/>
+        <Setter Property="Padding" Value="{DynamicResource Audio.Button.Padding}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <!-- Everything else. Grey fill, no outline. -->
+    <Style x:Key="Audio.Button" TargetType="Button" BasedOn="{StaticResource Audio.FilledButton}">
+        <Setter Property="Background" Value="{DynamicResource Audio.System.Gray5Brush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Audio.Text.PrimaryBrush}"/>
+    </Style>
+
+    <!-- The dark pill the DFM draws for "Machine Log" and "HIVE Log" on the
+         station card (slide 43). Its own style rather than a recolour of
+         Audio.Button, so the station card cannot drift from the slide. -->
+    <Style x:Key="Audio.LogButton" TargetType="Button" BasedOn="{StaticResource Audio.FilledButton}">
+        <Setter Property="Background" Value="#FF48484A"/>
+        <Setter Property="Foreground" Value="{DynamicResource Audio.Text.OnAccentBrush}"/>
+        <Setter Property="Height" Value="28"/>
+        <Setter Property="MinWidth" Value="0"/>
+        <Setter Property="FontSize" Value="{DynamicResource Audio.FontSize.Footnote}"/>
+    </Style>
+
+    <!-- Text-only. For a tertiary action that must not compete with the panel
+         it sits in. -->
+    <Style x:Key="Audio.PlainButton" TargetType="Button" BasedOn="{StaticResource Audio.FilledButton}">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource Audio.System.BlueBrush}"/>
+        <Setter Property="MinWidth" Value="0"/>
+        <Setter Property="Padding" Value="8,0"/>
+    </Style>
+
+
+    <!-- ================================================================== -->
+    <!-- SEGMENTED CONTROL                                                  -->
+    <!--                                                                    -->
+    <!-- Main | Vendor (slide 54), I/O | Tossing and Hourly | Daily          -->
+    <!-- (slide 59) are all the same control. Built on ListBox so a view      -->
+    <!-- binds ItemsSource/SelectedItem and gets arrow-key navigation and     -->
+    <!-- single selection from the framework.                                 -->
+    <!--                                                                    -->
+    <!-- Per HIG: equal-width segments, text only, and it shows a selection   -->
+    <!-- rather than performing actions.                                      -->
+    <!-- ================================================================== -->
+
+    <Style x:Key="Audio.SegmentedItem" TargetType="ListBoxItem">
+        <Setter Property="FontFamily" Value="{DynamicResource Audio.FontFamily}"/>
+        <Setter Property="FontSize" Value="{DynamicResource Audio.FontSize.Footnote}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Audio.Text.PrimaryBrush}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="MinWidth" Value="64"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <!-- Fixed row height with the chip centred inside it. Height rather
+                         than MinHeight so this strip and the TabItem one in
+                         Styles/TabStyles.xaml are pinned to the same number instead of
+                         each sizing to its own content.
+
+                         The chip is outlined even when unselected - DFM slides 59/60 draw
+                         every segment as its own bordered rounded rect, not as bare text
+                         on a track. -->
+                    <Grid Background="Transparent"
+                          Height="{DynamicResource Audio.Segment.RowHeight}">
+                        <Border x:Name="Pill"
+                                Background="{DynamicResource Audio.Surface.GroupedBrush}"
+                                BorderBrush="{DynamicResource Audio.System.Gray3Brush}"
+                                BorderThickness="1"
+                                CornerRadius="{DynamicResource Audio.Radius.Small}"
+                                Margin="3,0"
+                                VerticalAlignment="Center"
+                                Height="{DynamicResource Audio.Segment.ChipHeight}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <!-- Selected chip fills white and takes a darker edge, the way
+                             the DFM draws the active segment. -->
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Pill" Property="Background"
+                                    Value="{DynamicResource Audio.Surface.CardBrush}"/>
+                            <Setter TargetName="Pill" Property="BorderBrush"
+                                    Value="{DynamicResource Audio.System.GrayBrush}"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter TargetName="Pill" Property="Effect">
+                                <Setter.Value>
+                                    <DropShadowEffect BlurRadius="3" ShadowDepth="1"
+                                                      Direction="270" Opacity="0.14" Color="#FF000000"/>
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsMouseOver" Value="True"/>
+                                <Condition Property="IsSelected" Value="False"/>
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="Pill" Property="Background"
+                                    Value="{DynamicResource Audio.System.Gray5Brush}"/>
+                            <Setter TargetName="Pill" Property="BorderBrush"
+                                    Value="{DynamicResource Audio.System.GrayBrush}"/>
+                        </MultiTrigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="{DynamicResource Audio.DisabledOpacity}"/>
+                            <Setter Property="Cursor" Value="Arrow"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="Audio.SegmentedControl" TargetType="ListBox">
+        <Setter Property="ItemContainerStyle" Value="{StaticResource Audio.SegmentedItem}"/>
+        <!-- One step darker than the chips sitting in it, so the track still reads as
+             a track now that each chip carries its own outline. -->
+        <Setter Property="Background" Value="{DynamicResource Audio.System.Gray5Brush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+        <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled"/>
+        <Setter Property="ItemsPanel">
+            <Setter.Value>
+                <ItemsPanelTemplate>
+                    <!-- StackPanel, not UniformGrid. HIG equalises segment widths, but
+                         the DFM does not: slides 59/60 draw I/O narrow and Tossing wider,
+                         each chip sized to its own label. UniformGrid was stretching
+                         "Main" and "Vendor" to 90px each and making this strip look
+                         nothing like the content-sized tab strip below it. -->
+                    <StackPanel Orientation="Horizontal"/>
+                </ItemsPanelTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBox">
+                    <!-- Padding horizontal only: the item already carries the row height,
+                         so vertical padding here would make this track taller than the
+                         TabControl's. -->
+                    <Border Background="{TemplateBinding Background}"
+                            CornerRadius="{DynamicResource Audio.Radius.Field}"
+                            Padding="4,0"
+                            SnapsToDevicePixels="True">
+                        <ItemsPresenter/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+
+    <!-- ================================================================== -->
+    <!-- FIELDS                                                             -->
+    <!--                                                                    -->
+    <!-- The DFM is emphatic that most values are read-only and that several -->
+    <!-- must never be typed at all: "Manually typing in state or error code -->
+    <!-- prohibited" (slide 49), "Any change should be selected through the   -->
+    <!-- menu bar. Manually key-in is NOT allowed" (slide 62).                -->
+    <!--                                                                    -->
+    <!-- So the read-only appearance is the DEFAULT here, and editability is  -->
+    <!-- the trigger. A field that looks typeable when it is not is the       -->
+    <!-- specific mistake the spec is guarding against.                       -->
+    <!-- ================================================================== -->
+
+    <Style x:Key="Audio.TextBox" TargetType="TextBox">
+        <Setter Property="FontFamily" Value="{DynamicResource Audio.FontFamily}"/>
+        <Setter Property="FontSize" Value="{DynamicResource Audio.FontSize.Subheadline}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Audio.Text.PrimaryBrush}"/>
+        <Setter Property="Height" Value="{DynamicResource Audio.Field.Height}"/>
+        <Setter Property="Padding" Value="8,0"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Background" Value="{DynamicResource Audio.Surface.RecessedBrush}"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="IsReadOnly" Value="True"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Grid>
+                        <Border x:Name="Plate"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="{DynamicResource Audio.Radius.Field}"
+                                SnapsToDevicePixels="True">
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                          Margin="{TemplateBinding Padding}"
+                                          VerticalAlignment="Center"
+                                          Focusable="False"
+                                          HorizontalScrollBarVisibility="Hidden"
+                                          VerticalScrollBarVisibility="Hidden"/>
+                        </Border>
+                        <Border x:Name="Ring" Visibility="Collapsed"
+                                BorderBrush="{DynamicResource Audio.FocusRingBrush}"
+                                BorderThickness="{DynamicResource Audio.FocusRingThickness}"
+                                CornerRadius="{DynamicResource Audio.Radius.Control}"
+                                Margin="-3" IsHitTestVisible="False"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <!-- Editable: white fill and a visible edge. This is the
+                             ONLY thing on screen that looks typeable. -->
+                        <Trigger Property="IsReadOnly" Value="False">
+                            <Setter TargetName="Plate" Property="Background"
+                                    Value="{DynamicResource Audio.Surface.CardBrush}"/>
+                            <Setter TargetName="Plate" Property="BorderBrush"
+                                    Value="{DynamicResource Audio.System.Gray3Brush}"/>
+                        </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsKeyboardFocused" Value="True"/>
+                                <Condition Property="IsReadOnly" Value="False"/>
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="Ring" Property="Visibility" Value="Visible"/>
+                        </MultiTrigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="{DynamicResource Audio.DisabledOpacity}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Numeric / identifier field: tabular figures so digits line up down a column. -->
+    <Style x:Key="Audio.TextBoxMono" TargetType="TextBox" BasedOn="{StaticResource Audio.TextBox}">
+        <Setter Property="FontFamily" Value="{DynamicResource Audio.FontFamily.Mono}"/>
+        <Setter Property="TextAlignment" Value="Right"/>
+    </Style>
+
+    <!-- The menu every "no manual key-in" value is chosen from. -->
+    <Style x:Key="Audio.ComboBox" TargetType="ComboBox">
+        <Setter Property="FontFamily" Value="{DynamicResource Audio.FontFamily}"/>
+        <Setter Property="FontSize" Value="{DynamicResource Audio.FontSize.Subheadline}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Audio.Text.PrimaryBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource Audio.Surface.CardBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Audio.System.Gray3Brush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Height" Value="{DynamicResource Audio.Field.Height}"/>
+        <Setter Property="Padding" Value="8,0"/>
+        <Setter Property="IsEditable" Value="False"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+    </Style>
+
+    <!-- Caption above or beside a field. -->
+    <Style x:Key="Audio.FieldLabel" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{DynamicResource Audio.FontFamily}"/>
+        <Setter Property="FontSize" Value="{DynamicResource Audio.FontSize.Footnote}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Audio.Text.SecondaryBrush}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+
+    <!-- ================================================================== -->
+    <!-- TABLES                                                             -->
+    <!--                                                                    -->
+    <!-- Alarm history, the parameter dashboard, spec limits, the unit data  -->
+    <!-- grid and the Top 10 breakdown. Horizontal rules only - a full grid  -->
+    <!-- of lines is chrome, and the columns already align the eye.          -->
+    <!-- ================================================================== -->
+
+    <Style x:Key="Audio.DataGridColumnHeader" TargetType="DataGridColumnHeader">
+        <Setter Property="Background" Value="{DynamicResource Audio.Surface.RecessedBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Audio.Text.SecondaryBrush}"/>
+        <Setter Property="FontFamily" Value="{DynamicResource Audio.FontFamily}"/>
+        <Setter Property="FontSize" Value="{DynamicResource Audio.FontSize.Footnote}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Height" Value="{DynamicResource Audio.TableHeader.Height}"/>
+        <Setter Property="Padding" Value="10,0"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="SeparatorBrush" Value="{DynamicResource Audio.Separator.SubtleBrush}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="DataGridColumnHeader">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{DynamicResource Audio.SeparatorBrush}"
+                            BorderThickness="0,0,0,1"
+                            Padding="{TemplateBinding Padding}"
+                            SnapsToDevicePixels="True">
+                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="Audio.DataGridRow" TargetType="DataGridRow">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource Audio.Text.PrimaryBrush}"/>
+        <Setter Property="MinHeight" Value="{DynamicResource Audio.Row.Height}"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{DynamicResource Audio.Surface.RecessedBrush}"/>
+            </Trigger>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background" Value="{DynamicResource Audio.System.Gray5Brush}"/>
+                <Setter Property="Foreground" Value="{DynamicResource Audio.Text.PrimaryBrush}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="Audio.DataGridCell" TargetType="DataGridCell">
+        <Setter Property="FontFamily" Value="{DynamicResource Audio.FontFamily}"/>
+        <Setter Property="FontSize" Value="{DynamicResource Audio.FontSize.Callout}"/>
+        <Setter Property="Padding" Value="10,0"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="DataGridCell">
+                    <Border Background="{TemplateBinding Background}"
+                            Padding="{TemplateBinding Padding}"
+                            SnapsToDevicePixels="True">
+                        <ContentPresenter VerticalAlignment="Center"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <!-- Selection is the row's job; a cell that also highlighted would
+                 look like a spreadsheet, and none of these tables are edited
+                 cell-by-cell. -->
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Foreground" Value="{DynamicResource Audio.Text.PrimaryBrush}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="Audio.DataGrid" TargetType="DataGrid">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="RowHeight" Value="{DynamicResource Audio.Row.Height}"/>
+        <Setter Property="ColumnHeaderStyle" Value="{StaticResource Audio.DataGridColumnHeader}"/>
+        <Setter Property="RowStyle" Value="{StaticResource Audio.DataGridRow}"/>
+        <Setter Property="CellStyle" Value="{StaticResource Audio.DataGridCell}"/>
+        <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+        <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource Audio.Separator.SubtleBrush}"/>
+        <Setter Property="VerticalGridLinesBrush" Value="Transparent"/>
+        <Setter Property="HeadersVisibility" Value="Column"/>
+        <Setter Property="AutoGenerateColumns" Value="False"/>
+        <Setter Property="CanUserAddRows" Value="False"/>
+        <Setter Property="CanUserDeleteRows" Value="False"/>
+        <Setter Property="CanUserResizeRows" Value="False"/>
+        <Setter Property="IsReadOnly" Value="True"/>
+        <Setter Property="SelectionMode" Value="Single"/>
+        <Setter Property="SelectionUnit" Value="FullRow"/>
+        <Setter Property="EnableRowVirtualization" Value="True"/>
+        <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
+        <Setter Property="HorizontalScrollBarVisibility" Value="Auto"/>
+    </Style>
+
+
+    <!-- ================================================================== -->
+    <!-- LIST ROW (non-DataGrid tables)                                     -->
+    <!--                                                                    -->
+    <!-- The Parameter Dashboard and Spec Limits are short, fixed-column     -->
+    <!-- lists, so they are ItemsControls with a Grid row rather than        -->
+    <!-- DataGrids. These give them the same metrics as the real grids.      -->
+    <!-- ================================================================== -->
+
+    <Style x:Key="Audio.ListRow" TargetType="Border">
+        <Setter Property="Height" Value="{DynamicResource Audio.Row.Height}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Audio.Separator.SubtleBrush}"/>
+        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+    </Style>
+
+    <Style x:Key="Audio.ListHeaderRow" TargetType="Border">
+        <Setter Property="Height" Value="{DynamicResource Audio.TableHeader.Height}"/>
+        <Setter Property="Background" Value="{DynamicResource Audio.Surface.RecessedBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource Audio.SeparatorBrush}"/>
+        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+    </Style>
+
+    <!-- Out-of-spec parameter. DFM slide 43: "Show OOS params at top of list in
+         red". The fill is the unit-SN fail red, so "this value is bad" is one
+         colour everywhere in the UI. -->
+    <Style x:Key="Audio.ListRow.OutOfSpec" TargetType="Border" BasedOn="{StaticResource Audio.ListRow}">
+        <Setter Property="Background" Value="{DynamicResource Audio.UnitSn.FailBrush}"/>
+    </Style>
+
+</ResourceDictionary>

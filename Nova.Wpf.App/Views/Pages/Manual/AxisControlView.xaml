@@ -1,0 +1,499 @@
+<UserControl x:Class="Nova.Wpf.App.Views.Pages.Manual.AxisControlView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:hc="https://handyorg.github.io/handycontrol"
+             xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             xmlns:behaviors="clr-namespace:Nova.Wpf.UI.Behaviors;assembly=Nova.Wpf.UI"
+             Background="Transparent">
+
+    <UserControl.Resources>
+        <Style x:Key="ManualCard" TargetType="Border" BasedOn="{StaticResource Nova.Card}">
+            <Setter Property="Padding" Value="14"/>
+            <Setter Property="Margin" Value="5"/>
+        </Style>
+
+        <!-- Uppercase card title ("MOTION CONTROL"). Same role — and therefore the
+             same size — as the card titles on every other page, so it inherits
+             Nova.SectionTitle and only adds this page's spacing. -->
+        <Style x:Key="SectionHeader" TargetType="TextBlock" BasedOn="{StaticResource Nova.SectionTitle}">
+            <Setter Property="Margin" Value="0,0,0,12"/>
+        </Style>
+
+        <!-- Small uppercase metric label ("ACTUAL POSITION"). Regular weight, like
+             every other field caption: the readout under it carries the emphasis,
+             and bold text on a muted caption starts to read like a control. -->
+        <Style x:Key="MetricLabel" TargetType="TextBlock" BasedOn="{StaticResource Nova.FieldLabel}">
+            <Setter Property="Margin" Value="0,0,0,6"/>
+        </Style>
+
+        <!-- Input with the label inside as a placeholder ("Position (mm)").
+             Every field on this screen is a number the view model reads with
+             double.TryParse, and a failed TryParse returns silently — so letters used to
+             produce a Move button that did nothing at all. NumericInput blocks the
+             character at the keyboard instead. Speeds and counts are unsigned; a
+             position can be either side of home, so those override to SignedDecimal. -->
+        <Style x:Key="PlaceholderField" TargetType="TextBox" BasedOn="{StaticResource TextBoxExtend}">
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+            <Setter Property="behaviors:NumericInput.Mode" Value="Decimal"/>
+        </Style>
+
+        <!-- Positions: signed, since an axis can travel either side of home. -->
+        <Style x:Key="PositionField" TargetType="TextBox" BasedOn="{StaticResource PlaceholderField}">
+            <Setter Property="behaviors:NumericInput.Mode" Value="SignedDecimal"/>
+        </Style>
+
+        <!-- Iteration count: whole numbers only. -->
+        <Style x:Key="CountField" TargetType="TextBox" BasedOn="{StaticResource PlaceholderField}">
+            <Setter Property="behaviors:NumericInput.Mode" Value="Integer"/>
+        </Style>
+
+        <!-- Filled primary action (Move / Home) -->
+        <Style x:Key="ActionButton" TargetType="Button" BasedOn="{StaticResource Nova.ButtonPrimary}">
+            <Setter Property="MinWidth" Value="100"/>
+        </Style>
+
+        <!-- Neutral base for the outline variants below -->
+        <Style x:Key="GhostButton" TargetType="Button" BasedOn="{StaticResource Nova.ButtonSecondary}">
+            <Setter Property="MinWidth" Value="100"/>
+        </Style>
+
+        <!-- Filled danger action (Stop) — app-wide stop colour -->
+        <Style x:Key="StopButton" TargetType="Button" BasedOn="{StaticResource Nova.ButtonDanger}">
+            <Setter Property="MinWidth" Value="100"/>
+        </Style>
+
+        <!-- Primary outline button (Jog / Continuous arrows). Accent is carried by
+             the LABEL only — the outline stays black on every button in the app. -->
+        <Style x:Key="OutlineButton" TargetType="Button" BasedOn="{StaticResource GhostButton}">
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
+        </Style>
+
+        <!-- Danger outline button (Clear error) -->
+        <Style x:Key="DangerOutlineButton" TargetType="Button" BasedOn="{StaticResource GhostButton}">
+            <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+        </Style>
+
+        <!-- Device status chip: grey idle, green tint when active, red tint for
+             active alarms. Borderless — this is a readout, and an outline here
+             would make it look like one of the buttons below it. State reads from
+             the tint, the dot and the text colour, which is three cues without
+             borrowing the button's. -->
+        <DataTemplate x:Key="StatusChipTemplate">
+            <Grid Margin="4">
+                <Border x:Name="ChipBg" CornerRadius="6"
+                        Background="{DynamicResource Nova.TableHeaderBrush}"/>
+                
+                <StackPanel Orientation="Horizontal" Margin="12,9">
+                    <Ellipse x:Name="ChipDot" Width="7" Height="7" VerticalAlignment="Center" Margin="0,0,7,0"
+                             Fill="{DynamicResource ThirdlyTextBrush}"/>
+                    <TextBlock x:Name="ChipText" Text="{Binding Label}" FontSize="{DynamicResource Nova.FontSize.Caption}" FontWeight="SemiBold"
+                               Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+            <DataTemplate.Triggers>
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding IsActive}" Value="True"/>
+                        <Condition Binding="{Binding IsAlarm}" Value="False"/>
+                    </MultiDataTrigger.Conditions>
+                    <Setter TargetName="ChipBg" Property="Background" Value="{DynamicResource SuccessBrush}"/>
+                    <Setter TargetName="ChipBg" Property="Opacity" Value="0.12"/>
+                    <Setter TargetName="ChipDot" Property="Fill" Value="{DynamicResource SuccessBrush}"/>
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+                </MultiDataTrigger>
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding IsActive}" Value="True"/>
+                        <Condition Binding="{Binding IsAlarm}" Value="True"/>
+                    </MultiDataTrigger.Conditions>
+                    <Setter TargetName="ChipBg" Property="Background" Value="{DynamicResource DangerBrush}"/>
+                    <Setter TargetName="ChipBg" Property="Opacity" Value="0.12"/>
+                    <Setter TargetName="ChipDot" Property="Fill" Value="{DynamicResource DangerBrush}"/>
+                    <Setter TargetName="ChipText" Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+                </MultiDataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <ScrollViewer Margin="0"
+              VerticalScrollBarVisibility="Auto"
+              HorizontalScrollBarVisibility="Disabled"
+              CanContentScroll="True">
+        <Grid Margin="4">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <!-- Axis selector -->
+                <RowDefinition Height="Auto"/>
+                <!-- Device status | Live values -->
+                <RowDefinition Height="Auto"/>
+                <!-- Device / Motion / Homing / Jog -->
+                <RowDefinition Height="Auto"/>
+                <!-- Point to point | Continuous -->
+            </Grid.RowDefinitions>
+
+            <!-- ============ Axis Selector + configured parameters ============ -->
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="6,4,0,6">
+                <ComboBox Width="260" Height="36" VerticalContentAlignment="Center"
+                      ItemsSource="{Binding Axes}"
+                      SelectedItem="{Binding SelectedAxis, Mode=TwoWay}"/>
+
+                <!-- Read-only parameters of the selected axis, from the same
+                 Axis_Parameters.xml that Settings > Axis Parameters edits. Informational
+                 only: the operator previously had to leave Manual to find out what pitch
+                 or homing velocity an axis was configured with. Hidden entirely when the
+                 axis has no row in the profile, rather than showing a rank of dashes. -->
+                <ItemsControl ItemsSource="{Binding AxisParameters}" VerticalAlignment="Center" Margin="16,0,0,0">
+                    <ItemsControl.Style>
+                        <Style TargetType="ItemsControl">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasAxisParameters}" Value="False">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ItemsControl.Style>
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,18,0" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding Label}" FontSize="{DynamicResource Nova.FontSize.Caption}"
+                                       Foreground="{DynamicResource ThirdlyTextBrush}" VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding Value}" FontSize="{DynamicResource Nova.FontSize.Caption}" FontWeight="SemiBold"
+                                       Margin="6,0,0,0" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+
+            <!-- ============ Device Status | Live Values ============ -->
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.5*"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Device status chips -->
+                <Border Grid.Column="0" Style="{StaticResource ManualCard}">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+                            <iconPacks:PackIconLucide Kind="Info" Width="15" Height="15" VerticalAlignment="Center"
+                                                  Margin="0,0,8,0" Foreground="{DynamicResource PrimaryBrush}"/>
+                            <TextBlock Text="DEVICE STATUS" Style="{StaticResource SectionHeader}" Margin="0"/>
+                        </StackPanel>
+
+                        <!-- Chip group centered in the remaining card area (even spacing on all sides) -->
+                        <ItemsControl ItemsSource="{Binding DeviceStatus}" ItemTemplate="{StaticResource StatusChipTemplate}"
+                                  HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </DockPanel>
+                </Border>
+
+                <!-- Live values -->
+                <Border Grid.Column="1" Style="{StaticResource ManualCard}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <iconPacks:PackIconLucide Kind="Activity" Width="15" Height="15" VerticalAlignment="Center"
+                                                  Margin="0,0,8,0" Foreground="{DynamicResource PrimaryBrush}"/>
+                            <TextBlock Text="LIVE VALUES" Style="{StaticResource SectionHeader}" Margin="0"/>
+                        </StackPanel>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="14"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="ACTUAL POSITION" Style="{StaticResource MetricLabel}"/>
+                                <Grid>
+                                    <Border Background="{DynamicResource PrimaryBrush}" Opacity="0.08" CornerRadius="8"/>
+                                    <StackPanel Orientation="Horizontal" Margin="12,6">
+                                        <TextBlock Text="{Binding ActualPosition, StringFormat={}{0:0.00}}"
+                                               FontFamily="Consolas, Cascadia Mono, monospace" FontSize="{DynamicResource Nova.FontSize.ReadoutLarge}" FontWeight="Bold"
+                                               Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Center"/>
+                                        <TextBlock Text="MM" FontSize="{DynamicResource Nova.FontSize.Caption}" FontWeight="Bold" Margin="8,0,0,4"
+                                               Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Bottom"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="ACTUAL VELOCITY" Style="{StaticResource MetricLabel}"/>
+                                <Grid>
+                                    <Border Background="{DynamicResource PrimaryBrush}" Opacity="0.08" CornerRadius="8"/>
+                                    <StackPanel Orientation="Horizontal" Margin="12,6">
+                                        <TextBlock Text="{Binding ActualSpeed, StringFormat={}{0:0.00}}"
+                                               FontFamily="Consolas, Cascadia Mono, monospace" FontSize="{DynamicResource Nova.FontSize.ReadoutLarge}" FontWeight="Bold"
+                                               Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Center"/>
+                                        <TextBlock Text="MM/S" FontSize="{DynamicResource Nova.FontSize.Caption}" FontWeight="Bold" Margin="8,0,0,4"
+                                               Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Bottom"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- ============ Device / Motion / Homing / Jog ============ -->
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1.3*"/>
+                    <ColumnDefinition Width="1.3*"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Device control (Enable toggle kept as-is) -->
+                <Border Grid.Column="0" Style="{StaticResource ManualCard}">
+                    <StackPanel>
+                        <TextBlock Text="DEVICE CONTROL" Style="{StaticResource SectionHeader}"/>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
+                            <TextBlock Text="Enable" FontSize="{DynamicResource Nova.FontSize.Body}" VerticalAlignment="Center"
+                                   Margin="0,0,12,0" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                            <ToggleButton Style="{StaticResource ToggleButtonSwitch}"
+                                      IsChecked="{Binding IsEnabled, Mode=TwoWay}"/>
+                        </StackPanel>
+
+                        <Button Style="{StaticResource DangerOutlineButton}" Command="{Binding ClearErrorCommand}"
+                            HorizontalAlignment="Center" Margin="0,24,0,0">
+                            <StackPanel Orientation="Horizontal">
+                                <iconPacks:PackIconLucide Kind="RotateCcw" Width="13" Height="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Clear error" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- The drive's own state word (AdvantechAxis.GetAxisStatus()). The
+                         chips above say enabled / running / faulted; this says exactly
+                         what the drive thinks it is doing, which is what an engineer
+                         needs when an axis refuses a command and no chip explains it.
+                         Verbatim, so it matches the vendor documentation. -->
+                        <TextBlock Text="AXIS STATE" Style="{StaticResource MetricLabel}"
+                               HorizontalAlignment="Center" Margin="0,24,0,6"/>
+                        <Grid HorizontalAlignment="Center">
+                            <Border Background="{DynamicResource PrimaryBrush}" Opacity="0.08" CornerRadius="8"/>
+                            <TextBlock Text="{Binding AxisState}" Margin="12,5"
+                                   FontFamily="Consolas, Cascadia Mono, monospace"
+                                   FontSize="{DynamicResource Nova.FontSize.Caption}" FontWeight="Bold"
+                                   TextAlignment="Center" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource PrimaryBrush}" VerticalAlignment="Center"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Motion control -->
+                <Border Grid.Column="1" Style="{StaticResource ManualCard}">
+                    <StackPanel>
+                        <TextBlock Text="MOTION CONTROL" Style="{StaticResource SectionHeader}"/>
+
+                        <TextBox Style="{StaticResource PositionField}" hc:InfoElement.Placeholder="Position (mm)"
+                             Text="{Binding Position, UpdateSourceTrigger=PropertyChanged}"/>
+                        <TextBox Style="{StaticResource PlaceholderField}" hc:InfoElement.Placeholder="{Binding VelocityHint}"
+                             Text="{Binding Speed, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,8,0,0">
+                            <Button Style="{StaticResource ActionButton}" Command="{Binding MoveCommand}">
+                                <StackPanel Orientation="Horizontal">
+                                    <iconPacks:PackIconLucide Kind="Play" Width="13" Height="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Start" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Style="{StaticResource StopButton}" Command="{Binding StopCommand}" Margin="10,0,0,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <iconPacks:PackIconLucide Kind="Square" Width="13" Height="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Stop" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Homing control -->
+                <Border Grid.Column="2" Style="{StaticResource ManualCard}">
+                    <StackPanel>
+                        <TextBlock Text="HOMING CONTROL" Style="{StaticResource SectionHeader}"/>
+
+                        <TextBox Style="{StaticResource PlaceholderField}" hc:InfoElement.Placeholder="{Binding HomeVelocityHint}"
+                             Text="{Binding HomeVelocity, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,56,0,0">
+                            <Button Style="{StaticResource ActionButton}" Command="{Binding HomeCommand}">
+                                <StackPanel Orientation="Horizontal">
+                                    <iconPacks:PackIconLucide Kind="House" Width="13" Height="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Home" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Style="{StaticResource StopButton}" Command="{Binding HomeStopCommand}" Margin="10,0,0,0">
+                                <StackPanel Orientation="Horizontal">
+                                    <iconPacks:PackIconLucide Kind="Square" Width="13" Height="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Stop" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Jog control -->
+                <Border Grid.Column="3" Style="{StaticResource ManualCard}">
+                    <StackPanel>
+                        <TextBlock Text="JOG CONTROL" Style="{StaticResource SectionHeader}"/>
+
+                        <TextBox Style="{StaticResource PlaceholderField}" hc:InfoElement.Placeholder="{Binding VelocityHint}"
+                             Text="{Binding JogSpeed, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <!-- Jog runs only while the button is held down (see the PreviewMouseDown /
+                         PreviewMouseUp handlers below); operators kept clicking once and
+                         reporting the axis "did not move". -->
+                        <TextBlock Text="Press and Hold" HorizontalAlignment="Center" Margin="0,16,0,0"
+                               FontSize="{DynamicResource Nova.FontSize.Caption}"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+
+                        <Grid Margin="0,24,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Style="{StaticResource OutlineButton}" MinWidth="0"
+                                PreviewMouseDown="JogReverse_PreviewMouseDown"
+                                PreviewMouseUp="Jog_PreviewMouseUp"
+                                MouseLeave="Jog_MouseLeave">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Jog" VerticalAlignment="Center"/>
+                                    <iconPacks:PackIconLucide Kind="Minus" Width="13" Height="13" Margin="6,0,0,0" VerticalAlignment="Bottom"/>
+
+                                </StackPanel>
+                            </Button>
+                            <Button Grid.Column="2" Style="{StaticResource OutlineButton}" MinWidth="0"
+                                PreviewMouseDown="JogForward_PreviewMouseDown"
+                                PreviewMouseUp="Jog_PreviewMouseUp"
+                                MouseLeave="Jog_MouseLeave">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Jog" VerticalAlignment="Center"/>
+                                    <iconPacks:PackIconLucide Kind="Plus" Width="13" Height="13" Margin="6,0,0,0" VerticalAlignment="Bottom"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- ============ Point to point | Continuous ============ -->
+            <Grid Grid.Row="3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3.6*"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Point to point control -->
+                <Border Grid.Column="0" Style="{StaticResource ManualCard}" VerticalAlignment="Top">
+                    <StackPanel>
+                        <TextBlock Text="POINT TO POINT CONTROL" Style="{StaticResource SectionHeader}"/>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="14"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="14"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBox Grid.Row="0" Grid.Column="0" Style="{StaticResource PositionField}"
+                                 hc:InfoElement.Placeholder="Start position (mm)"
+                                 Text="{Binding StartPosition, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBox Grid.Row="0" Grid.Column="2" Style="{StaticResource PlaceholderField}"
+                                 hc:InfoElement.Placeholder="{Binding VelocityHint}"
+                                 Text="{Binding PointToPointSpeed, UpdateSourceTrigger=PropertyChanged}"/>
+                            <!-- MaxLength is V3's PPCIterationLen: the count is capped, so a
+                             fourth digit can never be part of a valid entry and is
+                             refused at the keyboard rather than at the Start button. -->
+                            <TextBox Grid.Row="0" Grid.Column="4" Style="{StaticResource CountField}"
+                                 hc:InfoElement.Placeholder="{Binding IterationHint}"
+                                 MaxLength="{Binding IterationDigits}"
+                                 Text="{Binding Iterations, UpdateSourceTrigger=PropertyChanged}"/>
+
+                            <TextBox Grid.Row="1" Grid.Column="0" Style="{StaticResource PositionField}"
+                                 hc:InfoElement.Placeholder="End position (mm)"
+                                 Text="{Binding EndPosition, UpdateSourceTrigger=PropertyChanged}"/>
+                            <TextBox Grid.Row="1" Grid.Column="2" Style="{StaticResource PlaceholderField}"
+                                 hc:InfoElement.Placeholder="Wait (sec)"
+                                 Text="{Binding Wait, UpdateSourceTrigger=PropertyChanged}"/>
+
+                            <StackPanel Grid.Row="1" Grid.Column="4" Orientation="Horizontal">
+                                <Button Style="{StaticResource ActionButton}" Command="{Binding PointToPointMoveCommand}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <iconPacks:PackIconLucide Kind="Play" Width="13" Height="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Start" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource StopButton}" Command="{Binding PointToPointStopCommand}" Margin="10,0,0,0">
+                                    <StackPanel Orientation="Horizontal">
+                                        <iconPacks:PackIconLucide Kind="Square" Width="13" Height="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                        <TextBlock Text="Stop" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Continuous motion -->
+                <Border Grid.Column="1" Style="{StaticResource ManualCard}" VerticalAlignment="Top">
+                    <StackPanel>
+                        <TextBlock Text="CONTINUOUS MOTION" Style="{StaticResource SectionHeader}"/>
+
+                        <TextBox Style="{StaticResource PlaceholderField}" hc:InfoElement.Placeholder="{Binding VelocityHint}"
+                             Text="{Binding ContinuousSpeed, UpdateSourceTrigger=PropertyChanged}"/>
+
+                        <!-- Continuous motion runs until told otherwise, so it needs its own
+                         Stop like every other motion block. ContinuousStopCommand was
+                         already on the view model; only the button was missing. -->
+                        <Grid Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Style="{StaticResource OutlineButton}" MinWidth="0"
+                                ToolTip="Continuous reverse"
+                                Command="{Binding ContinuousReverseCommand}">
+                                <iconPacks:PackIconLucide Kind="Undo2" Width="16" Height="16"/>
+                            </Button>
+                            <Button Grid.Column="2" Style="{StaticResource StopButton}" MinWidth="0"
+                                ToolTip="Stop continuous motion"
+                                Command="{Binding ContinuousStopCommand}">
+                                <iconPacks:PackIconLucide Kind="Square" Width="16" Height="16"/>
+                            </Button>
+                            <Button Grid.Column="4" Style="{StaticResource OutlineButton}" MinWidth="0"
+                                ToolTip="Continuous forward"
+                                Command="{Binding ContinuousForwardCommand}">
+                                <iconPacks:PackIconLucide Kind="Redo2" Width="16" Height="16"/>
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

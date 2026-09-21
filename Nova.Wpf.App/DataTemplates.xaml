@@ -1,0 +1,71 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:manualVm="clr-namespace:Nova.ViewModels.Pages.Manual;assembly=Nova.ViewModels"
+                    xmlns:settingsVm="clr-namespace:Nova.ViewModels.Pages.Settings;assembly=Nova.ViewModels"
+                    xmlns:recipeVm="clr-namespace:Nova.ViewModels.Pages.Recipe;assembly=Nova.ViewModels"
+                    xmlns:shellsVm="clr-namespace:Nova.ViewModels.Shells;assembly=Nova.ViewModels"
+                    xmlns:manualViews="clr-namespace:Nova.Wpf.App.Views.Pages.Manual"
+                    xmlns:settingsViews="clr-namespace:Nova.Wpf.App.Views.Pages.Settings"
+                    xmlns:recipeViews="clr-namespace:Nova.Wpf.App.Views.Pages.Recipe"
+                    xmlns:shellsViews="clr-namespace:Nova.Wpf.App.Views.Shells"
+                    xmlns:authVm="clr-namespace:Nova.ViewModels.Auth;assembly=Nova.ViewModels"
+                    xmlns:authViews="clr-namespace:Nova.Wpf.App.Views.Auth"
+                    xmlns:audioVm="clr-namespace:Nova.ViewModels.Pages.Audio;assembly=Nova.ViewModels"
+                    xmlns:audioViews="clr-namespace:Nova.Wpf.App.Views.Pages.Audio">
+
+    <!-- Shell Mapping -->
+    <DataTemplate DataType="{x:Type shellsVm:AuthShellViewModel}">
+        <shellsViews:AuthShellView />
+    </DataTemplate>
+
+    <!-- Audio/Home shell (Audio SW DFM v5.4 slide 42). The only shell the window
+         shows; this application drives one Audio machine. -->
+    <DataTemplate DataType="{x:Type shellsVm:AudioShellViewModel}">
+        <shellsViews:AudioShellView />
+    </DataTemplate>
+
+    <!-- Audio/Home pages, one per indicator-bar tab (DFM v5.4 slide 42). -->
+    <DataTemplate DataType="{x:Type audioVm:AudioHomeViewModel}">
+        <audioViews:AudioHomeView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type audioVm:AudioAlarmViewModel}">
+        <audioViews:AudioAlarmView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type audioVm:AudioConfigViewModel}">
+        <audioViews:AudioConfigView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type audioVm:AudioDataViewModel}">
+        <audioViews:AudioDataView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type audioVm:AudioVisionViewModel}">
+        <audioViews:AudioVisionView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type audioVm:AudioSettingsViewModel}">
+        <audioViews:AudioSettingsView />
+    </DataTemplate>
+
+    <!-- Kept for any tab added to the bar ahead of its page. Nothing routes to it
+         now that all six are built. -->
+    <DataTemplate DataType="{x:Type audioVm:AudioPlaceholderViewModel}">
+        <audioViews:AudioPlaceholderView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type authVm:LoginViewModel}">
+        <authViews:LoginView />
+    </DataTemplate>
+
+    <!-- Hosted screens. None of these is navigated to: Manual is the content of the
+         Home page's Vendor pane (slide 57), and the machine-configuration tree and
+         Recipe are the two sections of the Config page's Machine Configs area
+         (slide 58). They are mapped here so the ContentControl that hosts each one
+         resolves its view. -->
+    <DataTemplate DataType="{x:Type manualVm:ManualViewModel}">
+        <manualViews:ManualView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type settingsVm:SettingsViewModel}">
+        <settingsViews:SettingsView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type recipeVm:RecipeViewModel}">
+        <recipeViews:RecipeView />
+    </DataTemplate>
+
+</ResourceDictionary>

@@ -1,0 +1,65 @@
+<UserControl x:Class="Nova.Wpf.App.Views.Pages.Manual.ManualView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:manualVm="clr-namespace:Nova.ViewModels.Pages.Manual;assembly=Nova.ViewModels"
+             xmlns:local="clr-namespace:Nova.Wpf.App.Views.Pages.Manual"
+             Background="Transparent">
+
+    <!-- Segmented chip strip + icon/label header come from the shared implicit
+         TabControl/TabItem styles (Nova.Wpf.UI/Styles/TabStyles.xaml).
+
+         No margin: the host that places this view owns the inset, so that this tab
+         strip lines up with the one above it. Adding one here put the two strips on
+         different vertical lines. -->
+    <Grid>
+        <TabControl ItemsSource="{Binding Tabs}"
+                    SelectedItem="{Binding SelectedTab}">
+            <TabControl.Resources>
+                <!-- Content templates: only Axis is built out -->
+                <DataTemplate DataType="{x:Type manualVm:AxisControlViewModel}">
+                    <local:AxisControlView/>
+                </DataTemplate>
+
+                <DataTemplate DataType="{x:Type manualVm:StepperControlViewModel}">
+                    <local:StepperControlView/>
+                </DataTemplate>
+
+                <DataTemplate DataType="{x:Type manualVm:CylinderControlViewModel}">
+                    <local:CylinderControlView/>
+                </DataTemplate>
+
+                <DataTemplate DataType="{x:Type manualVm:VacuumControlViewModel}">
+                    <local:VacuumControlView/>
+                </DataTemplate>
+
+                <DataTemplate DataType="{x:Type manualVm:CameraControlViewModel}">
+                    <local:CameraControlView/>
+                </DataTemplate>
+
+                <!-- Scanner / Light Control / SFC &amp; PDCA share the console-style view -->
+                <DataTemplate DataType="{x:Type manualVm:ScannerControlViewModel}">
+                    <local:ConsoleDeviceView/>
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type manualVm:LightControlViewModel}">
+                    <local:ConsoleDeviceView/>
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type manualVm:SfcPdcaControlViewModel}">
+                    <local:ConsoleDeviceView/>
+                </DataTemplate>
+
+                <DataTemplate DataType="{x:Type manualVm:RobotControlViewModel}">
+                    <local:RobotControlView/>
+                </DataTemplate>
+
+                <DataTemplate DataType="{x:Type manualVm:ManualPlaceholderViewModel}">
+                    <Border Background="{DynamicResource RegionBrush}" CornerRadius="6"
+                            Padding="20" Margin="0,8,0,0" Effect="{StaticResource EffectShadow1}">
+                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center"
+                                   FontSize="{DynamicResource Nova.FontSize.Heading}" Foreground="{DynamicResource SecondaryTextBrush}"
+                                   Text="{Binding Title, StringFormat='{}{0} — not yet implemented'}"/>
+                    </Border>
+                </DataTemplate>
+            </TabControl.Resources>
+        </TabControl>
+    </Grid>
+</UserControl>

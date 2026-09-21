@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>Nova.Wpf.UI</AssemblyName>
+    <RootNamespace>Nova.Wpf.UI</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="HandyControl" Version="3.5.1" />
+    <PackageReference Include="MahApps.Metro.IconPacks.Lucide" Version="6.2.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Nova.Abstractions\Nova.Abstractions.csproj" />
+    <ProjectReference Include="..\Nova.ViewModels\Nova.ViewModels.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Indicator-bar artwork from the Audio SW DFM v5.4 package ("7. Icons\GUI
+         Icons"), downsampled from ~4000px to 192px square / 96px tall. Embedded as
+         Resource, not Content, so Assets/AudioIcons.cs can address them by pack URI
+         and a deployment cannot lose them. -->
+    <Resource Include="Assets\Icons\*.png" />
+  </ItemGroup>
+</Project>

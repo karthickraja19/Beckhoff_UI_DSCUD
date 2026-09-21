@@ -1,0 +1,610 @@
+<UserControl x:Class="Nova.Wpf.App.Views.Pages.Audio.AudioHomeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
+             xmlns:converters="clr-namespace:Nova.Wpf.App.Converters"
+             FontFamily="{DynamicResource Audio.FontFamily}"
+             Background="Transparent">
+
+    <!-- ================================================================== -->
+    <!-- HOME PAGE -->
+    <!-- Audio SW DFM v5.4 slide 43 "Home Page Formatting" dimensions it: -->
+    <!--   left  column  2/3 width : State Changes (1/2 h) over -->
+    <!--                             Error Statistics (1/2 h) -->
+    <!--   right column  1/3 width : I/O Summary (1/3 h), -->
+    <!--                             Parameter Dashboard (1/3 h), -->
+    <!--                             Station Card (1/3 h) -->
+    <!-- Those proportions are the spec, so they are star sizes here rather -->
+    <!-- than fixed heights: the page holds its ratios at any panel size. -->
+    <!-- ================================================================== -->
+
+    <UserControl.Resources>
+        <converters:RatioToStarConverter x:Key="RatioToStar"/>
+        <converters:BoolToBrushKeyConverter x:Key="BoolToBrushKey"/>
+        <converters:AudioBoolToVisibilityConverter x:Key="BoolToVisibility"/>
+
+        <!-- A card's title row. Repeated on six panels, so it is a template
+             rather than six copies of the same two setters. -->
+        <Style x:Key="CardTitle" TargetType="TextBlock" BasedOn="{StaticResource Audio.Title3}">
+            <Setter Property="Margin" Value="16,12,16,8"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>   <!-- 0  Main | Vendor + sample-data notice -->
+            <RowDefinition Height="*"/>      <!-- 1  dashboard -->
+        </Grid.RowDefinitions>
+
+        <!-- ============================================================== -->
+        <!-- MAIN | VENDOR  (slides 54 and 57) -->
+        <!-- ============================================================== -->
+        <Grid Grid.Row="0" Margin="4,0,4,6">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <ListBox Grid.Column="0"
+                     Style="{StaticResource Audio.SegmentedControl}"
+                     ItemsSource="{Binding Tabs}"
+                     SelectedItem="{Binding SelectedTab, Mode=TwoWay}"
+                     AutomationProperties.Name="Dashboard view"/>
+
+            <!-- Seeded panels are labelled on screen, not just in a comment. An
+                 operator must be able to tell a real yield from a placeholder. -->
+            <Border Grid.Column="2"
+                    Background="{DynamicResource Audio.System.Gray5Brush}"
+                    CornerRadius="{DynamicResource Audio.Radius.Small}"
+                    Padding="10,3"
+                    VerticalAlignment="Center"
+                    Visibility="{Binding IsSampleData, Converter={StaticResource BoolToVisibility}}"
+                    ToolTip="State Changes, Error Statistics and the Parameter Dashboard are showing seeded figures. No service records them yet.">
+                <TextBlock Style="{StaticResource Audio.Footnote}"
+                           Text="Charts show sample data"/>
+            </Border>
+        </Grid>
+
+        <!-- ============================================================== -->
+        <!-- MAIN TAB -->
+        <!-- ============================================================== -->
+        <Grid Grid.Row="1"
+              Visibility="{Binding IsMainTab, Converter={StaticResource BoolToVisibility}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*"/>   <!-- slide 43: 2/3 width -->
+                <ColumnDefinition Width="1*"/>   <!-- slide 43: 1/3 width -->
+            </Grid.ColumnDefinitions>
+
+            <!-- LEFT COLUMN -->
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>  <!-- slide 43: 1/2 height -->
+                    <RowDefinition Height="*"/>  <!-- slide 43: 1/2 height -->
+                </Grid.RowDefinitions>
+
+                <!-- State Changes -->
+                <Border Grid.Row="0" Style="{StaticResource Audio.Card}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Style="{StaticResource CardTitle}" Text="State Changes"/>
+
+                        <lvc:CartesianChart Grid.Row="1"
+                                            Margin="12,0,16,0"
+                                            Series="{Binding StateChangeSeries}"
+                                            XAxes="{Binding StateChangeXAxes}"
+                                            YAxes="{Binding StateChangeYAxes}"
+                                            TooltipPosition="Top"
+                                            LegendPosition="Hidden"/>
+
+                        <!-- The chart's own legend is hidden and replaced with this
+                             one, so the three swatches are the DFM's exact state
+                             colours and sit where the slide puts them. -->
+                        <StackPanel Grid.Row="2" Orientation="Horizontal"
+                                    HorizontalAlignment="Center" Margin="0,8,0,12">
+                            <StackPanel Orientation="Horizontal" Margin="0,0,16,0">
+                                <Rectangle Width="12" Height="12" RadiusX="2" RadiusY="2"
+                                           Fill="{DynamicResource Audio.State.RunningBrush}"
+                                           Stroke="{DynamicResource Audio.SeparatorBrush}" StrokeThickness="1"/>
+                                <TextBlock Style="{StaticResource Audio.Footnote}" Text="Running" Margin="6,0,0,0"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,16,0">
+                                <Rectangle Width="12" Height="12" RadiusX="2" RadiusY="2"
+                                           Fill="{DynamicResource Audio.State.IdleBrush}"
+                                           Stroke="{DynamicResource Audio.SeparatorBrush}" StrokeThickness="1"/>
+                                <TextBlock Style="{StaticResource Audio.Footnote}" Text="Idle" Margin="6,0,0,0"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <Rectangle Width="12" Height="12" RadiusX="2" RadiusY="2"
+                                           Fill="{DynamicResource Audio.State.DowntimeBrush}"
+                                           Stroke="{DynamicResource Audio.SeparatorBrush}" StrokeThickness="1"/>
+                                <TextBlock Style="{StaticResource Audio.Footnote}" Text="Downtime" Margin="6,0,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Error Statistics -->
+                <!-- Slide 54: "Click space areas to jump to error tab", so the
+                     whole panel is the target rather than a link inside it. -->
+                <Button Grid.Row="1"
+                        Style="{StaticResource Audio.CardButton}"
+                        Command="{Binding ShowAlarmPageCommand}"
+                        ToolTip="Open the Alarm page"
+                        AutomationProperties.Name="Error statistics - open the Alarm page">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0">
+                            <TextBlock Style="{StaticResource CardTitle}" Text="Error Statistics"/>
+
+                            <!-- Slide 43's filter slider, shown as its two timestamp
+                                 boxes. The slider itself needs the seven days of
+                                 locally stored data it filters, which nothing records
+                                 yet, so the range is displayed and not yet draggable. -->
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
+                                        VerticalAlignment="Center" Margin="0,8,16,0">
+                                <Border Background="{DynamicResource Audio.Surface.RecessedBrush}"
+                                        CornerRadius="{DynamicResource Audio.Radius.Small}" Padding="8,3">
+                                    <TextBlock Style="{StaticResource Audio.Caption1}"
+                                               Text="{Binding ErrorFilterStart, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}"/>
+                                </Border>
+                                <TextBlock Style="{StaticResource Audio.Caption1}" Text="—" Margin="6,0"/>
+                                <Border Background="{DynamicResource Audio.Surface.RecessedBrush}"
+                                        CornerRadius="{DynamicResource Audio.Radius.Small}" Padding="8,3">
+                                    <TextBlock Style="{StaticResource Audio.Caption1}"
+                                               Text="{Binding ErrorFilterEnd, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}"/>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+
+                        <ItemsControl Grid.Row="1" ItemsSource="{Binding ErrorStatistics}"
+                                      Margin="16,0,16,12" VerticalAlignment="Center">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,3">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="120"/>  <!-- category -->
+                                            <ColumnDefinition Width="*"/>    <!-- bar -->
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Grid.Column="0"
+                                                   Style="{StaticResource Audio.Footnote}"
+                                                   Text="{Binding Label}"
+                                                   TextAlignment="Right"
+                                                   Margin="0,0,10,0"/>
+
+                                        <!-- Two star columns proportioned by Ratio, so
+                                             the value label sits immediately after the
+                                             bar's end exactly as the slide draws it. -->
+                                        <Grid Grid.Column="1">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="{Binding Ratio, Converter={StaticResource RatioToStar}}"/>
+                                                <ColumnDefinition Width="{Binding Ratio, Converter={StaticResource RatioToStar}, ConverterParameter=invert}"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <Border Grid.Column="0" Height="16"
+                                                    Background="{DynamicResource Audio.UnitSn.FailBrush}"
+                                                    CornerRadius="3"
+                                                    HorizontalAlignment="Stretch"/>
+
+                                            <TextBlock Grid.Column="1"
+                                                       Style="{StaticResource Audio.Caption1}"
+                                                       Text="{Binding CountText}"
+                                                       Margin="6,0,0,0"
+                                                       VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </Grid>
+                </Button>
+            </Grid>
+
+            <!-- RIGHT COLUMN -->
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>  <!-- slide 43: 1/3 height -->
+                    <RowDefinition Height="*"/>  <!-- slide 43: 1/3 height -->
+                    <RowDefinition Height="*"/>  <!-- slide 43: 1/3 height -->
+                </Grid.RowDefinitions>
+
+                <!-- I/O Summary -->
+                <!-- Slide 54: "Click space areas to jump to data tab". -->
+                <Button Grid.Row="0"
+                        Style="{StaticResource Audio.CardButton}"
+                        Command="{Binding ShowDataPageCommand}"
+                        ToolTip="Open the Data page"
+                        AutomationProperties.Name="I/O summary - open the Data page">
+                    <Grid Margin="16,12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Unit SN banner. Slide 43: "Each unit status shows as it
+                             completes processing. Failed units turn SN background
+                             red" - DFM green #00F900 / red #EC5D57. -->
+                        <Border Grid.Row="0" MinHeight="44"
+                                CornerRadius="{DynamicResource Audio.Radius.Field}"
+                                Background="{Binding LastUnitPassed,
+                                                     Converter={StaticResource BoolToBrushKey},
+                                                     ConverterParameter='Audio.UnitSn.PassBrush|Audio.UnitSn.FailBrush'}">
+                            <TextBlock Style="{StaticResource Audio.Title2}"
+                                       Text="{Binding LastUnitSn}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                                       Foreground="{Binding LastUnitPassed,
+                                                            Converter={StaticResource BoolToBrushKey},
+                                                            ConverterParameter='Audio.UnitSn.PassForegroundBrush|Audio.UnitSn.FailForegroundBrush'}"/>
+                        </Border>
+
+                        <TextBlock Grid.Row="1" Style="{StaticResource Audio.Headline}"
+                                   Text="I/O Summary" HorizontalAlignment="Center" Margin="0,8,0,4"/>
+
+                        <!-- Scrolled, not just laid out: this card is one third of the
+                             column height by spec, and five rows plus the SN banner do
+                             not always fit at every window size. Without the scroll
+                             viewer the last rows are silently clipped, which on a
+                             summary panel reads as "no UPH" rather than "scroll". -->
+                        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled">
+                            <ItemsControl ItemsSource="{Binding IoSummary}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,1">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Style="{StaticResource Audio.Footnote}"
+                                                       Text="{Binding Label}"/>
+                                            <TextBlock Grid.Column="1" Style="{StaticResource Audio.CalloutMono}"
+                                                       Text="{Binding Value}"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Button>
+
+                <!-- Parameter Dashboard -->
+                <Border Grid.Row="1" Style="{StaticResource Audio.Card}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Style="{StaticResource CardTitle}"
+                                   Text="Parameter Dashboard" HorizontalAlignment="Center"/>
+
+                        <!-- Column header. Four columns shared with the rows below;
+                             the widths are repeated rather than shared because a
+                             SharedSizeGroup across a virtualised ItemsControl costs
+                             more than it saves at eight rows. -->
+                        <Border Grid.Row="1" Style="{StaticResource Audio.ListHeaderRow}">
+                            <Grid Margin="12,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="70"/>
+                                    <ColumnDefinition Width="56"/>
+                                    <ColumnDefinition Width="56"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Style="{StaticResource Audio.TableHeaderText}" Text="Key Name"/>
+                                <TextBlock Grid.Column="1" Style="{StaticResource Audio.TableHeaderText}" Text="Value" TextAlignment="Right"/>
+                                <TextBlock Grid.Column="2" Style="{StaticResource Audio.TableHeaderText}" Text="LSL" TextAlignment="Right"/>
+                                <TextBlock Grid.Column="3" Style="{StaticResource Audio.TableHeaderText}" Text="USL" TextAlignment="Right"/>
+                            </Grid>
+                        </Border>
+
+                        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding Parameters}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border>
+                                            <Border.Style>
+                                                <Style TargetType="Border" BasedOn="{StaticResource Audio.ListRow}">
+                                                    <Style.Triggers>
+                                                        <!-- Slide 43: OOS params at the
+                                                             top of the list, in red. The
+                                                             sort is the view model's; this
+                                                             is the red. -->
+                                                        <DataTrigger Binding="{Binding IsOutOfSpec}" Value="True">
+                                                            <Setter Property="Background"
+                                                                    Value="{DynamicResource Audio.UnitSn.FailBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <Grid Margin="12,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="70"/>
+                                                    <ColumnDefinition Width="56"/>
+                                                    <ColumnDefinition Width="56"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" Style="{StaticResource Audio.Callout}"
+                                                           Text="{Binding KeyName}" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Grid.Column="1" Style="{StaticResource Audio.CalloutMono}"
+                                                           Text="{Binding Value}" TextAlignment="Right"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Grid.Column="2" Style="{StaticResource Audio.CalloutMono}"
+                                                           Text="{Binding LowerLimitText}" TextAlignment="Right"/>
+                                                <TextBlock Grid.Column="3" Style="{StaticResource Audio.CalloutMono}"
+                                                           Text="{Binding UpperLimitText}" TextAlignment="Right"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+
+                <!-- Station card -->
+                <Border Grid.Row="2">
+                    <Border.Style>
+                        <Style TargetType="Border" BasedOn="{StaticResource Audio.Card}">
+                            <Style.Triggers>
+                                <!-- Slide 40: the card goes orange (#FF8F00) while the
+                                     machine is under remote qualification. -->
+                                <DataTrigger Binding="{Binding IsRemoteQualification}" Value="True">
+                                    <Setter Property="Background"
+                                            Value="{DynamicResource Audio.StationCard.RemoteQualBrush}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+
+                    <Grid Margin="16,12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>   <!-- station name -->
+                            <RowDefinition Height="*"/>      <!-- facts -->
+                            <RowDefinition Height="Auto"/>   <!-- links -->
+                            <RowDefinition Height="Auto"/>   <!-- log buttons -->
+                            <RowDefinition Height="Auto"/>   <!-- sensor expander -->
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Style="{StaticResource Audio.Title3}"
+                                   Text="{Binding StationTitle}" HorizontalAlignment="Center"/>
+
+                        <StackPanel Grid.Row="1" Margin="0,8,0,0">
+                            <Grid Margin="0,1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource Audio.FieldLabel}" Text="Site:"/>
+                                    <TextBlock Style="{StaticResource Audio.Footnote}"
+                                               Foreground="{DynamicResource Audio.Text.PrimaryBrush}"
+                                               Text="{Binding Site}" Margin="6,0,0,0"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource Audio.FieldLabel}" Text="Vendor:"/>
+                                    <TextBlock Style="{StaticResource Audio.Footnote}"
+                                               Foreground="{DynamicResource Audio.Text.PrimaryBrush}"
+                                               Text="{Binding Vendor}" Margin="6,0,0,0"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,1">
+                                <TextBlock Style="{StaticResource Audio.FieldLabel}" Text="SW Version:"/>
+                                <TextBlock Style="{StaticResource Audio.Caption1Mono}"
+                                           Foreground="{DynamicResource Audio.Text.PrimaryBrush}"
+                                           Text="{Binding SoftwareVersion}" Margin="6,0,0,0"/>
+                            </StackPanel>
+
+                            <!-- Slide 43: "click to open the path". -->
+                            <StackPanel Orientation="Horizontal" Margin="0,1">
+                                <TextBlock Style="{StaticResource Audio.FieldLabel}" Text="Main SW Path:"/>
+                                <Button Style="{StaticResource Audio.PlainButton}"
+                                        Height="18" Padding="6,0" Margin="2,0,0,0"
+                                        Command="{Binding OpenMainSoftwarePathCommand}"
+                                        ToolTip="{Binding MainSoftwarePath}">
+                                    <TextBlock Style="{StaticResource Audio.Caption1Mono}"
+                                               Foreground="{DynamicResource Audio.System.BlueBrush}"
+                                               Text="{Binding MainSoftwarePath}"
+                                               MaxWidth="200" TextTrimming="CharacterEllipsis"/>
+                                </Button>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" Margin="0,1">
+                                <TextBlock Style="{StaticResource Audio.FieldLabel}" Text="MS_Hash:"/>
+                                <TextBlock Style="{StaticResource Audio.Caption1Mono}"
+                                           Foreground="{DynamicResource Audio.Text.PrimaryBrush}"
+                                           Text="{Binding MainSoftwareHash}" Margin="6,0,0,0"
+                                           MaxWidth="220" TextTrimming="CharacterEllipsis"
+                                           ToolTip="{Binding MainSoftwareHash}"/>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Green when connected, red when not (slide 43). -->
+                        <ItemsControl Grid.Row="2" ItemsSource="{Binding Links}" Margin="0,8,0,0">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Rows="1"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Style="{StaticResource Audio.Caption1}"
+                                               Text="{Binding StatusText}"
+                                               HorizontalAlignment="Center"
+                                               FontWeight="SemiBold"
+                                               Foreground="{Binding IsConnected,
+                                                                    Converter={StaticResource BoolToBrushKey},
+                                                                    ConverterParameter='Audio.Link.ConnectedBrush|Audio.Link.DisconnectedBrush'}"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+
+                        <Grid Grid.Row="3" Margin="0,8,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Style="{StaticResource Audio.LogButton}"
+                                    Content="Machine Log" Command="{Binding OpenMachineLogCommand}"/>
+                            <Button Grid.Column="2" Style="{StaticResource Audio.LogButton}"
+                                    Content="HIVE Log" Command="{Binding OpenHiveLogCommand}"/>
+                        </Grid>
+
+                        <!-- Slide 54: "Show sensor connection button after login". -->
+                        <StackPanel Grid.Row="4" Margin="0,8,0,0"
+                                    Visibility="{Binding IsLoggedIn, Converter={StaticResource BoolToVisibility}}">
+                            <Button Style="{StaticResource Audio.PlainButton}"
+                                    HorizontalAlignment="Left"
+                                    Command="{Binding ToggleSensorPanelCommand}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Style="{StaticResource Audio.Footnote}"
+                                               Foreground="{DynamicResource Audio.System.BlueBrush}"
+                                               Text="Sensor Connection"/>
+                                    <!-- Disclosure caret. The glyph is a Style setter so
+                                         the trigger can swap it, which means Style
+                                         cannot also be set as an attribute here. -->
+                                    <TextBlock Margin="6,0,0,0">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock" BasedOn="{StaticResource Audio.Footnote}">
+                                                <Setter Property="Foreground" Value="{DynamicResource Audio.System.BlueBrush}"/>
+                                                <Setter Property="Text" Value="&#x25B6;"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsSensorPanelExpanded}" Value="True">
+                                                        <Setter Property="Text" Value="&#x25BC;"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Button>
+
+                            <Border Background="{DynamicResource Audio.Surface.RecessedBrush}"
+                                    CornerRadius="{DynamicResource Audio.Radius.Field}"
+                                    Padding="10,6" Margin="0,4,0,0" MaxHeight="120"
+                                    Visibility="{Binding IsSensorPanelExpanded, Converter={StaticResource BoolToVisibility}}">
+                                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                    <ItemsControl ItemsSource="{Binding Sensors}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <StackPanel Orientation="Horizontal" Margin="0,2">
+                                                    <Ellipse Width="8" Height="8" VerticalAlignment="Center"
+                                                             Fill="{Binding IsConnected,
+                                                                            Converter={StaticResource BoolToBrushKey},
+                                                                            ConverterParameter='Audio.System.GreenBrush|Audio.System.GrayBrush'}"/>
+                                                    <TextBlock Style="{StaticResource Audio.Caption1}"
+                                                               Text="{Binding Name}" Margin="8,0,0,0"/>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </Border>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- ============================================================== -->
+        <!-- VENDOR TAB  (slide 57) -->
+        <!-- ============================================================== -->
+        <Grid Grid.Row="1"
+              Visibility="{Binding IsMainTab, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}">
+
+            <!-- Nothing to host: keep the slide's own explanation of what this pane is
+                 for, so a non-semi-auto station shows a reason rather than a blank. -->
+            <Border Style="{StaticResource Audio.Card}"
+                    Visibility="{Binding HasManual, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="520">
+                    <TextBlock Style="{StaticResource Audio.Title3}" Text="Vendor"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Style="{StaticResource Audio.EmptyState}" Margin="0,8,0,0"
+                               Text="For semi-auto machines only — the manual-operation GUI for stations that require operator loading or scanning."/>
+                    <TextBlock Style="{StaticResource Audio.Caption1}" Margin="0,12,0,0"
+                               HorizontalAlignment="Center"
+                               Text="DFM v5.4 slide 57"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Manual GUI (slide 57) with the running log alongside it. 3/4 + 1/4:
+                 the manual screens carry device tables that need the width, the log is
+                 a narrow column of lines. -->
+            <Grid Visibility="{Binding HasManual, Converter={StaticResource BoolToVisibility}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3*"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Recessed, not a white card. The manual screens draw their own
+                     white panels; hosting them on white too made every panel edge
+                     disappear and the whole tab read as one blank sheet. HIG stacks
+                     white cards on the grouped grey, which is what this restores. -->
+                <!-- Padding 4 to match the Main|Vendor row's own 4px left margin, so the
+                     device tab strip inside starts on the same vertical line as the
+                     Main|Vendor strip above it rather than 16px further in. -->
+                <Border Grid.Column="0"
+                        Background="{DynamicResource Audio.Surface.GroupedBrush}"
+                        CornerRadius="{DynamicResource Audio.Radius.Card}"
+                        Padding="4">
+                    <ContentControl Content="{Binding Manual}" Focusable="False"/>
+                </Border>
+
+                <Border Grid.Column="1" Style="{StaticResource Audio.Card}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Style="{StaticResource Audio.Title3}"
+                                   Text="Running Log" Margin="16,12,16,8"/>
+
+                        <TextBlock Grid.Row="1" Style="{StaticResource Audio.EmptyState}"
+                                   Margin="16,0" VerticalAlignment="Top"
+                                   Text="Nothing logged yet."
+                                   Visibility="{Binding RunningLog.IsEmpty, Converter={StaticResource BoolToVisibility}}"/>
+
+                        <!-- Auto-height rows, not Audio.ListRow: a log line wraps to two
+                             or three lines and that style pins a single row height, which
+                             clips the overflow. -->
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      Margin="0,0,0,8">
+                            <ItemsControl ItemsSource="{Binding RunningLog.Logs}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="{DynamicResource Audio.Separator.SubtleBrush}"
+                                                BorderThickness="0,0,0,1"
+                                                Padding="16,7"
+                                                SnapsToDevicePixels="True">
+                                            <TextBlock Style="{StaticResource Audio.Caption1}"
+                                                       FontFamily="{DynamicResource Audio.FontFamily.Mono}"
+                                                       Text="{Binding}"
+                                                       TextWrapping="Wrap"
+                                                       LineHeight="16"
+                                                       LineStackingStrategy="BlockLineHeight"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

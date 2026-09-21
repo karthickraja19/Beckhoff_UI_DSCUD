@@ -1,0 +1,118 @@
+<UserControl x:Class="Nova.Wpf.App.Views.Pages.Audio.AudioVisionView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:Nova.Wpf.App.Converters"
+             FontFamily="{DynamicResource Audio.FontFamily}"
+             Background="Transparent">
+
+    <!-- ================================================================== -->
+    <!-- VISION PAGE   Audio SW DFM v5.4 slide 61                           -->
+    <!-- "Vision page shows all CCD images for current running units.        -->
+    <!--  Clicking image magnifies image and displays information for        -->
+    <!--  capture."                                                          -->
+    <!-- ================================================================== -->
+
+    <UserControl.Resources>
+        <converters:AudioBoolToVisibilityConverter x:Key="BoolToVisibility"/>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>      <!-- 3x2 grid -->
+            <RowDefinition Height="Auto"/>   <!-- detail, once a tile is chosen -->
+        </Grid.RowDefinitions>
+
+        <ItemsControl Grid.Row="0" ItemsSource="{Binding Tiles}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <UniformGrid Rows="2" Columns="3"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Button Style="{StaticResource Audio.CardButton}"
+                            Command="{Binding DataContext.SelectTileCommand,
+                                              RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            CommandParameter="{Binding}"
+                            AutomationProperties.Name="{Binding Name}">
+                        <Grid>
+                            <!-- Placeholder. Deliberately says there is no frame rather
+                                 than showing an empty rectangle, which on a vision page
+                                 reads as a dead camera. -->
+                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                                        Visibility="{Binding HasImage, Converter={StaticResource BoolToVisibility},
+                                                             ConverterParameter=invert}">
+                                <TextBlock Style="{StaticResource Audio.Title3}"
+                                           Text="{Binding Name}" HorizontalAlignment="Center"/>
+                                <TextBlock Style="{StaticResource Audio.Caption1}"
+                                           Text="no frame captured" HorizontalAlignment="Center"
+                                           Margin="0,4,0,0"/>
+                            </StackPanel>
+
+                            <!-- Selected ring. The card button already tints its border
+                                 on hover, so selection needs a heavier, persistent mark. -->
+                            <Border BorderBrush="{DynamicResource Audio.Accent.VisionBrush}"
+                                    BorderThickness="3"
+                                    CornerRadius="{DynamicResource Audio.Radius.Card}"
+                                    IsHitTestVisible="False"
+                                    Visibility="{Binding IsSelected, Converter={StaticResource BoolToVisibility}}"/>
+                        </Grid>
+                    </Button>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- Detail pane -->
+        <Border Grid.Row="1" Style="{StaticResource Audio.Card}" MinHeight="260"
+                Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}">
+            <Grid Margin="16,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="260"/>   <!-- Information -->
+                    <ColumnDefinition Width="*"/>     <!-- magnified capture -->
+                </Grid.ColumnDefinitions>
+
+                <Grid Grid.Column="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Style="{StaticResource Audio.Headline}"
+                               Text="Information" Margin="0,0,0,8"/>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding SelectedTile.Information}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Style="{StaticResource Audio.Footnote}"
+                                                   Text="{Binding Label}"/>
+                                        <TextBlock Grid.Column="1" Style="{StaticResource Audio.Caption1Mono}"
+                                                   Foreground="{DynamicResource Audio.Text.PrimaryBrush}"
+                                                   Text="{Binding Value}" Margin="12,0,0,0"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+
+                <Border Grid.Column="1"
+                        Background="{DynamicResource Audio.Surface.RecessedBrush}"
+                        CornerRadius="{DynamicResource Audio.Radius.Field}"
+                        Margin="16,0,0,0">
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="460">
+                        <TextBlock Style="{StaticResource Audio.Title3}"
+                                   Text="{Binding SelectedTile.Name}" HorizontalAlignment="Center"/>
+                        <TextBlock Style="{StaticResource Audio.EmptyState}" Margin="0,8,0,0"
+                                   Text="No frame source yet. The machine's cameras are reachable as comm devices, but nothing retrieves an image buffer from them in this build."/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

@@ -1,0 +1,173 @@
+[
+  {
+    "EnumName": "PressingModule_XAxis",
+    "CardId": 0,
+    "Name": "PressingModule_XAxis",
+    "Id": 0,
+    "Pitch": 10,
+    "Pulse": 998,
+    "PPR": 10000,
+    "Acceleration": 90000,
+    "Deceleration": 90000,
+    "HomingSpeed": 10,
+    "Speed": 10,
+    "HomingMethod": "NegDir",
+    "ConfiguredPositions": [],
+    "SoftLimits": {
+      "Positive": 0,
+      "Negative": 0
+    }
+  },
+  {
+    "EnumName": "InspectionModule_XAxis",
+    "CardId": 0,
+    "Name": "InspectionModule_XAxis",
+    "Id": 1,
+    "Pitch": 10,
+    "Pulse": 1001,
+    "PPR": 10017,
+    "Acceleration": 70000000,
+    "Deceleration": 70000000,
+    "HomingSpeed": 10,
+    "Speed": 10,
+    "HomingMethod": "NegDir",
+    "ConfiguredPositions": [],
+    "SoftLimits": {
+      "Positive": 0,
+      "Negative": 0
+    }
+  },
+  {
+    "EnumName": "InspectionModule_YAxis",
+    "CardId": 0,
+    "Name": "InspectionModule_YAxis",
+    "Id": 2,
+    "Pitch": 10,
+    "Pulse": 1000,
+    "PPR": 10002,
+    "Acceleration": 70000000,
+    "Deceleration": 70000000,
+    "HomingSpeed": 10,
+    "Speed": 10,
+    "HomingMethod": "NegDir",
+    "ConfiguredPositions": [],
+    "SoftLimits": {
+      "Positive": 0,
+      "Negative": 0
+    }
+  },
+  {
+    "EnumName": "PressingModule_ZAxis",
+    "CardId": 0,
+    "Name": "PressingModule_ZAxis",
+    "Id": 3,
+    "Pitch": 10,
+    "Pulse": 100010,
+    "PPR": 1000000,
+    "Acceleration": 50000000,
+    "Deceleration": 50000000,
+    "HomingSpeed": 10,
+    "Speed": 10,
+    "HomingMethod": "NegDir",
+    "ConfiguredPositions": [],
+    "SoftLimits": {
+      "Positive": 0,
+      "Negative": 0
+    }
+  },
+  {
+    "EnumName": "BTH_XAxis",
+    "CardId": 0,
+    "Name": "BTH_XAxis",
+    "Id": 4,
+    "Pitch": 142,
+    "Pulse": 70,
+    "PPR": 50000,
+    "Acceleration": 5000,
+    "Deceleration": 5000,
+    "HomingSpeed": 20,
+    "Speed": 20,
+    "HomingMethod": "NegDir",
+    "ConfiguredPositions": [],
+    "SoftLimits": {
+      "Positive": 0,
+      "Negative": 0
+    }
+  },
+  {
+    "EnumName": "LiftingStepper0",
+    "CardId": 0,
+    "Name": "LiftingStepper0",
+    "Id": 5,
+    "Pitch": 142,
+    "Pulse": 70,
+    "PPR": 50000,
+    "Acceleration": 5000,
+    "Deceleration": 5000,
+    "HomingSpeed": 20,
+    "Speed": 20,
+    "HomingMethod": "NegDir",
+    "ConfiguredPositions": [],
+    "SoftLimits": {
+      "Positive": 0,
+      "Negative": 0
+    }
+  },
+  {
+    "EnumName": "LiftingStepper1",
+    "CardId": 0,
+    "Name": "LiftingStepper1",
+    "Id": 6,
+    "Pitch": 142,
+    "Pulse": 70,
+    "PPR": 50000,
+    "Acceleration": 5000,
+    "Deceleration": 5000,
+    "HomingSpeed": 20,
+    "Speed": 20,
+    "HomingMethod": "NegDir",
+    "ConfiguredPositions": [],
+    "SoftLimits": {
+      "Positive": 0,
+      "Negative": 0
+    }
+  },
+  {
+    "EnumName": "LiftingStepper2",
+    "CardId": 0,
+    "Name": "LiftingStepper2",
+    "Id": 7,
+    "Pitch": 142,
+    "Pulse": 70,
+    "PPR": 50000,
+    "Acceleration": 5000,
+    "Deceleration": 5000,
+    "HomingSpeed": 20,
+    "Speed": 20,
+    "HomingMethod": "NegDir",
+    "ConfiguredPositions": [],
+    "SoftLimits": {
+      "Positive": 0,
+      "Negative": 0
+    }
+  },
+  {
+    "EnumName": "LiftingStepper3",
+    "CardId": 0,
+    "Name": "LiftingStepper3",
+    "Id": 8,
+    "Pitch": 142,
+    "Pulse": 70,
+    "PPR": 50000,
+    "Acceleration": 5000,
+    "Deceleration": 5000,
+    "HomingSpeed": 20,
+    "Speed": 20,
+    "HomingMethod": "NegDir",
+    "ConfiguredPositions": [],
+    "SoftLimits": {
+      "Positive": 0,
+      "Negative": 0
+    }
+  }
+]

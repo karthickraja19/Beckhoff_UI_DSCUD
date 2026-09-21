@@ -1,0 +1,224 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+
+    <!-- ================================================================== -->
+    <!-- AUDIO/HOME - TYPE SCALE                                            -->
+    <!--                                                                    -->
+    <!-- Apple HIG "Typography > Specifications > iOS, iPadOS Dynamic Type   -->
+    <!-- sizes > Large (default)", reproduced step for step:                 -->
+    <!--                                                                    -->
+    <!--   Style        Size  Leading  Weight     Emphasized                -->
+    <!--   LargeTitle     34      41   Regular    Bold                      -->
+    <!--   Title1         28      34   Regular    Bold                      -->
+    <!--   Title2         22      28   Regular    Bold                      -->
+    <!--   Title3         20      25   Regular    Semibold                  -->
+    <!--   Headline       17      22   Semibold   Semibold                  -->
+    <!--   Body           17      22   Regular    Semibold                  -->
+    <!--   Callout        16      21   Regular    Semibold                  -->
+    <!--   Subheadline    15      20   Regular    Semibold                  -->
+    <!--   Footnote       13      18   Regular    Semibold                  -->
+    <!--   Caption1       12      16   Regular    Semibold                  -->
+    <!--   Caption2       11      13   Regular    Semibold                  -->
+    <!--                                                                    -->
+    <!-- The iOS ramp rather than the macOS one (which tops out at 14pt      -->
+    <!-- Body) because this runs on a panel PC read standing up at the       -->
+    <!-- machine, not at a desk. HIG's own instruction for that case is      -->
+    <!-- "use font sizes that most people can read easily ... at various     -->
+    <!-- viewing distances", and 14pt Body does not survive the distance.    -->
+    <!--                                                                    -->
+    <!-- SEPARATE FROM Nova.FontSize.*. The existing app runs a 13/14/18/24  -->
+    <!-- ramp; re-pointing those keys at this one would re-lay-out every     -->
+    <!-- legacy page. Audio.* is additive and only the Audio shell and its   -->
+    <!-- six pages resolve it.                                               -->
+    <!--                                                                    -->
+    <!-- No Dynamic Type equivalent on WPF, so the scale is fixed. It is all -->
+    <!-- in one file so a site that needs it larger changes eleven numbers.  -->
+    <!-- ================================================================== -->
+
+
+    <!-- ========================= -->
+    <!-- FONT                      -->
+    <!-- ========================= -->
+
+    <!-- SF Pro is not licensed for redistribution on Windows. Segoe UI
+         Variable is the closest match available on the target OS (Windows 11):
+         a neutral humanist grotesque on the same optical plan, with real
+         optical sizes. The fallback chain degrades to Segoe UI on Windows 10
+         and to the generic sans elsewhere, so a machine without the variable
+         family still renders correctly rather than falling back to a serif. -->
+    <FontFamily x:Key="Audio.FontFamily">Segoe UI Variable Display, Segoe UI Variable, Segoe UI, Arial</FontFamily>
+
+    <!-- Tabular figures for anything a number is read out of - counts, cycle
+         times, limits, serial numbers - so digits stay column-aligned down a
+         table and a changing readout does not jitter. -->
+    <FontFamily x:Key="Audio.FontFamily.Mono">Cascadia Mono, Consolas, Courier New</FontFamily>
+
+
+    <!-- ========================= -->
+    <!-- SIZES                     -->
+    <!-- ========================= -->
+
+    <sys:Double x:Key="Audio.FontSize.LargeTitle">34</sys:Double>
+    <sys:Double x:Key="Audio.FontSize.Title1">28</sys:Double>
+    <sys:Double x:Key="Audio.FontSize.Title2">22</sys:Double>
+    <sys:Double x:Key="Audio.FontSize.Title3">20</sys:Double>
+    <sys:Double x:Key="Audio.FontSize.Headline">17</sys:Double>
+    <sys:Double x:Key="Audio.FontSize.Body">17</sys:Double>
+    <sys:Double x:Key="Audio.FontSize.Callout">16</sys:Double>
+    <sys:Double x:Key="Audio.FontSize.Subheadline">15</sys:Double>
+    <sys:Double x:Key="Audio.FontSize.Footnote">13</sys:Double>
+    <sys:Double x:Key="Audio.FontSize.Caption1">12</sys:Double>
+    <sys:Double x:Key="Audio.FontSize.Caption2">11</sys:Double>
+
+    <!-- Leading, as the matching column of the HIG table. Set as LineHeight
+         with LineStackingStrategy=BlockLineHeight on the styles below, because
+         WPF's default strategy ignores LineHeight when it is smaller than the
+         font's own ascent+descent. -->
+    <sys:Double x:Key="Audio.Leading.LargeTitle">41</sys:Double>
+    <sys:Double x:Key="Audio.Leading.Title1">34</sys:Double>
+    <sys:Double x:Key="Audio.Leading.Title2">28</sys:Double>
+    <sys:Double x:Key="Audio.Leading.Title3">25</sys:Double>
+    <sys:Double x:Key="Audio.Leading.Headline">22</sys:Double>
+    <sys:Double x:Key="Audio.Leading.Body">22</sys:Double>
+    <sys:Double x:Key="Audio.Leading.Callout">21</sys:Double>
+    <sys:Double x:Key="Audio.Leading.Subheadline">20</sys:Double>
+    <sys:Double x:Key="Audio.Leading.Footnote">18</sys:Double>
+    <sys:Double x:Key="Audio.Leading.Caption1">16</sys:Double>
+    <sys:Double x:Key="Audio.Leading.Caption2">13</sys:Double>
+
+
+    <!-- ================================================================== -->
+    <!-- TEXT STYLES                                                        -->
+    <!--                                                                    -->
+    <!-- Views use these, not bare FontSize setters. Each one is a ROLE:     -->
+    <!-- picking a style says what the text is for, and the scale decides    -->
+    <!-- how big that is. That is what stops eleven sizes turning into       -->
+    <!-- thirty over the life of the project.                                -->
+    <!-- ================================================================== -->
+
+    <!-- The base every other style derives from, so the font family and the
+         primary label colour are declared exactly once. -->
+    <Style x:Key="Audio.Text" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{DynamicResource Audio.FontFamily}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Audio.Text.PrimaryBrush}"/>
+        <Setter Property="LineStackingStrategy" Value="BlockLineHeight"/>
+        <Setter Property="TextOptions.TextFormattingMode" Value="Ideal"/>
+        <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"/>
+    </Style>
+
+    <!-- The one hero number on a screen: the unit SN banner on Home and Data. -->
+    <Style x:Key="Audio.LargeTitle" TargetType="TextBlock" BasedOn="{StaticResource Audio.Text}">
+        <Setter Property="FontSize" Value="{DynamicResource Audio.FontSize.LargeTitle}"/>
+        <Setter Property="LineHeight" Value="{DynamicResource Audio.Leading.LargeTitle}"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+    </Style>
+
+    <!-- The station ID in the middle of the indicator bar. -->
+    <Style x:Key="Audio.Title1" TargetType="TextBlock" BasedOn="{StaticResource Audio.Text}">
+        <Setter Property="FontSize" Value="{DynamicResource Audio.FontSize.Title1}"/>
+        <Setter Property="LineHeight" Value="{DynamicResource Audio.Leading.Title1}"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+    </Style>
+
+    <!-- A prominent readout inside a card: a KPI, a total, a duration. -->
+    <Style x:Key="Audio.Title2" TargetType="TextBlock" BasedOn="{StaticResource Audio.Text}">
+        <Setter Property="FontSize" Value="{DynamicResource Audio.FontSize.Title2}"/>
+        <Setter Property="LineHeight" Value="{DynamicResource Audio.Leading.Title2}"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+    </Style>
+
+    <!-- Card and panel title: "Machine State", "Error Statistics",
+         "Parameter Dashboard", "Spec Limits". -->
+    <Style x:Key="Audio.Title3" TargetType="TextBlock" BasedOn="{StaticResource Audio.Text}">
+        <Setter Property="FontSize" Value="{DynamicResource Audio.FontSize.Title3}"/>
+        <Setter Property="LineHeight" Value="{DynamicResource Audio.Leading.Title3}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <!-- An emphasised line inside a body block - a station name, a group header. -->
+    <Style x:Key="Audio.Headline" TargetType="TextBlock" BasedOn="{StaticResource Audio.Text}">
+        <Setter Property="FontSize" Value="{DynamicResource Audio.FontSize.Headline}"/>
+        <Setter Property="LineHeight" Value="{DynamicResource Audio.Leading.Headline}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <!-- Default running text. -->
+    <Style x:Key="Audio.Body" TargetType="TextBlock" BasedOn="{StaticResource Audio.Text}">
+        <Setter Property="FontSize" Value="{DynamicResource Audio.FontSize.Body}"/>
+        <Setter Property="LineHeight" Value="{DynamicResource Audio.Leading.Body}"/>
+    </Style>
+
+    <!-- Table cell / list row. One step down from Body so a dense grid fits
+         without dropping to caption sizes an operator has to lean in for. -->
+    <Style x:Key="Audio.Callout" TargetType="TextBlock" BasedOn="{StaticResource Audio.Text}">
+        <Setter Property="FontSize" Value="{DynamicResource Audio.FontSize.Callout}"/>
+        <Setter Property="LineHeight" Value="{DynamicResource Audio.Leading.Callout}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- Numeric table cell. Same size as Callout, tabular figures. -->
+    <Style x:Key="Audio.CalloutMono" TargetType="TextBlock" BasedOn="{StaticResource Audio.Callout}">
+        <Setter Property="FontFamily" Value="{DynamicResource Audio.FontFamily.Mono}"/>
+    </Style>
+
+    <!-- A field's value, beside its label. -->
+    <Style x:Key="Audio.Subheadline" TargetType="TextBlock" BasedOn="{StaticResource Audio.Text}">
+        <Setter Property="FontSize" Value="{DynamicResource Audio.FontSize.Subheadline}"/>
+        <Setter Property="LineHeight" Value="{DynamicResource Audio.Leading.Subheadline}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- Field caption, axis label, chart legend, unit suffix. Secondary label
+         colour: it names the value, it is not the value. -->
+    <Style x:Key="Audio.Footnote" TargetType="TextBlock" BasedOn="{StaticResource Audio.Text}">
+        <Setter Property="FontSize" Value="{DynamicResource Audio.FontSize.Footnote}"/>
+        <Setter Property="LineHeight" Value="{DynamicResource Audio.Leading.Footnote}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Audio.Text.SecondaryBrush}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- Table column header. Uppercase is NOT applied: the DFM tables are
+         title case and HIG writes headers in sentence case. -->
+    <Style x:Key="Audio.TableHeaderText" TargetType="TextBlock" BasedOn="{StaticResource Audio.Text}">
+        <Setter Property="FontSize" Value="{DynamicResource Audio.FontSize.Footnote}"/>
+        <Setter Property="LineHeight" Value="{DynamicResource Audio.Leading.Footnote}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{DynamicResource Audio.Text.SecondaryBrush}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <!-- Smallest legible step. Chart tick labels and the hash-key line on the
+         station card only - never for anything that has to be acted on. -->
+    <Style x:Key="Audio.Caption1" TargetType="TextBlock" BasedOn="{StaticResource Audio.Text}">
+        <Setter Property="FontSize" Value="{DynamicResource Audio.FontSize.Caption1}"/>
+        <Setter Property="LineHeight" Value="{DynamicResource Audio.Leading.Caption1}"/>
+        <Setter Property="Foreground" Value="{DynamicResource Audio.Text.SecondaryBrush}"/>
+    </Style>
+
+    <Style x:Key="Audio.Caption1Mono" TargetType="TextBlock" BasedOn="{StaticResource Audio.Caption1}">
+        <Setter Property="FontFamily" Value="{DynamicResource Audio.FontFamily.Mono}"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <!-- The greyed station ID watermark shown when the product has no SKU.
+         DFM slide 40: "STATION ID  Text R 204 G 204 B 204". -->
+    <Style x:Key="Audio.StationIdPlaceholder" TargetType="TextBlock" BasedOn="{StaticResource Audio.Title1}">
+        <Setter Property="Foreground" Value="{DynamicResource Audio.StationId.PlaceholderBrush}"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- Centred "nothing here yet" message for a panel with no data. -->
+    <Style x:Key="Audio.EmptyState" TargetType="TextBlock" BasedOn="{StaticResource Audio.Body}">
+        <Setter Property="Foreground" Value="{DynamicResource Audio.Text.TertiaryBrush}"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="TextAlignment" Value="Center"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+
+</ResourceDictionary>

@@ -1,0 +1,529 @@
+[
+  {
+    "EnumName": "Light_Mask_ZAxis_Cyl",
+    "ValveType": 2,
+    "Name": "Light Mask Z Axis Cylinder",
+    "ExtendValves": [
+      "Light_Mask_ZAxis_Cyl_FW"
+    ],
+    "RetractValves": [
+      "Light_Mask_ZAxis_Cyl_BW"
+    ],
+    "ExtendSenses": [
+      "Light_Mask_ZAxis_Cyl_FW"
+    ],
+    "RetractSenses": [
+      "Light_Mask_ZAxis_Cyl_BW"
+    ],
+    "Timeout": 5,
+    "StableCount": 1,
+    "ActionTime": 700,
+    "BothSenseTimeout": 5,
+    "Buttons": {
+      "Extend": {
+        "Text": "Work",
+        "IsEnabled": true
+      },
+      "Retract": {
+        "Text": "Home",
+        "IsEnabled": true
+      }
+    }
+  },
+  {
+    "EnumName": "Light_Mask_XAxis_Cyl",
+    "ValveType": 2,
+    "Name": "Light Mask X Axis Cylinder",
+    "ExtendValves": [
+      "Light_Mask_XAxis_Cyl_FW"
+    ],
+    "RetractValves": [
+      "Light_Mask_XAxis_Cyl_BW"
+    ],
+    "ExtendSenses": [
+      "Light_Mask_XAxis_Cyl_FW"
+    ],
+    "RetractSenses": [
+      "Light_Mask_XAxis_Cyl_BW"
+    ],
+    "Timeout": 5,
+    "StableCount": 1,
+    "ActionTime": 950,
+    "BothSenseTimeout": 5,
+    "Buttons": {
+      "Extend": {
+        "Text": "Work",
+        "IsEnabled": true
+      },
+      "Retract": {
+        "Text": "Home",
+        "IsEnabled": true
+      }
+    }
+  },
+  {
+    "EnumName": "Load_Conv_Stopper_Cyl",
+    "ValveType": 2,
+    "Name": "Loading Conveyor Stopper Cylinder",
+    "ExtendValves": [
+      "Loading_Conv_Stop_Cyl_Up"
+    ],
+    "RetractValves": [
+      "Loading_Conv_Stop_Cyl_Down"
+    ],
+    "ExtendSenses": [
+      "Loading_Conv_Stop_Cyl_Up"
+    ],
+    "RetractSenses": [
+      "Loading_Conv_Stop_Cyl_Down"
+    ],
+    "Timeout": 5,
+    "StableCount": 1,
+    "ActionTime": 2000,
+    "BothSenseTimeout": 5,
+    "Buttons": {
+      "Extend": {
+        "Text": "Work",
+        "IsEnabled": true
+      },
+      "Retract": {
+        "Text": "Home",
+        "IsEnabled": true
+      }
+    }
+  },
+  {
+    "EnumName": "Wrk_Conv_Stopper_Cyl",
+    "ValveType": 2,
+    "Name": "Working Conveyor Stopper Cylinder",
+    "ExtendValves": [
+      "Wor_Conv_Cyl_Stop_Up"
+    ],
+    "RetractValves": [
+      "Wor_Conv_Cyl_Stop_Down"
+    ],
+    "ExtendSenses": [
+      "Work_Conv_Cyl_Stop_Up"
+    ],
+    "RetractSenses": [
+      "Work_Conv_Cyl_Stop_Down"
+    ],
+    "Timeout": 5,
+    "StableCount": 1,
+    "ActionTime": 800,
+    "BothSenseTimeout": 5,
+    "Buttons": {
+      "Extend": {
+        "Text": "Work",
+        "IsEnabled": true
+      },
+      "Retract": {
+        "Text": "Home",
+        "IsEnabled": true
+      }
+    }
+  },
+  {
+    "EnumName": "Wrk_Conv_Pall_Clamp_Cyl",
+    "ValveType": 2,
+    "Name": "Working Conveyor Pallet Clamping Cylinder",
+    "ExtendValves": [
+      "Work_Conv_Pall_Clamp_Cyl_Clamp"
+    ],
+    "RetractValves": [
+      "Work_Conv_Pall_Clamp_Cyl_UnClamp"
+    ],
+    "ExtendSenses": [
+      "Work_Conv_Pall_Clamp_Cyl_Clamp"
+    ],
+    "RetractSenses": [
+      "Work_Conv_Pall_Clamp_Cyl_UnClamp"
+    ],
+    "Timeout": 5,
+    "StableCount": 1,
+    "ActionTime": 5000,
+    "BothSenseTimeout": 5,
+    "Buttons": {
+      "Extend": {
+        "Text": "Work",
+        "IsEnabled": true
+      },
+      "Retract": {
+        "Text": "Home",
+        "IsEnabled": true
+      }
+    }
+  },
+  {
+    "EnumName": "Wrk_Conv_Pall_Lift_Cyl",
+    "ValveType": 2,
+    "Name": "Working Conveyor Pallet Lifting Cylinder",
+    "ExtendValves": [
+      "Work_Conv_Pall_Lift_Cyl_Up"
+    ],
+    "RetractValves": [
+      "Work_Conv_Pall_Lift_Cyl_Down"
+    ],
+    "ExtendSenses": [
+      "Work_Conv_Pall_Lift_Cyl_Up"
+    ],
+    "RetractSenses": [
+      "Work_Conv_Pall_Lift_Cyl_Down"
+    ],
+    "Timeout": 5,
+    "StableCount": 1,
+    "ActionTime": 4000,
+    "BothSenseTimeout": 5,
+    "Buttons": {
+      "Extend": {
+        "Text": "Work",
+        "IsEnabled": true
+      },
+      "Retract": {
+        "Text": "Home",
+        "IsEnabled": true
+      }
+    }
+  },
+  {
+    "EnumName": "Wrk_Conv_HSG_Clamp_Cyl1",
+    "ValveType": 2,
+    "Name": "Working Conveyor HSG Clamping Cylinder 1",
+    "ExtendValves": [
+      "Work_Conv_HSG_Clamp_Cyl1_Clamp"
+    ],
+    "RetractValves": [
+      "Work_Conv_HSG_Clamp_Cyl1_UnClamp"
+    ],
+    "ExtendSenses": [
+      "Work_Conv_HSG_Clamp_Cyl1_Clamp"
+    ],
+    "RetractSenses": [
+      "Work_Conv_HSG_Clamp_Cyl1_Unclamp"
+    ],
+    "Timeout": 5,
+    "StableCount": 1,
+    "ActionTime": 800,
+    "BothSenseTimeout": 5,
+    "Buttons": {
+      "Extend": {
+        "Text": "Work",
+        "IsEnabled": true
+      },
+      "Retract": {
+        "Text": "Home",
+        "IsEnabled": true
+      }
+    }
+  },
+  {
+    "EnumName": "Wrk_Conv_HSG_Clamp_Cyl2",
+    "ValveType": 2,
+    "Name": "Working Conveyor HSG Clamping Cylinder 2",
+    "ExtendValves": [
+      "Work_Conv_HSG_Clamp_Cyl2_Clamp"
+    ],
+    "RetractValves": [
+      "Work_Conv_HSG_Clamp_Cyl2_UnClamp"
+    ],
+    "ExtendSenses": [
+      "Work_Conv_HSG_Clamp_Cyl2_Clamp"
+    ],
+    "RetractSenses": [
+      "Work_Conv_HSG_Clamp_Cyl2_Unclamp"
+    ],
+    "Timeout": 5,
+    "StableCount": 1,
+    "ActionTime": 800,
+    "BothSenseTimeout": 5,
+    "Buttons": {
+      "Extend": {
+        "Text": "Work",
+        "IsEnabled": true
+      },
+      "Retract": {
+        "Text": "Home",
+        "IsEnabled": true
+      }
+    }
+  },
+  {
+    "EnumName": "Unload_Conv_Stopper_Cyl",
+    "ValveType": 2,
+    "Name": "Unloading Conveyor Stopper Cylinder",
+    "ExtendValves": [
+      "Unload_Conv_Stop_Cyl_Up"
+    ],
+    "RetractValves": [
+      "Unload_Conv_Stop_Cyl_Down"
+    ],
+    "ExtendSenses": [
+      "Unload_Conv_Stop_Cyl_Up"
+    ],
+    "RetractSenses": [
+      "Unload_Conv_Stop_Cyl_Down"
+    ],
+    "Timeout": 5,
+    "StableCount": 1,
+    "ActionTime": 800,
+    "BothSenseTimeout": 5,
+    "Buttons": {
+      "Extend": {
+        "Text": "Work",
+        "IsEnabled": true
+      },
+      "Retract": {
+        "Text": "Home",
+        "IsEnabled": true
+      }
+    }
+  },
+  {
+    "EnumName": "Unload_Conv_Pall_Clamp_Cyl",
+    "ValveType": 2,
+    "Name": "Unloading Conveyor Pallet Clamping Cylinder",
+    "ExtendValves": [
+      "Unload_Conv_Pall_Clamp_Cyl_Clamp"
+    ],
+    "RetractValves": [
+      "Unload_Conv_Pall_Clamp_Cyl_UnClamp"
+    ],
+    "ExtendSenses": [
+      "Unload_Conv_Pall_Clamp_Cyl_Clamp"
+    ],
+    "RetractSenses": [
+      "Unload_Conv_Pall_Clamp_Cyl_Unclamp"
+    ],
+    "Timeout": 5,
+    "StableCount": 1,
+    "ActionTime": 2000,
+    "BothSenseTimeout": 5,
+    "Buttons": {
+      "Extend": {
+        "Text": "Work",
+        "IsEnabled": true
+      },
+      "Retract": {
+        "Text": "Home",
+        "IsEnabled": true
+      }
+    }
+  },
+  {
+    "EnumName": "Unload_Conv_Pall_Lift_Cyl",
+    "ValveType": 2,
+    "Name": "Unloading Conveyor Pallet Lifting Cylinder",
+    "ExtendValves": [
+      "Unload_Conv_Pall_Lift_Cyl_Up"
+    ],
+    "RetractValves": [
+      "Unload_Conv_Pall_Lift_Cyl_Down"
+    ],
+    "ExtendSenses": [
+      "Unload_Conv_Pall_Lift_Cyl_UP"
+    ],
+    "RetractSenses": [
+      "Unload_Conv_Pall_Lift_Cyl_Down"
+    ],
+    "Timeout": 5,
+    "StableCount": 1,
+    "ActionTime": 1000,
+    "BothSenseTimeout": 5,
+    "Buttons": {
+      "Extend": {
+        "Text": "Work",
+        "IsEnabled": true
+      },
+      "Retract": {
+        "Text": "Home",
+        "IsEnabled": true
+      }
+    }
+  },
+  {
+    "EnumName": "UnLoad_Conv_HSG_Clamp_Cyl1",
+    "ValveType": 2,
+    "Name": "UnLoading Conveyor HSG Clamping Cylinder 1",
+    "ExtendValves": [
+      "Unload_Conv_HSG_Clamp_Cyl1_Clamp"
+    ],
+    "RetractValves": [
+      "Unload_Conv_HSG_Clamp_Cyl1_UnClamp"
+    ],
+    "ExtendSenses": [
+      "Unload_Conv_HSG_Clamp_Cyl1_Clamp"
+    ],
+    "RetractSenses": [
+      "Unload_Conv_HSG_Clamp_Cyl1_Unclamp"
+    ],
+    "Timeout": 5,
+    "StableCount": 1,
+    "ActionTime": 800,
+    "BothSenseTimeout": 5,
+    "Buttons": {
+      "Extend": {
+        "Text": "Work",
+        "IsEnabled": true
+      },
+      "Retract": {
+        "Text": "Home",
+        "IsEnabled": true
+      }
+    }
+  },
+  {
+    "EnumName": "UnLoad_Conv_HSG_Clamp_Cyl2",
+    "ValveType": 2,
+    "Name": "UnLoading Conveyor HSG Clamping Cylinder 2",
+    "ExtendValves": [
+      "Unload_Conv_HSG_Clamp_Cyl2_Clamp"
+    ],
+    "RetractValves": [
+      "Unload_Conv_HSG_Clamp_Cyl2_UnClamp"
+    ],
+    "ExtendSenses": [
+      "Unload_Conv_HSG_Clamp_Cyl2_Clamp"
+    ],
+    "RetractSenses": [
+      "Unload_Conv_HSG_Clamp_Cyl2_Unclamp"
+    ],
+    "Timeout": 5,
+    "StableCount": 1,
+    "ActionTime": 800,
+    "BothSenseTimeout": 5,
+    "Buttons": {
+      "Extend": {
+        "Text": "Work",
+        "IsEnabled": true
+      },
+      "Retract": {
+        "Text": "Home",
+        "IsEnabled": true
+      }
+    }
+  },
+  {
+    "EnumName": "BTH_PP_ZAxis_Cyl",
+    "ValveType": 2,
+    "Name": "BTH Pick Place Z Axis Cylinder",
+    "ExtendValves": [
+      "BTH_PP_ZAxis_Cyl_Up"
+    ],
+    "RetractValves": [
+      "BTH_PP_ZAxis_Cyl_Down"
+    ],
+    "ExtendSenses": [
+      "BTH_PP_ZAxis_Cyl_Up"
+    ],
+    "RetractSenses": [
+      "BTH_PP_ZAxis_Cyl_Down"
+    ],
+    "Timeout": 5,
+    "StableCount": 1,
+    "ActionTime": 2000,
+    "BothSenseTimeout": 5,
+    "Buttons": {
+      "Extend": {
+        "Text": "Work",
+        "IsEnabled": true
+      },
+      "Retract": {
+        "Text": "Home",
+        "IsEnabled": true
+      }
+    }
+  },
+  {
+    "EnumName": "BTH_Load_LHS_Lock_Cyl",
+    "ValveType": 2,
+    "Name": "BTH Loading Feeder LHS Locking Cylinder",
+    "ExtendValves": [
+      "BTH_Load_Feeder_LHS_Lock_Cyl_Up"
+    ],
+    "RetractValves": [
+      "BTH_Load_Feeder_LHS_Lock_Cyl_Down"
+    ],
+    "ExtendSenses": [
+      "BTH_Load_Feeder_LHS_Lock_Cyl_Up"
+    ],
+    "RetractSenses": [
+      "BTH_Load_Feeder_LHS_Lock_Cyl_Down"
+    ],
+    "Timeout": 5,
+    "StableCount": 1,
+    "ActionTime": 500,
+    "BothSenseTimeout": 5,
+    "Buttons": {
+      "Extend": {
+        "Text": "Work",
+        "IsEnabled": true
+      },
+      "Retract": {
+        "Text": "Home",
+        "IsEnabled": true
+      }
+    }
+  },
+  {
+    "EnumName": "BTH_Load_RHS_Lock_Cyl",
+    "ValveType": 2,
+    "Name": "BTH Loading Feeder RHS Locking Cylinder",
+    "ExtendValves": [
+      "BTH_Load_Feeder_RHS_Lock_Cyl_Up"
+    ],
+    "RetractValves": [
+      "BTH_Load_Feeder_RHS_Lock_Cyl_Down"
+    ],
+    "ExtendSenses": [
+      "BTH_Load_Feeder_RHS_Lock_Cyl_Up"
+    ],
+    "RetractSenses": [
+      "BTH_Load_Feeder_RHS_Lock_Cyl_Down"
+    ],
+    "Timeout": 5,
+    "StableCount": 1,
+    "ActionTime": 500,
+    "BothSenseTimeout": 5,
+    "Buttons": {
+      "Extend": {
+        "Text": "Work",
+        "IsEnabled": true
+      },
+      "Retract": {
+        "Text": "Home",
+        "IsEnabled": true
+      }
+    }
+  },
+  {
+    "EnumName": "Peel_Off_Clamp_Cyl",
+    "ValveType": 2,
+    "Name": "Peel Off Clamping Cylinder",
+    "ExtendValves": [
+      "Peel_Off_Cyl_Clamp"
+    ],
+    "RetractValves": [
+      "Peel_Off_Cyl_UnClamp"
+    ],
+    "ExtendSenses": [
+      "Peel_Off_Cyl_Clamp"
+    ],
+    "RetractSenses": [
+      "Peel_Off_Cyl_Unclamp"
+    ],
+    "Timeout": 5,
+    "StableCount": 1,
+    "ActionTime": 300,
+    "BothSenseTimeout": 5,
+    "Buttons": {
+      "Extend": {
+        "Text": "Work",
+        "IsEnabled": true
+      },
+      "Retract": {
+        "Text": "Home",
+        "IsEnabled": true
+      }
+    }
+  }
+]

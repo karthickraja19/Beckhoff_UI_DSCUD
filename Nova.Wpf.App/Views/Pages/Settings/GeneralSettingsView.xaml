@@ -1,0 +1,150 @@
+<UserControl x:Class="Nova.Wpf.App.Views.Pages.Settings.GeneralSettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:hc="https://handyorg.github.io/handycontrol"
+             xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             Background="Transparent">
+
+    <UserControl.Resources>
+        <Style x:Key="Card" TargetType="Border" BasedOn="{StaticResource Nova.Card}">
+            <Setter Property="Margin" Value="8"/>
+        </Style>
+
+        <Style x:Key="FieldCaption" TargetType="TextBlock" BasedOn="{StaticResource Nova.FieldLabel}"/>
+
+        <Style x:Key="FieldInput" TargetType="TextBox">
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="10,0"/>
+        </Style>
+
+        <Style x:Key="FieldCombo" TargetType="ComboBox">
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <!-- Shared design-system buttons -->
+        <Style x:Key="FilledButton" TargetType="Button" BasedOn="{StaticResource Nova.ButtonPrimary}"/>
+        <Style x:Key="OutlineButton" TargetType="Button" BasedOn="{StaticResource Nova.ButtonOutline}"/>
+        <Style x:Key="AccentOutlineButton" TargetType="Button" BasedOn="{StaticResource Nova.ButtonAccentOutline}"/>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Width="600" HorizontalAlignment="Center" Margin="0,12">
+
+            <!-- ============ Action bar: Edit/Save (top right) ============ -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,0,10">
+                <Button Style="{StaticResource OutlineButton}" Command="{Binding EditCommand}" IsEnabled="{Binding CanEdit}">
+                    <StackPanel Orientation="Horizontal">
+                        <iconPacks:PackIconLucide Kind="Pencil" Width="13" Height="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Edit" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource FilledButton}" Command="{Binding SaveCommand}" IsEnabled="{Binding IsEditing}" Margin="10,0,0,0">
+                    <StackPanel Orientation="Horizontal">
+                        <iconPacks:PackIconLucide Kind="Save" Width="13" Height="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Save" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+
+            <!-- ============ Shift settings ============ -->
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                        <iconPacks:PackIconLucide Kind="Clock" Width="16" Height="16" VerticalAlignment="Center"
+                                                  Margin="0,0,8,0" Foreground="{DynamicResource PrimaryBrush}"/>
+                        <TextBlock Text="Shift settings" Style="{StaticResource Nova.SectionTitle}"/>
+                    </StackPanel>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="SHIFT" Style="{StaticResource FieldCaption}"/>
+                            <ComboBox Style="{StaticResource FieldCombo}" ItemsSource="{Binding Shifts}"
+                                      SelectedItem="{Binding SelectedShift, Mode=TwoWay}"
+                                      IsEnabled="{Binding IsEditing}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="START TIME" Style="{StaticResource FieldCaption}"/>
+                            <TextBox Style="{StaticResource FieldInput}" Text="{Binding StartTime, UpdateSourceTrigger=PropertyChanged}"
+                                     IsEnabled="{Binding IsEditing}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="4">
+                            <TextBlock Text="END TIME" Style="{StaticResource FieldCaption}"/>
+                            <TextBox Style="{StaticResource FieldInput}" Text="{Binding EndTime, UpdateSourceTrigger=PropertyChanged}"
+                                     IsEnabled="{Binding IsEditing}"/>
+                        </StackPanel>
+                    </Grid>
+
+                </StackPanel>
+            </Border>
+
+            <!-- ============ Update shift downtime / breaktime ============ -->
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,16">
+                        <iconPacks:PackIconLucide Kind="Clock" Width="16" Height="16" VerticalAlignment="Center"
+                                                  Margin="0,0,8,0" Foreground="{DynamicResource PrimaryBrush}"/>
+                        <TextBlock Text="Update shift downtime / breaktime" Style="{StaticResource Nova.SectionTitle}"/>
+                    </StackPanel>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="DATE" Style="{StaticResource FieldCaption}"/>
+                            <DatePicker Height="32" VerticalContentAlignment="Center" SelectedDate="{Binding UpdateDate, Mode=TwoWay}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="SHIFT" Style="{StaticResource FieldCaption}"/>
+                            <!-- DowntimeShifts, not Shifts: V3 offers only shifts that
+                                 have not finished yet on this card. -->
+                            <ComboBox Style="{StaticResource FieldCombo}" ItemsSource="{Binding DowntimeShifts}"
+                                      SelectedItem="{Binding UpdateShift, Mode=TwoWay}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Margin="0,14,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="PLANNED DOWNTIME (MIN)" Style="{StaticResource FieldCaption}"/>
+                            <TextBox Style="{StaticResource FieldInput}" Text="{Binding PlannedDowntime, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Text="PLANNED BREAKTIME (MIN)" Style="{StaticResource FieldCaption}"/>
+                            <TextBox Style="{StaticResource FieldInput}" Text="{Binding PlannedBreaktime, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Margin="0,18,0,0">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                            <Button Style="{StaticResource FilledButton}" Command="{Binding UpdateCommand}" Content="Update"/>
+                            <Button Style="{StaticResource OutlineButton}" Command="{Binding CancelCommand}" Content="Cancel" Margin="10,0,0,0"/>
+                        </StackPanel>
+                        <Button Style="{StaticResource AccentOutlineButton}" Command="{Binding RecalculateCommand}" HorizontalAlignment="Right">
+                            <StackPanel Orientation="Horizontal">
+                                <iconPacks:PackIconLucide Kind="RefreshCw" Width="13" Height="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Re-calculate" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

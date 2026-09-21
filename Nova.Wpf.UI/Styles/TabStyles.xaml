@@ -1,0 +1,179 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks">
+
+    <!-- =============================================================== -->
+    <!-- SEGMENTED TABS                                                   -->
+    <!--                                                                  -->
+    <!-- Implicit styles: every TabControl bound to a collection of items -->
+    <!-- exposing { Icon, Title, ViewModel } (i.e. TabItemViewModel) gets -->
+    <!-- the segmented look + icon/label header for free.                 -->
+    <!--                                                                  -->
+    <!-- The chip here is the one Audio SW DFM v5.4 draws on slides 59/60 -->
+    <!-- for the Data page's I/O / Tossing strip: a compact outlined      -->
+    <!-- rounded rect per segment, the active one filled white. It is the -->
+    <!-- same chip as Audio.SegmentedItem in Styles/AudioControls.xaml,   -->
+    <!-- so a tab strip on a pre-Audio screen and a segmented control on  -->
+    <!-- an Audio page are indistinguishable. The two templates are kept  -->
+    <!-- in step BY HAND: one targets TabItem and the other ListBoxItem,  -->
+    <!-- so they cannot share a ControlTemplate. Change one, change both. -->
+    <!-- =============================================================== -->
+
+    <!-- Default header: icon + label (icon auto-hidden when empty) -->
+    <DataTemplate x:Key="ConnectedTabHeaderTemplate">
+        <StackPanel Orientation="Horizontal">
+            <iconPacks:PackIconLucide x:Name="HdrIcon" Kind="{Binding Icon, FallbackValue=SlidersHorizontal, TargetNullValue=SlidersHorizontal}"
+                                      Width="15" Height="15" Margin="0,0,8,0"
+                                      VerticalAlignment="Center"/>
+            <TextBlock x:Name="HdrText" Text="{Binding Title}" VerticalAlignment="Center"/>
+        </StackPanel>
+        <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding Icon}" Value="">
+                <Setter TargetName="HdrIcon" Property="Visibility" Value="Collapsed"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Icon}" Value="{x:Null}">
+                <Setter TargetName="HdrIcon" Property="Visibility" Value="Collapsed"/>
+            </DataTrigger>
+            <!-- Standing alarm on this tab: the header goes danger-coloured and bold so
+                 it reads from across the machine even while another tab is selected.
+                 Every tab that does not set HasAlert is unaffected. -->
+            <DataTrigger Binding="{Binding HasAlert}" Value="True">
+                <Setter TargetName="HdrIcon" Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+                <Setter TargetName="HdrText" Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+                <Setter TargetName="HdrText" Property="FontWeight" Value="Bold"/>
+            </DataTrigger>
+        </DataTemplate.Triggers>
+    </DataTemplate>
+
+    <!-- Default content host: render the item's ViewModel (implicit DataTemplates map it to a View) -->
+    <DataTemplate x:Key="ConnectedTabContentTemplate">
+        <ContentPresenter Content="{Binding ViewModel}"/>
+    </DataTemplate>
+
+    <!-- ===================== TabItem ===================== -->
+    <!-- A HIG segmented control, matching Audio.SegmentedControl in
+         Styles/AudioControls.xaml: a recessed grey track with the selected
+         segment raised as a white pill. This was a Chrome-style connected tab
+         that filled solid with the accent colour and flared into the panel
+         below - the single loudest piece of pre-Audio styling left in the app,
+         and the one that made the Manual tab strip look nothing like the
+         segmented controls on the Audio pages beside it. -->
+    <Style TargetType="TabItem">
+        <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
+        <Setter Property="FontSize" Value="{DynamicResource Nova.FontSize.Caption}"/>
+        <Setter Property="Padding" Value="12,0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="HeaderTemplate" Value="{StaticResource ConnectedTabHeaderTemplate}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TabItem">
+                    <!-- Same chip as Audio.SegmentedItem, driven by the same two tokens
+                         so the two strips cannot drift apart in height or baseline.
+                         Kept in step by hand otherwise - one targets ListBoxItem and the
+                         other TabItem, so they cannot share a ControlTemplate. -->
+                    <Grid Background="Transparent"
+                          Height="{DynamicResource Audio.Segment.RowHeight}">
+                        <Border x:Name="Bd"
+                                Background="{DynamicResource Audio.Surface.GroupedBrush}"
+                                BorderBrush="{DynamicResource Audio.System.Gray3Brush}"
+                                BorderThickness="1"
+                                CornerRadius="{DynamicResource Audio.Radius.Small}"
+                                Margin="3,0"
+                                Height="{DynamicResource Audio.Segment.ChipHeight}"
+                                VerticalAlignment="Center"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter x:Name="ContentSite"
+                                              ContentSource="Header"
+                                              RecognizesAccessKey="True"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                    </Grid>
+
+                    <ControlTemplate.Triggers>
+                        <!-- SELECTED: white fill, darker edge. -->
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter TargetName="Bd" Property="Background"
+                                    Value="{DynamicResource Audio.Surface.CardBrush}"/>
+                            <Setter TargetName="Bd" Property="BorderBrush"
+                                    Value="{DynamicResource Audio.System.GrayBrush}"/>
+                            <Setter TargetName="Bd" Property="Effect">
+                                <Setter.Value>
+                                    <DropShadowEffect BlurRadius="3" ShadowDepth="1"
+                                                      Direction="270" Opacity="0.14" Color="#FF000000"/>
+                                </Setter.Value>
+                            </Setter>
+                            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="Panel.ZIndex" Value="2"/>
+                        </Trigger>
+
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsSelected" Value="False"/>
+                                <Condition Property="IsMouseOver" Value="True"/>
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="Bd" Property="Background"
+                                    Value="{DynamicResource Audio.System.Gray5Brush}"/>
+                            <Setter TargetName="Bd" Property="BorderBrush"
+                                    Value="{DynamicResource Audio.System.GrayBrush}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+                        </MultiTrigger>
+
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="{DynamicResource ThirdlyTextBrush}"/>
+                            <Setter Property="Cursor" Value="Arrow"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+
+    <!-- ===================== TabControl ===================== -->
+    <Style TargetType="TabControl">
+        <Setter Property="Background" Value="{DynamicResource RegionBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="ContentTemplate" Value="{StaticResource ConnectedTabContentTemplate}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TabControl">
+                    <Grid KeyboardNavigation.TabNavigation="Local">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>   <!-- Tab headers -->
+                            <RowDefinition Height="*"/>      <!-- Content panel -->
+                        </Grid.RowDefinitions>
+
+                        <!-- Recessed segmented track, one step darker than the chips in
+                             it so it still reads as a track now that each chip carries
+                             its own outline. Left-aligned and sized to its content, so a
+                             nine-tab strip does not stretch across the whole screen the
+                             way the old connected tabs did. -->
+                        <Border Grid.Row="0" HorizontalAlignment="Left"
+                                VerticalAlignment="Top"
+                                Background="{DynamicResource Audio.System.Gray5Brush}"
+                                CornerRadius="{DynamicResource Audio.Radius.Field}"
+                                Padding="4,0"
+                                SnapsToDevicePixels="True">
+                            <StackPanel x:Name="HeaderPanel"
+                                        Orientation="Horizontal"
+                                        IsItemsHost="True"/>
+                        </Border>
+
+                        <!-- Content sits on the page, not in a second box: the screens
+                             below draw their own cards, and framing them again is what
+                             produced the border-inside-a-border look. -->
+                        <ContentPresenter x:Name="PART_SelectedContentHost"
+                                          Grid.Row="1"
+                                          ContentSource="SelectedContent"
+                                          Margin="0,10,0,0"/>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

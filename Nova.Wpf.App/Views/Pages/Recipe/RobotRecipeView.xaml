@@ -1,0 +1,130 @@
+<UserControl x:Class="Nova.Wpf.App.Views.Pages.Recipe.RobotRecipeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             xmlns:hc="https://handyorg.github.io/handycontrol"
+             xmlns:common="clr-namespace:Nova.Wpf.App.Views.Common"
+             Background="Transparent">
+
+    <UserControl.Resources>
+        <Style x:Key="HeaderCell" TargetType="TextBlock" BasedOn="{StaticResource Nova.TableHeaderText}"/>
+        <Style x:Key="CompactGridHeader" TargetType="DataGridColumnHeader" BasedOn="{StaticResource Nova.DataGridColumnHeader}">
+            <Setter Property="MinHeight" Value="30"/>
+            <Setter Property="Padding" Value="8,0"/>
+        </Style>
+
+        <!-- Flat value cell: plain text until Edit mode. -->
+        <Style x:Key="ValueCell" TargetType="TextBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Height" Value="22"/>
+            <Setter Property="Margin" Value="4,0,4,0"/>
+            <Setter Property="Padding" Value="3,0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+            <Setter Property="FontSize" Value="{DynamicResource Nova.FontSize.Body}"/>
+            <Setter Property="FontFamily" Value="Consolas, Cascadia Mono, monospace"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+            <Setter Property="IsReadOnly" Value="{Binding DataContext.IsReadOnlyMode, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+            <Style.Triggers>
+                <Trigger Property="IsReadOnly" Value="False">
+                    <Setter Property="Background" Value="{DynamicResource RegionBrush}"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+                </Trigger>
+                <DataTrigger Binding="{Binding IsSpare}" Value="True">
+                    <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Selectable point row: left accent + bottom rule (same as Gantry table). -->
+        <Style x:Key="PointRowContainer" TargetType="ListBoxItem">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
+                                Background="{TemplateBinding Background}" MinHeight="40">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="3"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Border x:Name="Accent" Background="Transparent"/>
+                                <ContentPresenter Grid.Column="1" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource SecondaryRegionBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource SecondaryRegionBrush}"/>
+                                <Setter TargetName="Accent" Property="Background" Value="{DynamicResource PrimaryBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="10">
+        <!-- Dynamic point-parameter card with auto-expanding width -->
+        <Border Background="{DynamicResource RegionBrush}" CornerRadius="8"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                Effect="{StaticResource EffectShadow1}"
+                MinWidth="480" MaxWidth="900" Width="Auto" HorizontalAlignment="Center" VerticalAlignment="Top">
+            <DockPanel Margin="14">
+
+                <!-- Card header -->
+                <Grid DockPanel.Dock="Top" Margin="2,0,2,12">
+                    <TextBlock Text="{Binding Title, FallbackValue='Point Parameter Table'}" Style="{StaticResource Nova.SectionTitle}"/>
+                    <iconPacks:PackIconLucide Kind="EllipsisVertical" Width="15" Height="15"
+                                              HorizontalAlignment="Right" VerticalAlignment="Center"
+                                              Foreground="{DynamicResource SecondaryTextBrush}"/>
+                </Grid>
+
+                <DataGrid Style="{StaticResource Nova.DataGrid}"
+                          Margin="0,2,0,0"
+                          CanUserSortColumns="False"
+                          AutoGenerateColumns="False"
+                          ItemsSource="{Binding Rows}"
+                          SelectedItem="{Binding SelectedRow, Mode=TwoWay}"
+                          common:DynamicGridHelper.ColumnsSource="{Binding Columns}"
+                          hc:DataGridAttach.CanUnselectAllWithBlankArea="True">
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow" BasedOn="{StaticResource Nova.DataGridRow}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsSpare}" Value="True">
+                                    <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.RowStyle>
+                </DataGrid>
+            </DockPanel>
+        </Border>
+
+        <!-- Edit / Save -->
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
+            <Button Style="{StaticResource Nova.ButtonInfo}"
+                    Command="{Binding EditCommand}" IsEnabled="{Binding CanEdit}">
+                <StackPanel Orientation="Horizontal">
+                    <iconPacks:PackIconLucide Kind="Pencil" Width="13" Height="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Edit" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+            <Button Style="{StaticResource Nova.ButtonPrimary}" Margin="10,0,0,0"
+                    Command="{Binding SaveCommand}" IsEnabled="{Binding IsEditing}">
+                <StackPanel Orientation="Horizontal">
+                    <iconPacks:PackIconLucide Kind="Save" Width="13" Height="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Save" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+        </StackPanel>
+    </Grid>
+</UserControl>

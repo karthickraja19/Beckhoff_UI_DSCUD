@@ -1,0 +1,12 @@
+[
+  {
+    "CardId": 0,
+    "Type": "Advantech",
+    "InputChannelCount": 96,
+    "OutputChannelCount": 144,
+    "IsEnabled": true,
+    "InputOffsetPort": 12,
+    "OutputOffsetPort": 18,
+    "SysConfigPath": ""
+  }
+]

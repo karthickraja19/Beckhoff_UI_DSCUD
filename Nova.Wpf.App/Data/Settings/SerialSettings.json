@@ -1,0 +1,29 @@
+{
+  "Title": "Serial Comm Settings",
+  "Columns": [
+    { "Key": "Name", "Title": "COM Port", "IsReadOnly": true, "IsIdentifier": true, "DataType": "Text" },
+    { "Key": "BaudRate", "Title": "Baud Rate", "DataType": "NonNegative" },
+    { "Key": "DataBits", "Title": "Data Bits", "DataType": "NonNegative" },
+    { "Key": "Parity", "Title": "Parity", "DataType": "Text" },
+    { "Key": "StopBits", "Title": "Stop Bits", "DataType": "Text" },
+    { "Key": "Handshake", "Title": "Handshake", "DataType": "Text" }
+  ],
+  "Rows": [
+    {
+      "Name": "COM5",
+      "BaudRate": "9600",
+      "DataBits": "8",
+      "Parity": "Odd",
+      "StopBits": "One",
+      "Handshake": "None"
+    },
+    {
+      "Name": "COM7",
+      "BaudRate": "9600",
+      "DataBits": "8",
+      "Parity": "None",
+      "StopBits": "One",
+      "Handshake": "None"
+    }
+  ]
+}

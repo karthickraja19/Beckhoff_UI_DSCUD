@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TCP_IP_Details>
+  <Server Name="CCD1" IP="192.168.1.10" Port="0" />
+  <Server Name="CCD3" IP="127.0.0.1" Port="5000" />
+  <Server Name="CCD4" IP="169.254.0.1" Port="6" />
+  <Server Name="CCD5" IP="169.254.0.1" Port="5" />
+  <Server Name="Robot" IP="2" Port="5" />
+  <Server Name="Robot_Auto" IP="32" Port="5" />
+  <Server Name="Robot_Error" IP="4" Port="5" />
+  <Server Name="Barcode_Scanner" IP="5" Port="5" />
+  <Server Name="SFC_PDCA" IP="6" Port="5" />
+</TCP_IP_Details>

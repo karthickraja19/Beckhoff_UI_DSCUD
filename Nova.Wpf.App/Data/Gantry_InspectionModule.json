@@ -1,0 +1,32 @@
+{
+  "Title": "Gantry Recipe (Inspection Module)",
+  "Columns": [
+    { "Key": "Position", "Title": "Position", "IsReadOnly": true, "IsIdentifier": true, "DataType": "Text" },
+    { "Key": "X", "Title": "X", "DataType": "Numeric" },
+    { "Key": "XVel", "Title": "X-Vel (mm)", "DataType": "NonNegative" },
+    { "Key": "XAcc", "Title": "X-Axis Acc (mm/s)", "DataType": "NonNegative" },
+    { "Key": "XDeAcc", "Title": "X-Axis De-Acc", "DataType": "NonNegative" },
+    { "Key": "Y", "Title": "Y", "DataType": "Numeric" },
+    { "Key": "YVel", "Title": "Y-Vel (mm)", "DataType": "NonNegative" },
+    { "Key": "YAcc", "Title": "Y-Axis Acc (mm/s)", "DataType": "NonNegative" },
+    { "Key": "YDeAcc", "Title": "Y-Axis De-acc", "DataType": "NonNegative" },
+    { "Key": "Z", "Title": "Z", "DataType": "Numeric" },
+    { "Key": "ZVel", "Title": "Z-Vel (mm)", "DataType": "NonNegative" },
+    { "Key": "ZAcc", "Title": "Z-Axis Acc (mm/s)", "DataType": "NonNegative" },
+    { "Key": "ZDeAcc", "Title": "Z-Axis De-acc", "DataType": "NonNegative" }
+  ],
+  "Rows": [
+    {
+      "Position": "SafePosition",
+      "X": "0", "XVel": "0", "XAcc": "0", "XDeAcc": "0",
+      "Y": "0", "YVel": "0", "YAcc": "0", "YDeAcc": "0",
+      "Z": "0", "ZVel": "0", "ZAcc": "0", "ZDeAcc": "0"
+    },
+    {
+      "Position": "Inspection_1",
+      "X": "50", "XVel": "0", "XAcc": "0", "XDeAcc": "0",
+      "Y": "100", "YVel": "0", "YAcc": "0", "YDeAcc": "0",
+      "Z": "-15.5", "ZVel": "0", "ZAcc": "0", "ZDeAcc": "0"
+    }
+  ]
+}

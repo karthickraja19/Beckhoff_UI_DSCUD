@@ -1,0 +1,53 @@
+<UserControl x:Class="Nova.Wpf.App.Views.Dialogs.AppDialogView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent"
+             MinWidth="360"
+             MaxWidth="560">
+    <Border Background="{DynamicResource RegionBrush}"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="8"
+            Padding="18"
+            Effect="{StaticResource EffectShadow2}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="{Binding IconText}"
+                           FontSize="20"
+                           Margin="0,0,10,0"
+                           VerticalAlignment="Center"
+                           Foreground="{Binding AccentBrush}" />
+                <TextBlock Text="{Binding DialogTitle}"
+                           Style="{StaticResource Nova.SectionTitle}"
+                           VerticalAlignment="Center" />
+            </StackPanel>
+
+            <TextBlock Grid.Row="1"
+                       Margin="0,14,0,0"
+                       Text="{Binding DialogMessage}"
+                       TextWrapping="Wrap"
+                       FontSize="{DynamicResource Nova.FontSize.Body}"
+                       Foreground="{DynamicResource PrimaryTextBrush}" />
+
+            <StackPanel Grid.Row="2"
+                        Margin="0,18,0,0"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Right">
+                <Button Content="{Binding SecondaryButtonText}"
+                        Visibility="{Binding SecondaryVisibility}"
+                        Style="{StaticResource Nova.ButtonOutline}"
+                        Margin="0,0,10,0"
+                        Click="OnSecondaryClick" />
+                <Button Content="{Binding PrimaryButtonText}"
+                        Style="{StaticResource Nova.ButtonPrimary}"
+                        Click="OnPrimaryClick" />
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

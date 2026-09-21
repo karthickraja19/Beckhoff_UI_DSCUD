@@ -1,0 +1,30 @@
+{
+  "PressingModule": {
+    "MovementPriority": [
+      "Servo_X1",
+      "Servo_Z1"
+    ],
+    "SafePositionPriority": [
+      "Servo_X1",
+      "Servo_Z1"
+    ]
+  },
+  "InspectionModule": {
+    "MovementPriority": [
+      "Servo_X1",
+      "Servo_Y1"
+    ],
+    "SafePositionPriority": [
+      "Servo_X1",
+      "Servo_Y1"
+    ]
+  },
+  "BTHGantry": {
+    "MovementPriority": [
+      "Servo_X1"
+    ],
+    "SafePositionPriority": [
+      "Servo_X1"
+    ]
+  }
+}

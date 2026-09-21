@@ -1,0 +1,14 @@
+PointName,Value
+Speed,100
+PickSpeed,100
+PlaceSpeed,100
+PeelSpeed,100
+PickHeight,-2.15
+PlaceHeight,-13.4
+PressingTime,1.5
+ADH_OFFSET_X,0
+ADH_OFFSET_Y,0
+ADH_OFFSET_C,0
+Robo_OFFSET_X,0
+Robo_OFFSET_Y,0
+Robo_OFFSET_C,0

@@ -1,0 +1,26 @@
+[
+  {
+    "EnumName": "Robot1",
+    "Name": "Robot 1",
+    "IPAddress": "192.168.0.20",
+    "Ports": {
+      "Communication": 10009,
+      "Auto": 10007,
+      "Error": 10008
+    },
+    "Receipe": [
+      {
+        "key": "RobotSpeed",
+        "value": 100
+      },
+      {
+        "key": "PickSpeed",
+        "value": 80
+      },
+      {
+        "key": "PlaceSpeed",
+        "value": 50
+      }
+    ]
+  }
+]

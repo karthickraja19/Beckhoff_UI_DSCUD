@@ -1,0 +1,56 @@
+<Application x:Class="Nova.Wpf.App.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:Nova.Wpf.App.Converters">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- 1. HandyControl skin. SkinDefault (light) is the only skin this
+                     application uses - it is an Audio machine HMI with one look. -->
+                <ResourceDictionary Source="pack://application:,,,/HandyControl;component/Themes/SkinDefault.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/HandyControl;component/Themes/Theme.xaml"/>
+
+                <!-- 2. The application palette: the DFM / Apple HIG colours, republished
+                     under the shared key names the pre-Audio screens bind to. Must sit
+                     AFTER HandyControl so it overrides shared keys (RegionBrush,
+                     PrimaryColor, etc.). -->
+                <ResourceDictionary Source="pack://application:,,,/Nova.Wpf.UI;component/Themes/AudioPalette.xaml"/>
+
+                <!-- 3. Theme-independent styles & geometry -->
+                <ResourceDictionary Source="pack://application:,,,/Nova.Wpf.UI;component/Styles/ThemeResources.xaml"/>
+
+                <!-- 3a. Nova type scale: every font size in the app resolves here. -->
+                <ResourceDictionary Source="pack://application:,,,/Nova.Wpf.UI;component/Styles/Typography.xaml"/>
+
+                <!-- 3b. Nova design system: shared table/button/card/typography styles.
+                     Must sit after HandyControl (BasedOn ButtonPrimary etc.) and after
+                     Typography (its styles reference the type scale). -->
+                <ResourceDictionary Source="pack://application:,,,/Nova.Wpf.UI;component/Styles/DesignSystem.xaml"/>
+
+                <!-- 4. Shared connected-tab styles (implicit: applies to every TabControl) -->
+                <ResourceDictionary Source="pack://application:,,,/Nova.Wpf.UI;component/Styles/TabStyles.xaml"/>
+
+                <!-- 5. Audio/Home GUI (Audio SW DFM v5.4). Three dictionaries, always
+                     merged and never swapped: the DFM's colours are audited, so unlike
+                     the Nova palettes above they must not follow the theme switcher -
+                     "Downtime" has to be #EB7373 on every station on the line.
+
+                     Every key is prefixed Audio. and every style is keyed (x:Key), so
+                     none of this is an implicit style and merging it cannot restyle a
+                     single pre-existing Nova page. Only the Audio shell and its pages
+                     resolve these. -->
+                <ResourceDictionary Source="pack://application:,,,/Nova.Wpf.UI;component/Styles/AudioTokens.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/Nova.Wpf.UI;component/Styles/AudioTypography.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/Nova.Wpf.UI;component/Styles/AudioControls.xaml"/>
+
+                <!-- 6. ViewModel to View Mappings -->
+                <ResourceDictionary Source="pack://application:,,,/Nova.Wpf.App;component/DataTemplates.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Converters -->
+            <converters:Boolean2DoubleConverter x:Key="Boolean2DoubleConverter"/>
+            <converters:Boolean2VisibilityReValueConverter x:Key="Boolean2VisibilityReValueConverter"/>
+            <converters:String2VisibilityConverter x:Key="String2VisibilityConverter"/>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

@@ -1,0 +1,230 @@
+<UserControl x:Class="Nova.Wpf.App.Views.Pages.Manual.CylinderControlView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:hc="https://handyorg.github.io/handycontrol"
+             xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             Background="Transparent">
+
+    <UserControl.Resources>
+        <!-- Header column label. Size comes from Nova.TableHeaderText — do not
+             restate it here, that is how pages drift apart. -->
+        <Style x:Key="HeaderCell" TargetType="TextBlock" BasedOn="{StaticResource Nova.TableHeaderText}"/>
+        <Style x:Key="HeaderCellCentered" TargetType="TextBlock" BasedOn="{StaticResource HeaderCell}">
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+        </Style>
+        <!-- Group label of the two-tier header (EXTEND / RETRACT) -->
+        <Style x:Key="HeaderGroupCell" TargetType="TextBlock" BasedOn="{StaticResource HeaderCellCentered}"/>
+
+        <!-- Row text -->
+        <Style x:Key="CellText" TargetType="TextBlock" BasedOn="{StaticResource Nova.CellText}"/>
+
+        <!-- Work (move) and Home share the app-wide primary action colour. Raised
+             + Hand cursor (Nova.ButtonCompact) so they never read as a chip. -->
+        <Style x:Key="GridActionButton" TargetType="Button" BasedOn="{StaticResource Nova.ButtonCompact}"/>
+
+        <!-- Single-value output address chip: read-only, so it uses the flat
+             recessed chip treatment — never the raised button one. -->
+        <Style x:Key="OutputChip" TargetType="Border" BasedOn="{StaticResource Nova.Chip}"/>
+        <Style x:Key="ChipText" TargetType="TextBlock" BasedOn="{StaticResource Nova.ChipText}"/>
+
+        <!-- One input (reed-switch) address chip: green while the input is on. -->
+        <DataTemplate x:Key="SensorChipTemplate">
+            <!-- Read-only address chip: borderless, because an outline is how a
+                 button announces itself. The fill alone carries on/off. -->
+            <Border x:Name="Chip" CornerRadius="4" Padding="6,2" Margin="2"
+                    VerticalAlignment="Center"
+                    Background="{DynamicResource Nova.TableHeaderBrush}"
+                    BorderBrush="Transparent" BorderThickness="1">
+                <TextBlock x:Name="ChipLabel" Text="{Binding Address}" Style="{StaticResource ChipText}"/>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsOn}" Value="True">
+                    <Setter TargetName="Chip" Property="Background" Value="{DynamicResource SuccessBrush}"/>
+                    <Setter TargetName="ChipLabel" Property="Foreground" Value="{DynamicResource ReverseTextBrush}"/>
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!-- Input address cell: chips wrap onto extra lines when a side has more
+             sensors than fit the column width (the row grows in height). -->
+        <ItemsPanelTemplate x:Key="SensorChipPanel">
+            <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center"/>
+        </ItemsPanelTemplate>
+
+        <!-- =============== One data row ===============
+             Name + actions are content-sized so they sit together; the two
+             INPUT ADDR columns are the stretch columns, giving the address
+             chips all remaining width. -->
+        <DataTemplate x:Key="CylinderRowTemplate">
+            <Border x:Name="RowRoot" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
+                    Background="Transparent" MinHeight="40">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="cNo"/>
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="cName"/>
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="cActions"/>
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="cSafeE"/>
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="cOutE"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="cSafeR"/>
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="cOutR"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- S.No -->
+                    <TextBlock Grid.Column="0" Text="{Binding SerialNo}" Style="{StaticResource CellText}"
+                               FontWeight="SemiBold" Foreground="{DynamicResource ThirdlyTextBrush}"
+                               HorizontalAlignment="Center" Margin="10,0" MinWidth="24" TextAlignment="Center"/>
+
+                    <!-- State dot + cylinder name (dot goes green while extended) -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"
+                                Margin="4,0,10,0" ToolTip="{Binding StateText}">
+                        <Ellipse x:Name="StateDot" Width="10" Height="10" VerticalAlignment="Center" Margin="0,0,8,0"
+                                 Fill="{DynamicResource ThirdlyTextBrush}"/>
+                        <TextBlock Text="{Binding Name}" FontSize="{DynamicResource Nova.FontSize.Body}" FontWeight="SemiBold" MinWidth="130"
+                                   VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}"/>
+                    </StackPanel>
+
+                    <!-- Work (= extend) + Home (= retract), tight beside the name -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
+                        <Button Style="{StaticResource GridActionButton}" Command="{Binding ExtendCommand}"
+                                IsEnabled="{Binding CanExtendNow}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Work" VerticalAlignment="Center"/>
+                                <iconPacks:PackIconLucide Kind="ChevronRight" Width="14" Height="14" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource GridActionButton}" Command="{Binding RetractCommand}"
+                                IsEnabled="{Binding CanRetractNow}" Margin="6,0,0,0">
+                            <StackPanel Orientation="Horizontal">
+                                <iconPacks:PackIconLucide Kind="ChevronLeft" Width="14" Height="14" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                                <TextBlock Text="Home" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <!-- Extend side: safe | output addr | input addr (leading divider) -->
+                    <Border Grid.Column="3" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,0,0,0">
+                        <iconPacks:PackIconLucide x:Name="SafeExtendIcon" Kind="ShieldCheck" Width="16" Height="16"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,0"
+                                                  Foreground="{DynamicResource SuccessBrush}"/>
+                    </Border>
+                    <Border Grid.Column="4" Style="{StaticResource OutputChip}" Margin="8,0" MinWidth="52">
+                        <TextBlock Text="{Binding ExtendOutput}" Style="{StaticResource ChipText}" HorizontalAlignment="Center"/>
+                    </Border>
+                    <ItemsControl Grid.Column="5" Margin="8,3" VerticalAlignment="Center" HorizontalAlignment="Stretch"
+                                  ItemsSource="{Binding WorkSensors}"
+                                  ItemTemplate="{StaticResource SensorChipTemplate}"
+                                  ItemsPanel="{StaticResource SensorChipPanel}"/>
+
+                    <!-- Retract side: safe | output addr | input addr (leading divider) -->
+                    <Border Grid.Column="6" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,0,0,0">
+                        <iconPacks:PackIconLucide x:Name="SafeRetractIcon" Kind="ShieldCheck" Width="16" Height="16"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,0"
+                                                  Foreground="{DynamicResource SuccessBrush}"/>
+                    </Border>
+                    <Border Grid.Column="7" Style="{StaticResource OutputChip}" Margin="8,0" MinWidth="52">
+                        <TextBlock Text="{Binding RetractOutput}" Style="{StaticResource ChipText}" HorizontalAlignment="Center"/>
+                    </Border>
+                    <ItemsControl Grid.Column="8" Margin="8,3" VerticalAlignment="Center" HorizontalAlignment="Stretch"
+                                  ItemsSource="{Binding HomeSensors}"
+                                  ItemTemplate="{StaticResource SensorChipTemplate}"
+                                  ItemsPanel="{StaticResource SensorChipPanel}"/>
+                </Grid>
+            </Border>
+
+            <DataTemplate.Triggers>
+                <Trigger SourceName="RowRoot" Property="IsMouseOver" Value="True">
+                    <Setter TargetName="RowRoot" Property="Background" Value="{DynamicResource SecondaryRegionBrush}"/>
+                </Trigger>
+                <DataTrigger Binding="{Binding IsExtended}" Value="True">
+                    <Setter TargetName="StateDot" Property="Fill" Value="{DynamicResource SuccessBrush}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding SafeToExtend}" Value="False">
+                    <Setter TargetName="SafeExtendIcon" Property="Kind" Value="ShieldX"/>
+                    <Setter TargetName="SafeExtendIcon" Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding SafeToRetract}" Value="False">
+                    <Setter TargetName="SafeRetractIcon" Property="Kind" Value="ShieldX"/>
+                    <Setter TargetName="SafeRetractIcon" Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <Grid Margin="8">
+        <!-- ============ Compact cylinder grid ============ -->
+        <Border Background="{DynamicResource RegionBrush}" CornerRadius="8"
+                Effect="{StaticResource EffectShadow1}" ClipToBounds="True">
+            <DockPanel Grid.IsSharedSizeScope="True">
+
+                <!-- Card title + inline counts (replaces the old KPI tile strip) -->
+                <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="0,0,0,1" Padding="12,8">
+                    <Grid>
+                        <StackPanel Orientation="Horizontal">
+                            <iconPacks:PackIconLucide Kind="CircleDot" Width="15" Height="15" VerticalAlignment="Center"
+                                                      Margin="0,0,8,0" Foreground="{DynamicResource PrimaryBrush}"/>
+                            <TextBlock Text="Cylinders" Style="{StaticResource Nova.SectionTitle}"/>
+                        </StackPanel>
+                        <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="{DynamicResource Nova.FontSize.Body}"
+                                   Foreground="{DynamicResource SecondaryTextBrush}">
+                            <Run Text="Total"/> <Run FontWeight="Bold" Text="{Binding TotalCount, Mode=OneWay}"/>
+                            <Run Text="  ·  Extended"/> <Run FontWeight="Bold" Text="{Binding ExtendedCount, Mode=OneWay}"/>
+                            <Run Text="  ·  Retracted"/> <Run FontWeight="Bold" Text="{Binding RetractedCount, Mode=OneWay}"/>
+                        </TextBlock>
+                    </Grid>
+                </Border>
+
+                <!-- Two-tier sticky header: EXTEND / RETRACT group labels over short sub-labels -->
+                <Border DockPanel.Dock="Top" Background="{DynamicResource Nova.TableHeaderBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="0,5">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="cNo"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="cName"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="cActions"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="cSafeE"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="cOutE"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="cSafeR"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="cOutR"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Group dividers span both header rows -->
+                        <Border Grid.Column="3" Grid.RowSpan="2" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,0,0,0"/>
+                        <Border Grid.Column="6" Grid.RowSpan="2" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,0,0,0"/>
+
+                        <!-- Tier 1: group labels -->
+                        <TextBlock Grid.Row="0" Grid.Column="3" Grid.ColumnSpan="3" Text="EXTEND"
+                                   Style="{StaticResource HeaderGroupCell}" Foreground="{DynamicResource PrimaryBrush}"/>
+                        <TextBlock Grid.Row="0" Grid.Column="6" Grid.ColumnSpan="3" Text="RETRACT"
+                                   Style="{StaticResource HeaderGroupCell}" Foreground="{DynamicResource InfoBrush}"/>
+
+                        <!-- Tier 2: column labels -->
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="S.NO" Style="{StaticResource HeaderCellCentered}" Margin="10,0"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="CYLINDER NAME" Style="{StaticResource HeaderCell}" Margin="22,0,10,0"/>
+                        <TextBlock Grid.Row="1" Grid.Column="2" Text="ACTIONS" Style="{StaticResource HeaderCell}" Margin="0,0,10,0"/>
+                        <TextBlock Grid.Row="1" Grid.Column="3" Text="SAFE" Style="{StaticResource HeaderCellCentered}" Margin="10,0"/>
+                        <TextBlock Grid.Row="1" Grid.Column="4" Text="OUTPUT ADDR" Style="{StaticResource HeaderCellCentered}" Margin="8,0"/>
+                        <TextBlock Grid.Row="1" Grid.Column="5" Text="INPUT ADDR" Style="{StaticResource HeaderCellCentered}" Margin="8,0"/>
+                        <TextBlock Grid.Row="1" Grid.Column="6" Text="SAFE" Style="{StaticResource HeaderCellCentered}" Margin="10,0"/>
+                        <TextBlock Grid.Row="1" Grid.Column="7" Text="OUTPUT ADDR" Style="{StaticResource HeaderCellCentered}" Margin="8,0"/>
+                        <TextBlock Grid.Row="1" Grid.Column="8" Text="INPUT ADDR" Style="{StaticResource HeaderCellCentered}" Margin="8,0"/>
+                    </Grid>
+                </Border>
+
+                <!-- Rows -->
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <ItemsControl ItemsSource="{Binding Cylinders}" ItemTemplate="{StaticResource CylinderRowTemplate}"/>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
+    </Grid>
+</UserControl>

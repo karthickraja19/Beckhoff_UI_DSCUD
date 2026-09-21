@@ -1,0 +1,66 @@
+{
+  "Title": "Vision Settings",
+  "Columns": [
+    {
+      "Key": "Colour",
+      "Title": "Colour",
+      "IsIdentifier": false,
+      "IsReadOnly": false,
+      "DataType": "Text",
+      "ValidationEnabled": true
+    },
+    {
+      "Key": "OptId",
+      "Title": "Opt ID",
+      "IsIdentifier": false,
+      "IsReadOnly": false,
+      "DataType": "Text",
+      "ValidationEnabled": true
+    },
+    {
+      "Key": "CameraId",
+      "Title": "Camera ID",
+      "IsIdentifier": false,
+      "IsReadOnly": false,
+      "DataType": "Text",
+      "ValidationEnabled": true
+    }
+  ],
+  "Rows": [
+    {
+      "Colour": "White",
+      "OptId": "1",
+      "CameraId": "A"
+    },
+    {
+      "Colour": "Black",
+      "OptId": "2",
+      "CameraId": "A"
+    },
+    {
+      "Colour": "Green",
+      "OptId": "3",
+      "CameraId": "A"
+    },
+    {
+      "Colour": "White",
+      "OptId": "43434",
+      "CameraId": "A"
+    },
+    {
+      "Colour": "Black",
+      "OptId": "5",
+      "CameraId": "A"
+    },
+    {
+      "Colour": "Green",
+      "OptId": "6",
+      "CameraId": "A"
+    },
+    {
+      "Colour": "White",
+      "OptId": "111",
+      "CameraId": "A"
+    }
+  ]
+}

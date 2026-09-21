@@ -1,0 +1,17 @@
+{
+  "Title": "Robot Recipe",
+  "Columns": [
+    { "Key": "PointName", "Title": "Point Name", "IsReadOnly": true, "IsIdentifier": true, "DataType": "Text" },
+    { "Key": "Value", "Title": "Value", "DataType": "Numeric" }
+  ],
+  "Rows": [
+    { "PointName": "Speed", "Value": "70" },
+    { "PointName": "PickDelay", "Value": "25" },
+    { "PointName": "PlaceDelay", "Value": "100" },
+    { "PointName": "Spare1", "Value": "0" },
+    { "PointName": "Spare2", "Value": "0" },
+    { "PointName": "Spare3", "Value": "0" },
+    { "PointName": "Spare4", "Value": "0" },
+    { "PointName": "Spare5", "Value": "0" }
+  ]
+}

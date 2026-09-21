@@ -1,0 +1,152 @@
+<UserControl x:Class="Nova.Wpf.App.Views.Pages.Audio.AudioConfigView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:Nova.Wpf.App.Converters"
+             FontFamily="{DynamicResource Audio.FontFamily}"
+             Background="Transparent">
+
+    <!-- ================================================================== -->
+    <!-- CONFIG PAGE   Audio SW DFM v5.4 slide 58                           -->
+    <!--   2/3 width : machine configuration                                 -->
+    <!--   1/3 width : Spec Limits + Edit / Save                             -->
+    <!-- Access, from the slide: L1 view only, L2 non-critical config,       -->
+    <!-- L3 Edit/Save.                                                        -->
+    <!-- ================================================================== -->
+
+    <UserControl.Resources>
+        <converters:AudioBoolToVisibilityConverter x:Key="BoolToVisibility"/>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*"/>   <!-- slide 58: 2/3 width -->
+            <ColumnDefinition Width="1*"/>   <!-- slide 58: 1/3 width -->
+        </Grid.ColumnDefinitions>
+
+        <!-- Machine Configs. The slide labels this area and leaves it blank because
+             what a machine is configured with is per-machine; for this machine it is
+             the machine configuration tree and the taught recipe. -->
+        <Border Grid.Column="0" Style="{StaticResource Audio.Card}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <ListBox Grid.Row="0" Margin="16,12,16,8"
+                         Style="{StaticResource Audio.SegmentedControl}"
+                         ItemsSource="{Binding Sections}"
+                         SelectedItem="{Binding SelectedSection, Mode=TwoWay}"
+                         DisplayMemberPath="Title"
+                         AutomationProperties.Name="Machine configuration section"/>
+
+                <!-- Slide 58 grades edit authority per section rather than hiding what
+                     an operator may not change, so a locked section stays listed and
+                     says why it is locked rather than vanishing from the control. -->
+                <TextBlock Grid.Row="1" Style="{StaticResource Audio.Footnote}"
+                           Margin="16,0,16,8" TextWrapping="Wrap"
+                           Foreground="{DynamicResource Audio.System.OrangeBrush}"
+                           Text="Locked — this section needs a higher access level to change."
+                           Visibility="{Binding SelectedSection.IsEditable,
+                                                Converter={StaticResource BoolToVisibility},
+                                                ConverterParameter=invert}"/>
+
+                <!-- Recessed host, for the same reason as the Vendor pane: the
+                     hosted screens draw their own white panels and need a grey to
+                     sit on, or their edges vanish into this card. -->
+                <Border Grid.Row="2"
+                        Background="{DynamicResource Audio.Surface.GroupedBrush}"
+                        CornerRadius="{DynamicResource Audio.Radius.Field}"
+                        Margin="8,0,8,8"
+                        Padding="10">
+                    <ContentControl Content="{Binding SelectedSection.Page}"
+                                    IsEnabled="{Binding SelectedSection.IsEditable}"
+                                    Focusable="False"/>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Spec Limits -->
+        <Border Grid.Column="1" Style="{StaticResource Audio.Card}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>   <!-- title -->
+                    <RowDefinition Height="Auto"/>   <!-- column header -->
+                    <RowDefinition Height="*"/>      <!-- rows -->
+                    <RowDefinition Height="Auto"/>   <!-- status -->
+                    <RowDefinition Height="Auto"/>   <!-- Edit / Save -->
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Style="{StaticResource Audio.Title3}"
+                           Text="Spec Limits" HorizontalAlignment="Center"
+                           Margin="16,12,16,8"/>
+
+                <Border Grid.Row="1" Style="{StaticResource Audio.ListHeaderRow}">
+                    <Grid Margin="12,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="72"/>
+                            <ColumnDefinition Width="72"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Style="{StaticResource Audio.TableHeaderText}" Text="Key Name"/>
+                        <TextBlock Grid.Column="1" Style="{StaticResource Audio.TableHeaderText}"
+                                   Text="LSL" TextAlignment="Right"/>
+                        <TextBlock Grid.Column="2" Style="{StaticResource Audio.TableHeaderText}"
+                                   Text="USL" TextAlignment="Right"/>
+                    </Grid>
+                </Border>
+
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding SpecLimits}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource Audio.ListRow}">
+                                    <Grid Margin="12,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="72"/>
+                                            <ColumnDefinition Width="72"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Style="{StaticResource Audio.Callout}"
+                                                   Text="{Binding KeyName}" TextTrimming="CharacterEllipsis"
+                                                   ToolTip="{Binding KeyName}"/>
+                                        <TextBlock Grid.Column="1" Style="{StaticResource Audio.CalloutMono}"
+                                                   Text="{Binding LowerLimitText}" TextAlignment="Right"/>
+                                        <TextBlock Grid.Column="2" Style="{StaticResource Audio.CalloutMono}"
+                                                   Text="{Binding UpperLimitText}" TextAlignment="Right"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <TextBlock Grid.Row="3" Style="{StaticResource Audio.EmptyState}"
+                           Text="{Binding SpecLimitsStatus}"
+                           Margin="16,12"
+                           Visibility="{Binding SpecLimitsStatus, Converter={StaticResource String2VisibilityConverter}}"/>
+
+                <!-- Slide 58 puts Edit and Save at the foot of this panel, behind
+                     Level 3. Disabled rather than hidden, so a Level 1 operator can see
+                     that the capability exists and is not theirs. -->
+                <Grid Grid.Row="4" Margin="12,8,12,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Button Grid.Column="0" Style="{StaticResource Audio.Button}"
+                            Content="Edit"
+                            Command="{Binding EditCommand}"
+                            ToolTip="Changing spec limits requires Level 3"/>
+
+                    <Button Grid.Column="2" Style="{StaticResource Audio.FilledButton}"
+                            Content="Save"
+                            Command="{Binding SaveCommand}"/>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

@@ -1,0 +1,77 @@
+{
+  "Title": "Axis Parameters",
+  "Columns": [
+    { "Key": "CardId", "Title": "Card ID", "IsReadOnly": true, "IsIdentifier": true, "DataType": "Text" },
+    { "Key": "AxisId", "Title": "Axis ID", "IsReadOnly": true, "DataType": "Text" },
+    { "Key": "AxisName", "Title": "Axis Name", "IsReadOnly": true, "DataType": "Text" },
+    { "Key": "Pitch", "Title": "PITCH", "DataType": "Numeric" },
+    { "Key": "Pulses", "Title": "PULSES/MM", "DataType": "NonNegative" },
+    { "Key": "PPR", "Title": "PPR", "DataType": "NonNegative" },
+    { "Key": "HomingAcc", "Title": "HOMING ACC", "DataType": "NonNegative" },
+    { "Key": "HomingDeAcc", "Title": "HOMING DE-ACC", "DataType": "NonNegative" },
+    { "Key": "HomingSpeed", "Title": "HOMING SPEED", "DataType": "NonNegative" },
+    { "Key": "Test", "Title": "Test", "DataType": "Numeric" }
+  ],
+  "Rows": [
+    {
+      "CardId": "0",
+      "AxisId": "0",
+      "AxisName": "PressingModule_XAxis",
+      "Pitch": "10",
+      "Pulses": "998",
+      "PPR": "10000",
+      "HomingAcc": "90000",
+      "HomingDeAcc": "90000",
+      "HomingSpeed": "10",
+      "Test": "10"
+    },
+    {
+      "CardId": "0",
+      "AxisId": "1",
+      "AxisName": "InspectionModule_XAxis",
+      "Pitch": "10",
+      "Pulses": "1001",
+      "PPR": "10017",
+      "HomingAcc": "70000000",
+      "HomingDeAcc": "70000000",
+      "HomingSpeed": "10",
+      "Test": "10"
+    },
+    {
+      "CardId": "0",
+      "AxisId": "2",
+      "AxisName": "InspectionModule_YAxis",
+      "Pitch": "10",
+      "Pulses": "1000",
+      "PPR": "10002",
+      "HomingAcc": "70000000",
+      "HomingDeAcc": "70000000",
+      "HomingSpeed": "10",
+      "Test": "10"
+    },
+    {
+      "CardId": "0",
+      "AxisId": "3",
+      "AxisName": "PressingModule_ZAxis",
+      "Pitch": "10",
+      "Pulses": "100010",
+      "PPR": "1000000",
+      "HomingAcc": "50000000",
+      "HomingDeAcc": "50000000",
+      "HomingSpeed": "10",
+      "Test": "10"
+    },
+    {
+      "CardId": "0",
+      "AxisId": "4",
+      "AxisName": "BTH_XAxis",
+      "Pitch": "142.2",
+      "Pulses": "70.34",
+      "PPR": "50000",
+      "HomingAcc": "5000",
+      "HomingDeAcc": "5000",
+      "HomingSpeed": "20",
+      "Test": "10"
+    }
+  ]
+}

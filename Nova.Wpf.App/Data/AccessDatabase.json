@@ -1,0 +1,62 @@
+[
+  {
+    "Site": "ITKS",
+    "Project": "H37",
+    "StationId": "FT200",
+    "TerminalName": "ITKS_E03-4FT-01B_1_STATION59",
+    "Name": "Name 1",
+    "AccessLevel": 3,
+    "SoftwareType": "Main",
+    "CardUid": "123456",
+    "Function": "Apple AME",
+    "Organization": "Apple"
+  },
+  {
+    "Site": "ITKS",
+    "Project": "H37",
+    "StationId": "FT200",
+    "TerminalName": "ITKS_E03-4FT-01B_1_STATION59",
+    "Name": "Name 2",
+    "AccessLevel": 2,
+    "SoftwareType": "Main",
+    "CardUid": "123",
+    "Function": "ICT DFx",
+    "Organization": "CM"
+  },
+  {
+    "Site": "ITKS",
+    "Project": "H37",
+    "StationId": "FT200",
+    "TerminalName": "ITKS_E03-4FT-01B_1_STATION59",
+    "Name": "Line Operator",
+    "AccessLevel": 1,
+    "SoftwareType": "Main",
+    "CardUid": "1001",
+    "Function": "Production",
+    "Organization": "CM"
+  },
+  {
+    "Site": "ITKS",
+    "Project": "H37",
+    "StationId": "FT200",
+    "TerminalName": "ITKS_E03-4FT-01B_1_STATION59",
+    "Name": "TEAL Engineer",
+    "AccessLevel": 3,
+    "SoftwareType": "Main",
+    "CardUid": "3001",
+    "Function": "SI Commissioning",
+    "Organization": "SI"
+  },
+  {
+    "Site": "ITKS",
+    "Project": "H37",
+    "StationId": "FT200",
+    "TerminalName": "ITKS_E03-4FT-01B_1_STATION59",
+    "Name": "CM Supervisor",
+    "AccessLevel": 3,
+    "SoftwareType": "Main",
+    "CardUid": "3002",
+    "Function": "ICT DFx",
+    "Organization": "CM"
+  }
+]
