@@ -1,17 +1,22 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
 using Nova.Abstractions.Data;
 using Nova.Abstractions.Services;
+using Nova.Core.Config;
 
 namespace Nova.Core.Services
 {
     /// <summary>
     /// Station profile stored as <c>Data\Settings\StationProfile.json</c>, alongside the
-    /// recipe and machine-settings JSON the other screens already write.
+    /// recipe and machine-settings JSON the other screens already write. The Settings
+    /// page's option lists come from <c>Data\Settings\StationOptions.json</c>.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -24,13 +29,24 @@ namespace Nova.Core.Services
     /// <para>
     /// A missing, empty or malformed file is not an error: the machine still has to
     /// start, and a blank indicator bar tells the operator nothing. Every load failure
-    /// falls back to <see cref="BuildDefault"/> and the reason goes to Debug.
+    /// falls back to <see cref="BuildDefault"/> and the reason goes to Debug. The same
+    /// holds for the options file: any list it leaves out keeps its built-in default.
+    /// </para>
+    /// <para>
+    /// Vendor, SW version and main SW path are never stored. Slide 43 hard codes the
+    /// version in the software, the vendor is that version's first field, and the path
+    /// is wherever the exe is running from - a stored copy of any of them could only
+    /// ever disagree with the build. They are filled in on load and stripped on save.
     /// </para>
     /// </remarks>
     public sealed class JsonStationProfileService : IStationProfileService
     {
         private const string SettingsFolder = "Settings";
         private const string ProfileFile = "StationProfile.json";
+        private const string OptionsFile = "StationOptions.json";
+
+        // Filled in from the build on every load, so never written; see the remarks.
+        private static readonly string[] FixedFields = { "Vendor", "SoftwareVersion", "MainSoftwarePath" };
 
         private readonly string _dataDirectory;
         private readonly object _gate = new object();
@@ -44,14 +60,16 @@ namespace Nova.Core.Services
             get { lock (_gate) { return _current; } }
         }
 
-        // Closed option lists, because slide 62 forbids typing these in. Kept here
-        // rather than in the view model so a site can extend them without a rebuild of
-        // the presentation layer, and so the Settings page cannot invent a value that
-        // is not offered.
-        public IReadOnlyList<string> Sites { get; }
-        public IReadOnlyList<string> Lines { get; }
-        public IReadOnlyList<string> Stations { get; }
-        public IReadOnlyList<string> Languages { get; }
+        // Closed option lists, because slide 62 forbids typing these in. Read from
+        // StationOptions.json so a site can extend them without a rebuild (slide 62:
+        // "Cross QPL/Line/Site software implementation will not allow re-compile
+        // software"), and so the Settings page cannot invent a value that is not offered.
+        public IReadOnlyList<string> Sites { get; private set; }
+        public IReadOnlyList<string> Lines { get; private set; }
+        public IReadOnlyList<string> Stations { get; private set; }
+        public IReadOnlyList<string> Languages { get; private set; }
+        public IReadOnlyList<int> MachineNumbers { get; private set; }
+        public IReadOnlyList<HardwareSubsystem> HardwareSubsystems { get; private set; }
 
         public JsonStationProfileService(string dataDirectory)
         {
@@ -59,12 +77,11 @@ namespace Nova.Core.Services
                 throw new ArgumentException("Data directory cannot be empty.", nameof(dataDirectory));
 
             _dataDirectory = dataDirectory;
-            _current = Load();
 
-            Sites = new[] { "ICT KS", "ICT SZ", "PEGA KS", "LUXSHARE" };
-            Lines = new[] { "Line1", "Line2", "Line3", "Line4" };
-            Stations = new[] { "FT200", "FT300", "FT400", "BE010", "BE020", "CP0100" };
-            Languages = new[] { "English", "简体中文" };
+            // Options first: loading the profile fills in a default hardware type for
+            // any subsystem the stored file does not mention.
+            LoadOptions();
+            _current = Load();
         }
 
         public bool Save(StationProfile profile, out string error)
@@ -79,10 +96,12 @@ namespace Nova.Core.Services
 
             try
             {
+                ApplyFixedFields(profile);
+
                 string path = ProfilePath();
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
 
-                string json = JsonConvert.SerializeObject(profile, Formatting.Indented);
+                string json = Serialize(profile);
 
                 // Written through a temp file and then moved into place: an operator
                 // power-cycling the panel PC mid-save must not be able to leave a
@@ -128,10 +147,7 @@ namespace Nova.Core.Services
         /// </remarks>
         public string ComputeMainSoftwareHash()
         {
-            string path = Current != null ? Current.MainSoftwarePath : null;
-            if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
-                path = MainExecutablePath();
-
+            string path = MainExecutablePath();
             if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
                 return "unavailable";
 
@@ -201,7 +217,7 @@ namespace Nova.Core.Services
                 System.Diagnostics.Debug.WriteLine("Station profile load failed: " + ex.Message);
             }
 
-            return BuildDefault();
+            return Normalise(BuildDefault());
         }
 
         /// <summary>
@@ -217,14 +233,25 @@ namespace Nova.Core.Services
             if (string.IsNullOrWhiteSpace(profile.Line)) profile.Line = fallback.Line;
             if (string.IsNullOrWhiteSpace(profile.Station)) profile.Station = fallback.Station;
             if (string.IsNullOrWhiteSpace(profile.Language)) profile.Language = fallback.Language;
-            if (string.IsNullOrWhiteSpace(profile.Vendor)) profile.Vendor = fallback.Vendor;
-            if (string.IsNullOrWhiteSpace(profile.SoftwareVersion)) profile.SoftwareVersion = fallback.SoftwareVersion;
-            if (string.IsNullOrWhiteSpace(profile.MainSoftwarePath)) profile.MainSoftwarePath = fallback.MainSoftwarePath;
             if (string.IsNullOrWhiteSpace(profile.MachineLogPath)) profile.MachineLogPath = fallback.MachineLogPath;
             if (string.IsNullOrWhiteSpace(profile.HiveLogPath)) profile.HiveLogPath = fallback.HiveLogPath;
             if (string.IsNullOrWhiteSpace(profile.QplNumber)) profile.QplNumber = fallback.QplNumber;
             if (profile.MachineNumber <= 0) profile.MachineNumber = fallback.MachineNumber;
 
+            // A subsystem with no recorded type takes its first option, which is the
+            // default the options file lists first.
+            if (profile.Hardware == null)
+                profile.Hardware = new List<HardwareSelection>();
+            profile.Hardware.RemoveAll(h => h == null ||
+                                            string.IsNullOrWhiteSpace(h.Subsystem) ||
+                                            string.IsNullOrWhiteSpace(h.Type));
+            foreach (HardwareSubsystem subsystem in HardwareSubsystems)
+            {
+                if (profile.HardwareTypeOf(subsystem.Name) == null && subsystem.Types.Count > 0)
+                    profile.Hardware.Add(new HardwareSelection { Subsystem = subsystem.Name, Type = subsystem.Types[0] });
+            }
+
+            ApplyFixedFields(profile);
             return profile;
         }
 
@@ -238,20 +265,95 @@ namespace Nova.Core.Services
                 MachineNumber = 1,
                 Language = "English",
                 ProductType = ProductSku.Common,
-                Vendor = "TET",
-
-                // Placeholder in the DFM's own format so the field is self-documenting
-                // until a build pipeline stamps the real one in. Suffixed VAL, not POR:
-                // labelling an un-stamped build "production of record" is the one wrong
-                // default here.
-                SoftwareVersion = "TET_1.0.0.0_" + DateTime.Now.ToString("yyMMdd") + "_VAL",
-
-                MainSoftwarePath = MainExecutablePath(),
                 MachineLogPath = @"C:\TEAL_Log_Data",
                 HiveLogPath = @"C:\TEAL_Log_Data\HIVE",
                 RemoteQualification = false,
                 QplNumber = "#1"
             };
+        }
+
+        /// <summary>The three fields the build owns; see the class remarks.</summary>
+        private static void ApplyFixedFields(StationProfile profile)
+        {
+            profile.Vendor = SoftwareRelease.Vendor;
+            profile.SoftwareVersion = SoftwareRelease.Version;
+            profile.MainSoftwarePath = MainExecutablePath();
+        }
+
+        /// <summary>
+        /// Indented JSON, product type by name rather than number so the file can be
+        /// read and edited by hand, and without the fields the build owns.
+        /// </summary>
+        private static string Serialize(StationProfile profile)
+        {
+            var settings = new JsonSerializerSettings();
+            settings.Converters.Add(new StringEnumConverter());
+
+            JObject json = JObject.FromObject(profile, JsonSerializer.Create(settings));
+            foreach (string field in FixedFields)
+                json.Remove(field);
+
+            return json.ToString(Formatting.Indented);
+        }
+
+        /// <summary>
+        /// Reads the option lists. A list the file leaves out, or leaves empty, keeps
+        /// its built-in default, so a partial or missing file still gives a usable page.
+        /// </summary>
+        private void LoadOptions()
+        {
+            StationOptionsFile file = null;
+            try
+            {
+                string path = Path.Combine(_dataDirectory, SettingsFolder, OptionsFile);
+                if (File.Exists(path))
+                    file = JsonConvert.DeserializeObject<StationOptionsFile>(File.ReadAllText(path));
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Station options load failed: " + ex.Message);
+            }
+
+            if (file == null)
+                file = new StationOptionsFile();
+
+            Sites = OrDefault(file.Sites, "ICT KS", "ICT SZ", "PEGA KS", "LUXSHARE");
+            Lines = OrDefault(file.Lines, "Line1", "Line2", "Line3", "Line4");
+            Stations = OrDefault(file.Stations, "FT200", "FT300", "FT400", "BE010", "BE020", "CP0100");
+            Languages = OrDefault(file.Languages, "English", "简体中文");
+
+            List<int> numbers = (file.MachineNumbers ?? new List<int>()).Where(n => n > 0).Distinct().ToList();
+            MachineNumbers = numbers.Count > 0 ? numbers : Enumerable.Range(1, 8).ToList();
+
+            // No built-in hardware rows: which subsystems a machine has, and what each
+            // can be, is per machine, and inventing rows would put choices on screen
+            // that change nothing.
+            var subsystems = new List<HardwareSubsystem>();
+            foreach (HardwareOptionsEntry entry in file.Hardware ?? new List<HardwareOptionsEntry>())
+            {
+                if (entry == null || string.IsNullOrWhiteSpace(entry.Subsystem))
+                    continue;
+
+                List<string> types = Clean(entry.Types);
+                if (types.Count > 0)
+                    subsystems.Add(new HardwareSubsystem(entry.Subsystem.Trim(), types));
+            }
+            HardwareSubsystems = subsystems;
+        }
+
+        private static IReadOnlyList<string> OrDefault(List<string> values, params string[] fallback)
+        {
+            List<string> cleaned = Clean(values);
+            return cleaned.Count > 0 ? cleaned : fallback.ToList();
+        }
+
+        private static List<string> Clean(List<string> values)
+        {
+            return (values ?? new List<string>())
+                .Where(v => !string.IsNullOrWhiteSpace(v))
+                .Select(v => v.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
         }
 
         private static string MainExecutablePath()
@@ -268,6 +370,24 @@ namespace Nova.Core.Services
             {
                 return null;
             }
+        }
+
+        /// <summary>Shape of StationOptions.json.</summary>
+        internal sealed class StationOptionsFile
+        {
+            public List<string> Sites { get; set; }
+            public List<string> Lines { get; set; }
+            public List<string> Stations { get; set; }
+            public List<string> Languages { get; set; }
+            public List<int> MachineNumbers { get; set; }
+            public List<HardwareOptionsEntry> Hardware { get; set; }
+        }
+
+        /// <summary>One Hardware Setting row in StationOptions.json.</summary>
+        internal sealed class HardwareOptionsEntry
+        {
+            public string Subsystem { get; set; }
+            public List<string> Types { get; set; }
         }
     }
 }

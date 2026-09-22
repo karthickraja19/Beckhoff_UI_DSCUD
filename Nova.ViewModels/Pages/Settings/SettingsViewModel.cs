@@ -57,29 +57,23 @@ namespace Nova.ViewModels.Pages.Settings
             IDialogService dialogService,
             IMachineSettingsService machineSettingsService,
             IDigitalIOService digitalIoService,
-            ILoadCellMonitorService loadCellMonitorService,
             IMachineContext machineContext,
             // Needed by Device Settings: a mode change stops the sequence first.
             Nova.Abstractions.Machine.Interfaces.IMachineOrchestrator orchestrator,
-            Nova.Abstractions.Data.Repositories.IShiftSettingsRepository shiftSettings = null,
             // SFC & PDCA: the AE-limit tabs export their table to CSV.
             ICsvExportService csv = null)
         {
             if (dialogService == null) throw new System.ArgumentNullException(nameof(dialogService));
             if (machineSettingsService == null) throw new System.ArgumentNullException(nameof(machineSettingsService));
             if (digitalIoService == null) throw new System.ArgumentNullException(nameof(digitalIoService));
-            if (loadCellMonitorService == null) throw new System.ArgumentNullException(nameof(loadCellMonitorService));
             if (machineContext == null) throw new System.ArgumentNullException(nameof(machineContext));
             if (orchestrator == null) throw new System.ArgumentNullException(nameof(orchestrator));
 
             var axisParams = new AxisConfigurationViewModel(machineSettingsService, dialogService);
 
-            var ioGroup = new SettingsGroupViewModel("I/O Diagnostics",
-                new TabItemViewModel("Digital I/O", "ToggleRight", new DigitalIoViewModel(digitalIoService)),
-                new TabItemViewModel("Analog I/O", "Gauge", new AnalogIoViewModel(loadCellMonitorService)));
-
+            // Production limits are not here: the Config page's Spec Limits panel is
+            // where they are edited (DFM slide 58). CPK and GRR have no other home.
             var sfcGroup = new SettingsGroupViewModel("SFC & PDCA Settings",
-                new TabItemViewModel("AE limits (Production)", "", new AeLimitsViewModel("AE limits (Production)", AeLimitKind.Production, machineSettingsService, dialogService, csv)),
                 new TabItemViewModel("AE limits (CPK)", "", new AeLimitsViewModel("AE limits (CPK)", AeLimitKind.Cpk, machineSettingsService, dialogService, csv)),
                 new TabItemViewModel("AE limits (GRR)", "", new AeLimitsViewModel("AE limits (GRR)", AeLimitKind.Grr, machineSettingsService, dialogService, csv)));
 
@@ -87,19 +81,15 @@ namespace Nova.ViewModels.Pages.Settings
                 new TabItemViewModel("Camera", "Camera", new CalibrationCameraViewModel()),
                 new TabItemViewModel("Robot", "Bot", new CalibrationRobotViewModel()));
 
-            // Top-level tabs mirror the V3 Settings form's tabControlSettings; the grouped
-            // ones (Device / I/O / SFC / Calibration) host nested tabs like the original.
+            // Shift settings (General), Analog I/O and Vision Settings were V3 tabs this
+            // machine does not use, and are not offered.
             Tabs = new ObservableCollection<TabItemViewModel>
             {
-                new TabItemViewModel("General", "Settings2", new GeneralSettingsViewModel(dialogService, shiftSettings)),
-
                 new TabItemViewModel("Device Settings", "Cpu", new DeviceSettingsViewModel(machineContext, orchestrator, dialogService)),
 
-                new TabItemViewModel("I/O Diagnostics", "Activity", ioGroup),
+                new TabItemViewModel("I/O Diagnostics", "Activity", new DigitalIoViewModel(digitalIoService)),
 
                 new TabItemViewModel("Axis Configuration Settings", "Move", axisParams),
-
-                new TabItemViewModel("Vision Settings", "Eye", new VisionSettingsViewModel(machineSettingsService, dialogService)),
 
                 new TabItemViewModel("SFC & PDCA Settings", "ClipboardList", sfcGroup),
 

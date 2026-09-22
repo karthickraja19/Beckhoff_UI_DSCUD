@@ -748,14 +748,7 @@ namespace Nova.Core.Services
                 if (root != null)
                 {
                     string nodeName = GetAeNodeName(kind);
-                    var columns = new List<DynamicColumnSchema>
-                    {
-                        new DynamicColumnSchema { Key = "SerialNo", Title = "S.NO", IsReadOnly = true, IsIdentifier = true },
-                        new DynamicColumnSchema { Key = "Parameter", Title = "PARAMETER", IsReadOnly = true, IsIdentifier = true },
-                        new DynamicColumnSchema { Key = "Min", Title = "MINIMUM LIMIT", IsReadOnly = false },
-                        new DynamicColumnSchema { Key = "Max", Title = "MAXIMUM LIMIT", IsReadOnly = false },
-                        new DynamicColumnSchema { Key = "Unit", Title = "UNIT", IsReadOnly = false },
-                    };
+                    var columns = StandardAeColumns();
                     var rows = new List<Dictionary<string, string>>();
                     int fallbackSerial = 1;
                     foreach (var node in root.Elements(nodeName))
@@ -813,21 +806,38 @@ namespace Nova.Core.Services
             string fileName = GetAeJsonFileName(kind);
             string jsonPath = GetSettingsPath(fileName);
 
+            // Written as Title / Columns / Rows, the shape the shipped file has. A bare
+            // row array drops the column titles and the numeric type on Min and Max, and
+            // every load after that warns that the schema is missing. A file that has
+            // already lost its schema gets the standard AE columns back.
+            IReadOnlyList<DynamicColumnSchema> columns = oldDoc.HasMissingColumnSchema || document.Columns == null || document.Columns.Count == 0
+                ? WithStandardAeColumns(document.Columns)
+                : document.Columns;
+
             var jArray = new Newtonsoft.Json.Linq.JArray();
             foreach (var row in document.Rows)
             {
                 var jObj = new Newtonsoft.Json.Linq.JObject();
-                foreach (var col in document.Columns)
+                foreach (var col in columns)
                 {
                     jObj[col.Key] = row.TryGetValue(col.Key, out var val) ? val : string.Empty;
                 }
                 jArray.Add(jObj);
             }
 
-            string newJson = jArray.ToString(Formatting.Indented);
+            var root = new Newtonsoft.Json.Linq.JObject
+            {
+                ["Title"] = !string.IsNullOrWhiteSpace(oldDoc.Title) ? oldDoc.Title : document.Title,
+                ["Columns"] = new Newtonsoft.Json.Linq.JArray(columns.Select(ColumnToJson)),
+                ["Rows"] = jArray
+            };
+
+            string newJson = root.ToString(Formatting.Indented);
             string oldJson = File.Exists(jsonPath) ? File.ReadAllText(jsonPath, Encoding.UTF8) : string.Empty;
 
-            if (!string.IsNullOrEmpty(oldJson) && Normalize(oldJson).Equals(Normalize(newJson), StringComparison.Ordinal))
+            // Compared as JSON rather than as text, so a file laid out differently by
+            // hand is not reported as changed when no value moved.
+            if (!string.IsNullOrEmpty(oldJson) && SameJson(oldJson, root))
             {
                 return RecipeSaveResult.NoChanges("No data modified !");
             }
@@ -841,6 +851,72 @@ namespace Nova.Core.Services
 
             AppendEditLog(fileName, headers, oldRowArray, newRowArray);
             return RecipeSaveResult.Saved("AE limits saved successfully.");
+        }
+
+        /// <summary>
+        /// The AE limit table's columns, as the shipped AeLimits_*.json files define them.
+        /// </summary>
+        private static List<DynamicColumnSchema> StandardAeColumns()
+        {
+            return new List<DynamicColumnSchema>
+            {
+                new DynamicColumnSchema { Key = "SerialNo", Title = "S.NO", IsReadOnly = true, IsIdentifier = true },
+                new DynamicColumnSchema { Key = "Parameter", Title = "PARAMETER", IsReadOnly = true },
+                new DynamicColumnSchema { Key = "Min", Title = "MINIMUM LIMIT", DataType = ColumnDataType.Numeric },
+                new DynamicColumnSchema { Key = "Max", Title = "MAXIMUM LIMIT", DataType = ColumnDataType.Numeric },
+                new DynamicColumnSchema { Key = "Unit", Title = "UNIT" },
+            };
+        }
+
+        /// <summary>
+        /// The standard AE columns, plus any other column the caller had, so a file
+        /// with an extra column keeps it.
+        /// </summary>
+        private static List<DynamicColumnSchema> WithStandardAeColumns(IReadOnlyList<DynamicColumnSchema> existing)
+        {
+            var columns = StandardAeColumns();
+            if (existing != null)
+            {
+                foreach (var col in existing)
+                {
+                    if (!columns.Any(c => c.Key.Equals(col.Key, StringComparison.OrdinalIgnoreCase)))
+                        columns.Add(col);
+                }
+            }
+
+            return columns;
+        }
+
+        /// <summary>
+        /// One column schema entry, writing only what differs from the parser's
+        /// defaults - the same shape as the hand-written files.
+        /// </summary>
+        private static Newtonsoft.Json.Linq.JObject ColumnToJson(DynamicColumnSchema column)
+        {
+            var json = new Newtonsoft.Json.Linq.JObject
+            {
+                ["Key"] = column.Key,
+                ["Title"] = column.Title
+            };
+            if (column.IsReadOnly) json["IsReadOnly"] = true;
+            if (column.IsIdentifier) json["IsIdentifier"] = true;
+            json["DataType"] = column.DataType.ToString();
+            if (!column.ValidationEnabled) json["ValidationEnabled"] = false;
+            if (column.Width.HasValue) json["Width"] = column.Width.Value;
+            return json;
+        }
+
+        private static bool SameJson(string existingJson, Newtonsoft.Json.Linq.JToken candidate)
+        {
+            try
+            {
+                return Newtonsoft.Json.Linq.JToken.DeepEquals(Newtonsoft.Json.Linq.JToken.Parse(existingJson), candidate);
+            }
+            catch (JsonException)
+            {
+                // An unreadable file is by definition different from what is being saved.
+                return false;
+            }
         }
 
         public void SaveAeLimits(AeLimitKind kind, IReadOnlyList<AeLimitRecord> rows)

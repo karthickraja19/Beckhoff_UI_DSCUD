@@ -54,12 +54,15 @@
 
                 <!-- Recessed host, for the same reason as the Vendor pane: the
                      hosted screens draw their own white panels and need a grey to
-                     sit on, or their edges vanish into this card. -->
+                     sit on, or their edges vanish into this card. Margin plus
+                     horizontal padding is 16, the segmented control's left margin, so
+                     the Machine Configs / Recipe strip, the hosted page's tab strip and
+                     any nested strip all start on the same line. -->
                 <Border Grid.Row="2"
                         Background="{DynamicResource Audio.Surface.GroupedBrush}"
                         CornerRadius="{DynamicResource Audio.Radius.Field}"
                         Margin="8,0,8,8"
-                        Padding="10">
+                        Padding="8,10">
                     <ContentControl Content="{Binding SelectedSection.Page}"
                                     IsEnabled="{Binding SelectedSection.IsEditable}"
                                     Focusable="False"/>
@@ -98,7 +101,7 @@
                 </Border>
 
                 <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
-                    <ItemsControl ItemsSource="{Binding SpecLimits}">
+                    <ItemsControl x:Name="SpecLimitRows" ItemsSource="{Binding SpecLimits}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Border Style="{StaticResource Audio.ListRow}">
@@ -108,13 +111,50 @@
                                             <ColumnDefinition Width="72"/>
                                             <ColumnDefinition Width="72"/>
                                         </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
                                         <TextBlock Grid.Column="0" Style="{StaticResource Audio.Callout}"
                                                    Text="{Binding KeyName}" TextTrimming="CharacterEllipsis"
+                                                   VerticalAlignment="Center"
                                                    ToolTip="{Binding KeyName}"/>
+
+                                        <!-- Read mode: the stored limit, or N/A. -->
                                         <TextBlock Grid.Column="1" Style="{StaticResource Audio.CalloutMono}"
-                                                   Text="{Binding LowerLimitText}" TextAlignment="Right"/>
+                                                   Text="{Binding LowerLimitText}" TextAlignment="Right"
+                                                   VerticalAlignment="Center"
+                                                   Visibility="{Binding DataContext.IsEditing, ElementName=SpecLimitRows,
+                                                                        Converter={StaticResource BoolToVisibility},
+                                                                        ConverterParameter=invert}"/>
                                         <TextBlock Grid.Column="2" Style="{StaticResource Audio.CalloutMono}"
-                                                   Text="{Binding UpperLimitText}" TextAlignment="Right"/>
+                                                   Text="{Binding UpperLimitText}" TextAlignment="Right"
+                                                   VerticalAlignment="Center"
+                                                   Visibility="{Binding DataContext.IsEditing, ElementName=SpecLimitRows,
+                                                                        Converter={StaticResource BoolToVisibility},
+                                                                        ConverterParameter=invert}"/>
+
+                                        <!-- Edit mode: typed limits, blank for no limit. -->
+                                        <TextBox Grid.Column="1" Style="{StaticResource Audio.TextBoxMono}"
+                                                 IsReadOnly="False" Margin="4,2,0,2"
+                                                 Text="{Binding LowerLimit, UpdateSourceTrigger=PropertyChanged}"
+                                                 AutomationProperties.Name="{Binding KeyName, StringFormat='{}{0} LSL'}"
+                                                 Visibility="{Binding DataContext.IsEditing, ElementName=SpecLimitRows,
+                                                                      Converter={StaticResource BoolToVisibility}}"/>
+                                        <TextBox Grid.Column="2" Style="{StaticResource Audio.TextBoxMono}"
+                                                 IsReadOnly="False" Margin="4,2,0,2"
+                                                 Text="{Binding UpperLimit, UpdateSourceTrigger=PropertyChanged}"
+                                                 AutomationProperties.Name="{Binding KeyName, StringFormat='{}{0} USL'}"
+                                                 Visibility="{Binding DataContext.IsEditing, ElementName=SpecLimitRows,
+                                                                      Converter={StaticResource BoolToVisibility}}"/>
+
+                                        <!-- Why Save refused this row. -->
+                                        <TextBlock Grid.Row="1" Grid.ColumnSpan="3"
+                                                   Style="{StaticResource Audio.Footnote}"
+                                                   Foreground="{DynamicResource Audio.System.RedBrush}"
+                                                   Text="{Binding Error}" TextWrapping="Wrap" Margin="0,0,0,4"
+                                                   Visibility="{Binding Error, Converter={StaticResource String2VisibilityConverter}}"/>
                                     </Grid>
                                 </Border>
                             </DataTemplate>
@@ -122,14 +162,21 @@
                     </ItemsControl>
                 </ScrollViewer>
 
-                <TextBlock Grid.Row="3" Style="{StaticResource Audio.EmptyState}"
-                           Text="{Binding SpecLimitsStatus}"
-                           Margin="16,12"
-                           Visibility="{Binding SpecLimitsStatus, Converter={StaticResource String2VisibilityConverter}}"/>
+                <StackPanel Grid.Row="3">
+                    <TextBlock Style="{StaticResource Audio.EmptyState}"
+                               Text="{Binding SpecLimitsStatus}"
+                               Margin="16,12"
+                               Visibility="{Binding SpecLimitsStatus, Converter={StaticResource String2VisibilityConverter}}"/>
+                    <TextBlock Style="{StaticResource Audio.Footnote}"
+                               Margin="16,8,16,0" TextWrapping="Wrap"
+                               Text="Leave a limit blank (or type N/A) when there is no spec limit on that side."
+                               Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}}"/>
+                </StackPanel>
 
                 <!-- Slide 58 puts Edit and Save at the foot of this panel, behind
                      Level 3. Disabled rather than hidden, so a Level 1 operator can see
-                     that the capability exists and is not theirs. -->
+                     that the capability exists and is not theirs. While editing, Edit
+                     becomes Cancel so an edit can be abandoned without saving. -->
                 <Grid Grid.Row="4" Margin="12,8,12,12">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -140,7 +187,14 @@
                     <Button Grid.Column="0" Style="{StaticResource Audio.Button}"
                             Content="Edit"
                             Command="{Binding EditCommand}"
-                            ToolTip="Changing spec limits requires Level 3"/>
+                            ToolTip="Changing spec limits requires Level 3"
+                            Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"/>
+
+                    <Button Grid.Column="0" Style="{StaticResource Audio.Button}"
+                            Content="Cancel"
+                            Command="{Binding CancelCommand}"
+                            ToolTip="Discard the changes and reload the saved limits"
+                            Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}}"/>
 
                     <Button Grid.Column="2" Style="{StaticResource Audio.FilledButton}"
                             Content="Save"

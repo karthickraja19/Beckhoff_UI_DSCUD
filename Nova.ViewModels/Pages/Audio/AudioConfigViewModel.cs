@@ -90,8 +90,15 @@ namespace Nova.ViewModels.Pages.Audio
         // Spec Limits (1/3 width)
         // ==================================================================
 
-        public ObservableCollection<ParameterRow> SpecLimits { get; } =
-            new ObservableCollection<ParameterRow>();
+        public ObservableCollection<SpecLimitRow> SpecLimits { get; } =
+            new ObservableCollection<SpecLimitRow>();
+
+        /// <summary>
+        /// The limits table as loaded. Save writes the edited LSL/USL back into a copy
+        /// of it, so every other column in the file - serial number, unit, anything
+        /// added later - goes back exactly as it came.
+        /// </summary>
+        private DynamicTableDocument _specLimitDocument;
 
         /// <summary>
         /// True once Edit has been pressed and until Save or Cancel. Separate from
@@ -106,7 +113,7 @@ namespace Nova.ViewModels.Pages.Audio
         /// machine config" is the 2/3 area, not the spec limits - a spec limit is by
         /// definition a critical parameter, so it stays Level 3 here.
         /// </summary>
-        public bool CanEditSpecLimits => CanEditCritical && !IsEditing;
+        public bool CanEditSpecLimits => CanEditCritical && !IsEditing && _specLimitDocument != null;
 
         public bool CanSaveSpecLimits => CanEditCritical && IsEditing;
 
@@ -162,33 +169,33 @@ namespace Nova.ViewModels.Pages.Audio
         /// Reads the limits from the machine settings service.
         /// </summary>
         /// <remarks>
-        /// Sourced from the AE production limits, which is where this machine already
-        /// keeps its per-parameter LSL/USL pairs - the same rows the existing AE limits
-        /// screen edits. Reusing them means the Config page and that screen cannot show
-        /// different limits for the same parameter.
+        /// Sourced from the AE production limits file. This panel is the only place
+        /// Production limits are edited; Machine Configs keeps the CPK and GRR sets.
         /// </remarks>
         private void LoadSpecLimits()
         {
             SpecLimits.Clear();
-
-            if (_settings == null)
-            {
-                SpecLimitsStatus = "No spec limits are configured on this machine.";
-                return;
-            }
+            _specLimitDocument = null;
 
             try
             {
-                IReadOnlyList<AeLimitRecord> records = _settings.LoadAeLimits(AeLimitKind.Production);
+                DynamicTableDocument document = _settings != null
+                    ? _settings.LoadAeLimitsDynamic(AeLimitKind.Production)
+                    : null;
 
-                if (records == null || records.Count == 0)
+                if (document == null || document.Rows == null || document.Rows.Count == 0)
                 {
                     SpecLimitsStatus = "No spec limits are configured on this machine.";
                     return;
                 }
 
-                foreach (AeLimitRecord record in records)
-                    SpecLimits.Add(ToRow(record));
+                _specLimitDocument = document;
+                for (int i = 0; i < document.Rows.Count; i++)
+                {
+                    Dictionary<string, string> row = document.Rows[i];
+                    SpecLimits.Add(new SpecLimitRow(
+                        i, Cell(row, "Parameter"), Cell(row, "Unit"), Cell(row, "Min"), Cell(row, "Max")));
+                }
 
                 SpecLimitsStatus = string.Empty;
             }
@@ -196,64 +203,97 @@ namespace Nova.ViewModels.Pages.Audio
             {
                 SpecLimitsStatus = "Spec limits could not be read: " + ex.Message;
             }
+            finally
+            {
+                OnPropertyChanged(nameof(CanEditSpecLimits));
+                EditCommand?.NotifyCanExecuteChanged();
+            }
         }
 
-        /// <summary>
-        /// Projects one AE limit record onto the page's Key Name / LSL / USL row.
-        /// </summary>
-        /// <remarks>
-        /// <see cref="AeLimitRecord"/> stores Min and Max as strings, because the
-        /// underlying profile allows a blank for "no limit on this side". A blank or
-        /// unparseable bound becomes null, which <see cref="ParameterRow"/> renders as
-        /// "N/A" and - importantly - never treats as a bound that a value can fall
-        /// outside of.
-        /// <para>
-        /// The record carries no measured value, only the limits, so the Value column is
-        /// blank here. That also means no row on this panel can be out of spec, which is
-        /// correct: Spec Limits states the limits, the Home page's Parameter Dashboard
-        /// is the one that compares readings against them.
-        /// </para>
-        /// </remarks>
-        private static ParameterRow ToRow(AeLimitRecord record)
+        private static string Cell(Dictionary<string, string> row, string key)
         {
-            string name = string.IsNullOrWhiteSpace(record.Parameter) ? "(unnamed)" : record.Parameter.Trim();
-
-            if (!string.IsNullOrWhiteSpace(record.Unit))
-                name += " (" + record.Unit.Trim() + ")";
-
-            return new ParameterRow(name, string.Empty, ParseLimit(record.Min), ParseLimit(record.Max));
-        }
-
-        private static double? ParseLimit(string text)
-        {
-            double parsed;
-            return double.TryParse(text, out parsed) ? parsed : (double?)null;
+            string value;
+            return row != null && row.TryGetValue(key, out value) ? value : string.Empty;
         }
 
         private void BeginEdit()
         {
+            foreach (SpecLimitRow row in SpecLimits)
+                row.Error = null;
+
             IsEditing = true;
         }
 
         /// <summary>
-        /// Slide 58's Save. Writing limits back is not wired: the AE limits screen owns
-        /// that write path and duplicating it here would give the machine two places
-        /// that persist the same rows with different validation. Rather than accept an
-        /// edit and silently drop it, this says so and reloads.
+        /// Slide 58's Save: validates every row, then writes LSL/USL back into the AE
+        /// production limits file. The settings service logs each changed value with
+        /// the operator's name (slide 39: Level 3 "actions must be recorded by log").
         /// </summary>
+        /// <remarks>
+        /// A row that fails validation keeps the panel in edit mode with the reason
+        /// under the row, so nothing typed is lost. So does a failed write.
+        /// </remarks>
         private void SaveEdit()
         {
+            // Gate the write, not just the button: a level drop between Edit and Save
+            // must not let an edit through.
+            if (!CanEditCritical || _settings == null || _specLimitDocument == null)
+            {
+                CancelEdit();
+                return;
+            }
+
+            List<SpecLimitRow> invalid = SpecLimits.Where(r => !r.Validate()).ToList();
+            if (invalid.Count > 0)
+            {
+                if (_dialog != null)
+                {
+                    const int listed = 10;
+                    string message = "Correct these limits before saving:" + Environment.NewLine
+                        + string.Join(Environment.NewLine, invalid.Take(listed).Select(r => r.KeyName + ": " + r.Error));
+                    if (invalid.Count > listed)
+                        message += Environment.NewLine + "... and " + (invalid.Count - listed) + " more.";
+
+                    _dialog.ShowError(message, "Spec Limits");
+                }
+                return;
+            }
+
+            if (_dialog != null && !_dialog.Confirm("Save the spec limits?", "Spec Limits"))
+                return;
+
+            var rows = new List<Dictionary<string, string>>(_specLimitDocument.Rows.Count);
+            foreach (Dictionary<string, string> original in _specLimitDocument.Rows)
+                rows.Add(new Dictionary<string, string>(original, StringComparer.OrdinalIgnoreCase));
+
+            foreach (SpecLimitRow row in SpecLimits)
+            {
+                rows[row.Index]["Min"] = SpecLimitRow.ToStored(row.LowerLimit);
+                rows[row.Index]["Max"] = SpecLimitRow.ToStored(row.UpperLimit);
+            }
+
+            RecipeSaveResult result;
+            try
+            {
+                result = _settings.SaveAeLimitsDynamic(AeLimitKind.Production, new DynamicTableDocument
+                {
+                    Title = _specLimitDocument.Title,
+                    Columns = _specLimitDocument.Columns,
+                    Rows = rows
+                });
+            }
+            catch (Exception ex)
+            {
+                if (_dialog != null)
+                    _dialog.ShowError("The spec limits could not be saved: " + ex.Message, "Spec Limits");
+                return;
+            }
+
             IsEditing = false;
             LoadSpecLimits();
 
             if (_dialog != null)
-            {
-                _dialog.ShowInfo(
-                    "Editing spec limits from this panel is not wired up yet. Change them in "
-                    + "Machine Configs > SFC & PDCA Settings > AE limits (Production), on the "
-                    + "left of this page - that is the existing write path for these rows.",
-                    "Spec Limits");
-            }
+                _dialog.ShowInfo(result.IsNoChanges ? "No limits were changed." : "Spec limits saved.", "Spec Limits");
         }
 
         private void CancelEdit()
@@ -268,7 +308,7 @@ namespace Nova.ViewModels.Pages.Audio
             IDialogService dialog = null,
             PageViewModel machineConfig = null,
             PageViewModel recipe = null)
-            : base(session)
+            : base(session, AccessBypass.ConfigAndSettings)
         {
             _settings = settings;
             _dialog = dialog;

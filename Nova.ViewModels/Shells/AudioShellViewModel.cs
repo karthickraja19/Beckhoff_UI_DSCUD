@@ -384,13 +384,14 @@ namespace Nova.ViewModels.Shells
             TitleBar = titleBar;
 
             // Slide 42, left to right. RequiresLogin is set for exactly the two the DFM
-            // disables before login.
+            // disables before login - unless the commissioning bypass has opened them.
+            bool loginGated = !AccessBypass.ConfigAndSettings;
             NavItems.Add(new AudioNavItem(AppPageNames.Home, "Home", "Home", false));
             NavItems.Add(new AudioNavItem(AppPageNames.Alarm, "Alarm", "Alarm", false));
-            NavItems.Add(new AudioNavItem(AppPageNames.Config, "Config", "Config", true));
+            NavItems.Add(new AudioNavItem(AppPageNames.Config, "Config", "Config", loginGated));
             NavItems.Add(new AudioNavItem(AppPageNames.Data, "Data", "Data", false));
             NavItems.Add(new AudioNavItem(AppPageNames.Vision, "Vision", "Vision", false));
-            NavItems.Add(new AudioNavItem(AppPageNames.Settings, "Setting", "Setting", true));
+            NavItems.Add(new AudioNavItem(AppPageNames.Settings, "Setting", "Setting", loginGated));
 
             ApplyProfile();
             if (_profile != null)

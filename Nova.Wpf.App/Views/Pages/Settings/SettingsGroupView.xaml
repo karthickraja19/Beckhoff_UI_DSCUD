@@ -5,8 +5,9 @@
              xmlns:local="clr-namespace:Nova.Wpf.App.Views.Pages.Settings"
              Background="Transparent">
 
-    <!-- Nested tab control (same connected style as the parent Settings tabs). -->
-    <Grid Margin="8">
+    <!-- Nested tab control (same connected style as the parent Settings tabs). No
+         margin, so its strip lines up with the parent strip above it. -->
+    <Grid>
         <TabControl ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab}">
             <TabControl.Resources>
                 <DataTemplate DataType="{x:Type settingsVm:SettingsTabViewModel}">
@@ -22,13 +23,6 @@
                 <!-- SFC & PDCA AE-limit grids. -->
                 <DataTemplate DataType="{x:Type settingsVm:AeLimitsViewModel}">
                     <local:AeLimitsView/>
-                </DataTemplate>
-                <!-- I/O Diagnostics sub-tabs. -->
-                <DataTemplate DataType="{x:Type settingsVm:DigitalIoViewModel}">
-                    <local:DigitalIoView/>
-                </DataTemplate>
-                <DataTemplate DataType="{x:Type settingsVm:AnalogIoViewModel}">
-                    <local:AnalogIoView/>
                 </DataTemplate>
             </TabControl.Resources>
         </TabControl>

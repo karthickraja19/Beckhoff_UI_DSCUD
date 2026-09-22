@@ -249,6 +249,13 @@ namespace Nova.Wpf.App
             ApplyPositiveIntSetting("PtpIterationCount", v => AxisControlViewModel.MaxIterations = v);
             ApplyPositiveIntSetting("PPCIterationLen", v => AxisControlViewModel.MaxIterationDigits = v);
 
+            // Commissioning only: opens Config and Settings to everyone as Level 3. Set
+            // before any view model is built, because the pages read it once.
+            bool bypassAccessLevels;
+            AccessBypass.ConfigAndSettings =
+                bool.TryParse(ConfigurationManager.AppSettings["BypassAccessLevels"], out bypassAccessLevels)
+                && bypassAccessLevels;
+
             // 1. Core services
             services.AddSingleton<IAppSession, AppSession>();
 

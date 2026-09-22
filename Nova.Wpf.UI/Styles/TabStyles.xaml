@@ -151,16 +151,18 @@
                              it so it still reads as a track now that each chip carries
                              its own outline. Left-aligned and sized to its content, so a
                              nine-tab strip does not stretch across the whole screen the
-                             way the old connected tabs did. -->
+                             way the old connected tabs did. The chips wrap onto a second
+                             row when the page is too narrow for them, rather than the
+                             last ones being cut off out of reach. -->
                         <Border Grid.Row="0" HorizontalAlignment="Left"
                                 VerticalAlignment="Top"
                                 Background="{DynamicResource Audio.System.Gray5Brush}"
                                 CornerRadius="{DynamicResource Audio.Radius.Field}"
                                 Padding="4,0"
                                 SnapsToDevicePixels="True">
-                            <StackPanel x:Name="HeaderPanel"
-                                        Orientation="Horizontal"
-                                        IsItemsHost="True"/>
+                            <WrapPanel x:Name="HeaderPanel"
+                                       Orientation="Horizontal"
+                                       IsItemsHost="True"/>
                         </Border>
 
                         <!-- Content sits on the page, not in a second box: the screens

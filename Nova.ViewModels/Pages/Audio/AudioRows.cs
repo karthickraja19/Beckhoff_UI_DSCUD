@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace Nova.ViewModels.Pages.Audio
@@ -94,6 +97,130 @@ namespace Nova.ViewModels.Pages.Audio
             IsOutOfSpec = isNumeric &&
                           ((lowerLimit.HasValue && numeric < lowerLimit.Value) ||
                            (upperLimit.HasValue && numeric > upperLimit.Value));
+        }
+    }
+
+    /// <summary>
+    /// One row of the Config page's Spec Limits panel (slide 58), editable after Edit.
+    /// </summary>
+    /// <remarks>
+    /// Separate from <see cref="ParameterRow"/>, which compares a reading against fixed
+    /// limits. Limits are kept as the text the file stores, so "0.50" comes back as
+    /// "0.50" rather than being reformatted. Blank means no limit and shows as "N/A"
+    /// (slide 43: "Use N/A in LSL/USL if there is no spec limit"); typing "N/A" means
+    /// the same.
+    /// </remarks>
+    public partial class SpecLimitRow : ObservableObject
+    {
+        private const string NoLimit = "N/A";
+
+        /// <summary>Position of the row in the limits file; Save writes it back there.</summary>
+        public int Index { get; }
+
+        public string Parameter { get; }
+
+        public string Unit { get; }
+
+        /// <summary>"Parameter (unit)", as the panel's Key Name column.</summary>
+        public string KeyName { get; }
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(LowerLimitText))]
+        private string _lowerLimit;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(UpperLimitText))]
+        private string _upperLimit;
+
+        /// <summary>Why the row cannot be saved, or null. Set by <see cref="Validate"/>.</summary>
+        [ObservableProperty]
+        private string _error;
+
+        public string LowerLimitText => Display(LowerLimit);
+
+        public string UpperLimitText => Display(UpperLimit);
+
+        public SpecLimitRow(int index, string parameter, string unit, string lowerLimit, string upperLimit)
+        {
+            Index = index;
+            Parameter = parameter ?? string.Empty;
+            Unit = unit ?? string.Empty;
+            KeyName = (string.IsNullOrWhiteSpace(Parameter) ? "(unnamed)" : Parameter.Trim())
+                      + (string.IsNullOrWhiteSpace(Unit) ? string.Empty : " (" + Unit.Trim() + ")");
+            _lowerLimit = ToStored(lowerLimit);
+            _upperLimit = ToStored(upperLimit);
+        }
+
+        /// <summary>
+        /// Checks both limits are numbers (or blank) and that LSL is not above USL.
+        /// Sets <see cref="Error"/> and returns true when the row can be saved.
+        /// </summary>
+        public bool Validate()
+        {
+            double lower, upper;
+            bool hasLower = TryParse(LowerLimit, out lower);
+            bool hasUpper = TryParse(UpperLimit, out upper);
+
+            if (!IsBlank(LowerLimit) && !hasLower)
+                Error = "LSL is not a number.";
+            else if (!IsBlank(UpperLimit) && !hasUpper)
+                Error = "USL is not a number.";
+            else if (hasLower && hasUpper && lower > upper)
+                Error = "LSL is greater than USL.";
+            else
+                Error = null;
+
+            return Error == null;
+        }
+
+        /// <summary>The text to store: trimmed, and blank for no limit.</summary>
+        public static string ToStored(string text)
+        {
+            return IsBlank(text) ? string.Empty : text.Trim();
+        }
+
+        private static bool IsBlank(string text)
+        {
+            return string.IsNullOrWhiteSpace(text) ||
+                   string.Equals(text.Trim(), NoLimit, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string Display(string text)
+        {
+            return IsBlank(text) ? NoLimit : text.Trim();
+        }
+
+        /// <summary>
+        /// Invariant culture, because the file stores "0.50" whatever the panel PC's
+        /// regional settings are.
+        /// </summary>
+        private static bool TryParse(string text, out double value)
+        {
+            value = 0;
+            return !IsBlank(text) &&
+                   double.TryParse(text.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out value) &&
+                   !double.IsNaN(value) && !double.IsInfinity(value);
+        }
+    }
+
+    /// <summary>
+    /// One row of the Setting page's Hardware Setting dialog (slide 63): a subsystem and
+    /// the type chosen for it from a closed list.
+    /// </summary>
+    public partial class HardwareSettingRow : ObservableObject
+    {
+        public string Subsystem { get; }
+
+        public IReadOnlyList<string> Types { get; }
+
+        [ObservableProperty]
+        private string _selectedType;
+
+        public HardwareSettingRow(string subsystem, IReadOnlyList<string> types, string selectedType)
+        {
+            Subsystem = subsystem;
+            Types = types;
+            _selectedType = selectedType;
         }
     }
 

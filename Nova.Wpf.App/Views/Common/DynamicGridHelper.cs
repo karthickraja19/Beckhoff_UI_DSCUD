@@ -79,6 +79,7 @@ namespace Nova.Wpf.App.Views.Common
                     var textCol = new DataGridTextColumn
                     {
                         Header = col.Title,
+                        HeaderTemplate = WrappingHeader(TextAlignment.Left),
                         Binding = new Binding("[" + col.Key + "]") { Mode = BindingMode.OneWay },
                         IsReadOnly = true,
                         ElementStyle = elementStyle,
@@ -91,7 +92,10 @@ namespace Nova.Wpf.App.Views.Common
                     }
                     else
                     {
+                        // A wide table (the gantry's 13 columns) would otherwise squeeze
+                        // the row names down to an ellipsis.
                         textCol.Width = new DataGridLength(1.4, DataGridLengthUnitType.Star);
+                        textCol.MinWidth = IdentifierMinWidth;
                     }
                     dataGrid.Columns.Add(textCol);
                 }
@@ -105,6 +109,7 @@ namespace Nova.Wpf.App.Views.Common
                     var templateCol = new DataGridTemplateColumn
                     {
                         Header = col.Title,
+                        HeaderTemplate = WrappingHeader(TextAlignment.Center),
                         HeaderStyle = headerStyle,
                         Width = col.Width.HasValue ? new DataGridLength(col.Width.Value) : new DataGridLength(1, DataGridLengthUnitType.Star)
                     };
@@ -135,6 +140,22 @@ namespace Nova.Wpf.App.Views.Common
                 }
                 index++;
             }
+        }
+
+        private const double IdentifierMinWidth = 120;
+
+        /// <summary>
+        /// Column title that wraps onto a second line when the column is narrower than
+        /// the title, instead of being clipped mid-word ("X-Vel (mn").
+        /// </summary>
+        private static DataTemplate WrappingHeader(TextAlignment alignment)
+        {
+            var text = new FrameworkElementFactory(typeof(TextBlock));
+            text.SetBinding(TextBlock.TextProperty, new Binding());
+            text.SetValue(TextBlock.TextWrappingProperty, TextWrapping.Wrap);
+            text.SetValue(TextBlock.TextAlignmentProperty, alignment);
+            text.SetValue(FrameworkElement.MarginProperty, new Thickness(0, 4, 0, 4));
+            return new DataTemplate { VisualTree = text };
         }
     }
 }

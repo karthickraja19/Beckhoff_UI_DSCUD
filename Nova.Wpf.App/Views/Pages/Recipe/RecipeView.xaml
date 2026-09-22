@@ -6,8 +6,9 @@
              Background="Transparent">
 
     <!-- Connected-tab look + icon/label header come from the shared implicit
-         TabControl/TabItem styles (Nova.Wpf.UI/Styles/TabStyles.xaml). -->
-    <Grid Margin="6">
+         TabControl/TabItem styles (Nova.Wpf.UI/Styles/TabStyles.xaml). No margin: the
+         host page's padding places this strip level with the strip above it. -->
+    <Grid>
         <TabControl ItemsSource="{Binding Tabs}"
                     SelectedItem="{Binding SelectedTab}">
             <TabControl.Resources>
