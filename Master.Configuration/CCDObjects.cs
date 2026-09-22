@@ -14,7 +14,7 @@ namespace Master.Configuration
 {
     public static class CCDObjects
     {
-        public static Dictionary<CCDs, Vision> CCDs = new Dictionary<CCDs, Vision>();
+        public static Dictionary<CCDs, TcpDevice> CCDs = new Dictionary<CCDs, TcpDevice>();
 
         public static void LoadCCDs()
         {
@@ -29,8 +29,14 @@ namespace Master.Configuration
                     string ccdName = ccdEnum.ToString();
 
                     var ccdConfig = ConfigGlobalClass.CCDConfigurations.Where(x => x.EnumName == ccdName).FirstOrDefault();
-                    VisionProperties visionProperties = new VisionProperties();
-                    var ccd = new Vision(ConfigGlobalClass.cardManager.Card, visionProperties);
+                    NetworkDeviceProperties networkDeviceProperties = new NetworkDeviceProperties
+                    {
+                        Name = ccdConfig.Name,
+                        EnumName = ccdConfig.EnumName,
+                        DeviceType = NetworkDeviceType.Vision,
+                        Id = ccdConfig.Id,
+                    };
+                    var ccd = TcpDeviceFactory.Create(ConfigGlobalClass.cardManager.Card, networkDeviceProperties);
 
                     CCDs[ccdEnum] = ccd;
                 }
@@ -39,7 +45,6 @@ namespace Master.Configuration
             {
                 MessageBox.Show("LoadCCDs: " + ex.Message, "", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 Logger.WriteLog(LogType.Error, "LoadCCDs", "CCDConfig", ex.Message, ex.StackTrace);
-                //throw;
             }
         }
     }

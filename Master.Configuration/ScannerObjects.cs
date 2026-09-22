@@ -6,6 +6,7 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using System.Xml.Linq;
 using Teal.Library.Contracts;
 using Teal.Library.Log;
 using Teal.Library.TcpIp;
@@ -14,7 +15,7 @@ namespace Master.Configuration
 {
     public static class ScannerObjects
     {
-        public static Dictionary<Scanners, Scanner> Scanners = new Dictionary<Scanners, Scanner>();
+        public static Dictionary<Scanners, TcpDevice> Scanners = new Dictionary<Scanners, TcpDevice>();
 
         public static void LoadScanners()
         {
@@ -26,19 +27,24 @@ namespace Master.Configuration
 
                 foreach (var scannerEnum in Enum.GetValues(typeof(Scanners)).Cast<Scanners>())
                 {
-                    string ccdName = scannerEnum.ToString();
+                    string scannerName = scannerEnum.ToString();
 
-                    var scannerConfig = ConfigGlobalClass.ScannerConfigurations.Where(x => x.EnumName == ccdName).FirstOrDefault();
-                    ScannerProperties scannerProperties = new ScannerProperties();
-                    var scanner = new Scanner(ConfigGlobalClass.cardManager.Card, scannerProperties);
-
+                    var scannerConfig = ConfigGlobalClass.ScannerConfigurations.Where(x => x.EnumName == scannerName).FirstOrDefault();
+                    NetworkDeviceProperties networkDeviceProperties = new NetworkDeviceProperties
+                    {
+                        Name = scannerConfig.Name,
+                        EnumName = scannerConfig.EnumName,
+                        DeviceType = NetworkDeviceType.Scanner,
+                        Id = scannerConfig.Id,
+                    };
+                    var scanner = TcpDeviceFactory.Create(ConfigGlobalClass.cardManager.Card,networkDeviceProperties);
                     Scanners[scannerEnum] = scanner;
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show("LoadScanners: " + ex.Message, "", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                Logger.WriteLog(LogType.Error, "LoadScanners", "CCDConfig", ex.Message, ex.StackTrace);
+                Logger.WriteLog(LogType.Error, "LoadScanners", "ScannerObjects", ex.Message, ex.StackTrace);
             }
         }
     }
