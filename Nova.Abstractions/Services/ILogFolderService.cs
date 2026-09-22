@@ -15,5 +15,13 @@ namespace Nova.Abstractions.Services
 
         /// <summary>Opens <see cref="LogFolderPath"/> in the OS file browser.</summary>
         void OpenLogFolder();
+
+        /// <summary>
+        /// Opens any folder in the OS file browser - the station card's Machine Log,
+        /// HIVE Log and Main SW Path links (DFM slide 43). Returns false, without
+        /// opening anything, when the path is blank or the folder does not exist, so
+        /// the caller can say which folder is missing.
+        /// </summary>
+        bool OpenFolder(string path);
     }
 }

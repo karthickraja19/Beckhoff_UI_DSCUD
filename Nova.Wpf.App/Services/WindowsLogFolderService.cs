@@ -26,6 +26,7 @@ namespace Nova.Wpf.App.Services
 
         private readonly object _sync = new object();
         private DateTime _lastLaunchUtc = DateTime.MinValue;
+        private string _lastLaunchPath;
 
         public string LogFolderPath =>
             ConfigurationManager.AppSettings["LogFilePath"] ?? string.Empty;
@@ -34,36 +35,51 @@ namespace Nova.Wpf.App.Services
 
         public void OpenLogFolder()
         {
-            string path = LogFolderPath;
-            if (string.IsNullOrWhiteSpace(path))
-                return;
+            OpenFolder(LogFolderPath);
+        }
+
+        public bool OpenFolder(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path) || !Directory.Exists(path))
+                return false;
 
             lock (_sync)
             {
-                if (DateTime.UtcNow - _lastLaunchUtc < LaunchCooldown)
+                // The cooldown is per folder, so Machine Log then HIVE Log in quick
+                // succession still opens both.
+                if (string.Equals(path, _lastLaunchPath, StringComparison.OrdinalIgnoreCase) &&
+                    DateTime.UtcNow - _lastLaunchUtc < LaunchCooldown)
                 {
                     // A window was just launched and may not have appeared yet; a second
                     // Process.Start here is what produced the stack of Explorer windows.
-                    return;
+                    return true;
                 }
 
                 if (TryActivateExistingWindow(path))
                 {
-                    _lastLaunchUtc = DateTime.UtcNow;
-                    return;
+                    MarkLaunched(path);
+                    return true;
                 }
 
                 try
                 {
-                    System.Diagnostics.Process.Start("explorer.exe", path);
-                    _lastLaunchUtc = DateTime.UtcNow;
+                    System.Diagnostics.Process.Start("explorer.exe", "\"" + path + "\"");
+                    MarkLaunched(path);
                 }
                 catch (Exception ex)
                 {
                     // Never let a shell failure take out the nav bar.
-                    System.Diagnostics.Debug.WriteLine("Opening the log folder failed: " + ex.Message);
+                    System.Diagnostics.Debug.WriteLine("Opening folder " + path + " failed: " + ex.Message);
                 }
+
+                return true;
             }
+        }
+
+        private void MarkLaunched(string path)
+        {
+            _lastLaunchPath = path;
+            _lastLaunchUtc = DateTime.UtcNow;
         }
 
         /// <summary>

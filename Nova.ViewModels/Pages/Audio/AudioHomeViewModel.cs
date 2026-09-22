@@ -219,54 +219,54 @@ namespace Nova.ViewModels.Pages.Audio
         /// Slide 43: "Click Machine log and HIVE log to open the path of the log files".
         /// </summary>
         /// <remarks>
-        /// <see cref="ILogFolderService"/> opens one fixed configured folder and takes
-        /// no path, so it can only serve the machine log. The HIVE log and the main-SW
-        /// folder are separate paths from the station profile and have nowhere to go
-        /// yet, so those two commands report the path instead of opening it. Widening
-        /// the service to take a path is a change to a contract the legacy Log nav
-        /// entry also uses, which is not this pass's to make.
+        /// The machine log is the folder the running log is written to (App.config
+        /// LogFilePath), falling back to the profile's path when that is not set.
         /// </remarks>
         [RelayCommand]
         private void OpenMachineLog()
         {
-            if (_logFolders != null && _logFolders.FolderExists)
-            {
-                _logFolders.OpenLogFolder();
-                return;
-            }
+            string path = _logFolders != null && !string.IsNullOrWhiteSpace(_logFolders.LogFolderPath)
+                ? _logFolders.LogFolderPath
+                : (_profile != null ? _profile.Current.MachineLogPath : null);
 
-            ReportPath(
-                _logFolders != null && !string.IsNullOrWhiteSpace(_logFolders.LogFolderPath)
-                    ? _logFolders.LogFolderPath
-                    : (_profile != null ? _profile.Current.MachineLogPath : null),
-                "Machine log");
+            OpenFolder(path, "Machine log");
         }
 
         [RelayCommand]
         private void OpenHiveLog()
         {
-            ReportPath(_profile != null ? _profile.Current.HiveLogPath : null, "HIVE log");
+            OpenFolder(_profile != null ? _profile.Current.HiveLogPath : null, "HIVE log");
         }
 
-        /// <summary>Slide 43: "Main SW path to show the path of the main SW, click to open the path".</summary>
+        /// <summary>
+        /// Slide 43: "Main SW path to show the path of the main SW, click to open the
+        /// path" - the folder the running exe is in.
+        /// </summary>
         [RelayCommand]
         private void OpenMainSoftwarePath()
         {
-            ReportPath(_profile != null ? _profile.Current.MainSoftwarePath : null, "Main SW");
+            string exe = _profile != null ? _profile.Current.MainSoftwarePath : null;
+            OpenFolder(string.IsNullOrWhiteSpace(exe) ? null : System.IO.Path.GetDirectoryName(exe), "Main SW");
         }
 
-        private void ReportPath(string path, string what)
+        /// <summary>
+        /// Opens the folder, or says why not. A missing folder is reported with its
+        /// path, so the operator knows where the software expected to find it.
+        /// </summary>
+        private void OpenFolder(string path, string what)
         {
-            if (_dialog == null)
-                return;
-
             if (string.IsNullOrWhiteSpace(path))
             {
-                _dialog.ShowWarning(what + " path is not configured.", what);
+                if (_dialog != null)
+                    _dialog.ShowWarning(what + " path is not configured.", what);
                 return;
             }
 
-            _dialog.ShowInfo(path, what);
+            if (_logFolders != null && _logFolders.OpenFolder(path))
+                return;
+
+            if (_dialog != null)
+                _dialog.ShowWarning(what + " folder does not exist yet:" + Environment.NewLine + path, what);
         }
 
         /// <summary>

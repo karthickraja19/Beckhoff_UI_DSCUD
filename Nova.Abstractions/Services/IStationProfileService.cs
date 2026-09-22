@@ -43,19 +43,26 @@ namespace Nova.Abstractions.Services
         /// </summary>
         public ProductSku ProductType { get; set; }
 
-        /// <summary>System integrator / vendor, three-letter code. Shown on the card.</summary>
+        /// <summary>
+        /// System integrator / vendor, three-letter code. Shown on the card. Fixed by
+        /// the software - it is the <c>AAA</c> of <see cref="SoftwareVersion"/> - so the
+        /// service fills it in and never stores it.
+        /// </summary>
         public string Vendor { get; set; }
 
         /// <summary>
         /// The SW version string in the DFM's format,
         /// <c>AAA_X.X.X.X_YYMMDD_TYPE</c> (slide 43). Shown in the window title and on
-        /// the station card.
+        /// the station card. Slide 43: "SW Version ID is hard coded in SW", so the
+        /// service fills it in from the build and never stores it.
         /// </summary>
         public string SoftwareVersion { get; set; }
 
         /// <summary>
         /// Full path of the main executable. Slide 43: "Main SW path to show the path of
-        /// the main SW, click to open the path".
+        /// the main SW, click to open the path". The path of the running exe, filled in
+        /// by the service and never stored, so it cannot go stale when the software is
+        /// installed somewhere else.
         /// </summary>
         public string MainSoftwarePath { get; set; }
 
@@ -74,11 +81,76 @@ namespace Nova.Abstractions.Services
         /// <summary>QPL number shown on the station card.</summary>
         public string QplNumber { get; set; }
 
+        /// <summary>
+        /// The hardware type chosen for each subsystem in slide 63's Hardware Setting
+        /// dialog, one entry per subsystem in
+        /// <see cref="IStationProfileService.HardwareSubsystems"/>.
+        /// </summary>
+        public List<HardwareSelection> Hardware { get; set; } = new List<HardwareSelection>();
+
         /// <summary>A copy, so a page can edit a draft without touching the live record.</summary>
         public StationProfile Clone()
         {
-            return (StationProfile)MemberwiseClone();
+            var copy = (StationProfile)MemberwiseClone();
+            copy.Hardware = new List<HardwareSelection>();
+            if (Hardware != null)
+            {
+                foreach (HardwareSelection selection in Hardware)
+                {
+                    if (selection != null)
+                        copy.Hardware.Add(new HardwareSelection { Subsystem = selection.Subsystem, Type = selection.Type });
+                }
+            }
+
+            return copy;
         }
+
+        /// <summary>The chosen type for one subsystem, or null when none is recorded.</summary>
+        public string HardwareTypeOf(string subsystem)
+        {
+            if (Hardware == null)
+                return null;
+
+            foreach (HardwareSelection selection in Hardware)
+            {
+                if (selection != null &&
+                    string.Equals(selection.Subsystem, subsystem, StringComparison.OrdinalIgnoreCase))
+                {
+                    return selection.Type;
+                }
+            }
+
+            return null;
+        }
+    }
+
+    /// <summary>One row of the Hardware Setting dialog as saved: a subsystem and its type.</summary>
+    public sealed class HardwareSelection
+    {
+        /// <summary>Subsystem name, e.g. "PLC", "Robot Arm", "CCD".</summary>
+        public string Subsystem { get; set; }
+
+        /// <summary>The chosen hardware type, one of that subsystem's options.</summary>
+        public string Type { get; set; }
+    }
+
+    /// <summary>
+    /// One row the Hardware Setting dialog offers (slide 63): a subsystem and the
+    /// hardware types it can be. Read from configuration, not compiled in - slide 62:
+    /// "Cross QPL/Line/Site software implementation will not allow re-compile software".
+    /// </summary>
+    public sealed class HardwareSubsystem
+    {
+        public HardwareSubsystem(string name, IReadOnlyList<string> types)
+        {
+            Name = name;
+            Types = types ?? Array.Empty<string>();
+        }
+
+        public string Name { get; }
+
+        /// <summary>The options, in the order the dialog shows them. The first is the default.</summary>
+        public IReadOnlyList<string> Types { get; }
     }
 
     /// <summary>
@@ -89,6 +161,8 @@ namespace Nova.Abstractions.Services
     /// The option lists exist because of slide 62: "Any change should be selected
     /// through the menu bar. Manually key-in is NOT allowed." A free-text box would
     /// violate that, so every one of those fields has to be backed by a closed list.
+    /// They are read from configuration, so a new site, line or hardware type needs no
+    /// rebuild.
     /// </remarks>
     public interface IStationProfileService
     {
@@ -116,5 +190,9 @@ namespace Nova.Abstractions.Services
         IReadOnlyList<string> Lines { get; }
         IReadOnlyList<string> Stations { get; }
         IReadOnlyList<string> Languages { get; }
+        IReadOnlyList<int> MachineNumbers { get; }
+
+        /// <summary>The rows of slide 63's Hardware Setting dialog.</summary>
+        IReadOnlyList<HardwareSubsystem> HardwareSubsystems { get; }
     }
 }

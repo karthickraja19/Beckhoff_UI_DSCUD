@@ -7,24 +7,21 @@
              Background="Transparent">
 
     <!-- Connected-tab look + icon/label header come from the shared implicit
-         TabControl/TabItem styles (Nova.Wpf.UI/Styles/TabStyles.xaml) — same as Manual. -->
-    <Grid Margin="6">
+         TabControl/TabItem styles (Nova.Wpf.UI/Styles/TabStyles.xaml) — same as Manual.
+         No margin: the host page's padding places this strip level with the strip
+         above it, and a margin here would indent it. -->
+    <Grid>
         <TabControl ItemsSource="{Binding Tabs}"
                     SelectedItem="{Binding SelectedTab}">
             <TabControl.Resources>
-                <!-- General has a dedicated shift-settings layout. -->
-                <DataTemplate DataType="{x:Type settingsVm:GeneralSettingsViewModel}">
-                    <local:GeneralSettingsView/>
-                </DataTemplate>
-
                 <!-- Device Settings has a dedicated composite layout. -->
                 <DataTemplate DataType="{x:Type settingsVm:DeviceSettingsViewModel}">
                     <local:DeviceSettingsView/>
                 </DataTemplate>
 
-                <!-- Vision Settings: colour-parameter table. -->
-                <DataTemplate DataType="{x:Type settingsVm:VisionSettingsViewModel}">
-                    <local:VisionSettingsView/>
+                <!-- I/O Diagnostics: digital inputs and outputs. -->
+                <DataTemplate DataType="{x:Type settingsVm:DigitalIoViewModel}">
+                    <local:DigitalIoView/>
                 </DataTemplate>
 
                 <!-- Axis Parameter Settings: axis table. -->
@@ -32,7 +29,7 @@
                     <local:AxisParametersView/>
                 </DataTemplate>
 
-                <!-- Grouped tabs (I/O / SFC / Calibration) host nested tabs. -->
+                <!-- Grouped tabs (SFC / Calibration) host nested tabs. -->
                 <DataTemplate DataType="{x:Type settingsVm:SettingsGroupViewModel}">
                     <local:SettingsGroupView/>
                 </DataTemplate>

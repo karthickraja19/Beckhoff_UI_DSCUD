@@ -1,0 +1,18 @@
+{
+  "Site": "KS",
+  "Line": "Line1",
+  "Station": "FT200",
+  "MachineNumber": 1,
+  "Language": "English",
+  "ProductType": "Common",
+  "MachineLogPath": "C:\\TEAL_Log_Data",
+  "HiveLogPath": "C:\\TEAL_Log_Data\\HIVE",
+  "RemoteQualification": false,
+  "QplNumber": "#1",
+  "Hardware": [
+    { "Subsystem": "PLC", "Type": "Type A" },
+    { "Subsystem": "Robot Arm", "Type": "Type A" },
+    { "Subsystem": "CCD", "Type": "Type A" },
+    { "Subsystem": "Driver", "Type": "Type A" }
+  ]
+}

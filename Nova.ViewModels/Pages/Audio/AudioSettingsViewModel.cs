@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
 using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Nova.Abstractions.Data;
 using Nova.Abstractions.Services;
+using Nova.ViewModels.Common;
 
 namespace Nova.ViewModels.Pages.Audio
 {
@@ -54,8 +57,7 @@ namespace Nova.ViewModels.Pages.Audio
         public ObservableCollection<string> Languages { get; } = new ObservableCollection<string>();
 
         /// <summary>Machine numbers. Slide 62 shows a small stepper; a closed list keeps the no-typing rule.</summary>
-        public ObservableCollection<int> MachineNumbers { get; } =
-            new ObservableCollection<int> { 1, 2, 3, 4, 5, 6, 7, 8 };
+        public ObservableCollection<int> MachineNumbers { get; } = new ObservableCollection<int>();
 
         /// <summary>The four options slide 62's Prod Type menu lists, in its order.</summary>
         public ObservableCollection<ProductSku> ProductTypes { get; } =
@@ -140,7 +142,12 @@ namespace Nova.ViewModels.Pages.Audio
             OnPropertyChanged(nameof(CanEditLanguage));
             OnPropertyChanged(nameof(AccessHint));
 
+            // Dropping below Level 3 with the hardware dialog open closes it unsaved.
+            if (!CanEditCritical && IsHardwareDialogOpen)
+                IsHardwareDialogOpen = false;
+
             ChangeConfigCommand.NotifyCanExecuteChanged();
+            ApplyHardwareConfigCommand.NotifyCanExecuteChanged();
             SaveCommand.NotifyCanExecuteChanged();
         }
 
@@ -149,6 +156,10 @@ namespace Nova.ViewModels.Pages.Audio
         {
             get
             {
+                if (BypassesAccessLevels)
+                    return "Access levels are bypassed (BypassAccessLevels in App.config): every "
+                           + "setting on this page can be changed.";
+
                 if (!IsLoggedIn)
                     return "Sign in to change any of these settings.";
 
@@ -172,6 +183,45 @@ namespace Nova.ViewModels.Pages.Audio
 
 
         // ==================================================================
+        // Hardware Setting dialog (slide 63, and S2.4 for Remote Qualification)
+        // ==================================================================
+
+        /// <summary>Whether the Hardware Setting pop-up is showing.</summary>
+        [ObservableProperty]
+        private bool _isHardwareDialogOpen;
+
+        /// <summary>
+        /// The dialog's Remote Qualification choice. A draft until OK: Cancel leaves the
+        /// saved value alone. OFF is the default (S2.4: "Remote Qualification mode is
+        /// 'OFF' by default").
+        /// </summary>
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(RemoteQualificationOff))]
+        private bool _remoteQualificationDraft;
+
+        /// <summary>
+        /// The OFF radio button's side of <see cref="RemoteQualificationDraft"/>. Only a
+        /// check is acted on; the uncheck the radio group sends when ON is picked is
+        /// ignored, so the two buttons cannot fight.
+        /// </summary>
+        public bool RemoteQualificationOff
+        {
+            get { return !RemoteQualificationDraft; }
+            set
+            {
+                if (value)
+                    RemoteQualificationDraft = false;
+            }
+        }
+
+        /// <summary>One row per subsystem, each with its type chosen from a closed list.</summary>
+        public ObservableCollection<HardwareSettingRow> HardwareRows { get; } =
+            new ObservableCollection<HardwareSettingRow>();
+
+        public bool HasHardwareRows => HardwareRows.Count > 0;
+
+
+        // ==================================================================
         // Commands
         // ==================================================================
 
@@ -180,6 +230,11 @@ namespace Nova.ViewModels.Pages.Audio
         public IRelayCommand RevertCommand { get; }
 
         public IRelayCommand ChangeConfigCommand { get; }
+
+        /// <summary>The dialog's OK (slide 63: "Click Load Config to save").</summary>
+        public IRelayCommand ApplyHardwareConfigCommand { get; }
+
+        public IRelayCommand CancelHardwareConfigCommand { get; }
 
         private bool CanSave()
         {
@@ -237,21 +292,87 @@ namespace Nova.ViewModels.Pages.Audio
         /// (Admin access required)".
         /// </summary>
         /// <remarks>
-        /// The dialog itself is not built. Nothing in this application resolves a
-        /// hardware type to a code block yet ("Software backend will auto switch code
-        /// block according", slide 64), so a dialog that let an engineer pick Type B
-        /// would record a choice the machine then ignored - worse than not offering it.
+        /// Opens on a draft of the saved profile. The subsystems and their types come
+        /// from the options file; a saved type that is no longer offered falls back to
+        /// the subsystem's first option, which is what OK would then save.
+        /// <para>
+        /// Nothing in this application switches code blocks on the chosen types yet
+        /// ("Software backend will auto switch code block according", slide 64): the
+        /// choice is recorded, shown in the Config pane and available to that backend.
+        /// </para>
         /// </remarks>
         private void ChangeConfig()
         {
-            if (_dialog == null)
+            if (_profile == null)
+            {
+                if (_dialog != null)
+                    _dialog.ShowWarning("No station profile is configured on this machine.", "Change Config");
                 return;
+            }
 
-            _dialog.ShowInfo(
-                "The hardware configuration dialog is not built yet. It will hold the remote "
-                + "qualification switch and the per-subsystem hardware type selection from "
-                + "DFM v5.4 slide 63, once the software can switch code blocks to match.",
-                "Change Config");
+            // The dialog saves the whole profile, and saving reloads the General block,
+            // so unsaved General edits would be lost without a word.
+            if (IsDirty)
+            {
+                if (_dialog != null)
+                    _dialog.ShowInfo("Save or revert the General changes first, then open Change Config.", "Change Config");
+                return;
+            }
+
+            StationProfile current = _profile.Current;
+            RemoteQualificationDraft = current.RemoteQualification;
+
+            HardwareRows.Clear();
+            foreach (HardwareSubsystem subsystem in _profile.HardwareSubsystems)
+            {
+                string saved = current.HardwareTypeOf(subsystem.Name);
+                string selected = subsystem.Types.FirstOrDefault(t => string.Equals(t, saved, StringComparison.OrdinalIgnoreCase))
+                                  ?? subsystem.Types.FirstOrDefault();
+                HardwareRows.Add(new HardwareSettingRow(subsystem.Name, subsystem.Types, selected));
+            }
+            OnPropertyChanged(nameof(HasHardwareRows));
+
+            IsHardwareDialogOpen = true;
+        }
+
+        private void ApplyHardwareConfig()
+        {
+            // Gate the write as well as the button, as Save does.
+            if (_profile == null || !CanEditCritical)
+            {
+                IsHardwareDialogOpen = false;
+                return;
+            }
+
+            StationProfile draft = _profile.Current.Clone();
+            draft.RemoteQualification = RemoteQualificationDraft;
+            draft.Hardware = HardwareRows
+                .Where(r => !string.IsNullOrWhiteSpace(r.SelectedType))
+                .Select(r => new HardwareSelection { Subsystem = r.Subsystem, Type = r.SelectedType })
+                .ToList();
+
+            string error;
+            if (!_profile.Save(draft, out error))
+            {
+                // Stays open so the choices are not lost.
+                if (_dialog != null)
+                    _dialog.ShowError("The hardware configuration could not be saved: " + error, "Change Config");
+                return;
+            }
+
+            IsHardwareDialogOpen = false;
+        }
+
+        private void CancelHardwareConfig()
+        {
+            IsHardwareDialogOpen = false;
+        }
+
+        /// <summary>Leaving the page abandons an open Hardware Setting dialog.</summary>
+        public override void OnNavigatedFrom()
+        {
+            IsHardwareDialogOpen = false;
+            base.OnNavigatedFrom();
         }
 
         // ==================================================================
@@ -261,7 +382,7 @@ namespace Nova.ViewModels.Pages.Audio
             IStationProfileService profile = null,
             IMachineIdentityService identity = null,
             IDialogService dialog = null)
-            : base(session)
+            : base(session, AccessBypass.ConfigAndSettings)
         {
             _profile = profile;
             _identity = identity;
@@ -270,6 +391,8 @@ namespace Nova.ViewModels.Pages.Audio
             SaveCommand = new RelayCommand(Save, CanSave);
             RevertCommand = new RelayCommand(Revert, () => IsDirty);
             ChangeConfigCommand = new RelayCommand(ChangeConfig, () => CanEditCritical);
+            ApplyHardwareConfigCommand = new RelayCommand(ApplyHardwareConfig, () => CanEditCritical);
+            CancelHardwareConfigCommand = new RelayCommand(CancelHardwareConfig);
 
             if (_profile != null)
             {
@@ -277,6 +400,8 @@ namespace Nova.ViewModels.Pages.Audio
                 Fill(Lines, _profile.Lines);
                 Fill(Stations, _profile.Stations);
                 Fill(Languages, _profile.Languages);
+                foreach (int number in _profile.MachineNumbers ?? (IReadOnlyList<int>)Array.Empty<int>())
+                    MachineNumbers.Add(number);
                 _profile.ProfileChanged += OnProfileChanged;
             }
 
@@ -350,19 +475,18 @@ namespace Nova.ViewModels.Pages.Audio
         }
 
         /// <summary>
-        /// The right pane's text block (slides 62 and 64): IPC, CCD, PLC and Driver.
+        /// The right pane's text block (slides 62 and 64): "Once saved, the actual config
+        /// of this machine will show here".
         /// </summary>
         /// <remarks>
-        /// Reports what this install actually knows - the machine identity from the
-        /// profile and the host it is running on. Subsystem detail (CCD resolutions,
-        /// conveyor and robot-arm types) comes from the hardware configuration that
-        /// slide 63's dialog would set, which does not exist yet, so those lines say so
-        /// rather than printing the slide's example values as if they were read from
-        /// this machine.
+        /// IPC is read from the PC it is running on. Each hardware subsystem is shown
+        /// with the type saved from the Hardware Setting dialog - what this machine has
+        /// been configured as, not a probe of the hardware.
         /// </remarks>
         private void BuildResolvedConfig()
         {
             var text = new StringBuilder();
+            StationProfile profile = _profile != null ? _profile.Current : null;
 
             text.AppendLine("Config");
             text.AppendLine();
@@ -371,39 +495,70 @@ namespace Nova.ViewModels.Pages.Audio
             text.AppendLine("-----");
             text.AppendLine("Host: " + SafeMachineName());
             text.AppendLine("Processors: " + Environment.ProcessorCount);
+            foreach (string disk in FixedDisks())
+                text.AppendLine(disk);
             text.AppendLine("OS: " + Environment.OSVersion.VersionString);
             text.AppendLine("Runtime: " + Environment.Version);
             text.AppendLine();
 
             text.AppendLine("Machine");
             text.AppendLine("-----");
+            if (profile != null)
+                text.AppendLine("SW version: " + profile.SoftwareVersion);
             if (_identity != null)
             {
                 text.AppendLine("Name: " + _identity.MachineName);
-                text.AppendLine("SW version: " + _identity.SoftwareVersion);
                 text.AppendLine("MC version: " + _identity.MachineVersion);
             }
-            else
+            if (profile != null)
+                text.AppendLine("Remote Qualification: " + (profile.RemoteQualification ? "ON" : "OFF"));
+            text.AppendLine();
+
+            IReadOnlyList<HardwareSubsystem> subsystems = _profile != null
+                ? _profile.HardwareSubsystems
+                : (IReadOnlyList<HardwareSubsystem>)Array.Empty<HardwareSubsystem>();
+
+            if (subsystems.Count == 0)
             {
-                text.AppendLine("No machine profile was read.");
+                text.AppendLine("Hardware");
+                text.AppendLine("-----");
+                text.AppendLine("No hardware subsystems are listed in Data\\Settings\\StationOptions.json.");
             }
-            text.AppendLine();
 
-            text.AppendLine("CCD");
-            text.AppendLine("-----");
-            text.AppendLine("Not configured - set from Change Config.");
-            text.AppendLine();
+            foreach (HardwareSubsystem subsystem in subsystems)
+            {
+                string type = profile != null ? profile.HardwareTypeOf(subsystem.Name) : null;
 
-            text.AppendLine("PLC");
-            text.AppendLine("-----");
-            text.AppendLine("Not configured - set from Change Config.");
-            text.AppendLine();
+                text.AppendLine(subsystem.Name);
+                text.AppendLine("-----");
+                text.AppendLine("Type: " + (string.IsNullOrWhiteSpace(type) ? "not set - use Change Config" : type));
+                text.AppendLine();
+            }
 
-            text.AppendLine("Driver");
-            text.AppendLine("-----");
-            text.AppendLine("Not configured - set from Change Config.");
+            ResolvedConfig = text.ToString().TrimEnd();
+        }
 
-            ResolvedConfig = text.ToString();
+        /// <summary>"Disk C: 256 GB", one line per fixed drive; the slide's Hard Disk lines.</summary>
+        private static IEnumerable<string> FixedDisks()
+        {
+            var lines = new List<string>();
+            try
+            {
+                foreach (DriveInfo drive in DriveInfo.GetDrives())
+                {
+                    if (drive.DriveType != DriveType.Fixed || !drive.IsReady)
+                        continue;
+
+                    long gigabytes = (long)Math.Round(drive.TotalSize / 1e9);
+                    lines.Add("Disk " + drive.Name.TrimEnd('\\') + " " + gigabytes + " GB");
+                }
+            }
+            catch (Exception)
+            {
+                // A drive that cannot be read must not stop the Setting page rendering.
+            }
+
+            return lines;
         }
 
         private static string SafeMachineName()

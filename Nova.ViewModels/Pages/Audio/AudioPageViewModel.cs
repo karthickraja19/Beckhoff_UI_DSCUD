@@ -20,6 +20,7 @@ namespace Nova.ViewModels.Pages.Audio
     public abstract class AudioPageViewModel : PageViewModel
     {
         private readonly IAppSession _session;
+        private readonly bool _bypassAccessLevels;
 
         private AccessLevel _accessLevel;
 
@@ -55,18 +56,30 @@ namespace Nova.ViewModels.Pages.Audio
         /// </summary>
         public bool CanEditCritical => AccessLevel >= AccessLevel.Level3;
 
+        /// <summary>True when this page ignores the operator's level. See <see cref="AccessBypass"/>.</summary>
+        protected bool BypassesAccessLevels => _bypassAccessLevels;
+
         /// <summary>Hook for pages that have to re-read or re-lock something on a level change.</summary>
         protected virtual void OnAccessLevelChanged(AccessLevel level) { }
 
         protected AudioPageViewModel(IAppSession session)
+            : this(session, false)
+        {
+        }
+
+        /// <param name="session">The operator session the level is read from.</param>
+        /// <param name="bypassAccessLevels">
+        /// Treat every operator, signed in or not, as Level 3 on this page. Only the
+        /// commissioning switch in <see cref="AccessBypass"/> should pass true.
+        /// </param>
+        protected AudioPageViewModel(IAppSession session, bool bypassAccessLevels)
         {
             _session = session;
+            _bypassAccessLevels = bypassAccessLevels;
+            _accessLevel = CurrentLevel();
 
             if (_session != null)
-            {
-                _accessLevel = CurrentLevel();
                 _session.PropertyChanged += OnSessionPropertyChanged;
-            }
         }
 
         private void OnSessionPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -91,6 +104,9 @@ namespace Nova.ViewModels.Pages.Audio
         /// </remarks>
         private AccessLevel CurrentLevel()
         {
+            if (_bypassAccessLevels)
+                return AccessLevel.Level3;
+
             return _session != null && _session.IsLoggedIn ? _session.Level : AccessLevel.None;
         }
 

@@ -168,5 +168,126 @@
                            TextTrimming="None"/>
             </ScrollViewer>
         </Border>
+
+        <!-- ============================================================== -->
+        <!-- HARDWARE SETTING pop-up, slide 63 (and S2.4 for Remote          -->
+        <!-- Qualification). Modal over the page: the scrim takes every      -->
+        <!-- click that misses the dialog. Types are chosen from closed       -->
+        <!-- lists, never typed, per slide 62.                                -->
+        <!-- ============================================================== -->
+        <Grid Grid.ColumnSpan="2"
+              Visibility="{Binding IsHardwareDialogOpen, Converter={StaticResource BoolToVisibility}}">
+            <Border Background="#66000000"/>
+
+            <Border Style="{StaticResource Audio.Card}"
+                    Width="760" MaxHeight="620"
+                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Grid Margin="20,16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>   <!-- title -->
+                        <RowDefinition Height="Auto"/>   <!-- Remote Qualification -->
+                        <RowDefinition Height="Auto"/>   <!-- Hardware Setting heading -->
+                        <RowDefinition Height="*"/>      <!-- subsystem rows -->
+                        <RowDefinition Height="Auto"/>   <!-- Cancel / OK -->
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Style="{StaticResource Audio.Title3}"
+                               Text="Hardware Setting" HorizontalAlignment="Center" Margin="0,0,0,12"/>
+
+                    <StackPanel Grid.Row="1" Margin="0,0,0,16">
+                        <TextBlock Style="{StaticResource Audio.Headline}" Text="Remote Qualification" Margin="0,0,0,6"/>
+                        <Border Background="{DynamicResource Audio.Surface.RecessedBrush}"
+                                CornerRadius="{DynamicResource Audio.Radius.Field}"
+                                Padding="12,8">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton GroupName="RemoteQualification" Content="ON"
+                                                 IsChecked="{Binding RemoteQualificationDraft, Mode=TwoWay}"
+                                                 Margin="0,0,40,0"/>
+                                    <RadioButton GroupName="RemoteQualification" Content="OFF (Default)"
+                                                 IsChecked="{Binding RemoteQualificationOff, Mode=TwoWay}"/>
+                                </StackPanel>
+                                <TextBlock Style="{StaticResource Audio.Footnote}" TextWrapping="Wrap" Margin="0,8,0,0"
+                                           Text="ON turns the Home page station card orange. The extra HIVE log for remote qualification (S2.4) is not written by this build yet."/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <TextBlock Grid.Row="2" Style="{StaticResource Audio.Headline}" Text="Hardware Setting" Margin="0,0,0,6"/>
+
+                    <Border Grid.Row="3"
+                            BorderBrush="{DynamicResource Audio.System.Gray3Brush}" BorderThickness="1"
+                            CornerRadius="{DynamicResource Audio.Radius.Field}">
+                        <Grid>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{Binding HardwareRows}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Style="{StaticResource Audio.ListRow}">
+                                                <Grid Margin="12,4">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="120"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Style="{StaticResource Audio.Callout}"
+                                                               FontWeight="SemiBold"
+                                                               Text="{Binding Subsystem}" VerticalAlignment="Center"/>
+
+                                                    <!-- One type per subsystem: a single-select list drawn as
+                                                         the slide's check boxes. The boxes only show the
+                                                         selection; the click lands on the list item. -->
+                                                    <ListBox Grid.Column="1"
+                                                             ItemsSource="{Binding Types}"
+                                                             SelectedItem="{Binding SelectedType, Mode=TwoWay}"
+                                                             SelectionMode="Single"
+                                                             Background="Transparent" BorderThickness="0" Padding="0"
+                                                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                                             AutomationProperties.Name="{Binding Subsystem, StringFormat='{}{0} type'}">
+                                                        <ListBox.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <WrapPanel/>
+                                                            </ItemsPanelTemplate>
+                                                        </ListBox.ItemsPanel>
+                                                        <ListBox.ItemContainerStyle>
+                                                            <Style TargetType="ListBoxItem">
+                                                                <Setter Property="Cursor" Value="Hand"/>
+                                                                <Setter Property="Template">
+                                                                    <Setter.Value>
+                                                                        <ControlTemplate TargetType="ListBoxItem">
+                                                                            <Border Background="Transparent" Padding="0,6,28,6">
+                                                                                <CheckBox Content="{Binding}"
+                                                                                          IsChecked="{Binding IsSelected, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}"
+                                                                                          IsHitTestVisible="False" Focusable="False"
+                                                                                          VerticalContentAlignment="Center"/>
+                                                                            </Border>
+                                                                        </ControlTemplate>
+                                                                    </Setter.Value>
+                                                                </Setter>
+                                                            </Style>
+                                                        </ListBox.ItemContainerStyle>
+                                                    </ListBox>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+
+                            <TextBlock Style="{StaticResource Audio.EmptyState}" Margin="16,12" TextWrapping="Wrap"
+                                       Text="No hardware subsystems are listed. Add them under &quot;Hardware&quot; in Data\Settings\StationOptions.json."
+                                       Visibility="{Binding HasHardwareRows, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"/>
+                        </Grid>
+                    </Border>
+
+                    <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,16,0,0">
+                        <Button Style="{StaticResource Audio.Button}" Width="120"
+                                Content="Cancel" Command="{Binding CancelHardwareConfigCommand}"/>
+                        <Button Style="{StaticResource Audio.FilledButton}" Width="120" Margin="12,0,0,0"
+                                Content="OK" Command="{Binding ApplyHardwareConfigCommand}"
+                                ToolTip="Load Config - save the hardware configuration"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>

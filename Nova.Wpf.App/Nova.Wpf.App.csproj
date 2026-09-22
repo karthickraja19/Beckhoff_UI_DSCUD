@@ -64,5 +64,8 @@
     <None Update="Data\**\*.json;Data\**\*.xml;Data\**\*.csv;Data\**\*.txt" CopyToOutputDirectory="PreserveNewest" />
     <!-- Same as V3: the recipe and settings JSON the screens edit are re-copied on every build. -->
     <None Update="Data\Settings\*.json;Data\Gantry*.json;Data\RobotRecipe.json;Data\LightRecipe.json" CopyToOutputDirectory="Always" />
+    <!-- Except the station profile: the Settings page saves it next to the exe only, so
+         re-copying it on every build would throw away what the operator chose. -->
+    <None Update="Data\Settings\StationProfile.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
