@@ -1,0 +1,52 @@
+<Window x:Class="Nova.Hive.PlannedDowntimeDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Dialog"
+        Width="380"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        Topmost="True"
+        ShowInTaskbar="False"
+        FontFamily="Segoe UI"
+        FontSize="14"
+        Background="Transparent">
+
+    <!-- Audio SW DFM v5.4, slide 49: "Clicking planned downtime opens pop up with
+         planned downtime code options". The codes are chosen from this list only -
+         "Manually typing in state or error code prohibited". -->
+    <Border BorderBrush="#B0B0B0" BorderThickness="1" CornerRadius="6">
+        <StackPanel>
+            <Border Background="#ECECEC" CornerRadius="6,6,0,0" Padding="10,8">
+                <TextBlock Text="Dialog" FontWeight="Bold" Foreground="#3C3C3C" HorizontalAlignment="Center" />
+            </Border>
+
+            <Border Background="#F4F4F4" CornerRadius="0,0,6,6" Padding="20,16">
+                <StackPanel>
+                    <ItemsControl x:Name="ReasonList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <RadioButton GroupName="PlannedDowntime"
+                                             Content="{Binding Label}"
+                                             Tag="{Binding}"
+                                             IsEnabled="{Binding IsSelectable}"
+                                             FontWeight="Bold"
+                                             Margin="0,0,0,9"
+                                             Checked="Reason_Checked" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                        <Button Content="Cancel" MinWidth="92" Padding="14,6" Margin="0,0,10,0"
+                                Click="CancelButton_Click" />
+                        <Button x:Name="OkButton" Content="OK" MinWidth="92" Padding="14,6"
+                                IsEnabled="False" Click="OkButton_Click"
+                                Background="#1E7BF0" Foreground="White" BorderBrush="#1968CC" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </Border>
+</Window>

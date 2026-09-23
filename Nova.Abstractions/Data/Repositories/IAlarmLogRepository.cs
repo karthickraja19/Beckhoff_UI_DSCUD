@@ -6,10 +6,9 @@ using Nova.Abstractions.Data.Models;
 namespace Nova.Abstractions.Data.Repositories
 {
     /// <summary>
-    /// Read side of the persisted alarm log. Writes are owned by the legacy engine
-    /// (AlarmHelper.InsertAlarmInfo → sp_InsertAlarmLogs), so implementations that
-    /// sit on top of V3 leave <see cref="AppendAsync"/> as a no-op rather than
-    /// double-writing the same row.
+    /// Read side of the persisted alarm log. Rows are written by Nova.Alarm's
+    /// AlarmDatabase as PLC alarms start and end, so implementations leave
+    /// <see cref="AppendAsync"/> as a no-op rather than double-writing the same row.
     /// </summary>
     public interface IAlarmLogRepository
     {
