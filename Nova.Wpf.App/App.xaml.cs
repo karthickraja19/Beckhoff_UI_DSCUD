@@ -341,7 +341,8 @@ namespace Nova.Wpf.App
 
             services.AddSingleton<IAlarmService, SimulatedAlarmService>();
             services.AddSingleton<IMachineOrchestrator, SimulatedMachineOrchestrator>();
-            var resolveAddress = RegisterSimulatedDevices(services, dataDirectory);
+            List<KeyValuePair<CommDeviceKind, CommDevice>> simulatedCommDevices;
+            var resolveAddress = RegisterSimulatedDevices(services, dataDirectory, out simulatedCommDevices);
 
             var stepperConfigs = ReadJson<List<StepperConfiguration>>(dataDirectory, "Steppers.json");
             if (twincat)
@@ -360,6 +361,35 @@ namespace Nova.Wpf.App
                         SettingOrDefault("PlcIoGvl", ""),
                         resolveAddress,
                         _startupWarnings)));
+                services.AddSingleton<IVacuumService>(new VacuumService(
+                    TwincatDevices.CreateVacuums(
+                        plc,
+                        ReadJson<List<VacuumConfiguration>>(dataDirectory, "Vacuums.json"),
+                        SettingOrDefault("PlcIoGvl", ""),
+                        resolveAddress,
+                        _startupWarnings)));
+                services.AddSingleton<IAxisService>(new AxisService(
+                    TwincatDevices.CreateAxes(plc, ReadJson<List<ServoConfiguration>>(dataDirectory, "Servos.json"))));
+
+                // CCDs, scanners and robots go through their PLC function blocks. The library
+                // has no SFC class yet, so SFC stays simulated.
+                var commDevices = simulatedCommDevices.Where(d => d.Key == CommDeviceKind.Sfc).ToList();
+                AddTcpDevices(commDevices, plc, CommDeviceKind.Ccd, Teal.Library.Contracts.NetworkDeviceType.Vision,
+                    ReadJsonIfExists<List<SocketClientConfiguration>>(dataDirectory, "CCDs.json"));
+                AddTcpDevices(commDevices, plc, CommDeviceKind.Scanner, Teal.Library.Contracts.NetworkDeviceType.Scanner,
+                    ReadJsonIfExists<List<SocketClientConfiguration>>(dataDirectory, "Scanners.json"));
+                AddTcpDevices(commDevices, plc, CommDeviceKind.Robot, Teal.Library.Contracts.NetworkDeviceType.Robot,
+                    ReadJsonIfExists<List<RobotConfigurations>>(dataDirectory, "Robots.json")
+                        .Select(r => new SocketClientConfiguration
+                        {
+                            EnumName = r.EnumName,
+                            Name = r.Name,
+                            IPAddress = r.IPAddress,
+                            Port = r.Ports != null ? r.Ports.Communication : 0,
+                        })
+                        .ToList());
+                services.AddSingleton<ICommDeviceService>(new CommDeviceService(commDevices));
+
                 services.AddSingleton<IConnectionStatusService>(sp => new ConnectionStatusService(
                     sp.GetRequiredService<ICommDeviceService>(), "TwinCAT " + plc.Address, () => plc.IsConnected));
 
@@ -482,7 +512,8 @@ namespace Nova.Wpf.App
         /// Returns the Data\Config.csv name-to-wiring-address lookup, so a device that
         /// ConfigureServices replaces with a TwinCAT one shows the same addresses.
         /// </summary>
-        private static Func<string, bool, string> RegisterSimulatedDevices(IServiceCollection services, string dataDirectory)
+        private static Func<string, bool, string> RegisterSimulatedDevices(
+            IServiceCollection services, string dataDirectory, out List<KeyValuePair<CommDeviceKind, CommDevice>> simulatedCommDevices)
         {
             var axes = new List<IAxis>();
             foreach (var name in Enum.GetNames(typeof(Nova.Abstractions.Hardware.Enums.Servos)))
@@ -556,7 +587,22 @@ namespace Nova.Wpf.App
             services.AddSingleton<ILightService>(new LightService(
                 new List<ILightController> { new SimulatedLightController("OPT Light") }));
 
+            simulatedCommDevices = commDevices;
             return ResolveAddress;
+        }
+
+        /// <summary>Adds one console device per config entry, driven through the PLC.</summary>
+        private static void AddTcpDevices(
+            List<KeyValuePair<CommDeviceKind, CommDevice>> commDevices,
+            TwincatPlcConnection plc,
+            CommDeviceKind kind,
+            Teal.Library.Contracts.NetworkDeviceType type,
+            List<SocketClientConfiguration> configs)
+        {
+            var devices = TwincatDevices.CreateTcpDevices(plc, type, configs, _startupWarnings);
+            for (int i = 0; i < configs.Count; i++)
+                commDevices.Add(new KeyValuePair<CommDeviceKind, CommDevice>(kind,
+                    new CommDevice(configs[i].EnumName, $"{configs[i].IPAddress}:{configs[i].Port}", "", devices[i])));
         }
 
         /// <summary>
@@ -645,6 +691,12 @@ namespace Nova.Wpf.App
         private static T ReadJson<T>(string dataDirectory, string fileName)
         {
             return JsonConvert.DeserializeObject<T>(File.ReadAllText(Path.Combine(dataDirectory, fileName)));
+        }
+
+        /// <summary>The file's contents, or an empty T when the machine has no such file.</summary>
+        private static T ReadJsonIfExists<T>(string dataDirectory, string fileName) where T : new()
+        {
+            return File.Exists(Path.Combine(dataDirectory, fileName)) ? ReadJson<T>(dataDirectory, fileName) : new T();
         }
 
         /// <summary>

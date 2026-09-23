@@ -48,6 +48,15 @@
     <Reference Include="Teal.Library.Stepper">
       <HintPath>..\References\Beckhoff\Teal.Library.Stepper.dll</HintPath>
     </Reference>
+    <Reference Include="Teal.Library.Vacuum">
+      <HintPath>..\References\Beckhoff\Teal.Library.Vacuum.dll</HintPath>
+    </Reference>
+    <Reference Include="Teal.Library.Servo">
+      <HintPath>..\References\Beckhoff\Teal.Library.Servo.dll</HintPath>
+    </Reference>
+    <Reference Include="Teal.Library.TcpIp">
+      <HintPath>..\References\Beckhoff\Teal.Library.TcpIp.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Nova.Abstractions\Nova.Abstractions.csproj" />
