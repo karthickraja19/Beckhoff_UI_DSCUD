@@ -1,6 +1,7 @@
+using Nova.ViewModels.Pages.Manual;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Nova.ViewModels.Pages.Manual;
 
 namespace Nova.Wpf.App.Views.Pages.Manual
 {
@@ -12,7 +13,14 @@ namespace Nova.Wpf.App.Views.Pages.Manual
         }
 
         private AxisControlViewModel Vm => DataContext as AxisControlViewModel;
-
+        private void UserControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            Vm?.SubscribeAdsNotification();
+        }
+        private void UserControl_Unloaded(object sender, RoutedEventArgs e)
+        {
+            Vm?.UnsubscribeAdsNotification();
+        }
         // View glue only: jog must run while the button is held and stop on release
         // (same press/hold semantics as the V3 MouseDown/MouseUp handlers), which a
         // plain Command binding cannot express without a behaviors package.

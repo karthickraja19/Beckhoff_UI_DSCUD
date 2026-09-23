@@ -36,14 +36,26 @@
     <Reference Include="Teal.Library.Contracts">
       <HintPath>..\References\Beckhoff\Teal.Library.Contracts.dll</HintPath>
     </Reference>
+    <Reference Include="Teal.Library.Cylinder">
+      <HintPath>..\References\Beckhoff\Teal.Library.Cylinder.dll</HintPath>
+    </Reference>
     <Reference Include="Teal.Library.Log">
       <HintPath>..\References\Beckhoff\Teal.Library.Log.dll</HintPath>
+    </Reference>
+    <Reference Include="Teal.Library.Servo">
+      <HintPath>..\References\Beckhoff\Teal.Library.Servo.dll</HintPath>
+    </Reference>
+    <Reference Include="Teal.Library.TcpIp">
+      <HintPath>..\References\Beckhoff\Teal.Library.TcpIp.dll</HintPath>
     </Reference>
     <Reference Include="Teal.Library.Twincat">
       <HintPath>..\References\Beckhoff\Teal.Library.Twincat.dll</HintPath>
     </Reference>
     <Reference Include="Teal.Library.Stepper">
       <HintPath>..\References\Beckhoff\Teal.Library.Stepper.dll</HintPath>
+    </Reference>
+    <Reference Include="Teal.Library.Vacuum">
+      <HintPath>..\References\Beckhoff\Teal.Library.Vacuum.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

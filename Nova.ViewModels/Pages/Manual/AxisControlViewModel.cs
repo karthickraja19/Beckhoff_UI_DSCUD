@@ -604,5 +604,26 @@ private async Task PointToPointMove()
             }
             base.Dispose(disposing);
         }
+        private bool _isAdsSubscribed;
+
+        public void SubscribeAdsNotification()
+        {
+            //if (_isAdsSubscribed)
+            //    return;
+
+            //_notificationHandle = ...
+
+            //_isAdsSubscribed = true;
+        }
+
+        public void UnsubscribeAdsNotification()
+        {
+            //if (!_isAdsSubscribed)
+            //    return;
+
+            //_adsClient.DeleteDeviceNotification(_notificationHandle);
+
+            //_isAdsSubscribed = false;
+        }
     }
 }
