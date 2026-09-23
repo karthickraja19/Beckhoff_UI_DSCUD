@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
     <OutputType>WinExe</OutputType>
@@ -56,6 +56,9 @@
     </Reference>
     <Reference Include="Teal.Library.Stepper">
       <HintPath>..\References\Beckhoff\Teal.Library.Stepper.dll</HintPath>
+    </Reference>
+    <Reference Include="Teal.Library.Vacuum">
+      <HintPath>..\References\Beckhoff\Teal.Library.Vacuum.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
