@@ -46,11 +46,16 @@ namespace Nova.ViewModels.Pages.Audio
         // Filter row
         // ==================================================================
 
+        /// <summary>
+        /// The window the page opens with: "By default, the statistics of the last 48
+        /// hours (00:00 of the previous day to 24:00 of the current day)" - the Alarm
+        /// slide's key requirements. So: yesterday 00:00 to the end of today.
+        /// </summary>
         [ObservableProperty]
-        private DateTime _startTime = DateTime.Today;
+        private DateTime _startTime = DateTime.Today.AddDays(-1);
 
         [ObservableProperty]
-        private DateTime _endTime = DateTime.Now;
+        private DateTime _endTime = DateTime.Today.AddDays(1);
 
         [ObservableProperty]
         private bool _isBusy;

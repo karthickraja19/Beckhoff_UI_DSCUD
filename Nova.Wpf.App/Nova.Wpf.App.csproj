@@ -42,6 +42,9 @@
     <Reference Include="Teal.Library.Twincat">
       <HintPath>..\References\Beckhoff\Teal.Library.Twincat.dll</HintPath>
     </Reference>
+    <Reference Include="Teal.Library.Cylinder">
+      <HintPath>..\References\Beckhoff\Teal.Library.Cylinder.dll</HintPath>
+    </Reference>
     <Reference Include="Teal.Library.Stepper">
       <HintPath>..\References\Beckhoff\Teal.Library.Stepper.dll</HintPath>
     </Reference>
@@ -51,6 +54,8 @@
     <ProjectReference Include="..\Nova.ViewModels\Nova.ViewModels.csproj" />
     <ProjectReference Include="..\Nova.Wpf.UI\Nova.Wpf.UI.csproj" />
     <ProjectReference Include="..\Master.Repository\Master.Repository.csproj" />
+    <ProjectReference Include="..\Nova.Alarm\Nova.Alarm.csproj" />
+    <ProjectReference Include="..\Nova.Hive\Nova.Hive.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Assets\app.ico" />

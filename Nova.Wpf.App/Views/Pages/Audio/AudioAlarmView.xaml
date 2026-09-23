@@ -82,7 +82,7 @@
                     </Grid.RowDefinitions>
 
                     <TextBlock Grid.Row="0" Style="{StaticResource Audio.Title3}"
-                               Text="Downtime Statistic (Top 10)" Margin="16,12,16,8"/>
+                               Text="Downtime Statistic (Top10)" Margin="16,12,16,8"/>
 
                     <Grid Grid.Row="1" Margin="16,0,16,12">
                         <Grid.ColumnDefinitions>

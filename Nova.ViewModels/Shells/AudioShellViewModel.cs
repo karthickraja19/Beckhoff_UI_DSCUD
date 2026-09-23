@@ -46,6 +46,9 @@ namespace Nova.ViewModels.Shells
         private readonly IDialogService _dialog;
         private readonly IActiveAlarmService _activeAlarms;
 
+        /// <summary>HIVE state and its pop-ups (slides 47 and 49). Null with no PLC.</summary>
+        private readonly IHiveStatePrompt _hivePrompt;
+
         public AppTitleBarViewModel TitleBar { get; }
 
         /// <summary>The six menu buttons, in the order slide 42 draws them.</summary>
@@ -275,11 +278,12 @@ namespace Nova.ViewModels.Shells
             PauseMachineCommand.NotifyCanExecuteChanged();
             StopMachineCommand.NotifyCanExecuteChanged();
 
-            // HIVE state follows the machine for display purposes only. The real
-            // mapping has a 90-second idle timer and an error-code split (slides 7-9)
-            // that belongs with the HIVE reporting work; until then the chip shows the
-            // closest of the three states so the bar is not permanently grey.
-            HiveState = MapToHiveState(value);
+            // With HIVE running, the state is its own (slides 7-9) and the machine
+            // buttons do not change it - "Resetting the machine or pressing the
+            // running/idle button on GUI will not change HIVE state". Without HIVE the
+            // chip follows the machine, so the bar is not permanently grey.
+            if (_hivePrompt == null)
+                HiveState = MapToHiveState(value);
         }
 
         private static HiveState MapToHiveState(MachineStatus status)
@@ -340,20 +344,28 @@ namespace Nova.ViewModels.Shells
         }
 
         /// <summary>
-        /// HIVE chip. Slide 49's state-change dialog is HIVE work and is out of scope
-        /// for this pass, so the command says so plainly instead of silently doing
-        /// nothing - an unexplained dead control on the indicator bar is worse than a
-        /// message.
+        /// HIVE chip. Slide 49: "HIVE status bar shows current status. Click to change
+        /// state", for Level 2/3 only. The pop-ups live in Nova.Hive and are reached
+        /// through <see cref="IHiveStatePrompt"/>; with no PLC there is no HIVE to
+        /// change, so the chip says so rather than being a dead control.
         /// </summary>
         [RelayCommand]
         private void ChangeHiveState()
         {
+            if (_hivePrompt != null)
+            {
+                if (CanChangeHiveState)
+                    _hivePrompt.ShowStateChange();
+
+                return;
+            }
+
             if (_dialog == null)
                 return;
 
             _dialog.ShowInfo(
-                "Changing HIVE state from the GUI is not implemented yet. The chip shows "
-                + "the current state only.",
+                "HIVE is not running on this machine, so the state cannot be changed. "
+                + "The chip shows the machine's own state only.",
                 "HIVE");
         }
 
@@ -373,7 +385,8 @@ namespace Nova.ViewModels.Shells
             AppTitleBarViewModel titleBar,
             IStationProfileService profile = null,
             IDialogService dialog = null,
-            IActiveAlarmService activeAlarms = null)
+            IActiveAlarmService activeAlarms = null,
+            IHiveStatePrompt hivePrompt = null)
         {
             _navigation = navigation;
             _session = session;
@@ -381,6 +394,7 @@ namespace Nova.ViewModels.Shells
             _profile = profile;
             _dialog = dialog;
             _activeAlarms = activeAlarms;
+            _hivePrompt = hivePrompt;
             TitleBar = titleBar;
 
             // Slide 42, left to right. RequiresLogin is set for exactly the two the DFM
@@ -398,11 +412,19 @@ namespace Nova.ViewModels.Shells
                 _profile.ProfileChanged += OnProfileChanged;
 
             _machineStatus = orchestrator.CurrentStatus;
-            _hiveState = MapToHiveState(_machineStatus);
+            if (_hivePrompt != null)
+            {
+                _hiveState = _hivePrompt.CurrentState;
+                _hivePrompt.StateChanged += OnHivePromptStateChanged;
+            }
+            else
+            {
+                _hiveState = MapToHiveState(_machineStatus);
+            }
 
             StartMachineCommand = new AsyncRelayCommand(orchestrator.StartAutoAsync, CanStart);
             PauseMachineCommand = new RelayCommand(orchestrator.Pause, CanPause);
-            StopMachineCommand = new RelayCommand(orchestrator.Stop, CanStop);
+            StopMachineCommand = new RelayCommand(StopMachine, CanStop);
             orchestrator.OnMachineStatusChanged += HandleMachineStatusChanged;
 
             _accessLevel = session != null && session.IsLoggedIn ? session.Level : AccessLevel.None;
@@ -485,6 +507,24 @@ namespace Nova.ViewModels.Shells
             ApplyAlarmCount(alarms);
         }
 
+        private void OnHivePromptStateChanged(object sender, HiveState state)
+        {
+            HiveState = state;
+        }
+
+        /// <summary>
+        /// Stop. Slide 47: the machine stops and HIVE goes to downtime, but the
+        /// operator's badge is recorded first - "every time when pressing the stop
+        /// button on GUI will pop up to record operator ID".
+        /// </summary>
+        private void StopMachine()
+        {
+            _orchestrator.Stop();
+
+            if (_hivePrompt != null)
+                _hivePrompt.RecordStopDowntime();
+        }
+
         /// <summary>
         /// Slide 39: the alarm bell "turns to Alarmed when an error occurs". Only the
         /// Alarm button is touched - the other five have no alerted artwork.
@@ -525,6 +565,9 @@ namespace Nova.ViewModels.Shells
 
                 if (_activeAlarms != null)
                     _activeAlarms.ActiveAlarmsChanged -= OnActiveAlarmsChanged;
+
+                if (_hivePrompt != null)
+                    _hivePrompt.StateChanged -= OnHivePromptStateChanged;
 
                 if (_profile != null)
                     _profile.ProfileChanged -= OnProfileChanged;

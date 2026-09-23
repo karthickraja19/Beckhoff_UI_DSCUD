@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- HIVE reporting (Audio SW DFM v5.4, S1.1) and the alarm pop-up (slide 50).
+       Alarms come from Nova.Alarm; this project decides the HIVE machine state,
+       sends it to the HIVE gateway, and asks the operator to badge in. -->
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>Nova.Hive</AssemblyName>
+    <RootNamespace>Nova.Hive</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <!-- Reads the PLC's machine state. Same TwinCAT ADS version as the rest of the solution. -->
+    <PackageReference Include="Beckhoff.TwinCAT.Ads" Version="7.0.317" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Only for Logger.WriteLog, so HIVE errors land in the same log files as the rest of the HMI. -->
+    <Reference Include="Teal.Library.Contracts">
+      <HintPath>..\References\Beckhoff\Teal.Library.Contracts.dll</HintPath>
+    </Reference>
+    <Reference Include="Teal.Library.Log">
+      <HintPath>..\References\Beckhoff\Teal.Library.Log.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Nova.Abstractions\Nova.Abstractions.csproj" />
+    <ProjectReference Include="..\Nova.Alarm\Nova.Alarm.csproj" />
+  </ItemGroup>
+</Project>

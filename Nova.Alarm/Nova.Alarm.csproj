@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Machine alarms: reads the PLC's alarm list over ADS, works out when each alarm
+       starts and ends, and saves them to the [Alarms] table the Alarm page reads. -->
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <AssemblyName>Nova.Alarm</AssemblyName>
+    <RootNamespace>Nova.Alarm</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Same TwinCAT ADS version as Nova.Wpf.App and the Beckhoff library. -->
+    <PackageReference Include="Beckhoff.TwinCAT.Ads" Version="7.0.317" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Only for Logger.WriteLog, so alarm errors land in the same log files as the rest of the HMI. -->
+    <Reference Include="Teal.Library.Contracts">
+      <HintPath>..\References\Beckhoff\Teal.Library.Contracts.dll</HintPath>
+    </Reference>
+    <Reference Include="Teal.Library.Log">
+      <HintPath>..\References\Beckhoff\Teal.Library.Log.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Nova.Abstractions\Nova.Abstractions.csproj" />
+  </ItemGroup>
+</Project>

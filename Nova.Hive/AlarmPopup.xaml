@@ -1,0 +1,141 @@
+<Window x:Class="Nova.Hive.AlarmPopup"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Dialog"
+        Width="470"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        Topmost="True"
+        ShowInTaskbar="False"
+        FontFamily="Segoe UI"
+        FontSize="14"
+        Background="Transparent">
+
+    <!-- Audio SW DFM v5.4, slide 50 "Machine Alarm". Field order, the Options group,
+         and the Mute / Confirm buttons follow that slide. -->
+    <Window.Resources>
+        <!-- The read-only boxes the slide draws for the alarm's own values. -->
+        <Style x:Key="ValueBox" TargetType="Border">
+            <Setter Property="Background" Value="#E9E9E9" />
+            <Setter Property="BorderBrush" Value="#C8C8C8" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="3" />
+            <Setter Property="Padding" Value="8,5" />
+            <Setter Property="Margin" Value="0,0,0,10" />
+        </Style>
+
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="#20201F" />
+            <Setter Property="HorizontalAlignment" Value="Right" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,0,10,10" />
+        </Style>
+
+        <Style x:Key="DialogButton" TargetType="Button">
+            <Setter Property="Background" Value="White" />
+            <Setter Property="Foreground" Value="#20201F" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Padding" Value="26,7" />
+            <Setter Property="BorderBrush" Value="#C8C8C8" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="5">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Border BorderBrush="#B0B0B0" BorderThickness="1" CornerRadius="6">
+        <StackPanel>
+            <!-- Title bar. There is no close button: the slide's window is closed by
+                 confirming and swiping a badge, nothing else. -->
+            <Border Background="#ECECEC" CornerRadius="6,6,0,0" Padding="10,8">
+                <TextBlock Text="Dialog" FontWeight="Bold" Foreground="#3C3C3C" HorizontalAlignment="Center" />
+            </Border>
+
+            <!-- Body -->
+            <Border Background="#EE9490" CornerRadius="0,0,6,6" Padding="20,18">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Start Time:" Style="{StaticResource FieldLabel}" />
+                    <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource ValueBox}">
+                        <TextBlock x:Name="StartTimeText" HorizontalAlignment="Center" />
+                    </Border>
+
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Error Code:" Style="{StaticResource FieldLabel}" />
+                    <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource ValueBox}">
+                        <TextBlock x:Name="ErrorCodeText" HorizontalAlignment="Center" />
+                    </Border>
+
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Error Msg:" Style="{StaticResource FieldLabel}" />
+                    <Border Grid.Row="2" Grid.Column="1" Style="{StaticResource ValueBox}">
+                        <TextBlock x:Name="ErrorMessageText" HorizontalAlignment="Center" />
+                    </Border>
+
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Error Detail:" Style="{StaticResource FieldLabel}" />
+                    <Border Grid.Row="3" Grid.Column="1" Style="{StaticResource ValueBox}">
+                        <TextBlock x:Name="ErrorDetailText" TextWrapping="Wrap" MinHeight="36" />
+                    </Border>
+
+                    <!-- Options: add a repair action, or replace the detail (slide 50).
+                         Drawn as the slide draws it: a white rounded frame with the word
+                         "Options" sitting on its top edge. -->
+                    <Grid Grid.Row="4" Grid.ColumnSpan="2" Margin="0,4,0,0">
+                        <!-- The frame. -->
+                        <Border BorderBrush="White" BorderThickness="1" CornerRadius="6" Margin="0,9,0,0" />
+
+                        <!-- "Options" sits on the top edge of the frame. -->
+                        <TextBlock Text="Options" Foreground="#5B4441" Background="#EE9490"
+                                   Padding="5,0" Margin="12,0,0,0"
+                                   HorizontalAlignment="Left" VerticalAlignment="Top" />
+
+                        <StackPanel Margin="13,27,13,13">
+                            <ComboBox x:Name="RepairActionBox" DisplayMemberPath="Label" Padding="6,4" Margin="0,0,0,10" />
+                            <Grid>
+                                <TextBox x:Name="ChangeDetailBox" MinHeight="70" Padding="6,4"
+                                         TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"
+                                         TextChanged="ChangeDetailBox_TextChanged" />
+                                <!-- The grey placeholder the slide draws in the empty box. -->
+                                <TextBlock x:Name="ChangeDetailHint" Text="&lt;Change error detail&gt;"
+                                           Foreground="#9A9A9A" Margin="8,6,0,0"
+                                           HorizontalAlignment="Left" VerticalAlignment="Top"
+                                           IsHitTestVisible="False" />
+                            </Grid>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Grid.Row="5" Grid.ColumnSpan="2" Margin="0,18,0,0">
+                        <Button x:Name="MuteButton" Content="Mute" HorizontalAlignment="Left"
+                                Style="{StaticResource DialogButton}" Click="MuteButton_Click" />
+                        <Button x:Name="ConfirmButton" Content="Confirm" HorizontalAlignment="Right"
+                                Style="{StaticResource DialogButton}" Click="ConfirmButton_Click" />
+                    </Grid>
+                </Grid>
+            </Border>
+        </StackPanel>
+    </Border>
+</Window>

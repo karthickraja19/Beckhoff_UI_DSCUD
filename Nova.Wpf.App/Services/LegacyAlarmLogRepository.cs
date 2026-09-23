@@ -9,8 +9,8 @@ namespace Nova.Wpf.App.Services
 {
     /// <summary>
     /// <see cref="IAlarmLogRepository"/> backed by the V3 data access layer
-    /// (Master.Repository.IDataAccess). Writes are a no-op because AlarmHelper already
-    /// persists every trigger through sp_InsertAlarmLogs; reads query the same [Alarms]
+    /// (Master.Repository.IDataAccess). Writes are a no-op because Nova.Alarm's
+    /// AlarmDatabase already saves every PLC alarm; reads query the same [Alarms]
     /// table the V3 report used, so alarm history is identical to V3.
     /// </summary>
     public sealed class LegacyAlarmLogRepository : IAlarmLogRepository
@@ -24,8 +24,8 @@ namespace Nova.Wpf.App.Services
 
         public Task AppendAsync(NovaAlarmData alarm)
         {
-            // AlarmHelper.InsertAlarmInfo already logs every alarm at trigger time;
-            // writing here would duplicate every row.
+            // Nova.Alarm's AlarmDatabase already saves every alarm; writing here
+            // would duplicate every row.
             return Task.CompletedTask;
         }
 

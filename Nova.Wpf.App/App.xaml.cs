@@ -5,7 +5,9 @@ using Nova.Abstractions.Data.Repositories;
 using Nova.Abstractions.Hardware;
 using Nova.Abstractions.Machine.Interfaces;
 using Nova.Abstractions.Services;
+using Nova.Alarm;
 using Nova.Core.Comm;
+using Nova.Hive;
 using Nova.Core.Config;
 using Nova.Core.Hardware;
 using Nova.Core.Services;
@@ -125,6 +127,11 @@ namespace Nova.Wpf.App
                 _serviceProvider.GetRequiredService<IRunningLogService>().Start();
                 _serviceProvider.GetRequiredService<IActiveAlarmService>().Start();
                 _serviceProvider.GetRequiredService<IConnectionStatusService>().Start();
+
+                // HIVE reporting and the alarm pop-up. Only registered with a PLC
+                // (HardwareMode=Twincat), so both are null when running simulated.
+                _serviceProvider.GetService<HiveService>()?.Start();
+                _serviceProvider.GetService<AlarmPopupHost>()?.Start();
 
                 // Slide 39's five-minute idle sign-out for Levels 2 and 3. Started
                 // after the window exists: it watches InputManager, which needs a
@@ -320,9 +327,9 @@ namespace Nova.Wpf.App
             services.AddSingleton<IReportRepository>(new LegacyReportRepository(dataAccess));
 
             // 3. Machine control, alarms and devices. HardwareMode=Twincat drives the steppers
-            //    through the Beckhoff library over ADS. Everything else is simulated until its
-            //    TwinCAT adapter is written: the orchestrator will drive the PLC's machine
-            //    command bits and alarms will come from TwinCAT EventLogger.
+            //    through the Beckhoff library over ADS and reads the PLC's alarm list
+            //    (Nova.Alarm). Everything else is simulated until its TwinCAT adapter is
+            //    written: the orchestrator will drive the PLC's machine command bits.
             string hardwareMode = ConfigurationManager.AppSettings["HardwareMode"];
             bool twincat = string.Equals(hardwareMode, "Twincat", StringComparison.OrdinalIgnoreCase);
             if (!twincat && !string.IsNullOrWhiteSpace(hardwareMode) &&
@@ -333,9 +340,8 @@ namespace Nova.Wpf.App
             }
 
             services.AddSingleton<IAlarmService, SimulatedAlarmService>();
-            services.AddSingleton<IActiveAlarmService, SimulatedActiveAlarmService>();
             services.AddSingleton<IMachineOrchestrator, SimulatedMachineOrchestrator>();
-            RegisterSimulatedDevices(services, dataDirectory);
+            var resolveAddress = RegisterSimulatedDevices(services, dataDirectory);
 
             var stepperConfigs = ReadJson<List<StepperConfiguration>>(dataDirectory, "Steppers.json");
             if (twincat)
@@ -344,11 +350,46 @@ namespace Nova.Wpf.App
                 services.AddSingleton(plc);
                 services.AddSingleton<IStepperService>(new StepperService(
                     TwincatDevices.CreateSteppers(plc, stepperConfigs, _startupWarnings)));
+
+                // Real cylinders replace the simulated ones registered above: the container
+                // resolves the last registration, so this wins for ICylinderService.
+                services.AddSingleton<ICylinderService>(new CylinderService(
+                    TwincatDevices.CreateCylinders(
+                        plc,
+                        ReadJson<List<CylinderConfiguration>>(dataDirectory, "Cylinders.json"),
+                        SettingOrDefault("PlcIoGvl", ""),
+                        resolveAddress,
+                        _startupWarnings)));
                 services.AddSingleton<IConnectionStatusService>(sp => new ConnectionStatusService(
                     sp.GetRequiredService<ICommDeviceService>(), "TwinCAT " + plc.Address, () => plc.IsConnected));
+
+                // Alarms: read from the PLC's alarm list and saved to the [Alarms] table.
+                AlarmDatabase alarmDatabase = null;
+                if (string.IsNullOrWhiteSpace(connectionString))
+                    _startupWarnings.Add("No connectionString in App.config - alarms are shown but not saved.");
+                else
+                    alarmDatabase = new AlarmDatabase(connectionString, () => dataAccess.GetCurrentShift()?.ShiftName);
+
+                services.AddSingleton(sp => new AlarmMonitor(new PlcAlarmReader(plc.AmsNetId, plc.Port), alarmDatabase));
+                services.AddSingleton<IActiveAlarmService>(sp => sp.GetRequiredService<AlarmMonitor>());
+
+                // HIVE: the alarms above decide the HIVE machine state, and the alarm
+                // pop-up asks the operator to badge in before it closes.
+                services.AddSingleton(sp => new HiveService(
+                    BuildHiveSettings(dataDirectory, sp.GetRequiredService<IStationProfileService>()),
+                    sp.GetRequiredService<AlarmMonitor>()));
+                services.AddSingleton(sp => new AlarmPopupHost(
+                    sp.GetRequiredService<AlarmMonitor>(),
+                    sp.GetRequiredService<HiveService>(),
+                    sp.GetRequiredService<INavigationService>()));
+
+                // The HIVE chip's state-change pop-ups (DFM slides 47 and 49).
+                services.AddSingleton<IHiveStatePrompt>(sp => new HiveStatePrompt(sp.GetRequiredService<HiveService>()));
             }
             else
             {
+                services.AddSingleton<IActiveAlarmService, SimulatedActiveAlarmService>();
+
                 var steppers = new List<IStepper>();
                 foreach (var cfg in stepperConfigs)
                     steppers.Add(new SimulatedStepper(cfg.EnumName, cfg.IsAxisEnabled));
@@ -438,8 +479,10 @@ namespace Nova.Wpf.App
         /// Simulated devices built from the machine profile under Data\, so the Manual
         /// screens show the real device names and addresses with no PLC connected.
         /// Steppers are registered by ConfigureServices, per HardwareMode.
+        /// Returns the Data\Config.csv name-to-wiring-address lookup, so a device that
+        /// ConfigureServices replaces with a TwinCAT one shows the same addresses.
         /// </summary>
-        private static void RegisterSimulatedDevices(IServiceCollection services, string dataDirectory)
+        private static Func<string, bool, string> RegisterSimulatedDevices(IServiceCollection services, string dataDirectory)
         {
             var axes = new List<IAxis>();
             foreach (var name in Enum.GetNames(typeof(Nova.Abstractions.Hardware.Enums.Servos)))
@@ -512,6 +555,8 @@ namespace Nova.Wpf.App
             services.AddSingleton<ICommDeviceService>(new CommDeviceService(commDevices));
             services.AddSingleton<ILightService>(new LightService(
                 new List<ILightController> { new SimulatedLightController("OPT Light") }));
+
+            return ResolveAddress;
         }
 
         /// <summary>
@@ -538,6 +583,57 @@ namespace Nova.Wpf.App
             }
 
             return plc;
+        }
+
+        /// <summary>
+        /// HIVE reporting settings: the gateway and machine type come from App.config, the
+        /// software version, its hash and the log folder from the station profile.
+        /// </summary>
+        private static HiveSettings BuildHiveSettings(string dataDirectory, IStationProfileService profile)
+        {
+            int sequence;
+            if (!int.TryParse(ConfigurationManager.AppSettings["HiveSequence"], out sequence) || sequence < 0)
+                sequence = 0;
+
+            bool enabled = string.Equals(ConfigurationManager.AppSettings["HiveEnabled"], "true",
+                StringComparison.OrdinalIgnoreCase);
+
+            if (!enabled)
+            {
+                _startupWarnings.Add("HiveEnabled is not \"true\" in App.config, so nothing is sent to HIVE. "
+                    + "Alarms, the alarm pop-up and the HIVE log still work. HIVE must be switched on before "
+                    + "the machine runs on the line.");
+            }
+
+            return new HiveSettings
+            {
+                Enabled = enabled,
+                GatewayUrl = SettingOrDefault("HiveGatewayUrl", "http://10.0.0.2:5008"),
+                MachineType = SettingOrDefault("HiveMachineType", ""),
+                Sequence = sequence,
+                StateFile = SettingOrDefault("HiveStateFile", @"C:\Hive\LatestHiveState.ini"),
+                ErrorCodeFile = Path.Combine(dataDirectory, "HiveErrorCodes.csv"),
+                // The PLC says what state the machine is in; the HIVE state is worked
+                // out from it. Same ADS target as the rest of the HMI.
+                PlcAmsNetId = SettingOrDefault("PlcAmsNetId", "127.0.0.1.1.1"),
+                PlcAdsPort = PlcAdsPort(),
+                MachineStateSymbol = SettingOrDefault("PlcMachineStateSymbol", "GVL_Module.eStationState"),
+                SoftwareVersion = profile.Current.SoftwareVersion ?? "",
+                MainSoftwareHash = profile.ComputeMainSoftwareHash() ?? "",
+                LogFolder = string.IsNullOrWhiteSpace(profile.Current.HiveLogPath)
+                    ? @"C:\TEAL_Log_Data\HIVE"
+                    : profile.Current.HiveLogPath,
+            };
+        }
+
+        /// <summary>The PLC's ADS port from App.config, 851 when it is missing or invalid.</summary>
+        private static int PlcAdsPort()
+        {
+            int port;
+            if (!int.TryParse(ConfigurationManager.AppSettings["PlcAdsPort"], out port) || port <= 0)
+                port = 851;
+
+            return port;
         }
 
         private static string SettingOrDefault(string key, string fallback)
@@ -585,6 +681,8 @@ namespace Nova.Wpf.App
             _serviceProvider.GetService<ILoadCellMonitorService>()?.Stop();
             _serviceProvider.GetService<IDigitalIOService>()?.Stop();
             _serviceProvider.GetService<IRunningLogService>()?.Stop();
+            _serviceProvider.GetService<AlarmPopupHost>()?.Stop();
+            _serviceProvider.GetService<HiveService>()?.Stop();
             _serviceProvider.GetService<IActiveAlarmService>()?.Stop();
             _serviceProvider.GetService<IConnectionStatusService>()?.Stop();
             _serviceProvider.GetService<IdleLogoutService>()?.Dispose();
