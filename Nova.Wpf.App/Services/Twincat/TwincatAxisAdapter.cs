@@ -1,8 +1,9 @@
+using Nova.Abstractions.Hardware;
+using Nova.ViewModels.TwinCatModels;
 using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using Nova.Abstractions.Hardware;
 using Teal.Library.Servo;
 
 namespace Nova.Wpf.App.Services.Twincat
@@ -177,6 +178,31 @@ namespace Nova.Wpf.App.Services.Twincat
                     }
                 }
             });
+        }
+
+        public void UpdateAxisProperties()
+        {
+            try
+            {
+                Task.Run(() => _servo.UpdateAxisProperties());
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+
+        public void UpdateAxisStatus(ServoSdHmiDisplay status)
+        {
+            _servo.AxisError = status.AxisError;
+            _servo.AxisRunning = status.AxisRunning;
+            _servo.Homed = status.AxisHomed;
+            _servo.HomeSense = status.AxisHome;
+            _servo.PositiveLimitSense = status.PosLimit; 
+            _servo.NegativeLimitSense = status.NegLimit;
+            _servo.CurrentPosition = status.CurrentPosition;
+            _servo.CurrentVelocity = status.CurrentVelocity;
+            _servo.Enabled = status.AxisEnable;
         }
     }
 }

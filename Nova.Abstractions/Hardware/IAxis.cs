@@ -1,3 +1,4 @@
+using Nova.ViewModels.TwinCatModels;
 using System.Threading.Tasks;
 
 namespace Nova.Abstractions.Hardware
@@ -26,7 +27,8 @@ namespace Nova.Abstractions.Hardware
         /// <summary>Starts a continuous jog; runs until <see cref="JogStopAsync"/> or <see cref="StopAsync"/>.</summary>
         Task JogStartAsync(bool forward, double speed);
         Task JogStopAsync();
-
+        void UpdateAxisProperties();
+        void UpdateAxisStatus(ServoSdHmiDisplay status);
         /// <summary>
         /// Reads the current live status. Called by the axis monitor on a background
         /// thread at a fixed cadence; implementations should return quickly and never throw.

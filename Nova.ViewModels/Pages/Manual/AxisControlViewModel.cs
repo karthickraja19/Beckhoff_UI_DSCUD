@@ -1,15 +1,18 @@
-﻿using System;
-using System.Collections.ObjectModel;
-using System.Globalization;
-using System.Threading;
-using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Master.Configuration;
 using Nova.Abstractions.Data.Models;
 using Nova.Abstractions.Hardware;
 using Nova.Abstractions.Hardware.Enums;
 using Nova.Abstractions.Services;
 using Nova.ViewModels.Common;
+using Nova.ViewModels.TwinCatModels;
+using System;
+using System.Collections.ObjectModel;
+using System.Globalization;
+using System.Threading;
+using System.Threading.Tasks;
+using TwinCAT.Ads;
 
 namespace Nova.ViewModels.Pages.Manual
 {
@@ -26,7 +29,6 @@ namespace Nova.ViewModels.Pages.Manual
         private readonly IAxisMonitorService _monitor;
         private readonly IDialogService _dialog;
         private readonly IMachineSettingsService _settings;
-
         /// <summary>Message V3's ManualScreen shows for every out-of-range manual speed
         /// (home, jog, move, point-to-point). Kept verbatim so operators and the QA
         /// scripts see the same wording they already know.</summary>
@@ -217,8 +219,8 @@ namespace Nova.ViewModels.Pages.Manual
                 _negativeLimitStatus,
             };
 
-            if (_monitor != null)
-                _monitor.AxisStatusUpdated += OnAxisStatusUpdated;
+            //if (_monitor != null)
+            //    _monitor.AxisStatusUpdated += OnAxisStatusUpdated;
 
             RefreshAxisParameters();
         }
@@ -240,6 +242,8 @@ namespace Nova.ViewModels.Pages.Manual
 
         partial void OnSelectedAxisChanged(string value)
         {
+            CurrentAxis.UpdateAxisProperties();
+            OnAxisStatusUpdated(UpdateAxisStatus());
             RefreshAxisParameters();
         }
 
@@ -301,7 +305,7 @@ namespace Nova.ViewModels.Pages.Manual
 
         // Raised on the monitor's background thread: scalar INPC setters only here
         // (WPF marshals those); the DeviceStatus collection itself is never mutated.
-        private void OnAxisStatusUpdated(object sender, AxisStatusSnapshot s)
+        private void OnAxisStatusUpdated(AxisStatusSnapshot s)
         {
             if (s.ComponentId != SelectedAxis)
                 return;
@@ -593,37 +597,68 @@ private async Task PointToPointMove()
                 cts.Dispose();
             }
         }
-
+        private AxisStatusSnapshot UpdateAxisStatus()
+        {
+            var axis = CurrentAxis.ReadStatus();
+            return axis;
+        }
+        private void UpdateStatustoObj(object sender,AdsNotificationExEventArgs e)
+        {
+            ServoSdHmiDisplay axisStatus = new ServoSdHmiDisplay();
+            if(e.Value is ServoSdHmiDisplay status)
+            {
+                axisStatus.AxisEnable = status.AxisEnable;
+                axisStatus.AxisError = status.AxisError;
+                axisStatus.NegLimit = status.NegLimit;
+                axisStatus.PosLimit = status.PosLimit;
+                axisStatus.AxisHomed = status.AxisHomed;
+                axisStatus.AxisHome = status.AxisHome;
+                axisStatus.AxisRunning = status.AxisRunning;
+                axisStatus.CurrentPosition = status.CurrentPosition;
+                axisStatus.CurrentVelocity = status.CurrentVelocity;
+                CurrentAxis.UpdateAxisStatus(axisStatus);
+            }
+            OnAxisStatusUpdated(UpdateAxisStatus());
+        }
         protected override void Dispose(bool disposing)
         {
             if (disposing && !IsDisposed)
             {
-                if (_monitor != null)
-                    _monitor.AxisStatusUpdated -= OnAxisStatusUpdated;
+                //if (_monitor != null)
+                //    _monitor.AxisStatusUpdated -= OnAxisStatusUpdated;
                 CancelPointToPoint();
             }
             base.Dispose(disposing);
         }
-        private bool _isAdsSubscribed;
+        private uint _notificationHandle;
 
         public void SubscribeAdsNotification()
         {
-            //if (_isAdsSubscribed)
-            //    return;
+            ConfigGlobalClass.cardManager.Card.Client.AdsNotificationEx += UpdateStatustoObj;
 
-            //_notificationHandle = ...
+            var setting = new NotificationSettings(
+                AdsTransMode.OnChange,
+                100,
+                0);
 
-            //_isAdsSubscribed = true;
+            _notificationHandle =
+                ConfigGlobalClass.cardManager.Card.Client.AddDeviceNotificationEx(
+                    "",
+                    setting,
+                    null,
+                    typeof(ServoSdHmiDisplay));
         }
-
         public void UnsubscribeAdsNotification()
         {
-            //if (!_isAdsSubscribed)
-            //    return;
+            if (_notificationHandle != 0)
+            {
+                ConfigGlobalClass.cardManager.Card.Client.DeleteDeviceNotification(
+                    _notificationHandle);
 
-            //_adsClient.DeleteDeviceNotification(_notificationHandle);
+                _notificationHandle = 0;
+            }
 
-            //_isAdsSubscribed = false;
+            ConfigGlobalClass.cardManager.Card.Client.AdsNotificationEx -= UpdateStatustoObj;
         }
     }
 }
