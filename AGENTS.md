@@ -11,7 +11,7 @@ persistence only.
 - `Nova.ViewModels` (.NET Standard 2.0, C# 8.0): platform-free ViewModels. Depends on `Nova.Abstractions` only.
 - `Nova.Abstractions` (.NET Standard 2.0): interfaces/contracts only.
 - `Master.Repository` (.NET Framework 4.7.2): SQL Server / CSV data access for `TEAL_Master`.
-- `Nova.Alarm` (.NET Framework 4.7.2, C# 7.3): reads the PLC's alarm list (`GVL_Alarm.fbAlarmManager.aAlarms`) over ADS, works out when each alarm starts and ends, and saves them to the `[Alarms]` table.
+- `Nova.Alarm` (.NET Framework 4.7.2, C# 7.3): subscribes to the PLC's alarm list (`GVL_Alarm.fbAlarmManager.aAlarms`) with ADS notifications (no polling), works out when each alarm starts and ends, and saves them to the `[Alarms]` table.
 - `Nova.Hive` (.NET Framework 4.7.2, C# 7.3): HIVE reporting (machine state 1/2/5 and errordata) and the alarm pop-up. Depends on `Nova.Alarm`.
 
 ## Architecture decisions

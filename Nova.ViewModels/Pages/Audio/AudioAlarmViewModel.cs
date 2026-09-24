@@ -37,6 +37,12 @@ namespace Nova.ViewModels.Pages.Audio
     {
         public override AppPageNames PageName => AppPageNames.Alarm;
 
+        /// <summary>
+        /// True when the alarm log generates its rows (Simulated mode). The view labels
+        /// the page, so a generated alarm history is never taken for the machine's.
+        /// </summary>
+        public bool IsSampleData => _alarms is ISampleDataSource;
+
         private readonly IAlarmLogRepository _alarms;
         private readonly ICsvExportService _csv;
         private readonly IDialogService _dialog;

@@ -40,9 +40,13 @@ namespace Nova.ViewModels.Pages.Audio
         /// </remarks>
         private const double LongestBarFill = 0.88;
 
-        public ErrorStatRow(string label, int count, int maxCount)
+        /// <summary>Tooltip line, e.g. the downtime the category cost. Null when there is none.</summary>
+        public string Detail { get; }
+
+        public ErrorStatRow(string label, int count, int maxCount, string detail = null)
         {
             Label = label;
+            Detail = detail;
             Count = count;
             CountText = count.ToString("N0");
 
@@ -329,6 +333,9 @@ namespace Nova.ViewModels.Pages.Audio
     {
         public string Date { get; }
         public string Shift { get; }
+
+        /// <summary>"Front" or "Rear" on a D-SCUD; "—" when not recorded.</summary>
+        public string Gantry { get; }
         public string UnitSn { get; }
         public string ComponentSn { get; }
         public string StartTime { get; }
@@ -342,14 +349,15 @@ namespace Nova.ViewModels.Pages.Audio
         public bool IsFail { get; }
 
         public UnitDataRow(
-            string date, string shift, string unitSn, string componentSn,
+            string date, string shift, string gantry, string unitSn, string componentSn,
             string startTime, string endTime, bool? pass,
-            double? cycleTimeSeconds, int hiveState, int tossing)
+            double? cycleTimeSeconds, int? hiveState, int tossing)
         {
             Date = date;
             Shift = shift;
+            Gantry = string.IsNullOrWhiteSpace(gantry) ? "—" : gantry;
             UnitSn = unitSn;
-            ComponentSn = componentSn;
+            ComponentSn = string.IsNullOrWhiteSpace(componentSn) ? "N/A" : componentSn;
             StartTime = startTime;
             EndTime = endTime;
 
@@ -359,7 +367,10 @@ namespace Nova.ViewModels.Pages.Audio
             IsFail = pass.HasValue && !pass.Value;
 
             CycleTimeText = cycleTimeSeconds.HasValue ? cycleTimeSeconds.Value.ToString("0.00") : string.Empty;
-            HiveStateText = hiveState.ToString();
+
+            // The HIVE state the unit was processed in, as sent with it (hive_state).
+            // Not derived from pass/fail: a failing unit is still made in state 1.
+            HiveStateText = hiveState.HasValue ? hiveState.Value.ToString() : "—";
             TossingText = tossing.ToString();
         }
     }
@@ -409,14 +420,40 @@ namespace Nova.ViewModels.Pages.Audio
         [ObservableProperty]
         private bool _isConnected;
 
-        public string StatusText => Name + (IsConnected ? " Connected" : " Disconnected");
+        /// <summary>
+        /// The word after the name when it is not simply connected or disconnected -
+        /// "Disabled", "Not connected", "Checking". Null for the plain two-state rows.
+        /// </summary>
+        [ObservableProperty]
+        private string _stateWord;
+
+        /// <summary>What lies behind the state, for the tooltip.</summary>
+        [ObservableProperty]
+        private string _detail;
+
+        public string StatusText => Name + " " + (StateWord ?? (IsConnected ? "Connected" : "Disconnected"));
 
         partial void OnIsConnectedChanged(bool value) => OnPropertyChanged(nameof(StatusText));
+
+        partial void OnStateWordChanged(string value) => OnPropertyChanged(nameof(StatusText));
 
         public LinkStatusRow(string name, bool isConnected)
         {
             Name = name;
             _isConnected = isConnected;
+        }
+
+        /// <summary>
+        /// Shows a service link's state. Only scalar properties move, so this is safe
+        /// from the background thread the link raises its change on.
+        /// </summary>
+        public void Apply(Nova.Abstractions.Services.LinkState state, string detail)
+        {
+            IsConnected = state == Nova.Abstractions.Services.LinkState.Connected;
+            StateWord = state == Nova.Abstractions.Services.LinkState.Disabled ? "Disabled"
+                : state == Nova.Abstractions.Services.LinkState.Unknown ? "Checking"
+                : null;
+            Detail = detail;
         }
     }
 }

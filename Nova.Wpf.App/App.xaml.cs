@@ -256,6 +256,15 @@ namespace Nova.Wpf.App
             ApplyPositiveIntSetting("PtpIterationCount", v => AxisControlViewModel.MaxIterations = v);
             ApplyPositiveIntSetting("PPCIterationLen", v => AxisControlViewModel.MaxIterationDigits = v);
 
+            // Data > Yield target line. Blank or out of range draws no line.
+            double targetYield;
+            if (double.TryParse(ConfigurationManager.AppSettings["TargetYieldPercent"],
+                    System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture,
+                    out targetYield) && targetYield > 0 && targetYield <= 100)
+            {
+                AudioDataViewModel.TargetYieldPercent = targetYield;
+            }
+
             // Commissioning only: opens Config and Settings to everyone as Level 3. Set
             // before any view model is built, because the pages read it once.
             bool bypassAccessLevels;
@@ -405,8 +414,9 @@ namespace Nova.Wpf.App
 
                 // HIVE: the alarms above decide the HIVE machine state, and the alarm
                 // pop-up asks the operator to badge in before it closes.
+                services.AddSingleton(sp => BuildHiveSettings(dataDirectory, sp.GetRequiredService<IStationProfileService>()));
                 services.AddSingleton(sp => new HiveService(
-                    BuildHiveSettings(dataDirectory, sp.GetRequiredService<IStationProfileService>()),
+                    sp.GetRequiredService<HiveSettings>(),
                     sp.GetRequiredService<AlarmMonitor>()));
                 services.AddSingleton(sp => new AlarmPopupHost(
                     sp.GetRequiredService<AlarmMonitor>(),
@@ -415,10 +425,31 @@ namespace Nova.Wpf.App
 
                 // The HIVE chip's state-change pop-ups (DFM slides 47 and 49).
                 services.AddSingleton<IHiveStatePrompt>(sp => new HiveStatePrompt(sp.GetRequiredService<HiveService>()));
+
+                // Home page: the State Changes chart reads the HIVE log back, and the
+                // station card's HIVE link checks the gateway (slide 43).
+                services.AddSingleton<IHiveStateHistory>(sp => new HiveLogStateHistory(sp.GetRequiredService<HiveSettings>().LogFolder));
+                services.AddSingleton<IServiceLinkStatus>(sp => new HiveLinkStatus(sp.GetRequiredService<HiveSettings>()));
             }
             else
             {
                 services.AddSingleton<IActiveAlarmService, SimulatedActiveAlarmService>();
+
+                // Data page: generated TE010 units and glue data, which the page labels
+                // as sample data. Registered after the real repository in section 2, so
+                // this one wins. With TwinCAT the glue service is left out and the Glue
+                // and Health tabs say they are not connected.
+                services.AddSingleton<IProductionRepository, SimulatedProductionRepository>();
+                services.AddSingleton<IDispenserDataService>(new SimulatedDispenserDataService(dataDirectory));
+
+                // Home page (and the Alarm page's history): generated HIVE states, alarms,
+                // parameter values and TE010 sensors, all following the same sample day
+                // as the units above and all labelled as sample data.
+                services.AddSingleton<IHiveStateHistory, SimulatedHiveStateHistory>();
+                services.AddSingleton<IAlarmLogRepository, SimulatedAlarmLogRepository>();
+                services.AddSingleton<IParameterValueSource>(sp =>
+                    new SimulatedParameterValueSource(sp.GetRequiredService<IMachineSettingsService>()));
+                services.AddSingleton<ISensorService, SimulatedSensorService>();
 
                 var steppers = new List<IStepper>();
                 foreach (var cfg in stepperConfigs)
@@ -448,17 +479,27 @@ namespace Nova.Wpf.App
 
             //    Home hosts the manual-operation GUI in its Vendor pane (slide 57) and
             //    the running log beside it.
+            //    A source that is not registered is passed as null, and its panel says
+            //    it is not available rather than showing anything made up.
             services.AddSingleton(sp => new AudioHomeViewModel(
                 sp.GetRequiredService<IAppSession>(),
-                sp.GetRequiredService<IMachineTelemetryService>(),
-                sp.GetRequiredService<IMachineOrchestrator>(),
-                sp.GetRequiredService<IStationProfileService>(),
-                sp.GetRequiredService<IConnectionStatusService>(),
-                sp.GetRequiredService<ILogFolderService>(),
-                sp.GetRequiredService<IDialogService>(),
-                sp.GetRequiredService<INavigationService>(),
-                sp.GetRequiredService<ManualViewModel>(),
-                sp.GetRequiredService<IRunningLogService>()));
+                orchestrator: sp.GetRequiredService<IMachineOrchestrator>(),
+                profile: sp.GetRequiredService<IStationProfileService>(),
+                connections: sp.GetRequiredService<IConnectionStatusService>(),
+                logFolders: sp.GetRequiredService<ILogFolderService>(),
+                dialog: sp.GetRequiredService<IDialogService>(),
+                navigation: sp.GetRequiredService<INavigationService>(),
+                manual: sp.GetRequiredService<ManualViewModel>(),
+                runningLog: sp.GetRequiredService<IRunningLogService>(),
+                production: sp.GetService<IProductionRepository>(),
+                alarms: sp.GetService<IAlarmLogRepository>(),
+                stateHistory: sp.GetService<IHiveStateHistory>(),
+                settings: sp.GetService<IMachineSettingsService>(),
+                parameterValues: sp.GetService<IParameterValueSource>(),
+                dispenser: sp.GetService<IDispenserDataService>(),
+                links: sp.GetServices<IServiceLinkStatus>(),
+                sensors: sp.GetService<ISensorService>(),
+                accessLog: sp.GetService<IAccessLog>()));
 
             //    Config hosts the machine-configuration tree and the taught recipe as
             //    the two sections of its Machine Configs area (slide 58).

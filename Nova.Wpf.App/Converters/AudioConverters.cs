@@ -177,6 +177,37 @@ namespace Nova.Wpf.App.Converters
     }
 
     /// <summary>
+    /// A Data page health level (Normal, Warning, Critical, Unknown) to green, orange,
+    /// red or grey - the Health tab's status colours (S2.4.4.4).
+    /// </summary>
+    /// <remarks>
+    /// Matched on the level's name rather than the ViewModels enum type, and resolved
+    /// from the <c>Audio.System.*Brush</c> tokens like the other converters here.
+    /// </remarks>
+    public sealed class HealthLevelToBrushConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            string key;
+            switch (value != null ? value.ToString() : string.Empty)
+            {
+                case "Normal": key = "Audio.System.GreenBrush"; break;
+                case "Warning": key = "Audio.System.OrangeBrush"; break;
+                case "Critical": key = "Audio.System.RedBrush"; break;
+                default: key = "Audio.System.GrayBrush"; break;
+            }
+
+            object brush = Application.Current != null ? Application.Current.TryFindResource(key) : null;
+            return brush ?? Brushes.Gray;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotSupportedException();
+        }
+    }
+
+    /// <summary>
     /// True to <see cref="Visibility.Visible"/>, false to
     /// <see cref="Visibility.Collapsed"/>; pass "invert" to reverse it.
     /// </summary>

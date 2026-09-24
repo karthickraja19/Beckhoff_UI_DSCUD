@@ -41,6 +41,12 @@ namespace Nova.ViewModels.Audio
         /// <summary>Engineering time, sampled from the DFM's HIVE_Engineering chip.</summary>
         public static readonly SKColor Engineering = new SKColor(204, 171, 216);
 
+        /// <summary>
+        /// Time with no recorded state (before the first HIVE record, or the future part
+        /// of today). Not a DFM colour: HIG systemGray5, so it reads as "nothing here".
+        /// </summary>
+        public static readonly SKColor NoRecord = new SKColor(229, 229, 234);
+
         // ---- Downtime statistics Top 10 (DFM slide 40) ----
         // Ordinal, not semantic: index 0 is the largest contributor, not a category.
 

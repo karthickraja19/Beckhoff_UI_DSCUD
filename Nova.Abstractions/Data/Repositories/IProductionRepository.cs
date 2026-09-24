@@ -49,17 +49,55 @@ namespace Nova.Abstractions.Data.Repositories
 
     /// <summary>
     /// One produced unit, as stored in [ProductionData] — the rows behind the
-    /// Reports → Production Data table.
+    /// Data page (Audio SW DFM v5.4 slides 59 and 60).
     /// </summary>
+    /// <remarks>
+    /// The last six properties are the ones a D-SCUD also reports to HIVE with each
+    /// unit (slides 15-18). [ProductionData] does not store them yet, so a record read
+    /// from it leaves them empty and the page shows "—" rather than a guess.
+    /// </remarks>
     public sealed class ProductionUnitRecord
     {
+        /// <summary>Production date. A night-shift unit after midnight keeps its shift's date.</summary>
         public DateTime Date { get; set; }
         public string Shift { get; set; }
+
+        /// <summary>When the unit entered the station (HIVE input_time).</summary>
         public DateTime ProductionTime { get; set; }
+
+        /// <summary>Unit SN.</summary>
         public string ProductCode { get; set; }
         public bool IsPass { get; set; }
+
+        /// <summary>output_time - input_time, in seconds (HIVE unit_ct).</summary>
         public double CycleTimeSeconds { get; set; }
+
+        /// <summary>1 for the first pass, higher for a retest of the same unit.</summary>
         public int Iteration { get; set; }
+
+        /// <summary>"Front" or "Rear" on a D-SCUD (slide 16: front is the gantry nearest the input). Null when unknown.</summary>
+        public string Gantry { get; set; }
+
+        /// <summary>Linked serials, e.g. the carrier the unit rode on. Null when none are recorded.</summary>
+        public string ComponentSn { get; set; }
+
+        /// <summary>HIVE state when the unit was processed (hive_state: 1, 2 or 5). Null when not recorded.</summary>
+        public int? HiveState { get; set; }
+
+        /// <summary>
+        /// Tossing events on this record: 1 when the unit was thrown out by the
+        /// pre-process CCD check (first_vision_tossing_NG = 1), otherwise 0.
+        /// </summary>
+        public int TossingCount { get; set; }
+
+        /// <summary>Why the unit was tossed, e.g. "Pre-check CCD NG". Null when it was not.</summary>
+        public string TossingReason { get; set; }
+
+        /// <summary>HIVE failure_code: "NA" for a pass, otherwise the root failure. Null when not recorded.</summary>
+        public string FailureCode { get; set; }
+
+        /// <summary>When the unit left the station (HIVE output_time).</summary>
+        public DateTime OutputTime => ProductionTime.AddSeconds(CycleTimeSeconds);
     }
 
     /// <summary>

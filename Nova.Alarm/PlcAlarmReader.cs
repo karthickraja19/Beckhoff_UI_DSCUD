@@ -1,18 +1,32 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
+using Teal.Library.Contracts.Models;
+using Teal.Library.Log;
 using TwinCAT.Ads;
 
 namespace Nova.Alarm
 {
     /// <summary>
-    /// Reads the PLC's alarm list over ADS: GVL_Alarm.fbAlarmManager.aAlarms, which is an
-    /// ARRAY[1..MAX_ALARMS] OF ST_Alarms.
+    /// Subscribes to the PLC's alarm list over ADS: GVL_Alarm.fbAlarmManager.aAlarms, which
+    /// is an ARRAY[1..MAX_ALARMS] OF ST_Alarms. The PLC sends the whole list every time it
+    /// changes, so the HMI never has to ask for it.
     /// </summary>
     /// <remarks>
-    /// The whole array is read in one go as raw bytes, then cut into entries using the
-    /// layout below. The layout is ST_Alarms as the PLC compiles it (see alarm.tmc in the
-    /// PLC project). If ST_Alarms changes in the PLC, update the numbers below to match.
+    /// The subscription is two ADS notifications:
+    /// <list type="bullet">
+    /// <item>the alarm list - the PLC checks it every 100 ms and sends it only when it changed</item>
+    /// <item>the PLC's run state - so the HMI knows when the PLC stops and the subscription is lost</item>
+    /// </list>
+    /// A new PLC program or the PLC leaving Run throws its notifications away. Then, or when
+    /// the PLC cannot be reached, the HMI subscribes again every 5 seconds until the PLC is
+    /// back in Run. That retry is the only timer here, and it only runs while there is no
+    /// subscription.
+    ///
+    /// Each list arrives as raw bytes and is cut into entries using the layout below. The
+    /// layout is ST_Alarms as the PLC compiles it (see alarm.tmc in the PLC project). If
+    /// ST_Alarms changes in the PLC, update the numbers below to match.
     /// </remarks>
     public sealed class PlcAlarmReader : IDisposable
     {
@@ -29,15 +43,34 @@ namespace Nova.Alarm
         private const int LevelOffset = 176;              // INT (byte 175 is padding)
         private const int ModuleNoOffset = 178;           // INT
 
+        /// <summary>
+        /// The PLC compares the value every 100 ms and sends it only when it changed - and
+        /// once straight after subscribing, with the value as it is now.
+        /// </summary>
+        private static readonly NotificationSettings OnChange = new NotificationSettings(AdsTransMode.OnChange, 100, 0);
+
+        /// <summary>How long to wait before subscribing again when the PLC is not there.</summary>
+        private static readonly TimeSpan RetryAfter = TimeSpan.FromSeconds(5);
+
         // A TwinCAT STRING is one byte per character, Windows-1252.
         private static readonly Encoding PlcText = Encoding.GetEncoding(1252);
 
         private readonly string _amsNetId;
         private readonly int _port;
         private readonly AdsClient _client = new AdsClient();
+        private readonly object _sync = new object();
 
-        // How many entries the PLC array has. 0 = not read from the PLC yet.
-        private int _entryCount;
+        private bool _started;
+        private volatile Subscription _subscription;   // null = not subscribed
+        private Timer _retry;                          // only runs while not subscribed
+        private int _subscribeQueued;                  // 1 while a Subscribe is waiting to run
+        private bool _subscribeFailing;
+
+        /// <summary>
+        /// Raised with the alarms in the PLC's list every time the list changes, and once
+        /// after each subscribe. Raised on the ADS thread, so handlers must be quick.
+        /// </summary>
+        public event EventHandler<PlcAlarmList> AlarmsChanged;
 
         public PlcAlarmReader(string amsNetId, int port)
         {
@@ -45,39 +78,199 @@ namespace Nova.Alarm
             _port = port;
         }
 
-        /// <summary>
-        /// Returns the alarms currently in the PLC's list (empty slots left out).
-        /// Throws when the PLC cannot be read.
-        /// </summary>
-        public List<PlcAlarm> ReadAlarms()
+        public void Start()
         {
-            if (!_client.IsConnected)
-                _client.Connect(_amsNetId, _port);
+            lock (_sync)
+            {
+                if (_started)
+                    return;
 
-            if (_entryCount == 0)
-                _entryCount = ReadEntryCount();
+                _started = true;
+                _client.AdsNotification += OnAdsNotification;
+                _client.AdsNotificationsInvalidated += OnNotificationsInvalidated;
+            }
 
-            byte[] data;
+            // Not on the caller's thread: reaching a PLC that is not running can take seconds.
+            QueueSubscribe();
+        }
+
+        public void Stop()
+        {
+            lock (_sync)
+            {
+                if (!_started)
+                    return;
+
+                _started = false;
+                StopRetry();
+                Unsubscribe();
+                _client.AdsNotification -= OnAdsNotification;
+                _client.AdsNotificationsInvalidated -= OnNotificationsInvalidated;
+            }
+        }
+
+        public void Dispose()
+        {
+            Stop();
+            _client.Dispose();
+        }
+
+        /// <summary>Subscribes on a worker thread. Several requests close together run once.</summary>
+        private void QueueSubscribe()
+        {
+            if (Interlocked.Exchange(ref _subscribeQueued, 1) == 0)
+                ThreadPool.QueueUserWorkItem(_ => Subscribe());
+        }
+
+        /// <summary>
+        /// Subscribes to the alarm list and the PLC state, dropping the old subscription
+        /// first. If the PLC is not there or not in Run, tries again in 5 seconds.
+        /// </summary>
+        private void Subscribe()
+        {
+            Interlocked.Exchange(ref _subscribeQueued, 0);
+
+            lock (_sync)
+            {
+                if (!_started)
+                    return;
+
+                StopRetry();
+                Unsubscribe();
+
+                try
+                {
+                    if (!_client.IsConnected)
+                        _client.Connect(_amsNetId, _port);
+
+                    // A PLC that is not running has no alarm list to send.
+                    AdsState state = _client.ReadState().AdsState;
+                    if (state != AdsState.Run)
+                        throw new InvalidOperationException("the PLC is in " + state + ", not Run");
+
+                    var subscription = new Subscription { EntryCount = ReadEntryCount() };
+
+                    // Set before subscribing: the first notification can arrive before
+                    // AddDeviceNotification returns.
+                    _subscription = subscription;
+
+                    subscription.StateHandle = _client.AddDeviceNotification(
+                        (uint)AdsReservedIndexGroup.DeviceData, (uint)AdsReservedIndexOffset.DeviceDataAdsState,
+                        sizeof(ushort), OnChange, subscription.StateTag);
+
+                    subscription.ListHandle = _client.AddDeviceNotification(
+                        AlarmListSymbol, subscription.EntryCount * EntrySize, OnChange, subscription.ListTag);
+
+                    if (_subscribeFailing)
+                        Logger.WriteLog(LogType.Info, "Alarm", "PLC", "Subscribed to the alarm list " + AlarmListSymbol + " again", "");
+
+                    _subscribeFailing = false;
+                }
+                catch (Exception ex)
+                {
+                    Unsubscribe();
+
+                    // Logged once, not every 5 seconds.
+                    if (!_subscribeFailing)
+                    {
+                        _subscribeFailing = true;
+                        LogError("Cannot subscribe to the alarm list " + AlarmListSymbol + " - trying again every "
+                            + RetryAfter.TotalSeconds + " s", ex);
+                    }
+
+                    _retry = new Timer(_ => Subscribe(), null, RetryAfter, Timeout.InfiniteTimeSpan);
+                }
+            }
+        }
+
+        /// <summary>Drops the current subscription, if there is one.</summary>
+        private void Unsubscribe()
+        {
+            Subscription old = _subscription;
+            _subscription = null;
+
+            if (old == null || !_client.IsConnected)
+                return;
+
+            // After a new PLC program the handles are already gone, so a failure here is normal.
+            if (old.ListHandle != 0)
+                _client.TryDeleteDeviceNotification(old.ListHandle);
+
+            if (old.StateHandle != 0)
+                _client.TryDeleteDeviceNotification(old.StateHandle);
+        }
+
+        private void StopRetry()
+        {
+            if (_retry != null)
+            {
+                _retry.Dispose();
+                _retry = null;
+            }
+        }
+
+        /// <summary>
+        /// A notification arrived. This runs on the ADS thread: no locks and no ADS calls in
+        /// here, or the connection can deadlock - anything that needs the PLC is queued.
+        /// </summary>
+        private void OnAdsNotification(object sender, AdsNotificationEventArgs e)
+        {
             try
             {
-                data = (byte[])_client.ReadAny(AlarmListSymbol, typeof(byte[]), new[] { _entryCount * EntrySize });
+                Subscription current = _subscription;
+                if (current == null)
+                    return;
+
+                if (e.UserData == current.StateTag)
+                    OnPlcState(e);
+                else if (e.UserData == current.ListTag)
+                    OnAlarmList(current, e);
+
+                // Anything else is from a subscription that has since been replaced.
             }
-            catch
+            catch (Exception ex)
             {
-                // The PLC program may have been downloaded again; check the array size next time.
-                _entryCount = 0;
-                throw;
+                LogError("Could not handle a notification from the PLC", ex);
+            }
+        }
+
+        private void OnPlcState(AdsNotificationEventArgs e)
+        {
+            // No data means the PLC dropped the notification: subscribe again.
+            if (e.Data.Length < sizeof(ushort))
+            {
+                QueueSubscribe();
+                return;
             }
 
-            var alarms = new List<PlcAlarm>();
-            for (int i = 0; i < _entryCount; i++)
+            // Leaving Run throws the subscription away. Subscribe keeps trying until the
+            // PLC is back in Run.
+            var state = (AdsState)BitConverter.ToUInt16(e.Data.ToArray(), 0);
+            if (state != AdsState.Run)
+                QueueSubscribe();
+        }
+
+        private void OnAlarmList(Subscription subscription, AdsNotificationEventArgs e)
+        {
+            // No data means the PLC dropped the notification (e.g. a new program, or
+            // ST_Alarms changed by an online change): subscribe again, which also checks
+            // the array size.
+            if (e.Data.Length != subscription.EntryCount * EntrySize)
             {
-                PlcAlarm alarm = ReadEntry(data, i * EntrySize);
-                if (!alarm.IsEmpty)
-                    alarms.Add(alarm);
+                QueueSubscribe();
+                return;
             }
 
-            return alarms;
+            // The PLC's own time stamp for this list. It runs on this PC, so it is the same clock.
+            var list = new PlcAlarmList(ReadAlarms(e.Data.ToArray(), subscription.EntryCount), e.TimeStamp.LocalDateTime);
+
+            AlarmsChanged?.Invoke(this, list);
+        }
+
+        /// <summary>The PLC dropped some notifications - usually a new PLC program. Subscribe again.</summary>
+        private void OnNotificationsInvalidated(object sender, AdsNotificationsInvalidatedEventArgs e)
+        {
+            QueueSubscribe();
         }
 
         /// <summary>
@@ -97,6 +290,20 @@ namespace Nova.Alarm
             }
 
             return arraySize / EntrySize;
+        }
+
+        /// <summary>Cuts the raw list into entries, leaving out the empty slots.</summary>
+        private static List<PlcAlarm> ReadAlarms(byte[] data, int entryCount)
+        {
+            var alarms = new List<PlcAlarm>();
+            for (int i = 0; i < entryCount; i++)
+            {
+                PlcAlarm alarm = ReadEntry(data, i * EntrySize);
+                if (!alarm.IsEmpty)
+                    alarms.Add(alarm);
+            }
+
+            return alarms;
         }
 
         private static PlcAlarm ReadEntry(byte[] data, int start)
@@ -123,9 +330,38 @@ namespace Nova.Alarm
             return PlcText.GetString(data, start, length);
         }
 
-        public void Dispose()
+        private static void LogError(string message, Exception ex)
         {
-            _client.Dispose();
+            Logger.WriteLog(LogType.Error, "Alarm", "PLC", message + ": " + ex.Message, ex.ToString());
         }
+
+        /// <summary>
+        /// One subscription: its two notification handles, and the tags that tell its
+        /// notifications apart from each other and from an older subscription's.
+        /// </summary>
+        private sealed class Subscription
+        {
+            public readonly object ListTag = new object();
+            public readonly object StateTag = new object();
+            public int EntryCount;
+            public uint ListHandle;
+            public uint StateHandle;
+        }
+    }
+
+    /// <summary>The PLC's alarm list at one moment, as one notification delivered it.</summary>
+    public sealed class PlcAlarmList
+    {
+        public PlcAlarmList(List<PlcAlarm> alarms, DateTime time)
+        {
+            Alarms = alarms;
+            Time = time;
+        }
+
+        /// <summary>The alarms in the list, empty slots left out.</summary>
+        public List<PlcAlarm> Alarms { get; }
+
+        /// <summary>When the PLC saw the list like this.</summary>
+        public DateTime Time { get; }
     }
 }

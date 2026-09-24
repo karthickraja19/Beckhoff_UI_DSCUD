@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Nova.Abstractions.Services;
 using Teal.Library.Contracts.Models;
 using Teal.Library.Log;
@@ -9,48 +10,45 @@ using Teal.Library.Log;
 namespace Nova.Alarm
 {
     /// <summary>
-    /// Watches the PLC's alarm list and keeps the HMI's alarms up to date.
+    /// Listens to the PLC's alarm list and keeps the HMI's alarms up to date.
     /// </summary>
     /// <remarks>
-    /// Every half second:
+    /// Every time the PLC sends its alarm list (<see cref="PlcAlarmReader"/> subscribes to it):
     /// <list type="number">
-    /// <item>read the alarm list from the PLC (<see cref="PlcAlarmReader"/>)</item>
     /// <item>compare it with the alarms we already know (<see cref="AlarmTracker"/>)</item>
     /// <item>save started and ended alarms to the database (<see cref="AlarmDatabase"/>)</item>
     /// <item>tell the screens</item>
     /// </list>
     /// Registered as <see cref="IActiveAlarmService"/>, so the alarm bell follows it.
     ///
-    /// Start and end times are the moment the HMI sees the change, so they are accurate
-    /// to about half a second. When the PLC stamps its own raise time into each alarm,
-    /// use that instead.
+    /// The lists are handled one at a time, in the order they arrived, on a worker thread
+    /// rather than the ADS thread, so a slow database cannot hold up the PLC connection.
+    /// Start and end times are the PLC's time stamp on the list, so they are accurate to
+    /// the 100 ms the PLC checks the list at.
     /// </remarks>
     public sealed class AlarmMonitor : IActiveAlarmService, IDisposable
     {
-        private static readonly TimeSpan CheckInterval = TimeSpan.FromMilliseconds(500);
-
         private readonly PlcAlarmReader _plc;
         private readonly AlarmDatabase _database;   // null = alarms are shown but not saved
         private readonly AlarmTracker _tracker = new AlarmTracker();
         private readonly object _sync = new object();
 
-        private Timer _timer;
-        private int _checkRunning;                  // 1 while a check is running
+        private bool _started;
         private bool _openAlarmsLoaded;
-        private bool _plcReadFailing;
+        private Task _work = Task.CompletedTask;    // the work waiting to be done, in order
         private SynchronizationContext _uiThread;
         private IReadOnlyList<ActiveAlarmSnapshot> _activeAlarms = new ActiveAlarmSnapshot[0];
 
         /// <summary>Raised on the UI thread when the list of active alarms changes.</summary>
         public event EventHandler<IReadOnlyList<ActiveAlarmSnapshot>> ActiveAlarmsChanged;
 
-        /// <summary>Raised on the monitor thread when an alarm starts (for HIVE reporting).</summary>
+        /// <summary>Raised on a worker thread when an alarm starts (for HIVE reporting).</summary>
         public event EventHandler<AlarmRecord> AlarmStarted;
 
-        /// <summary>Raised on the monitor thread when an alarm ends (for HIVE reporting).</summary>
+        /// <summary>Raised on a worker thread when an alarm ends (for HIVE reporting).</summary>
         public event EventHandler<AlarmRecord> AlarmEnded;
 
-        /// <param name="plc">Reads the alarm list from the PLC.</param>
+        /// <param name="plc">Subscribes to the alarm list in the PLC.</param>
         /// <param name="database">Saves the alarms. Null to only show them.</param>
         public AlarmMonitor(PlcAlarmReader plc, AlarmDatabase database)
         {
@@ -68,27 +66,43 @@ namespace Nova.Alarm
 
         public void Start()
         {
+            bool loadOpenAlarms;
+
             lock (_sync)
             {
-                if (_timer != null)
+                if (_started)
                     return;
+
+                _started = true;
 
                 // Start() is called on the UI thread; screen updates are sent back to it.
                 _uiThread = SynchronizationContext.Current;
-                _timer = new Timer(OnTimer, null, TimeSpan.Zero, CheckInterval);
+
+                loadOpenAlarms = !_openAlarmsLoaded;
+                _openAlarmsLoaded = true;
             }
+
+            // Once, and first: alarms still active from the last time the HMI ran, so the
+            // first list from the PLC is compared with them.
+            if (loadOpenAlarms)
+                Queue(LoadOpenAlarms);
+
+            _plc.AlarmsChanged += OnPlcAlarmsChanged;
+            _plc.Start();
         }
 
         public void Stop()
         {
             lock (_sync)
             {
-                if (_timer != null)
-                {
-                    _timer.Dispose();
-                    _timer = null;
-                }
+                if (!_started)
+                    return;
+
+                _started = false;
             }
+
+            _plc.AlarmsChanged -= OnPlcAlarmsChanged;
+            _plc.Stop();
         }
 
         public void Dispose()
@@ -97,40 +111,40 @@ namespace Nova.Alarm
             _plc.Dispose();
         }
 
-        private void OnTimer(object state)
+        /// <summary>
+        /// The PLC sent its alarm list. This is the ADS thread, so the work is only queued.
+        /// If the PLC cannot be reached no lists arrive, and every alarm stays as it is
+        /// until the PLC is back.
+        /// </summary>
+        private void OnPlcAlarmsChanged(object sender, PlcAlarmList list)
         {
-            // Skip this tick if the previous check is still running.
-            if (Interlocked.Exchange(ref _checkRunning, 1) == 1)
-                return;
+            Queue(() => CheckAlarms(list));
+        }
 
+        /// <summary>Runs the work after everything queued before it, on a worker thread.</summary>
+        private void Queue(Action work)
+        {
+            lock (_sync)
+            {
+                _work = _work.ContinueWith(_ => Run(work), TaskScheduler.Default);
+            }
+        }
+
+        private static void Run(Action work)
+        {
             try
             {
-                CheckAlarms();
+                work();
             }
             catch (Exception ex)
             {
                 LogError("Alarm check failed", ex);
             }
-            finally
-            {
-                Interlocked.Exchange(ref _checkRunning, 0);
-            }
         }
 
-        private void CheckAlarms()
+        private void CheckAlarms(PlcAlarmList list)
         {
-            // Once, on the first check: alarms still active from the last time the HMI ran.
-            if (!_openAlarmsLoaded)
-            {
-                _openAlarmsLoaded = true;
-                LoadOpenAlarms();
-            }
-
-            List<PlcAlarm> plcAlarms = ReadPlcAlarms();
-            if (plcAlarms == null)
-                return;   // PLC not readable: leave every alarm as it is until we can see the PLC again
-
-            AlarmChanges changes = _tracker.Compare(plcAlarms, DateTime.Now);
+            AlarmChanges changes = _tracker.Compare(list.Alarms, list.Time);
             if (!changes.HasChanges)
                 return;
 
@@ -162,30 +176,6 @@ namespace Nova.Alarm
             catch (Exception ex)
             {
                 LogError("Could not load the open alarms from the database", ex);
-            }
-        }
-
-        /// <summary>
-        /// Reads the PLC, or returns null if it cannot be read. The error is logged once,
-        /// not every half second.
-        /// </summary>
-        private List<PlcAlarm> ReadPlcAlarms()
-        {
-            try
-            {
-                List<PlcAlarm> alarms = _plc.ReadAlarms();
-                _plcReadFailing = false;
-                return alarms;
-            }
-            catch (Exception ex)
-            {
-                if (!_plcReadFailing)
-                {
-                    _plcReadFailing = true;
-                    LogError("Cannot read the alarm list " + PlcAlarmReader.AlarmListSymbol + " from the PLC", ex);
-                }
-
-                return null;
             }
         }
 

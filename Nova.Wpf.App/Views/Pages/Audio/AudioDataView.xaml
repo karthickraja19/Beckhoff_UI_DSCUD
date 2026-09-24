@@ -3,34 +3,95 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:hc="https://handyorg.github.io/handycontrol"
              xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
+             xmlns:behaviors="clr-namespace:Nova.Wpf.UI.Behaviors;assembly=Nova.Wpf.UI"
              xmlns:converters="clr-namespace:Nova.Wpf.App.Converters"
              FontFamily="{DynamicResource Audio.FontFamily}"
              Background="Transparent">
 
     <!-- ================================================================== -->
-    <!-- DATA PAGE   Audio SW DFM v5.4 slides 59 (I/O) and 60 (Tossing)     -->
+    <!-- DATA PAGE   Audio SW DFM v5.4 slides 59 (I/O) and 60 (Tossing),    -->
+    <!-- plus Yield, Health and Glue from S2.4.4 Data page X4 (dispenser).  -->
     <!-- Slide requirements: Filter time, IO/Tossing, Data Export.           -->
-    <!-- Slide layout: 4/5 width charts + unit table, 1/5 width summary.     -->
+    <!-- Slide layout: 4/5 width tab content + 1/5 width summary column.     -->
     <!-- ================================================================== -->
 
     <UserControl.Resources>
         <converters:BoolToBrushKeyConverter x:Key="BoolToBrushKey"/>
         <converters:AudioBoolToVisibilityConverter x:Key="BoolToVisibility"/>
+        <converters:HealthLevelToBrushConverter x:Key="HealthLevelToBrush"/>
+        <converters:RatioToStarConverter x:Key="RatioToStar"/>
+
+        <!-- A failing unit or weighing is red wherever it appears (slide 43's rule). -->
+        <Style x:Key="Data.FailAwareRow" TargetType="DataGridRow" BasedOn="{StaticResource Audio.DataGridRow}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsFail}" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource Audio.UnitSn.FailBrush}"/>
+                    <Setter Property="Foreground" Value="{DynamicResource Audio.UnitSn.FailForegroundBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- A status dot and its text, coloured by the row's HealthLevel. -->
+        <DataTemplate x:Key="Data.StatusCell">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="4,0">
+                <Ellipse Width="10" Height="10" Margin="0,0,6,0" VerticalAlignment="Center"
+                         Fill="{Binding Level, Converter={StaticResource HealthLevelToBrush}}"/>
+                <TextBlock Text="{Binding StatusText}" VerticalAlignment="Center"
+                           Foreground="{Binding Level, Converter={StaticResource HealthLevelToBrush}}"/>
+            </StackPanel>
+        </DataTemplate>
+
+        <!-- Label over a value, used by the summary blocks. -->
+        <DataTemplate x:Key="Data.SummaryRow">
+            <Grid Margin="0,1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Style="{StaticResource Audio.Footnote}" Text="{Binding Label}" TextWrapping="Wrap"/>
+                <TextBlock Grid.Column="1" Style="{StaticResource Audio.CalloutMono}" Text="{Binding Value}" Margin="8,0,0,0"/>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="Data.TossingRow">
+            <Grid Margin="0,1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Style="{StaticResource Audio.Caption1}" Text="{Binding Label}" TextWrapping="Wrap"/>
+                <TextBlock Grid.Column="1" Style="{StaticResource Audio.Caption1Mono}" Text="{Binding Value}"
+                           Margin="8,0,0,0" VerticalAlignment="Top"/>
+            </Grid>
+        </DataTemplate>
+
+        <Style x:Key="Data.CardTitle" TargetType="TextBlock" BasedOn="{StaticResource Audio.Headline}">
+            <Setter Property="Margin" Value="16,12,16,0"/>
+        </Style>
+
+        <Style x:Key="Data.Note" TargetType="TextBlock" BasedOn="{StaticResource Audio.Footnote}">
+            <Setter Property="Foreground" Value="{DynamicResource Audio.Text.SecondaryBrush}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
+
+        <Style x:Key="Data.Error" TargetType="TextBlock" BasedOn="{StaticResource Audio.Footnote}">
+            <Setter Property="Foreground" Value="{DynamicResource Audio.System.RedBrush}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
     </UserControl.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>   <!-- I/O | Tossing + time filter -->
-            <RowDefinition Height="*"/>      <!-- charts / table / summary -->
+            <RowDefinition Height="Auto"/>   <!-- tabs + time filter -->
+            <RowDefinition Height="*"/>      <!-- tab content + summary column -->
         </Grid.RowDefinitions>
 
-        <!-- Filter row -->
+        <!-- ============================================================== -->
+        <!-- FILTER ROW                                                     -->
+        <!-- ============================================================== -->
         <Border Grid.Row="0" Style="{StaticResource Audio.Card}" Padding="16,10">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
@@ -43,23 +104,36 @@
                          SelectedItem="{Binding SelectedView, Mode=TwoWay}"
                          AutomationProperties.Name="Data view"/>
 
-                <TextBlock Grid.Column="1" Style="{StaticResource Audio.FieldLabel}"
-                           Text="From:" Margin="20,0,8,0"/>
-                <hc:DateTimePicker Grid.Column="2" Width="175" Height="28"
-                                   SelectedDateTime="{Binding StartTime, Mode=TwoWay}"/>
+                <!-- Health is the machine as it is now, so it has no From/To. -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"
+                            Visibility="{Binding IsTimeFiltered, Converter={StaticResource BoolToVisibility}}">
+                    <TextBlock Style="{StaticResource Audio.FieldLabel}" Text="From:" Margin="20,0,8,0"/>
+                    <hc:DateTimePicker Width="175" Height="28"
+                                       SelectedDateTime="{Binding StartTime, Mode=TwoWay}"/>
+                    <TextBlock Style="{StaticResource Audio.FieldLabel}" Text="To:" Margin="14,0,8,0"/>
+                    <hc:DateTimePicker Width="175" Height="28"
+                                       SelectedDateTime="{Binding EndTime, Mode=TwoWay}"/>
+                </StackPanel>
 
-                <TextBlock Grid.Column="3" Style="{StaticResource Audio.FieldLabel}"
-                           Text="To:" Margin="14,0,8,0"/>
-                <hc:DateTimePicker Grid.Column="4" Width="175" Height="28"
-                                   SelectedDateTime="{Binding EndTime, Mode=TwoWay}"/>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Style="{StaticResource Audio.FilledButton}"
+                            Content="{Binding QueryButtonText}" Margin="16,0,0,0"
+                            Command="{Binding RefreshCommand}"/>
 
-                <Button Grid.Column="5" Style="{StaticResource Audio.FilledButton}"
-                        Content="Query" Margin="16,0,0,0"
-                        Command="{Binding RefreshCommand}"/>
+                    <!-- Generated figures are labelled on screen, not just in a comment. -->
+                    <Border Background="{DynamicResource Audio.System.Gray5Brush}"
+                            CornerRadius="{DynamicResource Audio.Radius.Small}"
+                            Padding="10,3" Margin="12,0,0,0" VerticalAlignment="Center"
+                            Visibility="{Binding IsSampleData, Converter={StaticResource BoolToVisibility}}"
+                            ToolTip="HardwareMode is Simulated: these figures are generated, not recorded by the machine.">
+                        <TextBlock Style="{StaticResource Audio.Footnote}" Text="Sample data"/>
+                    </Border>
+                </StackPanel>
 
-                <TextBlock Grid.Column="6" Style="{StaticResource Audio.Footnote}"
+                <TextBlock Grid.Column="3" Style="{StaticResource Audio.Footnote}"
                            Text="{Binding StatusText}" Margin="16,0,0,0"
-                           TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                           TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
+                           ToolTip="{Binding StatusText}"/>
             </Grid>
         </Border>
 
@@ -69,8 +143,11 @@
                 <ColumnDefinition Width="1*"/>   <!-- slide 59: 1/5 width -->
             </Grid.ColumnDefinitions>
 
-            <!-- Charts over the unit table -->
-            <Grid Grid.Column="0">
+            <!-- ========================================================== -->
+            <!-- I/O, TOSSING, YIELD: two charts over the unit table        -->
+            <!-- ========================================================== -->
+            <Grid Grid.Column="0"
+                  Visibility="{Binding IsProductionView, Converter={StaticResource BoolToVisibility}}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="*"/>
@@ -84,13 +161,13 @@
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
                         <TextBlock Grid.Row="0" Style="{StaticResource Audio.Footnote}"
-                                   Text="{Binding RateSeriesLabel}" Margin="16,10,16,0"/>
+                                   Text="{Binding TopChartTitle}" Margin="16,10,16,0"/>
                         <lvc:CartesianChart Grid.Row="1" Margin="12,4,16,10"
-                                            Series="{Binding RateSeries}"
+                                            Series="{Binding TopSeries}"
                                             XAxes="{Binding SharedXAxes}"
-                                            YAxes="{Binding RateYAxes}"
+                                            YAxes="{Binding TopYAxes}"
                                             TooltipPosition="Top"
-                                            LegendPosition="Hidden"/>
+                                            LegendPosition="Right"/>
                     </Grid>
                 </Border>
 
@@ -101,51 +178,559 @@
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
                         <TextBlock Grid.Row="0" Style="{StaticResource Audio.Footnote}"
-                                   Text="{Binding VolumeSeriesLabel}" Margin="16,10,16,0"/>
+                                   Text="{Binding BottomChartTitle}" Margin="16,10,16,0"/>
                         <lvc:CartesianChart Grid.Row="1" Margin="12,4,16,10"
-                                            Series="{Binding VolumeSeries}"
+                                            Series="{Binding BottomSeries}"
                                             XAxes="{Binding SharedXAxes}"
-                                            YAxes="{Binding VolumeYAxes}"
+                                            YAxes="{Binding BottomYAxes}"
                                             TooltipPosition="Top"
-                                            LegendPosition="Hidden"/>
+                                            LegendPosition="Right"/>
                     </Grid>
                 </Border>
 
                 <Border Grid.Row="2" Style="{StaticResource Audio.Card}">
                     <DataGrid Style="{StaticResource Audio.DataGrid}"
                               ItemsSource="{Binding Units}"
+                              RowStyle="{StaticResource Data.FailAwareRow}"
                               Margin="8">
-                        <DataGrid.RowStyle>
-                            <Style TargetType="DataGridRow" BasedOn="{StaticResource Audio.DataGridRow}">
-                                <Style.Triggers>
-                                    <!-- Slide 43's rule carried through to the unit table:
-                                         a failing unit is red wherever it appears. -->
-                                    <DataTrigger Binding="{Binding IsFail}" Value="True">
-                                        <Setter Property="Background"
-                                                Value="{DynamicResource Audio.UnitSn.FailBrush}"/>
-                                        <Setter Property="Foreground"
-                                                Value="{DynamicResource Audio.UnitSn.FailForegroundBrush}"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </DataGrid.RowStyle>
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Date" Binding="{Binding Date}" Width="100"/>
-                            <DataGridTextColumn Header="Shift" Binding="{Binding Shift}" Width="60"/>
+                            <DataGridTextColumn Header="Date" Binding="{Binding Date}" Width="112"/>
+                            <DataGridTextColumn Header="Shift" Binding="{Binding Shift}" Width="55"/>
+                            <DataGridTextColumn Header="Gantry" Binding="{Binding Gantry}" Width="65"/>
                             <DataGridTextColumn Header="Unit SN" Binding="{Binding UnitSn}" Width="*"/>
-                            <DataGridTextColumn Header="Component SN" Binding="{Binding ComponentSn}" Width="120"/>
-                            <DataGridTextColumn Header="Start Time" Binding="{Binding StartTime}" Width="110"/>
-                            <DataGridTextColumn Header="End Time" Binding="{Binding EndTime}" Width="110"/>
-                            <DataGridTextColumn Header="Pass" Binding="{Binding PassText}" Width="70"/>
-                            <DataGridTextColumn Header="CT/s" Binding="{Binding CycleTimeText}" Width="70"/>
-                            <DataGridTextColumn Header="HIVE State" Binding="{Binding HiveStateText}" Width="90"/>
+                            <DataGridTextColumn Header="Component SN" Binding="{Binding ComponentSn}" Width="125"/>
+                            <DataGridTextColumn Header="Start Time" Binding="{Binding StartTime}" Width="130"/>
+                            <DataGridTextColumn Header="End Time" Binding="{Binding EndTime}" Width="130"/>
+                            <DataGridTextColumn Header="Pass" Binding="{Binding PassText}" Width="65"/>
+                            <DataGridTextColumn Header="CT/s" Binding="{Binding CycleTimeText}" Width="65"/>
+                            <DataGridTextColumn Header="HIVE State" Binding="{Binding HiveStateText}" Width="85"/>
                             <DataGridTextColumn Header="Tossing" Binding="{Binding TossingText}" Width="70"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Border>
             </Grid>
 
-            <!-- Summary column -->
+            <!-- ========================================================== -->
+            <!-- GLUE (S2.4.4.5): trends and raw data | regression, settings -->
+            <!-- ========================================================== -->
+            <!-- The Glue and Health tabs start collapsed, and a DataGrid collapsed when
+                 first laid out gives its star columns no width. DataGridStarColumns
+                 re-applies them when the tab is shown. -->
+            <Grid Grid.Column="0"
+                  Visibility="{Binding IsGlueView, Converter={StaticResource BoolToVisibility}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>   <!-- S2.4.4.5: 2/5 width -->
+                    <ColumnDefinition Width="*"/>   <!-- S2.4.4.5: 2/5 width -->
+                </Grid.ColumnDefinitions>
+
+                <!-- Trend charts and raw data -->
+                <Grid Grid.Column="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="1.2*"/>
+                        <RowDefinition Height="1.2*"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Style="{StaticResource Audio.Card}" Padding="16,8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Style="{StaticResource Audio.FieldLabel}" Text="Glue path:" Margin="0,0,10,0"
+                                       VerticalAlignment="Center"/>
+                            <ListBox Grid.Column="1" Style="{StaticResource Audio.SegmentedControl}"
+                                     ItemsSource="{Binding GluePaths}"
+                                     SelectedItem="{Binding SelectedGluePath, Mode=TwoWay}"
+                                     AutomationProperties.Name="Glue path"/>
+                            <TextBlock Grid.Column="2" Style="{StaticResource Data.Note}" Margin="16,0,0,0" VerticalAlignment="Center"
+                                       Text="Blue: weight · red dashed: USL and LSL · grey dashed: nominal · red dot: out of spec"/>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Row="1" Style="{StaticResource Audio.Card}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <StackPanel Grid.Row="0" Margin="16,10,16,0">
+                                <TextBlock Style="{StaticResource Audio.Headline}" Text="Gantry: Front"/>
+                                <TextBlock Style="{StaticResource Data.Note}" Text="{Binding FrontGlueStats}"/>
+                            </StackPanel>
+                            <lvc:CartesianChart Grid.Row="1" Margin="12,4,16,10"
+                                                Series="{Binding FrontGlueSeries}"
+                                                XAxes="{Binding FrontGlueXAxes}"
+                                                YAxes="{Binding GlueYAxes}"
+                                                TooltipPosition="Top"
+                                                LegendPosition="Hidden"
+                                                Visibility="{Binding HasFrontGlue, Converter={StaticResource BoolToVisibility}}"/>
+                            <TextBlock Grid.Row="1" Style="{StaticResource Audio.EmptyState}"
+                                       Text="No front-gantry weighings for this path in the window."
+                                       Visibility="{Binding HasFrontGlue, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"/>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Row="2" Style="{StaticResource Audio.Card}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <StackPanel Grid.Row="0" Margin="16,10,16,0">
+                                <TextBlock Style="{StaticResource Audio.Headline}" Text="Gantry: Rear"/>
+                                <TextBlock Style="{StaticResource Data.Note}" Text="{Binding RearGlueStats}"/>
+                            </StackPanel>
+                            <lvc:CartesianChart Grid.Row="1" Margin="12,4,16,10"
+                                                Series="{Binding RearGlueSeries}"
+                                                XAxes="{Binding RearGlueXAxes}"
+                                                YAxes="{Binding GlueYAxes}"
+                                                TooltipPosition="Top"
+                                                LegendPosition="Hidden"
+                                                Visibility="{Binding HasRearGlue, Converter={StaticResource BoolToVisibility}}"/>
+                            <TextBlock Grid.Row="1" Style="{StaticResource Audio.EmptyState}"
+                                       Text="No rear-gantry weighings for this path in the window."
+                                       Visibility="{Binding HasRearGlue, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"/>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Row="3" Style="{StaticResource Audio.Card}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Style="{StaticResource Data.CardTitle}" Text="Glue weight raw data"/>
+                            <DataGrid behaviors:DataGridStarColumns.RefreshOnShow="True"
+                                      Grid.Row="1" Style="{StaticResource Audio.DataGrid}"
+                                      ItemsSource="{Binding GlueWeighings}"
+                                      RowStyle="{StaticResource Data.FailAwareRow}"
+                                      Margin="8">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Time" Binding="{Binding DateTimeText}" Width="1.6*"/>
+                                    <DataGridTextColumn Header="Shift" Binding="{Binding Shift}" Width="0.7*"/>
+                                    <DataGridTextColumn Header="Gantry" Binding="{Binding Gantry}" Width="0.8*"/>
+                                    <DataGridTextColumn Header="Path" Binding="{Binding PathNumberText}" Width="0.6*"/>
+                                    <DataGridTextColumn Header="Weight (mg)" Binding="{Binding WeightText}" Width="1.2*"/>
+                                    <DataGridTextColumn Header="LSL" Binding="{Binding LowerLimitText}" Width="0.8*"/>
+                                    <DataGridTextColumn Header="USL" Binding="{Binding UpperLimitText}" Width="0.8*"/>
+                                    <DataGridTextColumn Header="Result" Binding="{Binding ResultText}" Width="0.8*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- Regression and weighing settings -->
+                <Grid Grid.Column="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Style="{StaticResource Audio.Card}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Style="{StaticResource Data.CardTitle}"
+                                       Text="Regression function (last calibration)"/>
+
+                            <DataGrid behaviors:DataGridStarColumns.RefreshOnShow="True"
+                                      Grid.Row="1" Style="{StaticResource Audio.DataGrid}"
+                                      ItemsSource="{Binding GlueRegressions}" Margin="8,6,8,0"
+                                      VerticalScrollBarVisibility="Disabled">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Gantry" Binding="{Binding Gantry}" Width="0.8*"/>
+                                    <DataGridTextColumn Header="w" Binding="{Binding WText}" Width="*"/>
+                                    <DataGridTextColumn Header="b" Binding="{Binding BText}" Width="*"/>
+                                    <DataGridTextColumn Header="R²" Binding="{Binding R2Text}" Width="0.9*"/>
+                                    <DataGridTextColumn Header="Calibrated" Binding="{Binding CalibratedText}" Width="1.7*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <lvc:CartesianChart Grid.Row="2" Margin="12,8,16,10"
+                                                Series="{Binding RegressionSeries}"
+                                                XAxes="{Binding RegressionXAxes}"
+                                                YAxes="{Binding RegressionYAxes}"
+                                                TooltipPosition="Top"
+                                                LegendPosition="Right"
+                                                Visibility="{Binding HasRegressions, Converter={StaticResource BoolToVisibility}}"/>
+                            <TextBlock Grid.Row="2" Style="{StaticResource Audio.EmptyState}"
+                                       Text="No glue calibration has been recorded."
+                                       Visibility="{Binding HasRegressions, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Glue weighing settings: when the scale runs (SOP) and how (S2.4.4.5). -->
+                    <Border Grid.Row="1" Style="{StaticResource Audio.Card}" Padding="16,12">
+                        <StackPanel>
+                            <Grid>
+                                <TextBlock Style="{StaticResource Audio.Headline}" Text="Glue weighing settings"
+                                           VerticalAlignment="Center"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Button Style="{StaticResource Audio.Button}" Content="Edit"
+                                            Command="{Binding EditWeighingSettingsCommand}"
+                                            Visibility="{Binding IsEditingWeighing, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"/>
+                                    <Button Style="{StaticResource Audio.Button}" Content="Cancel" Margin="0,0,8,0"
+                                            Command="{Binding CancelWeighingSettingsCommand}"
+                                            Visibility="{Binding IsEditingWeighing, Converter={StaticResource BoolToVisibility}}"/>
+                                    <Button Style="{StaticResource Audio.FilledButton}" Content="Save"
+                                            Command="{Binding SaveWeighingSettingsCommand}"
+                                            Visibility="{Binding IsEditingWeighing, Converter={StaticResource BoolToVisibility}}"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <TextBlock Style="{StaticResource Data.Note}" Margin="0,4,0,8"
+                                       Text="Level 2 or 3 to change."
+                                       Visibility="{Binding CanEditSettings, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"/>
+
+                            <Grid IsEnabled="{Binding IsEditingWeighing}" Margin="0,6,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="90"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <CheckBox Grid.Row="0" Grid.Column="0" Content="Every" Margin="0,4,10,4"
+                                          IsChecked="{Binding WeighByTime}" VerticalAlignment="Center"/>
+                                <TextBox Grid.Row="0" Grid.Column="1" Style="{StaticResource Audio.TextBoxMono}" IsReadOnly="False"
+                                         behaviors:NumericInput.Mode="Integer" Margin="0,2"
+                                         Text="{Binding WeighIntervalMinutes, UpdateSourceTrigger=PropertyChanged}"
+                                         AutomationProperties.Name="Weighing interval in minutes"/>
+                                <TextBlock Grid.Row="0" Grid.Column="2" Style="{StaticResource Audio.Footnote}"
+                                           Text="minutes" Margin="8,0,0,0" VerticalAlignment="Center"/>
+
+                                <CheckBox Grid.Row="1" Grid.Column="0" Content="Every" Margin="0,4,10,4"
+                                          IsChecked="{Binding WeighByUnitCount}" VerticalAlignment="Center"/>
+                                <TextBox Grid.Row="1" Grid.Column="1" Style="{StaticResource Audio.TextBoxMono}" IsReadOnly="False"
+                                         behaviors:NumericInput.Mode="Integer" Margin="0,2"
+                                         Text="{Binding WeighIntervalUnits, UpdateSourceTrigger=PropertyChanged}"
+                                         AutomationProperties.Name="Weighing interval in units"/>
+                                <TextBlock Grid.Row="1" Grid.Column="2" Style="{StaticResource Audio.Footnote}"
+                                           Text="units" Margin="8,0,0,0" VerticalAlignment="Center"/>
+
+                                <StackPanel Grid.Row="2" Grid.ColumnSpan="3" Orientation="Horizontal" Margin="0,4">
+                                    <CheckBox Content="At shift start" IsChecked="{Binding WeighAtShiftStart}" Margin="0,0,20,0"/>
+                                    <CheckBox Content="At shift end" IsChecked="{Binding WeighAtShiftEnd}"/>
+                                </StackPanel>
+
+                                <TextBlock Grid.Row="3" Grid.Column="0" Style="{StaticResource Audio.Footnote}"
+                                           Text="Shots per weighing" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <TextBox Grid.Row="3" Grid.Column="1" Style="{StaticResource Audio.TextBoxMono}" IsReadOnly="False"
+                                         behaviors:NumericInput.Mode="Integer" Margin="0,2"
+                                         Text="{Binding WeighShots, UpdateSourceTrigger=PropertyChanged}"
+                                         AutomationProperties.Name="Shots per weighing"/>
+
+                                <TextBlock Grid.Row="4" Grid.Column="0" Style="{StaticResource Audio.Footnote}"
+                                           Text="Calibrate every" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <TextBox Grid.Row="4" Grid.Column="1" Style="{StaticResource Audio.TextBoxMono}" IsReadOnly="False"
+                                         behaviors:NumericInput.Mode="Integer" Margin="0,2"
+                                         Text="{Binding CalibrationDays, UpdateSourceTrigger=PropertyChanged}"
+                                         AutomationProperties.Name="Calibration interval in days"/>
+                                <TextBlock Grid.Row="4" Grid.Column="2" Style="{StaticResource Audio.Footnote}"
+                                           Text="days" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                            </Grid>
+
+                            <TextBlock Style="{StaticResource Data.Error}" Margin="0,6,0,0"
+                                       Text="{Binding WeighingSettingsError}"
+                                       Visibility="{Binding WeighingSettingsError, Converter={StaticResource String2VisibilityConverter}}"/>
+                            <TextBlock Style="{StaticResource Data.Note}" Margin="0,6,0,0"
+                                       Text="Weighing settings are not available - the weighing scale is not connected to this HMI yet."
+                                       Visibility="{Binding HasWeighingSettings, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Grid>
+
+            <!-- ========================================================== -->
+            <!-- HEALTH (S2.4.4.4): glue left, pot life, nozzles, settings  -->
+            <!-- ========================================================== -->
+            <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto"
+                          Visibility="{Binding IsHealthView, Converter={StaticResource BoolToVisibility}}">
+                <StackPanel>
+
+                    <!-- Remaining glue: one gauge per gantry, then the arithmetic behind it. -->
+                    <Border Style="{StaticResource Audio.Card}">
+                        <StackPanel Margin="0,0,0,12">
+                            <TextBlock Style="{StaticResource Data.CardTitle}" Text="Remaining glue"/>
+                            <TextBlock Style="{StaticResource Data.Note}" Margin="16,2,16,8" Text="{Binding GlueThresholdText}"/>
+
+                            <ItemsControl ItemsSource="{Binding GlueCartridges}" Margin="10,0">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Rows="1"/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{DynamicResource Audio.Surface.RecessedBrush}"
+                                                CornerRadius="{DynamicResource Audio.Radius.Field}"
+                                                Padding="14,10" Margin="6">
+                                            <StackPanel>
+                                                <Grid>
+                                                    <TextBlock Style="{StaticResource Audio.Headline}">
+                                                        <Run Text="Gantry:"/>
+                                                        <Run Text="{Binding Gantry, Mode=OneWay}"/>
+                                                    </TextBlock>
+                                                    <TextBlock Style="{StaticResource Audio.Title2}" HorizontalAlignment="Right"
+                                                               Text="{Binding RemainingPercentText}"
+                                                               Foreground="{Binding Level, Converter={StaticResource HealthLevelToBrush}}"/>
+                                                </Grid>
+                                                <!-- The gauge: filled share, empty share. -->
+                                                <Grid Height="12" Margin="0,8,0,6">
+                                                    <Border Background="{DynamicResource Audio.System.Gray5Brush}" CornerRadius="6"/>
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="{Binding RemainingRatio, Converter={StaticResource RatioToStar}}"/>
+                                                            <ColumnDefinition Width="{Binding RemainingRatio, Converter={StaticResource RatioToStar}, ConverterParameter=invert}"/>
+                                                        </Grid.ColumnDefinitions>
+                                                        <Border Grid.Column="0" CornerRadius="6"
+                                                                Background="{Binding Level, Converter={StaticResource HealthLevelToBrush}}"/>
+                                                    </Grid>
+                                                </Grid>
+                                                <TextBlock Style="{StaticResource Audio.Footnote}">
+                                                    <Run Text="{Binding RemainingText, Mode=OneWay}"/>
+                                                    <Run Text="g left - about"/>
+                                                    <Run Text="{Binding EstimatedOutputText, Mode=OneWay}"/>
+                                                    <Run Text="more products"/>
+                                                </TextBlock>
+                                                <TextBlock Style="{StaticResource Audio.Footnote}" Margin="0,2,0,0"
+                                                           Text="{Binding StatusText}"
+                                                           Foreground="{Binding Level, Converter={StaticResource HealthLevelToBrush}}"/>
+                                                <TextBlock Style="{StaticResource Data.Note}" Margin="0,2,0,0"
+                                                           Text="{Binding GlueSn, StringFormat='Glue SN {0}'}"
+                                                           TextTrimming="CharacterEllipsis" TextWrapping="NoWrap"
+                                                           ToolTip="{Binding GlueSn}"/>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <DataGrid behaviors:DataGridStarColumns.RefreshOnShow="True"
+                                      Style="{StaticResource Audio.DataGrid}" ItemsSource="{Binding GlueCartridges}"
+                                      Margin="12,8,12,0" VerticalScrollBarVisibility="Disabled"
+                                      Visibility="{Binding HasCartridges, Converter={StaticResource BoolToVisibility}}">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Gantry" Binding="{Binding Gantry}" Width="0.8*"/>
+                                    <DataGridTextColumn Header="Changed" Binding="{Binding ChangedText}" Width="1.2*"/>
+                                    <DataGridTextColumn Header="Cartridge (g)" Binding="{Binding CartridgeText}" Width="1.2*"/>
+                                    <DataGridTextColumn Header="Per cartridge" Binding="{Binding TheoreticalOutputText}" Width="1.2*"/>
+                                    <DataGridTextColumn Header="Glue/unit (g)" Binding="{Binding GluePerProductText}" Width="1.2*"/>
+                                    <DataGridTextColumn Header="Produced" Binding="{Binding ProducedText}" Width="*"/>
+                                    <DataGridTextColumn Header="Long purges" Binding="{Binding LongPurgeCyclesText}" Width="1.1*"/>
+                                    <DataGridTextColumn Header="Short purges" Binding="{Binding ShortPurgeCyclesText}" Width="1.1*"/>
+                                    <DataGridTextColumn Header="Weighings" Binding="{Binding WeighingCyclesText}" Width="*"/>
+                                    <DataGridTextColumn Header="Used (g)" Binding="{Binding UsedText}" Width="*">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="ToolTip" Value="{Binding UsedBreakdown}"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+                                    <DataGridTextColumn Header="Left (g)" Binding="{Binding RemainingText}" Width="*"/>
+                                    <DataGridTextColumn Header="Est. output" Binding="{Binding EstimatedOutputText}" Width="1.1*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+
+                            <TextBlock Style="{StaticResource Audio.EmptyState}" Margin="16,12"
+                                       Text="No glue cartridge data."
+                                       Visibility="{Binding HasCartridges, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Pot life and nozzle health, side by side. -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="1.3*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0" Style="{StaticResource Audio.Card}">
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Style="{StaticResource Data.CardTitle}" Text="Pot life"/>
+                                <TextBlock Style="{StaticResource Data.Note}" Margin="16,2,16,8" Text="{Binding PotLifeThresholdText}"/>
+                                <DataGrid behaviors:DataGridStarColumns.RefreshOnShow="True"
+                                      Style="{StaticResource Audio.DataGrid}" ItemsSource="{Binding PotLife}"
+                                          Margin="12,0" VerticalScrollBarVisibility="Disabled">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Gantry" Binding="{Binding Gantry}" Width="0.8*"/>
+                                        <DataGridTextColumn Header="Left (h)" Binding="{Binding RemainingText}" Width="*"/>
+                                        <DataGridTextColumn Header="Threshold (h)" Binding="{Binding ThresholdText}" Width="1.2*"/>
+                                        <DataGridTemplateColumn Header="Status" Width="1.3*" CellTemplate="{StaticResource Data.StatusCell}"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Grid.Column="1" Style="{StaticResource Audio.Card}">
+                            <StackPanel Margin="0,0,0,12">
+                                <TextBlock Style="{StaticResource Data.CardTitle}" Text="Nozzle health"/>
+                                <TextBlock Style="{StaticResource Data.Note}" Margin="16,2,16,8" Text="{Binding NozzleThresholdText}"/>
+                                <DataGrid behaviors:DataGridStarColumns.RefreshOnShow="True"
+                                      Style="{StaticResource Audio.DataGrid}" ItemsSource="{Binding Nozzles}"
+                                          Margin="12,0" VerticalScrollBarVisibility="Disabled"
+                                          Visibility="{Binding HasNozzles, Converter={StaticResource BoolToVisibility}}">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Gantry" Binding="{Binding Gantry}" Width="0.8*"/>
+                                        <DataGridTextColumn Header="Valve SN" Binding="{Binding ValveSn}" Width="2.4*"/>
+                                        <DataGridTextColumn Header="Nozzle" Binding="{Binding NozzleId}" Width="0.9*"/>
+                                        <DataGridTextColumn Header="Value (h)" Binding="{Binding ValueText}" Width="*"/>
+                                        <DataGridTextColumn Header="LSL" Binding="{Binding LowerLimitText}" Width="0.6*"/>
+                                        <DataGridTextColumn Header="USL" Binding="{Binding UpperLimitText}" Width="0.7*"/>
+                                        <DataGridTemplateColumn Header="Status" Width="1.3*" CellTemplate="{StaticResource Data.StatusCell}"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                                <TextBlock Style="{StaticResource Audio.EmptyState}" Margin="16,12"
+                                           Text="No nozzle health from MES."
+                                           Visibility="{Binding HasNozzles, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <!-- Dosages and thresholds, set by OSS (S2.4.4.4 section 2.1). -->
+                    <Border Style="{StaticResource Audio.Card}" Padding="16,12">
+                        <StackPanel>
+                            <Grid>
+                                <TextBlock Style="{StaticResource Audio.Headline}" Text="Glue control settings"
+                                           VerticalAlignment="Center"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Button Style="{StaticResource Audio.Button}" Content="Edit"
+                                            Command="{Binding EditGlueControlCommand}"
+                                            Visibility="{Binding IsEditingGlueControl, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"/>
+                                    <Button Style="{StaticResource Audio.Button}" Content="Cancel" Margin="0,0,8,0"
+                                            Command="{Binding CancelGlueControlCommand}"
+                                            Visibility="{Binding IsEditingGlueControl, Converter={StaticResource BoolToVisibility}}"/>
+                                    <Button Style="{StaticResource Audio.FilledButton}" Content="Save"
+                                            Command="{Binding SaveGlueControlCommand}"
+                                            Visibility="{Binding IsEditingGlueControl, Converter={StaticResource BoolToVisibility}}"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <TextBlock Style="{StaticResource Data.Note}" Margin="0,4,0,0"
+                                       Text="Level 2 or 3 to change."
+                                       Visibility="{Binding CanEditSettings, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"/>
+
+                            <!-- Dosages per gantry -->
+                            <Border Style="{StaticResource Audio.ListHeaderRow}" Margin="0,10,0,0">
+                                <Grid Margin="8,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Style="{StaticResource Audio.TableHeaderText}" Text="Gantry"/>
+                                    <TextBlock Grid.Column="1" Style="{StaticResource Audio.TableHeaderText}" Text="Cartridge (g)" TextAlignment="Right"/>
+                                    <TextBlock Grid.Column="2" Style="{StaticResource Audio.TableHeaderText}" Text="Glue / product (g)" TextAlignment="Right"/>
+                                    <TextBlock Grid.Column="3" Style="{StaticResource Audio.TableHeaderText}" Text="Long purge dose (g)" TextAlignment="Right"/>
+                                    <TextBlock Grid.Column="4" Style="{StaticResource Audio.TableHeaderText}" Text="Short purge dose (g)" TextAlignment="Right"/>
+                                </Grid>
+                            </Border>
+                            <ItemsControl ItemsSource="{Binding DosageRows}" IsEnabled="{Binding IsEditingGlueControl}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="8,2">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="80"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.Column="0" Style="{StaticResource Audio.Callout}" Text="{Binding Gantry}"
+                                                       VerticalAlignment="Center"/>
+                                            <TextBox Grid.Column="1" Style="{StaticResource Audio.TextBoxMono}" IsReadOnly="False" Margin="4,2,0,2"
+                                                     behaviors:NumericInput.Mode="Decimal"
+                                                     Text="{Binding CartridgeWeight, UpdateSourceTrigger=PropertyChanged}"
+                                                     AutomationProperties.Name="{Binding Gantry, StringFormat='{}{0} cartridge weight'}"/>
+                                            <TextBox Grid.Column="2" Style="{StaticResource Audio.TextBoxMono}" IsReadOnly="False" Margin="4,2,0,2"
+                                                     behaviors:NumericInput.Mode="Decimal"
+                                                     Text="{Binding GluePerProduct, UpdateSourceTrigger=PropertyChanged}"
+                                                     AutomationProperties.Name="{Binding Gantry, StringFormat='{}{0} glue per product'}"/>
+                                            <TextBox Grid.Column="3" Style="{StaticResource Audio.TextBoxMono}" IsReadOnly="False" Margin="4,2,0,2"
+                                                     behaviors:NumericInput.Mode="Decimal"
+                                                     Text="{Binding LongPurgeDose, UpdateSourceTrigger=PropertyChanged}"
+                                                     AutomationProperties.Name="{Binding Gantry, StringFormat='{}{0} long purge dose'}"/>
+                                            <TextBox Grid.Column="4" Style="{StaticResource Audio.TextBoxMono}" IsReadOnly="False" Margin="4,2,0,2"
+                                                     behaviors:NumericInput.Mode="Decimal"
+                                                     Text="{Binding ShortPurgeDose, UpdateSourceTrigger=PropertyChanged}"
+                                                     AutomationProperties.Name="{Binding Gantry, StringFormat='{}{0} short purge dose'}"/>
+                                            <TextBlock Grid.Row="1" Grid.ColumnSpan="5" Style="{StaticResource Data.Error}"
+                                                       Text="{Binding Error}"
+                                                       Visibility="{Binding Error, Converter={StaticResource String2VisibilityConverter}}"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <!-- Thresholds -->
+                            <WrapPanel IsEnabled="{Binding IsEditingGlueControl}" Margin="0,12,0,0">
+                                <StackPanel Orientation="Horizontal" Margin="0,2,24,2">
+                                    <TextBlock Style="{StaticResource Audio.Footnote}" Text="Low glue at (%)" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBox Style="{StaticResource Audio.TextBoxMono}" IsReadOnly="False" Width="70" behaviors:NumericInput.Mode="Decimal"
+                                             Text="{Binding LowGluePercent, UpdateSourceTrigger=PropertyChanged}"
+                                             AutomationProperties.Name="Low glue threshold percent"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,2,24,2">
+                                    <TextBlock Style="{StaticResource Audio.Footnote}" Text="Change glue at (%)" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBox Style="{StaticResource Audio.TextBoxMono}" IsReadOnly="False" Width="70" behaviors:NumericInput.Mode="Decimal"
+                                             Text="{Binding EmptyGluePercent, UpdateSourceTrigger=PropertyChanged}"
+                                             AutomationProperties.Name="Change glue threshold percent"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,2,24,2">
+                                    <TextBlock Style="{StaticResource Audio.Footnote}" Text="Pot-life warning (h)" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBox Style="{StaticResource Audio.TextBoxMono}" IsReadOnly="False" Width="70" behaviors:NumericInput.Mode="Decimal"
+                                             Text="{Binding PotLifeWarningHours, UpdateSourceTrigger=PropertyChanged}"
+                                             AutomationProperties.Name="Pot life warning hours"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,2,24,2">
+                                    <TextBlock Style="{StaticResource Audio.Footnote}" Text="Nozzle warning (h)" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBox Style="{StaticResource Audio.TextBoxMono}" IsReadOnly="False" Width="70" behaviors:NumericInput.Mode="Decimal"
+                                             Text="{Binding NozzleWarningHours, UpdateSourceTrigger=PropertyChanged}"
+                                             AutomationProperties.Name="Nozzle warning hours"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,2,24,2">
+                                    <TextBlock Style="{StaticResource Audio.Footnote}" Text="Nozzle critical (h)" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                    <TextBox Style="{StaticResource Audio.TextBoxMono}" IsReadOnly="False" Width="70" behaviors:NumericInput.Mode="Decimal"
+                                             Text="{Binding NozzleCriticalHours, UpdateSourceTrigger=PropertyChanged}"
+                                             AutomationProperties.Name="Nozzle critical hours"/>
+                                </StackPanel>
+                            </WrapPanel>
+
+                            <TextBlock Style="{StaticResource Data.Error}" Margin="0,6,0,0"
+                                       Text="{Binding GlueControlError}"
+                                       Visibility="{Binding GlueControlError, Converter={StaticResource String2VisibilityConverter}}"/>
+                            <TextBlock Style="{StaticResource Data.Note}" Margin="0,6,0,0"
+                                       Text="Glue control settings are not available - glue health is not connected to this HMI yet."
+                                       Visibility="{Binding HasGlueControl, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ========================================================== -->
+            <!-- SUMMARY COLUMN (every tab)                                  -->
+            <!-- ========================================================== -->
             <Border Grid.Column="1" Style="{StaticResource Audio.Card}">
                 <Grid Margin="14,12">
                     <Grid.RowDefinitions>
@@ -174,49 +759,19 @@
                              Style="{StaticResource Audio.SegmentedControl}"
                              ItemsSource="{Binding Buckets}"
                              SelectedItem="{Binding SelectedBucket, Mode=TwoWay}"
-                             AutomationProperties.Name="Time bucket"/>
+                             AutomationProperties.Name="Time bucket"
+                             Visibility="{Binding IsProductionView, Converter={StaticResource BoolToVisibility}}"/>
 
                     <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" Margin="0,12,0,0">
                         <StackPanel>
                             <TextBlock Style="{StaticResource Audio.Headline}"
                                        Text="I/O Summary" HorizontalAlignment="Center" Margin="0,0,0,6"/>
-                            <ItemsControl ItemsSource="{Binding IoSummary}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid Margin="0,1">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Style="{StaticResource Audio.Footnote}"
-                                                       Text="{Binding Label}"/>
-                                            <TextBlock Grid.Column="1" Style="{StaticResource Audio.CalloutMono}"
-                                                       Text="{Binding Value}"/>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                            <ItemsControl ItemsSource="{Binding IoSummary}" ItemTemplate="{StaticResource Data.SummaryRow}"/>
 
                             <TextBlock Style="{StaticResource Audio.Headline}"
                                        Text="Tossing Summary" HorizontalAlignment="Center"
                                        Margin="0,16,0,6"/>
-                            <ItemsControl ItemsSource="{Binding TossingSummary}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid Margin="0,1">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Style="{StaticResource Audio.Caption1}"
-                                                       Text="{Binding Label}" TextWrapping="Wrap"/>
-                                            <TextBlock Grid.Column="1" Style="{StaticResource Audio.Caption1Mono}"
-                                                       Text="{Binding Value}" Margin="8,0,0,0"
-                                                       VerticalAlignment="Top"/>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+                            <ItemsControl ItemsSource="{Binding TossingSummary}" ItemTemplate="{StaticResource Data.TossingRow}"/>
                         </StackPanel>
                     </ScrollViewer>
 
