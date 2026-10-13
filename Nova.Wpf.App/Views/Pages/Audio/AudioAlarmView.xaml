@@ -58,12 +58,12 @@
                             Content="Save" Margin="8,0,0,0"
                             Command="{Binding SaveCommand}"/>
 
-                    <!-- Generated alarms (Simulated mode) are labelled on screen. -->
+                    <!-- Generated alarms (SampleData=true) are labelled on screen. -->
                     <Border Background="{DynamicResource Audio.System.Gray5Brush}"
                             CornerRadius="{DynamicResource Audio.Radius.Small}"
                             Padding="10,3" Margin="12,0,0,0" VerticalAlignment="Center"
                             Visibility="{Binding IsSampleData, Converter={StaticResource BoolToVisibility}}"
-                            ToolTip="HardwareMode is Simulated: these alarms are generated, not recorded by the machine.">
+                            ToolTip="These alarms are generated (SampleData=true), not recorded by the machine.">
                         <TextBlock Style="{StaticResource Audio.Footnote}" Text="Sample data"/>
                     </Border>
                 </StackPanel>
@@ -112,15 +112,15 @@
                                 <Grid Margin="8,0">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="14"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="96"/>
-                                        <ColumnDefinition Width="72"/>
+                                        <ColumnDefinition Width="*" MinWidth="110"/>
+                                        <ColumnDefinition Width="70"/>
+                                        <ColumnDefinition Width="52"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Grid.Column="1" Style="{StaticResource Audio.TableHeaderText}" Text="Error"/>
                                     <TextBlock Grid.Column="2" Style="{StaticResource Audio.TableHeaderText}"
-                                               Text="Total Time (Min)" TextAlignment="Right"/>
+                                               Text="Min" TextAlignment="Right" ToolTip="Total Time (Min)"/>
                                     <TextBlock Grid.Column="3" Style="{StaticResource Audio.TableHeaderText}"
-                                               Text="Count Total" TextAlignment="Right"/>
+                                               Text="Count" TextAlignment="Right" ToolTip="Count Total"/>
                                 </Grid>
                             </Border>
 
@@ -132,9 +132,9 @@
                                                 <Grid Margin="8,0">
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="14"/>
-                                                        <ColumnDefinition Width="*"/>
-                                                        <ColumnDefinition Width="96"/>
-                                                        <ColumnDefinition Width="72"/>
+                                                        <ColumnDefinition Width="*" MinWidth="110"/>
+                                                        <ColumnDefinition Width="70"/>
+                                                        <ColumnDefinition Width="52"/>
                                                     </Grid.ColumnDefinitions>
 
                                                     <!-- The swatch is what ties the row to
@@ -147,7 +147,7 @@
 
                                                     <TextBlock Grid.Column="1" Style="{StaticResource Audio.Callout}"
                                                                Text="{Binding ErrorName}" Margin="8,0,0,0"
-                                                               TextTrimming="CharacterEllipsis"/>
+                                                               TextTrimming="CharacterEllipsis" ToolTip="{Binding ErrorName}"/>
                                                     <TextBlock Grid.Column="2" Style="{StaticResource Audio.CalloutMono}"
                                                                Text="{Binding TotalMinutesText}" TextAlignment="Right"/>
                                                     <TextBlock Grid.Column="3" Style="{StaticResource Audio.CalloutMono}"
@@ -160,7 +160,7 @@
                             </ScrollViewer>
                         </Grid>
 
-                        <lvc:PieChart Grid.Column="1" Width="220"
+                        <lvc:PieChart Grid.Column="1" Width="190"
                                       Series="{Binding DowntimePieSeries}"
                                       LegendPosition="Hidden"
                                       Margin="12,0,0,0"/>

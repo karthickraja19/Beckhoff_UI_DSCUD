@@ -28,12 +28,19 @@
                            VerticalAlignment="Center" />
             </StackPanel>
 
-            <TextBlock Grid.Row="1"
-                       Margin="0,14,0,0"
-                       Text="{Binding DialogMessage}"
-                       TextWrapping="Wrap"
-                       FontSize="{DynamicResource Nova.FontSize.Body}"
-                       Foreground="{DynamicResource PrimaryTextBrush}" />
+            <!-- A long message (e.g. the startup warnings) scrolls, so the buttons stay on screen. -->
+            <ScrollViewer Grid.Row="1"
+                          Margin="0,14,0,0"
+                          MaxHeight="440"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          PanningMode="VerticalOnly">
+                <TextBlock Text="{Binding DialogMessage}"
+                           Margin="0,0,6,0"
+                           TextWrapping="Wrap"
+                           FontSize="{DynamicResource Nova.FontSize.Body}"
+                           Foreground="{DynamicResource PrimaryTextBrush}" />
+            </ScrollViewer>
 
             <StackPanel Grid.Row="2"
                         Margin="0,18,0,0"

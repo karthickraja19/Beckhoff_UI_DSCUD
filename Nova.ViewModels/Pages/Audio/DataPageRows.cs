@@ -14,34 +14,34 @@ namespace Nova.ViewModels.Pages.Audio
         Critical
     }
 
-    /// <summary>One glue weighing in the Glue tab's raw data table (S2.4.4.5).</summary>
+    /// <summary>
+    /// One glue weighing in the Glue tab's raw data table - S2.4.4.5's columns: Date,
+    /// Time, Shift, Gantry, Path, Speed, then Value, LSL, USL and Result under "Glue
+    /// weight SPEC".
+    /// </summary>
     public sealed class GlueWeighingRow
     {
         public GlueWeighingRow(GlueWeighingRecord record)
         {
-            Date = record.Time.ToString("yyyy/MM/dd");
+            Date = record.Time.ToString("yyyy/M/d");
             Time = record.Time.ToString("HH:mm:ss");
-            DateTimeText = record.Time.ToString("MM/dd HH:mm:ss");
-            PathNumberText = record.Path.ToString();
             Shift = record.Shift ?? string.Empty;
             Gantry = record.Gantry ?? string.Empty;
-            PathText = "Path " + record.Path;
+            PathNumberText = record.Path.ToString();
+            SpeedText = record.DispenseSpeed > 0 ? record.DispenseSpeed.ToString("0.##") + " mm/s" : "—";
             WeightText = record.WeightMg.ToString("0.000");
-            LowerLimitText = record.LowerLimitMg.ToString("0.000");
-            UpperLimitText = record.UpperLimitMg.ToString("0.000");
+            LowerLimitText = record.LowerLimitMg.ToString("0.0##");
+            UpperLimitText = record.UpperLimitMg.ToString("0.0##");
             IsFail = !record.IsPass;
             ResultText = record.IsPass ? "Pass" : "Fail";
         }
 
         public string Date { get; }
         public string Time { get; }
-
-        /// <summary>"09/24 08:05:12" - one column, so the table fits the Glue tab's half width.</summary>
-        public string DateTimeText { get; }
         public string Shift { get; }
         public string Gantry { get; }
-        public string PathText { get; }
         public string PathNumberText { get; }
+        public string SpeedText { get; }
         public string WeightText { get; }
         public string LowerLimitText { get; }
         public string UpperLimitText { get; }
@@ -51,28 +51,24 @@ namespace Nova.ViewModels.Pages.Audio
         public bool IsFail { get; }
     }
 
-    /// <summary>One gantry's glue regression in the Glue tab (HIVE keys w, b, R2).</summary>
-    public sealed class GlueRegressionRow
+    /// <summary>
+    /// One row of a Health tab colour key - S2.4.4.4's "Color | Explain and Detail |
+    /// Threshold (Minimum, Maximum)" tables beside the nozzle and glue tables.
+    /// </summary>
+    public sealed class HealthLegendRow
     {
-        public GlueRegressionRow(GlueRegression regression)
+        public HealthLegendRow(HealthLevel level, string detail, string minimum, string maximum)
         {
-            Gantry = regression.Gantry ?? string.Empty;
-            WText = regression.W.ToString("0.00000");
-            BText = regression.B.ToString("0.00000");
-            R2Text = regression.R2.ToString("0.0000");
-            CalibratedText = regression.CalibratedAt.HasValue
-                ? regression.CalibratedAt.Value.ToString("yyyy/MM/dd HH:mm")
-                : "—";
-            Formula = "y = " + regression.W.ToString("0.00000") + " x "
-                      + (regression.B < 0 ? "- " : "+ ") + Math.Abs(regression.B).ToString("0.00000");
+            Level = level;
+            Detail = detail;
+            Minimum = minimum;
+            Maximum = maximum;
         }
 
-        public string Gantry { get; }
-        public string WText { get; }
-        public string BText { get; }
-        public string R2Text { get; }
-        public string CalibratedText { get; }
-        public string Formula { get; }
+        public HealthLevel Level { get; }
+        public string Detail { get; }
+        public string Minimum { get; }
+        public string Maximum { get; }
     }
 
     /// <summary>
@@ -81,23 +77,30 @@ namespace Nova.ViewModels.Pages.Audio
     /// low-glue thresholds.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// The arithmetic is the spec's own. Remaining = cartridge - produced x glue per
     /// product - long purges - short purges - weighings, where one weighing uses the
-    /// glue of one finished product. With the spec's front-gantry example (300 g,
-    /// 0.06 g, 346 made, 9 x 0.02, 70 x 0.01, 2 weighings) this gives 278.24 g, 92.75 %
-    /// and 4637 more products, as the spec shows.
+    /// glue of one finished product. The spec's example gives front 278.24 g, 92.75 %
+    /// and 4637 more products; rear 2.69 g, 8.97 % and 449.
+    /// </para>
+    /// <para>
+    /// The share is taken from the grams as displayed (2.69, not 2.694), so the bar's
+    /// percentage is the one the table's grams give - and the one the spec prints.
+    /// </para>
     /// </remarks>
     public sealed class GlueCartridgeRow
     {
+        /// <summary>Guards the floor against a quotient such as 448.99999999 that is really 449.</summary>
+        private const double FloorTolerance = 1e-9;
+
         public GlueCartridgeRow(GlueCartridgeStatus status, GantryGlueDosage dosage, GlueControlSettings settings)
         {
             Gantry = status.Gantry ?? string.Empty;
             GlueSn = string.IsNullOrWhiteSpace(status.GlueSn) ? "—" : status.GlueSn;
-            ChangedText = status.ChangedAt.HasValue ? status.ChangedAt.Value.ToString("MM/dd HH:mm") : "—";
-            ProducedText = status.ProducedQty.ToString("N0");
-            LongPurgeCyclesText = status.LongPurgeCycles.ToString("N0");
-            ShortPurgeCyclesText = status.ShortPurgeCycles.ToString("N0");
-            WeighingCyclesText = status.WeighingCycles.ToString("N0");
+            ProducedText = status.ProducedQty.ToString("0");
+            LongPurgeCyclesText = status.LongPurgeCycles.ToString("0");
+            ShortPurgeCyclesText = status.ShortPurgeCycles.ToString("0");
+            WeighingCyclesText = status.WeighingCycles.ToString("0");
 
             if (dosage == null || dosage.CartridgeWeightG <= 0 || dosage.GluePerProductG <= 0)
             {
@@ -106,9 +109,10 @@ namespace Nova.ViewModels.Pages.Audio
                 HasDosage = false;
                 Level = HealthLevel.Unknown;
                 StatusText = "Set the glue dosage for this gantry";
+                RemainingPercentText = StatusText;
                 CartridgeText = TheoreticalOutputText = GluePerProductText = ProductGlueText =
-                    LongPurgeText = ShortPurgeText = WeighingText = RemainingText =
-                    RemainingPercentText = EstimatedOutputText = UsedText = UsedBreakdown = "—";
+                    LongPurgeDoseText = LongPurgeTotalText = ShortPurgeDoseText = ShortPurgeTotalText =
+                    WeighingTotalText = RemainingText = EstimatedOutputText = "—";
                 return;
             }
 
@@ -120,21 +124,21 @@ namespace Nova.ViewModels.Pages.Audio
             double weighing = status.WeighingCycles * dosage.GluePerProductG;
             double remaining = Math.Max(0, dosage.CartridgeWeightG - product - longPurge - shortPurge - weighing);
 
-            RemainingPercent = remaining / dosage.CartridgeWeightG * 100d;
+            RemainingPercent = Math.Round(remaining, 2) / dosage.CartridgeWeightG * 100d;
 
+            // The spec table's own number formats, column by column.
             CartridgeText = dosage.CartridgeWeightG.ToString("0.00");
-            TheoreticalOutputText = Math.Floor(dosage.CartridgeWeightG / dosage.GluePerProductG).ToString("N0");
-            GluePerProductText = dosage.GluePerProductG.ToString("0.0000");
+            TheoreticalOutputText = Math.Floor(dosage.CartridgeWeightG / dosage.GluePerProductG + FloorTolerance).ToString("0.00");
+            GluePerProductText = dosage.GluePerProductG.ToString("0.00##");
             ProductGlueText = product.ToString("0.00");
-            LongPurgeText = status.LongPurgeCycles + " x " + dosage.LongPurgeDoseG.ToString("0.0000") + " = " + longPurge.ToString("0.000");
-            ShortPurgeText = status.ShortPurgeCycles + " x " + dosage.ShortPurgeDoseG.ToString("0.0000") + " = " + shortPurge.ToString("0.000");
-            WeighingText = status.WeighingCycles + " x " + dosage.GluePerProductG.ToString("0.0000") + " = " + weighing.ToString("0.000");
+            LongPurgeDoseText = dosage.LongPurgeDoseG.ToString("0.0000");
+            LongPurgeTotalText = longPurge.ToString("0.00000");
+            ShortPurgeDoseText = dosage.ShortPurgeDoseG.ToString("0.00000");
+            ShortPurgeTotalText = shortPurge.ToString("0.00000");
+            WeighingTotalText = weighing.ToString("0.00");
             RemainingText = remaining.ToString("0.00");
             RemainingPercentText = RemainingPercent.ToString("0.00") + "%";
-            UsedText = (product + longPurge + shortPurge + weighing).ToString("0.00");
-            UsedBreakdown = "Products " + ProductGlueText + " g + long purge " + LongPurgeText
-                            + " g + short purge " + ShortPurgeText + " g + weighing " + WeighingText + " g";
-            EstimatedOutputText = Math.Floor(remaining / dosage.GluePerProductG).ToString("N0");
+            EstimatedOutputText = Math.Floor(remaining / dosage.GluePerProductG + FloorTolerance).ToString("0");
 
             if (remaining <= 0)
             {
@@ -160,7 +164,6 @@ namespace Nova.ViewModels.Pages.Audio
 
         public string Gantry { get; }
         public string GlueSn { get; }
-        public string ChangedText { get; }
         public bool HasDosage { get; }
 
         /// <summary>0 to 100.</summary>
@@ -173,19 +176,15 @@ namespace Nova.ViewModels.Pages.Audio
         public string TheoreticalOutputText { get; }
         public string GluePerProductText { get; }
         public string ProducedText { get; }
-        public string LongPurgeCyclesText { get; }
-        public string ShortPurgeCyclesText { get; }
-        public string WeighingCyclesText { get; }
-
-        /// <summary>Everything taken from the cartridge since the glue change, in grams.</summary>
-        public string UsedText { get; }
-
-        /// <summary>How <see cref="UsedText"/> adds up, for its tooltip.</summary>
-        public string UsedBreakdown { get; }
         public string ProductGlueText { get; }
-        public string LongPurgeText { get; }
-        public string ShortPurgeText { get; }
-        public string WeighingText { get; }
+        public string LongPurgeCyclesText { get; }
+        public string LongPurgeDoseText { get; }
+        public string LongPurgeTotalText { get; }
+        public string ShortPurgeCyclesText { get; }
+        public string ShortPurgeDoseText { get; }
+        public string ShortPurgeTotalText { get; }
+        public string WeighingCyclesText { get; }
+        public string WeighingTotalText { get; }
         public string RemainingText { get; }
         public string RemainingPercentText { get; }
         public string EstimatedOutputText { get; }
@@ -214,18 +213,19 @@ namespace Nova.ViewModels.Pages.Audio
             }
 
             double hours = status.RemainingPotLifeHours.Value;
-            RemainingText = hours.ToString("0.0#");
+            RemainingText = hours.ToString("0.##");
 
             // The spec's rule: threshold > remaining > 0 is a warning, remaining <= 0
-            // stops the machine.
+            // stops the machine. Both are red, as S2.4.4.4 draws its 0.4 h "Warning":
+            // a pot-life warning is one step from the machine stopping.
             if (hours <= 0)
             {
                 Level = HealthLevel.Critical;
-                StatusText = "Expired - machine stops";
+                StatusText = "Expired";
             }
             else if (hours < warningHours)
             {
-                Level = HealthLevel.Warning;
+                Level = HealthLevel.Critical;
                 StatusText = "Warning";
             }
             else
@@ -255,7 +255,13 @@ namespace Nova.ViewModels.Pages.Audio
             LowerLimitText = record.LowerLimit.ToString("0.#");
             UpperLimitText = record.UpperLimit.ToString("0.#");
 
-            if (record.Value < criticalHours)
+            // The bar is the value's share of the maintenance period (USL).
+            double span = record.UpperLimit - record.LowerLimit;
+            Ratio = span > 0 ? Math.Max(0, Math.Min(1, (record.Value - record.LowerLimit) / span)) : 0;
+
+            // S2.4.4.4's key: red 0 to 12 h, yellow 12 to 24 h, green from 24 h - and it
+            // draws its 12 h rear nozzle red, so the critical level itself is red.
+            if (record.Value <= criticalHours)
             {
                 Level = HealthLevel.Critical;
                 StatusText = "Critical";
@@ -278,6 +284,9 @@ namespace Nova.ViewModels.Pages.Audio
         public string ValueText { get; }
         public string LowerLimitText { get; }
         public string UpperLimitText { get; }
+
+        /// <summary>0 to 1, for the health bar's two star columns.</summary>
+        public double Ratio { get; }
         public HealthLevel Level { get; }
         public string StatusText { get; }
     }

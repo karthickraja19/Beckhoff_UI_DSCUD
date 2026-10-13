@@ -9,16 +9,14 @@ using Nova.Abstractions.Services;
 namespace Nova.Core.Services
 {
     /// <summary>
-    /// <see cref="IAccessControlService"/> backed by a local copy of the access
-    /// database (Audio SW DFM v5.4 slide 52), read from <c>Data\AccessDatabase.json</c>.
+    /// <see cref="IAccessControlService"/> backed by the local access list (Audio SW DFM
+    /// v5.4 slide 52; Access Control V5.1 S1.2.3 "Access Control with Local DB"), read
+    /// from <c>Data\AccessDatabase.json</c>.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// THIS IS NOT THE MES. Slide 52 specifies the check as a round trip to MES, and
-    /// a machine shipping to a line must make that call. This class implements the
-    /// same contract against a file so the GUI, the level gating and the two-step flow
-    /// can be built and tested before the MES endpoint exists. Swapping in a real
-    /// client is one registration in App.ConfigureServices - no caller changes.
+    /// Used when "Access Control with MES" is off. <see cref="RoutedAccessControlService"/>
+    /// picks between this and <see cref="MesAccessControlService"/>.
     /// </para>
     /// <para>
     /// The matching rules are the slide's, not looser ones: a record has to match the
@@ -34,7 +32,10 @@ namespace Nova.Core.Services
     /// </remarks>
     public sealed class JsonAccessControlService : IAccessControlService
     {
-        private const string FileName = "AccessDatabase.json";
+        public const string FileName = "AccessDatabase.json";
+
+        /// <summary>V5.1: the software type of a record that may approve a two-step verification.</summary>
+        public const string AuthorizeSoftwareType = "Authorize";
 
         private readonly string _path;
 
@@ -51,10 +52,15 @@ namespace Nova.Core.Services
 
         public Task<AccessCheckResult> CheckAccessAsync(string cardUid)
         {
-            return Task.FromResult(Check(cardUid));
+            return Task.FromResult(Check(cardUid, false));
         }
 
-        private AccessCheckResult Check(string cardUid)
+        public Task<AccessCheckResult> CheckApproverAsync(string cardUid)
+        {
+            return Task.FromResult(Check(cardUid, true));
+        }
+
+        private AccessCheckResult Check(string cardUid, bool approver)
         {
             if (string.IsNullOrWhiteSpace(cardUid))
                 return AccessCheckResult.Deny("No card was read.");
@@ -87,6 +93,7 @@ namespace Nova.Core.Services
 
             string uid = cardUid.Trim();
             bool uidKnown = false;
+            AccessCheckResult cmLevel3 = null;
 
             foreach (AccessRecord record in records)
             {
@@ -101,7 +108,8 @@ namespace Nova.Core.Services
                 if (!Same(record.TerminalName, TerminalName))
                     continue;
 
-                if (!Same(record.SoftwareType, SoftwareType))
+                bool authorizeRecord = Same(record.SoftwareType, AuthorizeSoftwareType);
+                if (!authorizeRecord && !Same(record.SoftwareType, SoftwareType))
                     continue;
 
                 AccessLevel level = ToLevel(record.AccessLevel);
@@ -111,12 +119,37 @@ namespace Nova.Core.Services
                         "The access record for this card has an invalid level (" + record.AccessLevel + ").");
                 }
 
-                return AccessCheckResult.Allow(
+                AccessCheckResult granted = AccessCheckResult.Allow(
                     string.IsNullOrWhiteSpace(record.Name) ? "(unnamed)" : record.Name.Trim(),
                     level,
                     record.Function,
                     record.Organization,
                     uid);
+
+                if (!approver)
+                {
+                    // An "Authorize" record only approves; it does not sign anyone in.
+                    if (!authorizeRecord)
+                        return granted;
+                    continue;
+                }
+
+                if (authorizeRecord)
+                    return granted;
+
+                // Before V5.1 added "Authorize" records, a Level 3 CM user was the approver.
+                if (level == AccessLevel.Level3 && record.Organization == AccessOrganization.CM)
+                    cmLevel3 = granted;
+            }
+
+            if (approver)
+            {
+                if (cmLevel3 != null)
+                    return cmLevel3;
+
+                return AccessCheckResult.Deny(uidKnown
+                    ? "This card may not approve a two-step verification on " + TerminalName + "."
+                    : "Card not recognised.");
             }
 
             return AccessCheckResult.Deny(uidKnown
@@ -139,7 +172,7 @@ namespace Nova.Core.Services
         /// treats as a refusal - an out-of-range value must never fall through to the
         /// level that can change every parameter.
         /// </summary>
-        private static AccessLevel ToLevel(int value)
+        public static AccessLevel ToLevel(int value)
         {
             switch (value)
             {

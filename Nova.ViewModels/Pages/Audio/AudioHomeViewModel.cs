@@ -30,8 +30,7 @@ namespace Nova.ViewModels.Pages.Audio
     /// record, the Parameter Dashboard from the Config page's production spec limits and
     /// the live parameter values, the station card from the station profile, the links
     /// from each service's link status, and the sensor dashboard from the sensor
-    /// service. A source that generates its figures (Simulated mode) marks the page as
-    /// sample data; a source that is missing leaves its panel saying so.
+    /// service. A source that is missing leaves its panel saying so.
     /// </para>
     /// <para>
     /// The page is split over three files: this one (tabs, station card, refresh loop),
@@ -63,15 +62,6 @@ namespace Nova.ViewModels.Pages.Audio
 
         private CancellationTokenSource _refreshLoop;
 
-        /// <summary>
-        /// True when any source behind this page generates its figures (Simulated mode).
-        /// Surfaced in the UI, so a generated yield is never taken for a real one.
-        /// </summary>
-        public bool IsSampleData { get; }
-
-        /// <summary>Which panels are generated, for the sample-data marker's tooltip.</summary>
-        public string SampleDataDetail { get; }
-
 
         // ==================================================================
         // Main | Vendor  (slide 54 / 57)
@@ -80,8 +70,8 @@ namespace Nova.ViewModels.Pages.Audio
         /// <summary>
         /// Slide 57: the Vendor tab is "for semi-auto stations only (require OP
         /// loading/scanning)". Both segments always exist so the control does not
-        /// appear and disappear; the Vendor pane says what it is for when the station
-        /// is not semi-auto.
+        /// appear and disappear. The Vendor pane is empty: the manual-operation GUI, the
+        /// Homing button and the running log are on the Setting page's Manual tab.
         /// </summary>
         public ObservableCollection<string> Tabs { get; } =
             new ObservableCollection<string> { "Main", "Vendor" };
@@ -91,31 +81,6 @@ namespace Nova.ViewModels.Pages.Audio
         private string _selectedTab = "Main";
 
         public bool IsMainTab => SelectedTab == "Main";
-
-        partial void OnSelectedTabChanged(string value)
-        {
-            // The manual GUI is a DI singleton, so a grid left unlocked on it stays
-            // unlocked. Leaving the Vendor pane ends any edit standing on it.
-            if (value != "Vendor" && Manual != null)
-                Manual.OnNavigatedFrom();
-        }
-
-        /// <summary>
-        /// The manual-operation GUI shown in the Vendor pane. Slide 57 gives the Vendor
-        /// tab's content as exactly that, for semi-auto stations that need an operator
-        /// to load or scan. Null on a build with no manual screens, which leaves the
-        /// pane showing its "semi-auto only" explanation.
-        /// </summary>
-        public PageViewModel Manual { get; }
-
-        /// <summary>Whether the Vendor pane has a manual GUI to show.</summary>
-        public bool HasManual => Manual != null;
-
-        /// <summary>
-        /// Live running log beside the manual GUI, so an operator driving the station by
-        /// hand can see what the machine just did.
-        /// </summary>
-        public RunningLogViewModel RunningLog { get; }
 
 
         // ==================================================================
@@ -229,9 +194,6 @@ namespace Nova.ViewModels.Pages.Audio
             ILogFolderService logFolders = null,
             IDialogService dialog = null,
             INavigationService navigation = null,
-            // Slide 57: the Vendor pane's content is the manual-operation GUI.
-            PageViewModel manual = null,
-            IRunningLogService runningLog = null,
             IProductionRepository production = null,
             IAlarmLogRepository alarms = null,
             IHiveStateHistory stateHistory = null,
@@ -240,8 +202,9 @@ namespace Nova.ViewModels.Pages.Audio
             IDispenserDataService dispenser = null,
             IEnumerable<IServiceLinkStatus> links = null,
             ISensorService sensors = null,
-            IAccessLog accessLog = null)
-            : base(session)
+            IAccessLog accessLog = null,
+            IErrorCodeCatalog errorCodes = null)
+            : base(session, AccessBypass.ConfigAndSettings)
         {
             _session = session;
             _profile = profile;
@@ -257,21 +220,8 @@ namespace Nova.ViewModels.Pages.Audio
             _dispenser = dispenser;
             _sensors = sensors;
             _accessLog = accessLog;
+            _errorCodes = errorCodes;
             _linkSources = links != null ? links.ToList() : new List<IServiceLinkStatus>();
-
-            Manual = manual;
-            RunningLog = new RunningLogViewModel(runningLog);
-
-            var generated = new List<string>();
-            if (stateHistory is ISampleDataSource) generated.Add("State Changes");
-            if (alarms is ISampleDataSource) generated.Add("Error Statistics");
-            if (production is ISampleDataSource) generated.Add("I/O Summary");
-            if (parameterValues is ISampleDataSource || dispenser is ISampleDataSource) generated.Add("Parameter Dashboard");
-            if (sensors is ISampleDataSource) generated.Add("Sensor Connection");
-            IsSampleData = generated.Count > 0;
-            SampleDataDetail = IsSampleData
-                ? "HardwareMode is Simulated: " + string.Join(", ", generated) + " show generated figures, not ones the machine recorded."
-                : string.Empty;
 
             InitialiseDashboard();
             ApplyStationCard();
@@ -434,9 +384,6 @@ namespace Nova.ViewModels.Pages.Audio
 
                 if (_sensors != null)
                     _sensors.Changed -= OnSensorsChanged;
-
-                if (RunningLog != null)
-                    RunningLog.Dispose();
             }
 
             base.Dispose(disposing);

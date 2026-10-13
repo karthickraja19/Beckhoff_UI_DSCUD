@@ -141,10 +141,15 @@
                     <!-- Level chip over HIVE chip, as one 56px column matching the
                          button height beside it (slide 42). -->
                     <StackPanel VerticalAlignment="Center" Margin="4,0">
+                        <!-- Click: sign in / switch user (slide 44). Right-click: log
+                             out after a confirmation (slide 85). -->
                         <Button Style="{StaticResource Audio.StatusChipButton}"
                                 Command="{Binding ChangeUserCommand}"
                                 ToolTip="{Binding AccessLevelTooltip}"
                                 AutomationProperties.Name="Access level">
+                            <Button.InputBindings>
+                                <MouseBinding MouseAction="RightClick" Command="{Binding LogOutCommand}"/>
+                            </Button.InputBindings>
                             <components:AudioIcon Style="{StaticResource Audio.StatusChip}"
                                                   Asset="{Binding AccessLevelAsset}"/>
                         </Button>

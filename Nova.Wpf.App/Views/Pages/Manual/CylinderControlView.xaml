@@ -13,8 +13,6 @@
             <Setter Property="HorizontalAlignment" Value="Center"/>
             <Setter Property="TextAlignment" Value="Center"/>
         </Style>
-        <!-- Group label of the two-tier header (EXTEND / RETRACT) -->
-        <Style x:Key="HeaderGroupCell" TargetType="TextBlock" BasedOn="{StaticResource HeaderCellCentered}"/>
 
         <!-- Row text -->
         <Style x:Key="CellText" TargetType="TextBlock" BasedOn="{StaticResource Nova.CellText}"/>
@@ -53,81 +51,91 @@
         </ItemsPanelTemplate>
 
         <!-- =============== One data row ===============
-             Name + actions are content-sized so they sit together; the two
-             INPUT ADDR columns are the stretch columns, giving the address
-             chips all remaining width. -->
+             Two lines per cylinder: the Work line carries the extend side
+             (safe | output addr | input addr) and the Home line the retract
+             side, so each button sits beside the I/O it drives. Stacking the
+             sides instead of placing them side by side halves the row width -
+             one line with both sides needs ~1800 px and was clipped beside the
+             Running Log. S.No and name span both lines; a long name wraps. The
+             INPUT ADDR column is the stretch column, giving the chips all
+             remaining width. -->
         <DataTemplate x:Key="CylinderRowTemplate">
             <Border x:Name="RowRoot" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
-                    Background="Transparent" MinHeight="40">
+                    Background="Transparent">
                 <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" MinHeight="{DynamicResource Nova.Row.Height}"/>
+                        <RowDefinition Height="Auto" MinHeight="{DynamicResource Nova.Row.Height}"/>
+                    </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" SharedSizeGroup="cNo"/>
                         <ColumnDefinition Width="Auto" SharedSizeGroup="cName"/>
-                        <ColumnDefinition Width="Auto" SharedSizeGroup="cActions"/>
-                        <ColumnDefinition Width="Auto" SharedSizeGroup="cSafeE"/>
-                        <ColumnDefinition Width="Auto" SharedSizeGroup="cOutE"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto" SharedSizeGroup="cSafeR"/>
-                        <ColumnDefinition Width="Auto" SharedSizeGroup="cOutR"/>
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="cAction"/>
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="cSafe"/>
+                        <ColumnDefinition Width="Auto" SharedSizeGroup="cOut"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
+                    <!-- Hairline between the Work line and the Home line -->
+                    <Border Grid.Row="0" Grid.Column="2" Grid.ColumnSpan="4" BorderThickness="0,0,0,1"
+                            BorderBrush="{DynamicResource BorderBrush}" Opacity="0.6"/>
+                    <!-- Divider between the cylinder and its I/O -->
+                    <Border Grid.Column="3" Grid.RowSpan="2" BorderThickness="1,0,0,0"
+                            BorderBrush="{DynamicResource BorderBrush}"/>
+
                     <!-- S.No -->
-                    <TextBlock Grid.Column="0" Text="{Binding SerialNo}" Style="{StaticResource CellText}"
+                    <TextBlock Grid.Column="0" Grid.RowSpan="2" Text="{Binding SerialNo}" Style="{StaticResource CellText}"
                                FontWeight="SemiBold" Foreground="{DynamicResource ThirdlyTextBrush}"
                                HorizontalAlignment="Center" Margin="10,0" MinWidth="24" TextAlignment="Center"/>
 
                     <!-- State dot + cylinder name (dot goes green while extended) -->
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"
+                    <StackPanel Grid.Column="1" Grid.RowSpan="2" Orientation="Horizontal" VerticalAlignment="Center"
                                 Margin="4,0,10,0" ToolTip="{Binding StateText}">
                         <Ellipse x:Name="StateDot" Width="10" Height="10" VerticalAlignment="Center" Margin="0,0,8,0"
                                  Fill="{DynamicResource ThirdlyTextBrush}"/>
-                        <TextBlock Text="{Binding Name}" FontSize="{DynamicResource Nova.FontSize.Body}" FontWeight="SemiBold" MinWidth="130"
+                        <TextBlock Text="{Binding Name}" FontSize="{DynamicResource Nova.FontSize.Body}" FontWeight="SemiBold"
+                                   MinWidth="130" MaxWidth="220" TextWrapping="Wrap"
                                    VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}"/>
                     </StackPanel>
 
-                    <!-- Work (= extend) + Home (= retract), tight beside the name -->
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
-                        <Button Style="{StaticResource GridActionButton}" Command="{Binding ExtendCommand}"
-                                IsEnabled="{Binding CanExtendNow}">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="Work" VerticalAlignment="Center"/>
-                                <iconPacks:PackIconLucide Kind="ChevronRight" Width="14" Height="14" Margin="4,0,0,0" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
-                        <Button Style="{StaticResource GridActionButton}" Command="{Binding RetractCommand}"
-                                IsEnabled="{Binding CanRetractNow}" Margin="6,0,0,0">
-                            <StackPanel Orientation="Horizontal">
-                                <iconPacks:PackIconLucide Kind="ChevronLeft" Width="14" Height="14" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="Home" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
-
-                    <!-- Extend side: safe | output addr | input addr (leading divider) -->
-                    <Border Grid.Column="3" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,0,0,0">
-                        <iconPacks:PackIconLucide x:Name="SafeExtendIcon" Kind="ShieldCheck" Width="16" Height="16"
-                                                  HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,0"
-                                                  Foreground="{DynamicResource SuccessBrush}"/>
-                    </Border>
-                    <Border Grid.Column="4" Style="{StaticResource OutputChip}" Margin="8,0" MinWidth="52">
+                    <!-- Work line (= extend): button | safe | output addr | input addr -->
+                    <Button Grid.Row="0" Grid.Column="2" Style="{StaticResource GridActionButton}"
+                            HorizontalAlignment="Stretch" Margin="0,4,10,4" ToolTip="Extend"
+                            Command="{Binding ExtendCommand}" IsEnabled="{Binding CanExtendNow}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Work" VerticalAlignment="Center"/>
+                            <iconPacks:PackIconLucide Kind="ChevronRight" Width="14" Height="14" Margin="4,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <iconPacks:PackIconLucide x:Name="SafeExtendIcon" Grid.Row="0" Grid.Column="3" Kind="ShieldCheck"
+                                              Width="16" Height="16" Margin="10,0"
+                                              HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              Foreground="{DynamicResource SuccessBrush}"/>
+                    <Border Grid.Row="0" Grid.Column="4" Style="{StaticResource OutputChip}" Margin="8,0" MinWidth="52">
                         <TextBlock Text="{Binding ExtendOutput}" Style="{StaticResource ChipText}" HorizontalAlignment="Center"/>
                     </Border>
-                    <ItemsControl Grid.Column="5" Margin="8,3" VerticalAlignment="Center" HorizontalAlignment="Stretch"
+                    <ItemsControl Grid.Row="0" Grid.Column="5" Margin="8,3" VerticalAlignment="Center" HorizontalAlignment="Stretch"
                                   ItemsSource="{Binding WorkSensors}"
                                   ItemTemplate="{StaticResource SensorChipTemplate}"
                                   ItemsPanel="{StaticResource SensorChipPanel}"/>
 
-                    <!-- Retract side: safe | output addr | input addr (leading divider) -->
-                    <Border Grid.Column="6" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,0,0,0">
-                        <iconPacks:PackIconLucide x:Name="SafeRetractIcon" Kind="ShieldCheck" Width="16" Height="16"
-                                                  HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10,0"
-                                                  Foreground="{DynamicResource SuccessBrush}"/>
-                    </Border>
-                    <Border Grid.Column="7" Style="{StaticResource OutputChip}" Margin="8,0" MinWidth="52">
+                    <!-- Home line (= retract): button | safe | output addr | input addr -->
+                    <Button Grid.Row="1" Grid.Column="2" Style="{StaticResource GridActionButton}"
+                            HorizontalAlignment="Stretch" Margin="0,4,10,4" ToolTip="Retract"
+                            Command="{Binding RetractCommand}" IsEnabled="{Binding CanRetractNow}">
+                        <StackPanel Orientation="Horizontal">
+                            <iconPacks:PackIconLucide Kind="ChevronLeft" Width="14" Height="14" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="Home" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <iconPacks:PackIconLucide x:Name="SafeRetractIcon" Grid.Row="1" Grid.Column="3" Kind="ShieldCheck"
+                                              Width="16" Height="16" Margin="10,0"
+                                              HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              Foreground="{DynamicResource SuccessBrush}"/>
+                    <Border Grid.Row="1" Grid.Column="4" Style="{StaticResource OutputChip}" Margin="8,0" MinWidth="52">
                         <TextBlock Text="{Binding RetractOutput}" Style="{StaticResource ChipText}" HorizontalAlignment="Center"/>
                     </Border>
-                    <ItemsControl Grid.Column="8" Margin="8,3" VerticalAlignment="Center" HorizontalAlignment="Stretch"
+                    <ItemsControl Grid.Row="1" Grid.Column="5" Margin="8,3" VerticalAlignment="Center" HorizontalAlignment="Stretch"
                                   ItemsSource="{Binding HomeSensors}"
                                   ItemTemplate="{StaticResource SensorChipTemplate}"
                                   ItemsPanel="{StaticResource SensorChipPanel}"/>
@@ -177,46 +185,28 @@
                     </Grid>
                 </Border>
 
-                <!-- Two-tier sticky header: EXTEND / RETRACT group labels over short sub-labels -->
+                <!-- Sticky header. No EXTEND / RETRACT group labels: each row's Work
+                     line is the extend side and its Home line the retract side. -->
                 <Border DockPanel.Dock="Top" Background="{DynamicResource Nova.TableHeaderBrush}"
-                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="0,5">
+                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="0,9">
                     <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="cNo"/>
                             <ColumnDefinition Width="Auto" SharedSizeGroup="cName"/>
-                            <ColumnDefinition Width="Auto" SharedSizeGroup="cActions"/>
-                            <ColumnDefinition Width="Auto" SharedSizeGroup="cSafeE"/>
-                            <ColumnDefinition Width="Auto" SharedSizeGroup="cOutE"/>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto" SharedSizeGroup="cSafeR"/>
-                            <ColumnDefinition Width="Auto" SharedSizeGroup="cOutR"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="cAction"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="cSafe"/>
+                            <ColumnDefinition Width="Auto" SharedSizeGroup="cOut"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
 
-                        <!-- Group dividers span both header rows -->
-                        <Border Grid.Column="3" Grid.RowSpan="2" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,0,0,0"/>
-                        <Border Grid.Column="6" Grid.RowSpan="2" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,0,0,0"/>
+                        <Border Grid.Column="3" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,0,0,0"/>
 
-                        <!-- Tier 1: group labels -->
-                        <TextBlock Grid.Row="0" Grid.Column="3" Grid.ColumnSpan="3" Text="EXTEND"
-                                   Style="{StaticResource HeaderGroupCell}" Foreground="{DynamicResource PrimaryBrush}"/>
-                        <TextBlock Grid.Row="0" Grid.Column="6" Grid.ColumnSpan="3" Text="RETRACT"
-                                   Style="{StaticResource HeaderGroupCell}" Foreground="{DynamicResource InfoBrush}"/>
-
-                        <!-- Tier 2: column labels -->
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="S.NO" Style="{StaticResource HeaderCellCentered}" Margin="10,0"/>
-                        <TextBlock Grid.Row="1" Grid.Column="1" Text="CYLINDER NAME" Style="{StaticResource HeaderCell}" Margin="22,0,10,0"/>
-                        <TextBlock Grid.Row="1" Grid.Column="2" Text="ACTIONS" Style="{StaticResource HeaderCell}" Margin="0,0,10,0"/>
-                        <TextBlock Grid.Row="1" Grid.Column="3" Text="SAFE" Style="{StaticResource HeaderCellCentered}" Margin="10,0"/>
-                        <TextBlock Grid.Row="1" Grid.Column="4" Text="OUTPUT ADDR" Style="{StaticResource HeaderCellCentered}" Margin="8,0"/>
-                        <TextBlock Grid.Row="1" Grid.Column="5" Text="INPUT ADDR" Style="{StaticResource HeaderCellCentered}" Margin="8,0"/>
-                        <TextBlock Grid.Row="1" Grid.Column="6" Text="SAFE" Style="{StaticResource HeaderCellCentered}" Margin="10,0"/>
-                        <TextBlock Grid.Row="1" Grid.Column="7" Text="OUTPUT ADDR" Style="{StaticResource HeaderCellCentered}" Margin="8,0"/>
-                        <TextBlock Grid.Row="1" Grid.Column="8" Text="INPUT ADDR" Style="{StaticResource HeaderCellCentered}" Margin="8,0"/>
+                        <TextBlock Grid.Column="0" Text="S.NO" Style="{StaticResource HeaderCellCentered}" Margin="10,0"/>
+                        <TextBlock Grid.Column="1" Text="CYLINDER NAME" Style="{StaticResource HeaderCell}" Margin="22,0,10,0"/>
+                        <TextBlock Grid.Column="2" Text="ACTION" Style="{StaticResource HeaderCell}" Margin="0,0,10,0"/>
+                        <TextBlock Grid.Column="3" Text="SAFE" Style="{StaticResource HeaderCellCentered}" Margin="10,0"/>
+                        <TextBlock Grid.Column="4" Text="OUTPUT ADDR" Style="{StaticResource HeaderCellCentered}" Margin="8,0"/>
+                        <TextBlock Grid.Column="5" Text="INPUT ADDR" Style="{StaticResource HeaderCellCentered}" Margin="8,0"/>
                     </Grid>
                 </Border>
 

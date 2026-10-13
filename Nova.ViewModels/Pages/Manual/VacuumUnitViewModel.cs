@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -48,6 +49,9 @@ namespace Nova.ViewModels.Pages.Manual
             _mode = VacuumMode.Off;
             RefreshFromHardware();
         }
+
+        /// <summary>Keeps this unit's live status up to date until the handle is disposed; null for a device that always has it.</summary>
+        public IDisposable FollowStatus() => (_vacuum as ILiveStatus)?.FollowStatus();
 
         /// <summary>Pulls the latest device snapshot (safe from the IO poll thread — scalar props only).</summary>
         public void RefreshFromHardware()

@@ -2,76 +2,25 @@
   {
     "EnumName": "BTH_PnP_Vacuum",
     "Name": "BTH Pick Place Vacuum",
+    "Id": 1,
     "VacuumSense": "BTH_PP_Vacuum_FB",
     "VacuumOutput": "BTH_PP_Vacc_Off",
-    "VacuumContactType": "NormallyClosed",
-    "BlowOutput": "BTH_PP_Blow_On",
-    "BlowContactType": "NormallyOpen",
-    "Timeout": 20,
-    "StableCount": 5,
-    "Buttons": {
-      "Vacuum": {
-        "Text": "Vacuum",
-        "IsEnabled": true
-      },
-      "Blow": {
-        "Text": "Blow",
-        "IsEnabled": true
-      },
-      "Off": {
-        "Text": "Off",
-        "IsEnabled": true
-      }
-    }
+    "BlowOutput": "BTH_PP_Blow_On"
   },
   {
     "EnumName": "BTH_Ins_Fix_Vacuum",
     "Name": "BTH Inspection Fixture Vacuum",
+    "Id": 2,
     "VacuumSense": "BTH_Insp_Fix_Vacuum_FB",
     "VacuumOutput": "BTH_Insp_Fix_Vacc_Off",
-    "VacuumContactType": "NormallyClosed",
-    "BlowOutput": "BTH_Insp_Fix_Blow_On",
-    "BlowContactType": "NormallyOpen",
-    "Timeout": 20,
-    "StableCount": 5,
-    "Buttons": {
-      "Vacuum": {
-        "Text": "Vacuum",
-        "IsEnabled": true
-      },
-      "Blow": {
-        "Text": "Blow",
-        "IsEnabled": true
-      },
-      "Off": {
-        "Text": "Off",
-        "IsEnabled": true
-      }
-    }
+    "BlowOutput": "BTH_Insp_Fix_Blow_On"
   },
   {
     "EnumName": "Robot_Vacuum",
     "Name": "Robot Vacuum",
+    "Id": 3,
     "VacuumSense": "Rbt_vaccum_On_Fb",
     "VacuumOutput": "RBT_Vacc_Off",
-    "VacuumContactType": "NormallyClosed",
-    "BlowOutput": "RBT_Blow_On",
-    "BlowContactType": "NormallyOpen",
-    "Timeout": 20,
-    "StableCount": 5,
-    "Buttons": {
-      "Vacuum": {
-        "Text": "Vacuum",
-        "IsEnabled": true
-      },
-      "Blow": {
-        "Text": "Blow",
-        "IsEnabled": true
-      },
-      "Off": {
-        "Text": "Off",
-        "IsEnabled": true
-      }
-    }
+    "BlowOutput": "RBT_Blow_On"
   }
 ]

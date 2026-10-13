@@ -7,7 +7,7 @@ using Nova.Abstractions.Services;
 namespace Nova.ViewModels.Pages.Audio
 {
     /// <summary>
-    /// Live running log, newest first - shown in the Home page's Vendor pane beside the
+    /// Live running log, newest first - shown in the Setting page's Manual tab beside the
     /// manual-operation GUI.
     /// </summary>
     /// <remarks>

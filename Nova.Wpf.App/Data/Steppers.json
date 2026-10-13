@@ -1,19 +1,22 @@
 [
   {
-    "EnumName": "IOStepper1",
-    "Name": "IO Stepper 1",
-    "IsAxisEnabled": false,
-    "CardId": 0,
-    "Id": 1,
-    "Pitch": 0,
-    "Pulse": 0,
-    "PPR": 0,
-    "Acceleration": 0,
-    "Deceleration": 0,
-    "Speed": 100,
-    "ForwardCommand": "",
-    "ReverseCommand": "",
-    "AlarmResetCommand": "",
-    "AlarmSignal": ""
+    "EnumName": "LiftingStepper0",
+    "Name": "Lifting Stepper 0",
+    "Id": 1
+  },
+  {
+    "EnumName": "LiftingStepper1",
+    "Name": "Lifting Stepper 1",
+    "Id": 2
+  },
+  {
+    "EnumName": "LiftingStepper2",
+    "Name": "Lifting Stepper 2",
+    "Id": 3
+  },
+  {
+    "EnumName": "LiftingStepper3",
+    "Name": "Lifting Stepper 3",
+    "Id": 4
   }
 ]

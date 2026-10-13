@@ -53,8 +53,9 @@ namespace Nova.Abstractions.Data.Repositories
     /// </summary>
     /// <remarks>
     /// The last six properties are the ones a D-SCUD also reports to HIVE with each
-    /// unit (slides 15-18). [ProductionData] does not store them yet, so a record read
-    /// from it leaves them empty and the page shows "—" rather than a guess.
+    /// unit (slides 15-18). [ProductionData] stores only the tossing flag
+    /// (<see cref="TossingCount"/>); a record read from it leaves the others empty and
+    /// the page shows "—" rather than a guess.
     /// </remarks>
     public sealed class ProductionUnitRecord
     {
@@ -90,7 +91,10 @@ namespace Nova.Abstractions.Data.Repositories
         /// </summary>
         public int TossingCount { get; set; }
 
-        /// <summary>Why the unit was tossed, e.g. "Pre-check CCD NG". Null when it was not.</summary>
+        /// <summary>
+        /// Why the unit was tossed, e.g. "Pre-check CCD NG". Null when it was not, and
+        /// always null from [ProductionData], which has one cause only and so no column for it.
+        /// </summary>
         public string TossingReason { get; set; }
 
         /// <summary>HIVE failure_code: "NA" for a pass, otherwise the root failure. Null when not recorded.</summary>

@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LiveChartsCore;
 using LiveChartsCore.Defaults;
+using LiveChartsCore.Measure;
 using LiveChartsCore.SkiaSharpView;
 using Nova.Abstractions.Data.Models;
 using Nova.ViewModels.Audio;
@@ -16,10 +17,21 @@ using SkiaSharp;
 namespace Nova.ViewModels.Pages.Audio
 {
     /// <summary>
-    /// The Glue tab - S2.4.4.5 Glue Weight: a trend chart per gantry for the chosen glue
-    /// path with its spec lines, the raw weighings, the regression from the last
-    /// calibration, and the weighing settings.
+    /// The Glue tab - S2.4.4.5 Glue Weight (slides 2 to 4).
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Layout the slides': the glue weight SPC trend chart across the top, one chart
+    /// per gantry, each with its own glue path buttons; below, on the left the glue
+    /// weight / speed regression diagram (its own gantry and path buttons) over the
+    /// regression function, and on the right the raw data over the weighing settings.
+    /// </para>
+    /// <para>
+    /// The trend follows the summary column's Hourly | Daily switch, as slides 3 and 4
+    /// show: one point per hour of the latest 12, or per day of the latest seven, each
+    /// the mean of the weighings in it.
+    /// </para>
+    /// </remarks>
     public partial class AudioDataViewModel
     {
         private const string FrontGantry = "Front";
@@ -31,18 +43,26 @@ namespace Nova.ViewModels.Pages.Audio
 
 
         // ==================================================================
-        // Trend charts, one per gantry (S2.4.4.5 page 3)
+        // SPC trend charts, one per gantry, each with its own path buttons
         // ==================================================================
 
-        /// <summary>"Path 1", "Path 2", ... as found in the weighings.</summary>
+        /// <summary>"Path 1", "Path 2", ... as found in the weighings and calibrations.</summary>
         public ObservableCollection<string> GluePaths { get; } = new ObservableCollection<string>();
 
         [ObservableProperty]
-        private string _selectedGluePath;
+        private string _frontGluePath;
 
-        partial void OnSelectedGluePathChanged(string value)
+        [ObservableProperty]
+        private string _rearGluePath;
+
+        partial void OnFrontGluePathChanged(string value)
         {
-            BuildGlueTrends();
+            BuildGlueTrend(FrontGantry);
+        }
+
+        partial void OnRearGluePathChanged(string value)
+        {
+            BuildGlueTrend(RearGantry);
         }
 
         [ObservableProperty]
@@ -58,14 +78,18 @@ namespace Nova.ViewModels.Pages.Audio
         private Axis[] _rearGlueXAxes = new Axis[0];
 
         [ObservableProperty]
-        private Axis[] _glueYAxes = new Axis[0];
-
-        /// <summary>"n 24 · mean 3.21 · σ 0.18 · Cpk 1.85" for the front gantry's chosen path.</summary>
-        [ObservableProperty]
-        private string _frontGlueStats = string.Empty;
+        private Axis[] _frontGlueYAxes = new Axis[0];
 
         [ObservableProperty]
-        private string _rearGlueStats = string.Empty;
+        private Axis[] _rearGlueYAxes = new Axis[0];
+
+        /// <summary>
+        /// The date(s) the hourly trend covers, shown beside each gantry's name. Slide 3
+        /// prints the date under every hour, but a chart label here is one line, and
+        /// twelve repeats of one date is clutter. Empty in Daily, whose labels are dates.
+        /// </summary>
+        [ObservableProperty]
+        private string _glueTrendDateText = string.Empty;
 
         [ObservableProperty]
         private bool _hasFrontGlue;
@@ -78,10 +102,27 @@ namespace Nova.ViewModels.Pages.Audio
 
 
         // ==================================================================
-        // Regression (HIVE w, b, R2)
+        // Regression diagram: its own gantry and path buttons
         // ==================================================================
 
-        public ObservableCollection<GlueRegressionRow> GlueRegressions { get; } = new ObservableCollection<GlueRegressionRow>();
+        public ObservableCollection<string> RegressionGantries { get; } =
+            new ObservableCollection<string> { FrontGantry, RearGantry };
+
+        [ObservableProperty]
+        private string _regressionGantry = FrontGantry;
+
+        [ObservableProperty]
+        private string _regressionPath;
+
+        partial void OnRegressionGantryChanged(string value)
+        {
+            BuildRegression();
+        }
+
+        partial void OnRegressionPathChanged(string value)
+        {
+            BuildRegression();
+        }
 
         [ObservableProperty]
         private ISeries[] _regressionSeries = new ISeries[0];
@@ -92,12 +133,50 @@ namespace Nova.ViewModels.Pages.Audio
         [ObservableProperty]
         private Axis[] _regressionYAxes = new Axis[0];
 
-        public bool HasRegressions => GlueRegressions.Count > 0;
+        /// <summary>"y = -0.0538x + 3.0521", printed on the diagram as slide 3 does.</summary>
+        [ObservableProperty]
+        private string _regressionEquation = string.Empty;
+
+        /// <summary>"R² = 0.9552".</summary>
+        [ObservableProperty]
+        private string _regressionR2Text = string.Empty;
+
+        [ObservableProperty]
+        private string _regressionCalibratedText = string.Empty;
+
+        [ObservableProperty]
+        private bool _hasRegression;
 
 
         // ==================================================================
-        // Weighing settings (SOP: time, count, shift start/end; S2.4.4.5)
+        // Glue weighing setting: S2.4.4.5's Item | Settings table
         // ==================================================================
+
+        /// <summary>"2 hours/one time", or "Off".</summary>
+        public string WeighingFrequencyText => _weighingSettings == null ? "—"
+            : _weighingSettings.ByTime ? FormatMinutesPerTime(_weighingSettings.IntervalMinutes) : "Off";
+
+        /// <summary>Shots per weighing - the slide's "Weighing times".</summary>
+        public string WeighingTimesText => _weighingSettings == null ? "—"
+            : _weighingSettings.ShotsPerWeighing.ToString(CultureInfo.InvariantCulture);
+
+        /// <summary>"24 hours/one time".</summary>
+        public string CalibrationFrequencyText => _weighingSettings == null ? "—"
+            : FormatHoursPerTime(_weighingSettings.CalibrationIntervalHours);
+
+        /// <summary>The SOP's extra triggers - shown only when one is on, so the table is the slide's three rows otherwise.</summary>
+        public bool HasUnitTrigger => _weighingSettings != null && _weighingSettings.ByUnitCount;
+
+        public string UnitTriggerText => _weighingSettings == null ? "—"
+            : _weighingSettings.IntervalUnits.ToString(CultureInfo.InvariantCulture) + " units/one time";
+
+        public bool HasShiftTrigger => _weighingSettings != null && (_weighingSettings.AtShiftStart || _weighingSettings.AtShiftEnd);
+
+        public string ShiftTriggerText => _weighingSettings == null ? "—"
+            : _weighingSettings.AtShiftStart && _weighingSettings.AtShiftEnd ? "Shift start and end"
+            : _weighingSettings.AtShiftStart ? "Shift start"
+            : _weighingSettings.AtShiftEnd ? "Shift end"
+            : "Off";
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(EditWeighingSettingsCommand))]
@@ -105,13 +184,20 @@ namespace Nova.ViewModels.Pages.Audio
 
         [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(EditWeighingSettingsCommand))]
+        [NotifyPropertyChangedFor(nameof(ShowUnitTriggerRow), nameof(ShowShiftTriggerRow))]
         private bool _isEditingWeighing;
+
+        /// <summary>The unit-count row: when that trigger is on, or while editing so it can be switched on.</summary>
+        public bool ShowUnitTriggerRow => HasUnitTrigger || IsEditingWeighing;
+
+        public bool ShowShiftTriggerRow => HasShiftTrigger || IsEditingWeighing;
 
         [ObservableProperty]
         private bool _weighByTime;
 
+        /// <summary>Edited in hours, as the slide states it; kept in minutes.</summary>
         [ObservableProperty]
-        private string _weighIntervalMinutes = string.Empty;
+        private string _weighIntervalHours = string.Empty;
 
         [ObservableProperty]
         private bool _weighByUnitCount;
@@ -129,7 +215,7 @@ namespace Nova.ViewModels.Pages.Audio
         private string _weighShots = string.Empty;
 
         [ObservableProperty]
-        private string _calibrationDays = string.Empty;
+        private string _calibrationHours = string.Empty;
 
         [ObservableProperty]
         private string _weighingSettingsError;
@@ -162,16 +248,17 @@ namespace Nova.ViewModels.Pages.Audio
             if (_dispenser == null || !CanEditSettings)
                 return;
 
-            int minutes = 0, units = 0, shots, days;
+            double hours = 0;
+            int units = 0, shots, calibration;
 
-            if (WeighByTime && !TryParseCount(WeighIntervalMinutes, out minutes))
-                WeighingSettingsError = "Time interval must be a whole number of minutes, 1 or more.";
+            if (WeighByTime && !TryParseHours(WeighIntervalHours, out hours))
+                WeighingSettingsError = "Weighing frequency must be a number of hours, at least one minute.";
             else if (WeighByUnitCount && !TryParseCount(WeighIntervalUnits, out units))
                 WeighingSettingsError = "Unit interval must be a whole number, 1 or more.";
             else if (!TryParseCount(WeighShots, out shots))
-                WeighingSettingsError = "Shots per weighing must be a whole number, 1 or more.";
-            else if (!TryParseCount(CalibrationDays, out days))
-                WeighingSettingsError = "Calibration interval must be a whole number of days, 1 or more.";
+                WeighingSettingsError = "Weighing times must be a whole number, 1 or more.";
+            else if (!TryParseCount(CalibrationHours, out calibration))
+                WeighingSettingsError = "Calibration frequency must be a whole number of hours, 1 or more.";
             else if (!WeighByTime && !WeighByUnitCount && !WeighAtShiftStart && !WeighAtShiftEnd)
                 WeighingSettingsError = "Choose at least one trigger, or the scale never weighs.";
             else
@@ -181,13 +268,13 @@ namespace Nova.ViewModels.Pages.Audio
                 var settings = new GlueWeighingSettings
                 {
                     ByTime = WeighByTime,
-                    IntervalMinutes = WeighByTime ? minutes : (_weighingSettings?.IntervalMinutes ?? 0),
+                    IntervalMinutes = WeighByTime ? (int)Math.Round(hours * 60) : (_weighingSettings?.IntervalMinutes ?? 0),
                     ByUnitCount = WeighByUnitCount,
                     IntervalUnits = WeighByUnitCount ? units : (_weighingSettings?.IntervalUnits ?? 0),
                     AtShiftStart = WeighAtShiftStart,
                     AtShiftEnd = WeighAtShiftEnd,
                     ShotsPerWeighing = shots,
-                    CalibrationIntervalDays = days
+                    CalibrationIntervalHours = calibration
                 };
 
                 try
@@ -211,17 +298,27 @@ namespace Nova.ViewModels.Pages.Audio
             GlueWeighingSettings s = _weighingSettings;
             HasWeighingSettings = s != null;
 
-            if (s == null)
-                return;
+            if (s != null)
+            {
+                WeighByTime = s.ByTime;
+                WeighIntervalHours = (s.IntervalMinutes / 60d).ToString("0.##", CultureInfo.InvariantCulture);
+                WeighByUnitCount = s.ByUnitCount;
+                WeighIntervalUnits = s.IntervalUnits.ToString(CultureInfo.InvariantCulture);
+                WeighAtShiftStart = s.AtShiftStart;
+                WeighAtShiftEnd = s.AtShiftEnd;
+                WeighShots = s.ShotsPerWeighing.ToString(CultureInfo.InvariantCulture);
+                CalibrationHours = s.CalibrationIntervalHours.ToString(CultureInfo.InvariantCulture);
+            }
 
-            WeighByTime = s.ByTime;
-            WeighIntervalMinutes = s.IntervalMinutes.ToString(CultureInfo.InvariantCulture);
-            WeighByUnitCount = s.ByUnitCount;
-            WeighIntervalUnits = s.IntervalUnits.ToString(CultureInfo.InvariantCulture);
-            WeighAtShiftStart = s.AtShiftStart;
-            WeighAtShiftEnd = s.AtShiftEnd;
-            WeighShots = s.ShotsPerWeighing.ToString(CultureInfo.InvariantCulture);
-            CalibrationDays = s.CalibrationIntervalDays.ToString(CultureInfo.InvariantCulture);
+            OnPropertyChanged(nameof(WeighingFrequencyText));
+            OnPropertyChanged(nameof(WeighingTimesText));
+            OnPropertyChanged(nameof(CalibrationFrequencyText));
+            OnPropertyChanged(nameof(HasUnitTrigger));
+            OnPropertyChanged(nameof(UnitTriggerText));
+            OnPropertyChanged(nameof(HasShiftTrigger));
+            OnPropertyChanged(nameof(ShiftTriggerText));
+            OnPropertyChanged(nameof(ShowUnitTriggerRow));
+            OnPropertyChanged(nameof(ShowShiftTriggerRow));
         }
 
         private static string WeighingSummary(GlueWeighingSettings s)
@@ -231,15 +328,33 @@ namespace Nova.ViewModels.Pages.Audio
             if (s.ByUnitCount) parts.Add("every " + s.IntervalUnits + " units");
             if (s.AtShiftStart) parts.Add("shift start");
             if (s.AtShiftEnd) parts.Add("shift end");
-            parts.Add(s.ShotsPerWeighing + " shots");
-            parts.Add("calibrate every " + s.CalibrationIntervalDays + " days");
+            parts.Add(s.ShotsPerWeighing + " weighing times");
+            parts.Add("calibrate every " + s.CalibrationIntervalHours + " h");
             return string.Join(", ", parts);
+        }
+
+        /// <summary>"2 hours/one time"; minutes when the interval is not whole hours.</summary>
+        private static string FormatMinutesPerTime(int minutes)
+        {
+            return minutes > 0 && minutes % 60 == 0
+                ? FormatHoursPerTime(minutes / 60)
+                : minutes + (minutes == 1 ? " minute" : " minutes") + "/one time";
+        }
+
+        private static string FormatHoursPerTime(int hours)
+        {
+            return hours + (hours == 1 ? " hour" : " hours") + "/one time";
         }
 
         private static bool TryParseCount(string text, out int value)
         {
             return int.TryParse((text ?? string.Empty).Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out value)
                    && value >= 1;
+        }
+
+        private static bool TryParseHours(string text, out double hours)
+        {
+            return GantryDosageRow.TryParsePositive(text, out hours) && Math.Round(hours * 60) >= 1;
         }
 
 
@@ -289,69 +404,54 @@ namespace Nova.ViewModels.Pages.Audio
 
         private void BuildGlue()
         {
-            List<string> paths = _glueRecords
-                .Select(r => r.Path)
+            List<string> paths = _glueRecords.Select(r => r.Path)
+                .Concat(_regressions.Select(r => r.Path))
+                .Where(p => p > 0)
                 .Distinct()
                 .OrderBy(p => p)
                 .Select(p => "Path " + p)
                 .ToList();
 
-            string keep = SelectedGluePath;
+            string keepFront = FrontGluePath;
+            string keepRear = RearGluePath;
+            string keepRegression = RegressionPath;
+
             GluePaths.Clear();
             foreach (string path in paths)
                 GluePaths.Add(path);
 
-            // Setting the selection rebuilds the trends through OnSelectedGluePathChanged;
-            // when it does not change, rebuild them here.
-            string select = paths.Contains(keep) ? keep : paths.FirstOrDefault();
-            if (select == SelectedGluePath)
-                BuildGlueTrends();
+            // Each selection that does not change is rebuilt here; one that does
+            // rebuilds itself through its changed handler.
+            string front = paths.Contains(keepFront) ? keepFront : paths.FirstOrDefault();
+            if (front == FrontGluePath)
+                BuildGlueTrend(FrontGantry);
             else
-                SelectedGluePath = select;
+                FrontGluePath = front;
+
+            string rear = paths.Contains(keepRear) ? keepRear : paths.FirstOrDefault();
+            if (rear == RearGluePath)
+                BuildGlueTrend(RearGantry);
+            else
+                RearGluePath = rear;
+
+            string regression = paths.Contains(keepRegression) ? keepRegression : paths.FirstOrDefault();
+            if (regression == RegressionPath)
+                BuildRegression();
+            else
+                RegressionPath = regression;
 
             GlueWeighings.Clear();
             foreach (GlueWeighingRecord record in _glueRecords.OrderByDescending(r => r.Time).Take(MaxTableRows))
                 GlueWeighings.Add(new GlueWeighingRow(record));
-
-            BuildRegression();
         }
 
-        private int SelectedPathNumber()
+        private static int PathNumber(string pathText)
         {
             int path;
-            return SelectedGluePath != null &&
-                   int.TryParse(SelectedGluePath.Replace("Path", string.Empty).Trim(), out path)
+            return pathText != null &&
+                   int.TryParse(pathText.Replace("Path", string.Empty).Trim(), out path)
                 ? path
                 : -1;
-        }
-
-        private void BuildGlueTrends()
-        {
-            int path = SelectedPathNumber();
-
-            List<GlueWeighingRecord> front = ForGantry(FrontGantry, path);
-            List<GlueWeighingRecord> rear = ForGantry(RearGantry, path);
-
-            HasFrontGlue = front.Count > 0;
-            HasRearGlue = rear.Count > 0;
-
-            FrontGlueSeries = TrendSeries(front);
-            RearGlueSeries = TrendSeries(rear);
-            FrontGlueXAxes = TrendXAxes(front);
-            RearGlueXAxes = TrendXAxes(rear);
-            FrontGlueStats = Stats(front);
-            RearGlueStats = Stats(rear);
-
-            GlueYAxes = new[]
-            {
-                new Axis
-                {
-                    Labeler = value => value.ToString("0.00"),
-                    LabelsPaint = AudioChartPalette.Fill(AudioChartPalette.AxisLine),
-                    TextSize = 11,
-                    SeparatorsPaint = AudioChartPalette.Line(AudioChartPalette.GridLine, 1)
-                }
-            };
         }
 
         private List<GlueWeighingRecord> ForGantry(string gantry, int path)
@@ -363,164 +463,308 @@ namespace Nova.ViewModels.Pages.Audio
         }
 
         /// <summary>
-        /// The weighings as a line, the out-of-spec ones marked red on top, and USL,
-        /// nominal and LSL as dashed lines. The spec lines follow each weighing's own
-        /// limits, so a limit change part-way through the window shows as a step.
+        /// One gantry's trend for its chosen path: the mean weight of each hour (or day)
+        /// as a point with its value printed over it, out-of-spec points red, and USL,
+        /// Nominal and LSL as dashed lines named on the right, as slides 3 and 4 draw them.
         /// </summary>
-        private static ISeries[] TrendSeries(List<GlueWeighingRecord> records)
+        private void BuildGlueTrend(string gantry)
         {
-            if (records.Count == 0)
-                return new ISeries[0];
+            bool front = gantry == FrontGantry;
+            List<GlueWeighingRecord> records = ForGantry(gantry, PathNumber(front ? FrontGluePath : RearGluePath));
+            List<DateTime> buckets = BucketStarts();
 
-            return new ISeries[]
+            ISeries[] series = new ISeries[0];
+            Axis[] xAxes = GlueTrendXAxes(buckets);
+            Axis[] yAxes = new Axis[0];
+
+            if (records.Count > 0 && buckets.Count > 0)
             {
-                SpecLine("USL", records.Select(r => r.UpperLimitMg), AudioChartPalette.Downtime),
-                SpecLine("Nominal", records.Select(r => r.NominalMg), AudioChartPalette.SeriesSecondary),
-                SpecLine("LSL", records.Select(r => r.LowerLimitMg), AudioChartPalette.Downtime),
-                new LineSeries<double>
+                var index = new Dictionary<DateTime, int>();
+                for (int i = 0; i < buckets.Count; i++)
+                    index[buckets[i]] = i;
+
+                // Points only where there were weighings, joined across the empty
+                // buckets between them - the scale weighs every couple of hours, and a
+                // line broken at every empty hour would read as missing data.
+                var points = new List<ObservablePoint>();
+                var outOfSpec = new List<ObservablePoint>();
+                foreach (var bucket in records.GroupBy(r => GlueBucketOf(r.Time)).OrderBy(g => g.Key))
                 {
-                    Name = "Weight (mg)",
-                    Values = records.Select(r => r.WeightMg).ToArray(),
-                    Stroke = AudioChartPalette.Line(AudioChartPalette.SeriesPrimary, 2),
-                    Fill = null,
-                    GeometrySize = 6,
-                    GeometryStroke = AudioChartPalette.Line(AudioChartPalette.SeriesPrimary, 2),
-                    GeometryFill = AudioChartPalette.Fill(AudioChartPalette.Stroke),
-                    LineSmoothness = 0
-                },
-                new LineSeries<double?>
-                {
-                    Name = "Out of spec",
-                    Values = records.Select(r => r.IsPass ? (double?)null : r.WeightMg).ToArray(),
-                    Stroke = null,
-                    Fill = null,
-                    GeometrySize = 10,
-                    GeometryStroke = AudioChartPalette.Line(AudioChartPalette.Downtime, 2),
-                    GeometryFill = AudioChartPalette.Fill(AudioChartPalette.Downtime)
+                    int i;
+                    if (!index.TryGetValue(bucket.Key, out i))
+                        continue;
+
+                    double mean = bucket.Average(r => r.WeightMg);
+                    GlueWeighingRecord last = bucket.Last();
+                    points.Add(new ObservablePoint(i, mean));
+                    if (mean < last.LowerLimitMg || mean > last.UpperLimitMg)
+                        outOfSpec.Add(new ObservablePoint(i, mean));
                 }
-            };
+
+                // The spec lines are the latest weighing's limits.
+                GlueWeighingRecord latest = records[records.Count - 1];
+                double lsl = latest.LowerLimitMg, nominal = latest.NominalMg, usl = latest.UpperLimitMg;
+
+                double low = Math.Min(lsl, points.Count > 0 ? points.Min(p => p.Y ?? lsl) : lsl);
+                double high = Math.Max(usl, points.Count > 0 ? points.Max(p => p.Y ?? usl) : usl);
+                double pad = Math.Max(0.1, (high - low) * 0.15);
+                double min = Math.Floor((low - pad) * 2) / 2;
+                double max = Math.Ceiling((high + pad) * 2) / 2;
+
+                series = new ISeries[]
+                {
+                    SpecLine("USL", usl, buckets.Count, AudioChartPalette.SpecLimit),
+                    SpecLine("Nominal", nominal, buckets.Count, AudioChartPalette.SpecNominal),
+                    SpecLine("LSL", lsl, buckets.Count, AudioChartPalette.SpecLimit),
+                    new LineSeries<ObservablePoint>
+                    {
+                        Name = "Gantry: " + gantry,
+                        Values = points,
+                        Stroke = AudioChartPalette.Line(AudioChartPalette.SeriesPrimary, 2),
+                        Fill = null,
+                        GeometrySize = 7,
+                        GeometryStroke = AudioChartPalette.Line(AudioChartPalette.SeriesPrimary, 2),
+                        GeometryFill = AudioChartPalette.Fill(AudioChartPalette.Stroke),
+                        LineSmoothness = 0.5,
+                        DataLabelsPaint = AudioChartPalette.Fill(AudioChartPalette.AxisLine),
+                        DataLabelsSize = 11,
+                        DataLabelsPosition = DataLabelsPosition.Top,
+                        DataLabelsFormatter = point => point.Coordinate.PrimaryValue.ToString("0.000"),
+                        XToolTipLabelFormatter = point => GlueBucketLabel(buckets, (int)point.Coordinate.SecondaryValue),
+                        YToolTipLabelFormatter = point => point.Coordinate.PrimaryValue.ToString("0.000") + " mg"
+                    },
+                    new LineSeries<ObservablePoint>
+                    {
+                        Name = "Out of spec",
+                        Values = outOfSpec,
+                        Stroke = null,
+                        Fill = null,
+                        GeometrySize = 11,
+                        GeometryStroke = AudioChartPalette.Line(AudioChartPalette.Fail, 2),
+                        GeometryFill = AudioChartPalette.Fill(AudioChartPalette.Fail),
+                        IsHoverable = false
+                    }
+                };
+
+                yAxes = new[]
+                {
+                    new Axis
+                    {
+                        MinLimit = min,
+                        MaxLimit = max,
+                        Labeler = value => value.ToString("0.0#"),
+                        LabelsPaint = AudioChartPalette.Fill(AudioChartPalette.AxisLine),
+                        TextSize = 11,
+                        SeparatorsPaint = AudioChartPalette.Line(AudioChartPalette.GridLine, 1)
+                    },
+                    // The right-hand axis names the spec lines where they cross it.
+                    new Axis
+                    {
+                        Position = AxisPosition.End,
+                        MinLimit = min,
+                        MaxLimit = max,
+                        CustomSeparators = new[] { lsl, nominal, usl },
+                        Labeler = value => SpecLabel(value, lsl, nominal, usl),
+                        LabelsPaint = AudioChartPalette.Fill(AudioChartPalette.SpecLimit),
+                        TextSize = 11,
+                        SeparatorsPaint = null
+                    }
+                };
+            }
+
+            if (front)
+            {
+                HasFrontGlue = series.Length > 0;
+                FrontGlueSeries = series;
+                FrontGlueXAxes = xAxes;
+                FrontGlueYAxes = yAxes;
+            }
+            else
+            {
+                HasRearGlue = series.Length > 0;
+                RearGlueSeries = series;
+                RearGlueXAxes = xAxes;
+                RearGlueYAxes = yAxes;
+            }
         }
 
-        private static LineSeries<double> SpecLine(string name, IEnumerable<double> values, SKColor colour)
+        /// <summary>A dashed spec line across the whole chart, on the right-hand axis.</summary>
+        private static LineSeries<ObservablePoint> SpecLine(string name, double value, int buckets, SKColor colour)
         {
-            return new LineSeries<double>
+            return new LineSeries<ObservablePoint>
             {
                 Name = name,
-                Values = values.ToArray(),
+                Values = new[] { new ObservablePoint(-0.5, value), new ObservablePoint(buckets - 0.5, value) },
                 Stroke = DashedLine(colour),
                 Fill = null,
                 GeometrySize = 0,
-                LineSmoothness = 0
+                LineSmoothness = 0,
+                ScalesYAt = 1,
+                IsHoverable = false
             };
         }
 
-        private static Axis[] TrendXAxes(List<GlueWeighingRecord> records)
+        private static string SpecLabel(double value, double lsl, double nominal, double usl)
         {
-            var labels = records.Select(r => r.Time.ToString("MM/dd HH:mm")).ToList();
+            const double tolerance = 1e-6;
+            if (Math.Abs(value - usl) < tolerance) return "USL " + usl.ToString("0.0##");
+            if (Math.Abs(value - nominal) < tolerance) return "Nominal " + nominal.ToString("0.0##");
+            if (Math.Abs(value - lsl) < tolerance) return "LSL " + lsl.ToString("0.0##");
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// One label per bucket: "08:00-09:00" hourly, "2024/11/18" daily. Hourly, the
+        /// date goes beside the gantry's name (<see cref="GlueTrendDateText"/>) rather
+        /// than in an axis title, which would take chart height the tab cannot spare.
+        /// </summary>
+        private Axis[] GlueTrendXAxes(List<DateTime> buckets)
+        {
+            var labels = buckets.Select((b, i) => GlueBucketLabel(buckets, i)).ToList();
+
+            string dates = string.Empty;
+            if (!IsDaily && buckets.Count > 0)
+            {
+                string first = buckets[0].ToString("yyyy/M/d");
+                string last = buckets[buckets.Count - 1].ToString("yyyy/M/d");
+                dates = first == last ? first : first + " - " + last;
+            }
+
+            GlueTrendDateText = dates;
+
             return new[]
             {
                 new Axis
                 {
-                    Labels = labels,
+                    MinLimit = -0.5,
+                    MaxLimit = Math.Max(0, buckets.Count - 1) + 0.5,
+                    CustomSeparators = Enumerable.Range(0, buckets.Count).Select(i => (double)i).ToArray(),
+                    Labeler = value =>
+                    {
+                        int i = (int)Math.Round(value);
+                        return i >= 0 && i < labels.Count ? labels[i] : string.Empty;
+                    },
                     LabelsPaint = AudioChartPalette.Fill(AudioChartPalette.AxisLine),
                     TextSize = 10,
-                    LabelsRotation = labels.Count > 8 ? 45 : 0,
+                    LabelsRotation = buckets.Count > 12 ? 45 : 0,
                     SeparatorsPaint = null
                 }
             };
         }
 
-        /// <summary>
-        /// Count, mean, standard deviation and Cpk against the latest limits - the
-        /// numbers an SPC chart is read for.
-        /// </summary>
-        private static string Stats(List<GlueWeighingRecord> records)
+        private string GlueBucketLabel(List<DateTime> buckets, int i)
         {
-            if (records.Count == 0)
-                return "No weighings";
+            if (i < 0 || i >= buckets.Count)
+                return string.Empty;
 
-            double mean = records.Average(r => r.WeightMg);
-            string text = "n " + records.Count + " · mean " + mean.ToString("0.000") + " mg";
+            DateTime b = buckets[i];
+            return IsDaily ? b.ToString("yyyy/M/d") : b.ToString("HH:00") + "-" + b.AddHours(1).ToString("HH:00");
+        }
 
-            if (records.Count < 2)
-                return text;
-
-            double sigma = Math.Sqrt(records.Sum(r => (r.WeightMg - mean) * (r.WeightMg - mean)) / (records.Count - 1));
-            text += " · σ " + sigma.ToString("0.000");
-
-            GlueWeighingRecord latest = records[records.Count - 1];
-            if (sigma > 0)
-            {
-                double cpk = Math.Min(latest.UpperLimitMg - mean, mean - latest.LowerLimitMg) / (3 * sigma);
-                text += " · Cpk " + cpk.ToString("0.00");
-            }
-
-            int failed = records.Count(r => !r.IsPass);
-            if (failed > 0)
-                text += " · " + failed + " out of spec";
-
-            return text;
+        /// <summary>A weighing's hour, or its calendar day in Daily.</summary>
+        private DateTime GlueBucketOf(DateTime time)
+        {
+            return IsDaily ? time.Date : new DateTime(time.Year, time.Month, time.Day, time.Hour, 0, 0);
         }
 
         /// <summary>
-        /// The calibration points of each gantry as dots, and its fitted line
-        /// y = w x + b drawn across them.
+        /// The chosen gantry and path's last calibration: its ten points in red, the
+        /// fitted line, and the equation and R² printed on the diagram (slide 3).
         /// </summary>
         private void BuildRegression()
         {
-            GlueRegressions.Clear();
-            var series = new List<ISeries>();
-            string inputName = "Input";
+            int path = PathNumber(RegressionPath);
+            GlueRegression regression = _regressions
+                .Where(r => string.Equals(r.Gantry, RegressionGantry, StringComparison.OrdinalIgnoreCase) && r.Path == path)
+                .OrderByDescending(r => r.CalibratedAt ?? DateTime.MinValue)
+                .FirstOrDefault();
 
-            int i = 0;
-            foreach (GlueRegression regression in _regressions
-                         .OrderBy(r => string.Equals(r.Gantry, FrontGantry, StringComparison.OrdinalIgnoreCase) ? 0 : 1))
+            IReadOnlyList<GlueCalibrationPoint> points = regression?.Points ?? new GlueCalibrationPoint[0];
+            HasRegression = regression != null && points.Count > 0;
+
+            if (!HasRegression)
             {
-                GlueRegressions.Add(new GlueRegressionRow(regression));
+                RegressionSeries = new ISeries[0];
+                RegressionEquation = RegressionR2Text = RegressionCalibratedText = string.Empty;
+                BuildRegressionAxes(regression);
+                return;
+            }
 
-                if (!string.IsNullOrWhiteSpace(regression.InputName))
-                    inputName = regression.InputName;
+            double minX = points.Min(p => p.X);
+            double maxX = points.Max(p => p.X);
 
-                SKColor colour = i == 0 ? AudioChartPalette.SeriesPrimary : AudioChartPalette.SeriesSecondary;
-                i++;
-
-                IReadOnlyList<GlueCalibrationPoint> points = regression.Points ?? new GlueCalibrationPoint[0];
-                if (points.Count == 0)
-                    continue;
-
-                series.Add(new ScatterSeries<ObservablePoint>
+            RegressionSeries = new ISeries[]
+            {
+                new LineSeries<ObservablePoint>
                 {
-                    Name = regression.Gantry + " points",
-                    Values = points.Select(p => new ObservablePoint(p.X, p.Y)).ToArray(),
-                    GeometrySize = 9,
-                    Fill = AudioChartPalette.Fill(colour),
-                    Stroke = null
-                });
-
-                double minX = points.Min(p => p.X);
-                double maxX = points.Max(p => p.X);
-                series.Add(new LineSeries<ObservablePoint>
-                {
-                    Name = regression.Gantry + " fit",
+                    Name = "Regression",
                     Values = new[]
                     {
                         new ObservablePoint(minX, regression.W * minX + regression.B),
                         new ObservablePoint(maxX, regression.W * maxX + regression.B)
                     },
-                    Stroke = AudioChartPalette.Line(colour, 1.5f),
+                    Stroke = AudioChartPalette.Line(AudioChartPalette.SeriesPrimary, 1.5f),
                     Fill = null,
                     GeometrySize = 0,
-                    LineSmoothness = 0
-                });
-            }
+                    LineSmoothness = 0,
+                    IsHoverable = false
+                },
+                new ScatterSeries<ObservablePoint>
+                {
+                    Name = "Calibration points",
+                    Values = points.Select(p => new ObservablePoint(p.X, p.Y)).ToArray(),
+                    GeometrySize = 7,
+                    Fill = AudioChartPalette.Fill(AudioChartPalette.Fail),
+                    Stroke = null,
+                    XToolTipLabelFormatter = point => point.Coordinate.SecondaryValue.ToString("0.##") + " mm/s",
+                    YToolTipLabelFormatter = point => point.Coordinate.PrimaryValue.ToString("0.000") + " mg"
+                }
+            };
 
-            RegressionSeries = series.ToArray();
+            RegressionEquation = "y = " + regression.W.ToString("0.0000") + "x "
+                                 + (regression.B < 0 ? "- " : "+ ") + Math.Abs(regression.B).ToString("0.0000");
+            RegressionR2Text = "R² = " + regression.R2.ToString("0.0000");
+            RegressionCalibratedText = regression.CalibratedAt.HasValue
+                ? "Calibrated " + regression.CalibratedAt.Value.ToString("yyyy/M/d HH:mm")
+                : string.Empty;
+
+            BuildRegressionAxes(regression);
+        }
+
+        /// <remarks>
+        /// The weight axis leaves the top third of the diagram clear, so the equation
+        /// printed there (slide 3) never sits on a calibration point; the speed axis
+        /// starts at 0, as the slide's does.
+        /// </remarks>
+        private void BuildRegressionAxes(GlueRegression regression)
+        {
+            string input = regression != null && !string.IsNullOrWhiteSpace(regression.InputName)
+                ? regression.InputName
+                : "Dispensing speed (mm/s)";
+
+            double? minX = null, maxX = null, minY = null, maxY = null;
+            IReadOnlyList<GlueCalibrationPoint> points = regression?.Points;
+            if (points != null && points.Count > 0)
+            {
+                var ys = points.Select(p => p.Y)
+                    .Concat(points.Select(p => regression.W * p.X + regression.B))
+                    .ToList();
+                double low = ys.Min(), high = ys.Max();
+                double range = Math.Max(high - low, 0.05);
+
+                minX = 0;
+                maxX = Math.Ceiling(points.Max(p => p.X)) + 1;
+                minY = low - range * 0.25;
+                maxY = high + range * 0.9;
+            }
 
             RegressionXAxes = new[]
             {
                 new Axis
                 {
-                    Name = inputName,
+                    MinLimit = minX,
+                    MaxLimit = maxX,
+                    Name = input,
                     NameTextSize = 11,
                     NamePaint = AudioChartPalette.Fill(AudioChartPalette.AxisLine),
                     LabelsPaint = AudioChartPalette.Fill(AudioChartPalette.AxisLine),
@@ -533,17 +777,17 @@ namespace Nova.ViewModels.Pages.Audio
             {
                 new Axis
                 {
-                    Name = "Weight (mg)",
+                    MinLimit = minY,
+                    MaxLimit = maxY,
+                    Name = "Glue weight (mg)",
                     NameTextSize = 11,
                     NamePaint = AudioChartPalette.Fill(AudioChartPalette.AxisLine),
-                    Labeler = value => value.ToString("0.00"),
+                    Labeler = value => value.ToString("0.0#"),
                     LabelsPaint = AudioChartPalette.Fill(AudioChartPalette.AxisLine),
                     TextSize = 10,
                     SeparatorsPaint = AudioChartPalette.Line(AudioChartPalette.GridLine, 1)
                 }
             };
-
-            OnPropertyChanged(nameof(HasRegressions));
         }
 
 
@@ -553,7 +797,7 @@ namespace Nova.ViewModels.Pages.Audio
 
         private static IReadOnlyList<string> GlueExportHeaders()
         {
-            return new[] { "Date", "Time", "Shift", "Gantry", "Path", "Weight (mg)", "Nominal (mg)", "LSL (mg)", "USL (mg)", "Result" };
+            return new[] { "Date", "Time", "Shift", "Gantry", "Path", "Speed (mm/s)", "Value (mg)", "Nominal (mg)", "LSL (mg)", "USL (mg)", "Result" };
         }
 
         private IReadOnlyList<IReadOnlyList<string>> GlueExportRows()
@@ -567,6 +811,7 @@ namespace Nova.ViewModels.Pages.Audio
                     r.Shift ?? string.Empty,
                     r.Gantry ?? string.Empty,
                     r.Path.ToString(),
+                    r.DispenseSpeed.ToString("0.##"),
                     r.WeightMg.ToString("0.000"),
                     r.NominalMg.ToString("0.000"),
                     r.LowerLimitMg.ToString("0.000"),

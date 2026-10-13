@@ -5,9 +5,9 @@ using Nova.Abstractions.Services;
 namespace Nova.Core.Services
 {
     /// <summary>
-    /// Machine state held by the HMI. On a TwinCAT machine the PLC owns the real state;
-    /// until the ADS adapters exist this is the store the simulated orchestrator and the
-    /// Settings screen share. Mode and bypass writes become PLC writes at that point.
+    /// Machine state held by the HMI. The PLC owns the real state; until the ADS adapters
+    /// exist this is the store the orchestrator and the Settings screen share. Mode and
+    /// bypass writes become PLC writes at that point.
     /// </summary>
     public sealed class MachineContext : IMachineContext
     {

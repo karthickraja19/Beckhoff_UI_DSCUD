@@ -2,163 +2,172 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
-using Nova.Abstractions.Hardware.Enums;
-using Nova.Abstractions.Hardware.Interfaces;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Nova.Abstractions.Hardware;
 using Nova.Abstractions.Services;
+using Nova.ViewModels.Common;
 
 namespace Nova.ViewModels.Pages.Manual
 {
     /// <summary>
-    /// "Robot" tab of the Manual screen. Combines an illustrative digital I/O board
-    /// with the shared console panel (from <see cref="ConsoleDeviceViewModel"/>) used
-    /// to select a command and send it over the selected robot's Communication
-    /// channel (V3: cmbRobot + btnRBTtrigger). The robot list + TCP transport come
-    /// from Robots.json via <see cref="ICommDeviceService"/>; the digital I/O board is
-    /// still illustrative until robot IO is wired.
+    /// "Robot" tab of the Manual screen: the selected robot's connection and its EtherCAT I/O,
+    /// from <see cref="IRobotIOService"/> - not the machine's digital IO, which does not include
+    /// it. Inputs - Bools, Bytes and Words - are read only; of the outputs, the Bools can be
+    /// switched and the Bytes and Words are read only. The spares are not shown.
     /// </summary>
-    public class RobotControlViewModel : ConsoleDeviceViewModel
+    /// <remarks>
+    /// The I/O is read only while the tab is on screen: <see cref="Activate"/> starts the
+    /// service reading it (when it is an <see cref="ILiveStatus"/>), and <see cref="Deactivate"/>
+    /// stops it.
+    /// </remarks>
+    public partial class RobotControlViewModel : ViewModelBase, IActivatableTab
     {
-        private readonly Dictionary<string, INetworkProtocol> _robotProtocols =
-            new Dictionary<string, INetworkProtocol>();
+        private readonly IRobotIOService _robotIO;
+        private IDisposable _following;
+        private bool _isActive;
 
-        private readonly IDigitalIOService _io;
-        private readonly Dictionary<int, RobotSignal> _inputsByBit = new Dictionary<int, RobotSignal>();
-        private readonly Dictionary<int, RobotSignal> _outputsByBit = new Dictionary<int, RobotSignal>();
+        // Replaced whole when another robot is selected, so a refresh on the IO thread always
+        // works on one complete set.
+        private Dictionary<string, RobotSignal> _inputsByName = new Dictionary<string, RobotSignal>();
+        private Dictionary<string, RobotSignal> _outputsByName = new Dictionary<string, RobotSignal>();
 
-        public override string SelectorCaption => "Select CMD :";
-        public override string TriggerLabel => "SEND COMMAND";
-        public override string TriggerIcon => "Bot";
+        public ObservableCollection<string> RobotUnits { get; } = new ObservableCollection<string>();
 
-        public ObservableCollection<string> RobotUnits { get; }
-
+        [ObservableProperty]
         private string _selectedRobot;
-        public string SelectedRobot
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(StatusText))]
+        private bool _isConnected;
+
+        public string StatusText => IsConnected ? "CONNECTED" : "DISCONNECTED";
+
+        /// <summary>The Bool inputs.</summary>
+        public ObservableCollection<RobotSignal> DigitalInputs { get; } = new ObservableCollection<RobotSignal>();
+
+        /// <summary>The Byte and Word inputs.</summary>
+        public ObservableCollection<RobotSignal> InputValues { get; } = new ObservableCollection<RobotSignal>();
+
+        /// <summary>The Bool outputs, which can be switched.</summary>
+        public ObservableCollection<RobotSignal> DigitalOutputs { get; } = new ObservableCollection<RobotSignal>();
+
+        /// <summary>The Byte and Word outputs.</summary>
+        public ObservableCollection<RobotSignal> OutputValues { get; } = new ObservableCollection<RobotSignal>();
+
+        public RobotControlViewModel(IRobotIOService robotIO = null)
         {
-            get => _selectedRobot;
-            set => SetProperty(ref _selectedRobot, value);
+            _robotIO = robotIO;
+
+            if (_robotIO != null)
+            {
+                foreach (string robot in _robotIO.Robots)
+                    RobotUnits.Add(robot);
+            }
+
+            SelectedRobot = RobotUnits.Count > 0 ? RobotUnits[0] : null;
         }
 
-        public ObservableCollection<RobotSignal> DigitalInputs { get; }
-        public ObservableCollection<RobotSignal> DigitalOutputs { get; }
+        partial void OnSelectedRobotChanged(string value) => BuildSignals();
 
-        public RobotControlViewModel(ICommDeviceService comm, IDigitalIOService io = null)
+        public void Activate()
         {
-            _io = io;
-            RobotUnits = new ObservableCollection<string>();
-            var robots = comm?.GetDevices(CommDeviceKind.Robot);
-            if (robots != null && robots.Count > 0)
-            {
-                foreach (var r in robots)
-                {
-                    RobotUnits.Add(r.Name);
-                    if (r.Protocol != null)
-                        _robotProtocols[r.Name] = r.Protocol;
-                }
-            }
-            else
-            {
-                foreach (var name in Enum.GetNames(typeof(Robots)))
-                    RobotUnits.Add(name);
-            }
-            _selectedRobot = RobotUnits.Count > 0 ? RobotUnits[0] : null;
+            if (_isActive || _robotIO == null)
+                return;
 
-            // Robot IO is not a transport concern: it is wired to the same digital input
-            // bank as everything else, at the bit numbers the enums carry
-            // (RobotInputs from 68, RobotOutputs from 21). V3's RbtInputState /
-            // RbtOutputState read both lists with DIDO.ReadDI — outputs included, since
-            // those members are feedback bits — so both are read from the input bank here.
-            DigitalInputs = new ObservableCollection<RobotSignal>();
-            foreach (RobotInputs value in Enum.GetValues(typeof(RobotInputs)))
-            {
-                var signal = new RobotSignal(value.ToString());
-                DigitalInputs.Add(signal);
-                _inputsByBit[(int)value] = signal;
-            }
+            _isActive = true;
+            _robotIO.IOChanged += OnIoChanged;
+            _following = (_robotIO as ILiveStatus)?.FollowStatus();
 
-            DigitalOutputs = new ObservableCollection<RobotSignal>();
-            foreach (RobotOutputs value in Enum.GetValues(typeof(RobotOutputs)))
-            {
-                var signal = new RobotSignal(value.ToString());
-                DigitalOutputs.Add(signal);
-                _outputsByBit[(int)value] = signal;
-            }
-
-            if (_io != null)
-            {
-                RefreshSignals();
-                _io.IOChanged += OnIoChanged;
-            }
-
-            // Command payloads (the send-command presets).
-            Devices.Add(new ConsoleDeviceItem("AUTO_MODE", "", "AUTO_MODE, 1.0, Auto_mode_Selected, IN, END"));
-            Devices.Add(new ConsoleDeviceItem("MANUAL_MODE", "", "MANUAL_MODE, 1.0, END"));
-            Devices.Add(new ConsoleDeviceItem("HOME", "", "HOME_REQ, 1, END"));
-            Devices.Add(new ConsoleDeviceItem("PICK", "", "PICK_REQ, POS=1, END"));
-            Devices.Add(new ConsoleDeviceItem("PLACE", "", "PLACE_REQ, POS=1, END"));
-            SelectedDevice = Devices[0];   // loads SendCommand via OnDeviceSelected
-
-            if (_robotProtocols.Count == 0)
-            {
-                // Dev fallback (no config): demo console.
-                IsConnected = true;
-                Console.Add(new CameraConsoleLine("RBT_INIT_REQ..."));
-                Console.Add(new CameraConsoleLine("ACK INIT_SUCCESS", isAck: true));
-            }
+            // What the robot is now, not what was left from the last visit.
+            Refresh();
         }
 
-        private INetworkProtocol RobotProtocol
-            => SelectedRobot != null && _robotProtocols.TryGetValue(SelectedRobot, out var p) ? p : null;
-
-        protected override async Task<bool> DoConnectAsync()
+        public void Deactivate()
         {
-            var p = RobotProtocol;
-            return p == null ? true : await p.ConnectAsync();
+            if (!_isActive)
+                return;
+
+            _isActive = false;
+            _robotIO.IOChanged -= OnIoChanged;
+            _following?.Dispose();
+            _following = null;
         }
 
-        protected override async Task<string> DoTriggerAsync()
+        /// <summary>The rows of the selected robot's points.</summary>
+        private void BuildSignals()
         {
-            var p = RobotProtocol;
-            return p == null ? null : await p.SendAndReceiveAsync(SendCommand);
+            DigitalInputs.Clear();
+            InputValues.Clear();
+            DigitalOutputs.Clear();
+            OutputValues.Clear();
+
+            var snapshot = _robotIO?.Read(SelectedRobot);
+            var inputs = new Dictionary<string, RobotSignal>();
+            var outputs = new Dictionary<string, RobotSignal>();
+
+            if (snapshot != null)
+            {
+                Add(snapshot.Inputs, inputs, DigitalInputs, InputValues);
+                Add(snapshot.Outputs, outputs, DigitalOutputs, OutputValues);
+            }
+
+            _inputsByName = inputs;
+            _outputsByName = outputs;
+            IsConnected = snapshot != null && snapshot.IsConnected;
         }
 
-        protected override Task DoDisconnectAsync()
+        private static void Add(IReadOnlyList<RobotIOPointSnapshot> points, Dictionary<string, RobotSignal> byName,
+            ObservableCollection<RobotSignal> bools, ObservableCollection<RobotSignal> values)
         {
-            RobotProtocol?.Disconnect();
-            return Task.CompletedTask;
-        }
-
-        protected override void OnTrigger()
-        {
-            Console.Add(new CameraConsoleLine("SEND " + (SelectedDevice?.Name ?? "CMD")));
-            Console.Add(new CameraConsoleLine("ACK DONE", isAck: true));
+            foreach (var point in points ?? new RobotIOPointSnapshot[0])
+            {
+                var signal = new RobotSignal(point.Name, point.Kind, point.Value);
+                byName[point.Name] = signal;
+                (point.Kind == RobotIOKind.Bool ? bools : values).Add(signal);
+            }
         }
 
         /// <summary>
-        /// Raised on the IO poll thread. Only scalar RobotSignal.IsOn values are set,
-        /// never the bound collections, so WPF marshals the change itself.
+        /// Raised on the IO poll thread. Only scalar values are set, never the bound
+        /// collections, so WPF marshals the change itself.
         /// </summary>
-        private void OnIoChanged(object sender, EventArgs e) => RefreshSignals();
+        private void OnIoChanged(object sender, EventArgs e) => Refresh();
 
-        private void RefreshSignals()
+        private void Refresh()
         {
-            var points = _io.ReadInputs();
-            if (points == null)
+            var snapshot = _robotIO?.Read(SelectedRobot);
+            if (snapshot == null)
                 return;
 
-            foreach (var point in points)
+            Update(snapshot.Inputs, _inputsByName);
+            Update(snapshot.Outputs, _outputsByName);
+            IsConnected = snapshot.IsConnected;
+        }
+
+        private static void Update(IReadOnlyList<RobotIOPointSnapshot> points, Dictionary<string, RobotSignal> byName)
+        {
+            foreach (var point in points ?? new RobotIOPointSnapshot[0])
             {
-                RobotSignal signal;
-                if (_inputsByBit.TryGetValue(point.Bit, out signal))
-                    signal.IsOn = point.IsOn;
-                if (_outputsByBit.TryGetValue(point.Bit, out signal))
-                    signal.IsOn = point.IsOn;
+                if (byName.TryGetValue(point.Name, out var signal))
+                    signal.Value = point.Value;
             }
+        }
+
+        /// <summary>Switches a Bool output; the next read shows what the PLC made of it.</summary>
+        [RelayCommand]
+        private async Task ToggleOutput(RobotSignal signal)
+        {
+            if (signal == null || signal.Kind != RobotIOKind.Bool || _robotIO == null || SelectedRobot == null)
+                return;
+
+            await _robotIO.WriteOutputAsync(SelectedRobot, signal.Name, !signal.IsOn);
         }
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing && !IsDisposed && _io != null)
-                _io.IOChanged -= OnIoChanged;
+            if (disposing && !IsDisposed)
+                Deactivate();
             base.Dispose(disposing);
         }
     }

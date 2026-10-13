@@ -13,24 +13,42 @@
         FontSize="14"
         Background="Transparent">
 
-    <!-- Audio SW DFM v5.4, slide 49 "Manually Changing HIVE State": the four state
-         options the HIVE chip offers a level 2/3 operator. -->
+    <!-- Audio SW DFM v5.4, slide 49 "Manually Changing HIVE State": the state options
+         the HIVE chip offers a level 2/3 operator. Idle is not one of them: since v5.1
+         idle is automatic only (slide 8). An option the current state does not allow
+         is greyed out with the reason under it. -->
     <Window.Resources>
         <Style x:Key="StateButton" TargetType="Button">
             <Setter Property="Background" Value="White" />
             <Setter Property="Foreground" Value="#20201F" />
             <Setter Property="FontWeight" Value="Bold" />
-            <Setter Property="Margin" Value="0,0,0,12" />
+            <Setter Property="Margin" Value="0,12,0,0" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" BorderBrush="#2B2B2B"
+                        <Border x:Name="Frame" Background="{TemplateBinding Background}" BorderBrush="#2B2B2B"
                                 BorderThickness="1" CornerRadius="5" Padding="10,9">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Frame" Property="BorderBrush" Value="#B8B8B8" />
+                                <Setter Property="Foreground" Value="#A0A0A0" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+        </Style>
+
+        <!-- Why the button above cannot be used now. Collapsed while it can. -->
+        <Style x:Key="BlockedNote" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Foreground" Value="#6E6E6E" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="TextAlignment" Value="Center" />
+            <Setter Property="Margin" Value="0,3,0,0" />
+            <Setter Property="Visibility" Value="Collapsed" />
         </Style>
     </Window.Resources>
 
@@ -40,12 +58,22 @@
                 <TextBlock Text="Dialog" FontWeight="Bold" Foreground="#3C3C3C" HorizontalAlignment="Center" />
             </Border>
 
-            <Border Background="#E4E4E4" CornerRadius="0,0,6,6" Padding="26,20,26,8">
+            <Border Background="#E4E4E4" CornerRadius="0,0,6,6" Padding="26,14,26,8">
                 <StackPanel>
-                    <Button Content="Running" Style="{StaticResource StateButton}" Click="Running_Click" />
-                    <Button Content="Idle" Style="{StaticResource StateButton}" Click="Idle_Click" />
-                    <Button Content="Planned downtime" Style="{StaticResource StateButton}" Click="PlannedDowntime_Click" />
-                    <Button Content="Manual downtime" Style="{StaticResource StateButton}" Click="ManualDowntime_Click" />
+                    <!-- The state being changed from, so the greyed-out options make sense. -->
+                    <TextBlock x:Name="CurrentStateText" FontSize="12" Foreground="#3C3C3C"
+                               TextWrapping="Wrap" TextAlignment="Center" />
+
+                    <Button x:Name="RunningButton" Content="Running" Style="{StaticResource StateButton}" Click="Running_Click" />
+                    <TextBlock x:Name="RunningNote" Style="{StaticResource BlockedNote}" />
+
+                    <Button x:Name="PlannedButton" Content="Planned downtime" Style="{StaticResource StateButton}" Click="PlannedDowntime_Click" />
+                    <TextBlock x:Name="PlannedNote" Style="{StaticResource BlockedNote}" />
+
+                    <Button x:Name="ManualButton" Content="Manual downtime" Style="{StaticResource StateButton}" Click="ManualDowntime_Click" />
+                    <TextBlock x:Name="ManualNote" Style="{StaticResource BlockedNote}" />
+
+                    <Border Height="12" />
 
                     <Button Content="Cancel" HorizontalAlignment="Center" Margin="0,4,0,8"
                             Padding="18,5" Click="Cancel_Click" />

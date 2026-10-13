@@ -20,11 +20,8 @@ namespace Master.Configuration
         {
             try
             {
-                var PdcaJsonString = File.ReadAllText(Application.StartupPath + "\\Data\\Pdca.json");
-                string PdcaName = "PDCA";
-                ConfigGlobalClass.PdcaConfiguration = JsonConvert.DeserializeObject<List<SocketClientConfiguration>>(PdcaJsonString);
-                var pdcaConfigs = ConfigGlobalClass.ScannerConfigurations.Where(x => x.EnumName == PdcaName).FirstOrDefault();
-
+                if (!MachineConfiguration.IsLoaded)
+                    MachineConfiguration.Load(Path.Combine(Application.StartupPath, "Data"));
 
                 foreach (var PdcaEnum in Enum.GetValues(typeof(Pdca)).Cast<Pdca>())
                 {

@@ -41,7 +41,7 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>   <!-- 0  Main | Vendor + sample-data notice -->
+            <RowDefinition Height="Auto"/>   <!-- 0  Main | Vendor -->
             <RowDefinition Height="*"/>      <!-- 1  dashboard -->
         </Grid.RowDefinitions>
 
@@ -60,18 +60,6 @@
                      ItemsSource="{Binding Tabs}"
                      SelectedItem="{Binding SelectedTab, Mode=TwoWay}"
                      AutomationProperties.Name="Dashboard view"/>
-
-            <!-- Generated figures are labelled on screen, not just in a comment. An
-                 operator must be able to tell a real yield from a placeholder. -->
-            <Border Grid.Column="2"
-                    Background="{DynamicResource Audio.System.Gray5Brush}"
-                    CornerRadius="{DynamicResource Audio.Radius.Small}"
-                    Padding="10,3"
-                    VerticalAlignment="Center"
-                    Visibility="{Binding IsSampleData, Converter={StaticResource BoolToVisibility}}"
-                    ToolTip="{Binding SampleDataDetail}">
-                <TextBlock Style="{StaticResource Audio.Footnote}" Text="Sample data"/>
-            </Border>
         </Grid>
 
         <!-- ============================================================== -->
@@ -700,91 +688,11 @@
         </Border>
 
         <!-- ============================================================== -->
-        <!-- VENDOR TAB  (slide 57) -->
+        <!-- VENDOR TAB  (slide 57)                                          -->
+        <!-- Empty: the manual-operation GUI, the Homing button and the      -->
+        <!-- running log are on the Setting page's Manual tab.               -->
         <!-- ============================================================== -->
         <Grid Grid.Row="1"
-              Visibility="{Binding IsMainTab, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}">
-
-            <!-- Nothing to host: keep the slide's own explanation of what this pane is
-                 for, so a non-semi-auto station shows a reason rather than a blank. -->
-            <Border Style="{StaticResource Audio.Card}"
-                    Visibility="{Binding HasManual, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}">
-                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="520">
-                    <TextBlock Style="{StaticResource Audio.Title3}" Text="Vendor"
-                               HorizontalAlignment="Center"/>
-                    <TextBlock Style="{StaticResource Audio.EmptyState}" Margin="0,8,0,0"
-                               Text="For semi-auto machines only — the manual-operation GUI for stations that require operator loading or scanning."/>
-                    <TextBlock Style="{StaticResource Audio.Caption1}" Margin="0,12,0,0"
-                               HorizontalAlignment="Center"
-                               Text="DFM v5.4 slide 57"/>
-                </StackPanel>
-            </Border>
-
-            <!-- Manual GUI (slide 57) with the running log alongside it. 3/4 + 1/4:
-                 the manual screens carry device tables that need the width, the log is
-                 a narrow column of lines. -->
-            <Grid Visibility="{Binding HasManual, Converter={StaticResource BoolToVisibility}}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="3*"/>
-                    <ColumnDefinition Width="1*"/>
-                </Grid.ColumnDefinitions>
-
-                <!-- Recessed, not a white card. The manual screens draw their own
-                     white panels; hosting them on white too made every panel edge
-                     disappear and the whole tab read as one blank sheet. HIG stacks
-                     white cards on the grouped grey, which is what this restores. -->
-                <!-- Padding 4 to match the Main|Vendor row's own 4px left margin, so the
-                     device tab strip inside starts on the same vertical line as the
-                     Main|Vendor strip above it rather than 16px further in. -->
-                <Border Grid.Column="0"
-                        Background="{DynamicResource Audio.Surface.GroupedBrush}"
-                        CornerRadius="{DynamicResource Audio.Radius.Card}"
-                        Padding="4">
-                    <ContentControl Content="{Binding Manual}" Focusable="False"/>
-                </Border>
-
-                <Border Grid.Column="1" Style="{StaticResource Audio.Card}">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-
-                        <TextBlock Grid.Row="0" Style="{StaticResource Audio.Title3}"
-                                   Text="Running Log" Margin="16,12,16,8"/>
-
-                        <TextBlock Grid.Row="1" Style="{StaticResource Audio.EmptyState}"
-                                   Margin="16,0" VerticalAlignment="Top"
-                                   Text="Nothing logged yet."
-                                   Visibility="{Binding RunningLog.IsEmpty, Converter={StaticResource BoolToVisibility}}"/>
-
-                        <!-- Auto-height rows, not Audio.ListRow: a log line wraps to two
-                             or three lines and that style pins a single row height, which
-                             clips the overflow. -->
-                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
-                                      HorizontalScrollBarVisibility="Disabled"
-                                      Margin="0,0,0,8">
-                            <ItemsControl ItemsSource="{Binding RunningLog.Logs}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border BorderBrush="{DynamicResource Audio.Separator.SubtleBrush}"
-                                                BorderThickness="0,0,0,1"
-                                                Padding="16,7"
-                                                SnapsToDevicePixels="True">
-                                            <TextBlock Style="{StaticResource Audio.Caption1}"
-                                                       FontFamily="{DynamicResource Audio.FontFamily.Mono}"
-                                                       Text="{Binding}"
-                                                       TextWrapping="Wrap"
-                                                       LineHeight="16"
-                                                       LineStackingStrategy="BlockLineHeight"/>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </ScrollViewer>
-                    </Grid>
-                </Border>
-            </Grid>
-        </Grid>
+              Visibility="{Binding IsMainTab, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"/>
     </Grid>
 </UserControl>

@@ -10,8 +10,10 @@ using Nova.Abstractions.Data.Models;
 namespace Nova.ViewModels.Pages.Audio
 {
     /// <summary>
-    /// The Health tab - S2.4.4.4 Health &amp; Early-warning: glue left in each
-    /// cartridge, pot life, nozzle health, and the dosages and thresholds behind them.
+    /// The Health tab - S2.4.4.4 Health &amp; Early-warning: Nozzle Health (a bar per
+    /// gantry, the nozzle table and its colour key), then Glue Control &amp; Early
+    /// Warning (a bar per gantry, pot life, the consumption table and its colour key),
+    /// and below them the dosages and thresholds OSS sets.
     /// </summary>
     /// <remarks>
     /// This tab shows the state and its thresholds. The warnings themselves - the
@@ -37,22 +39,43 @@ namespace Nova.ViewModels.Pages.Audio
 
 
         // ==================================================================
-        // Threshold explanations (S2.4.4.4 tables)
+        // Colour keys (S2.4.4.4), with the thresholds OSS has set
         // ==================================================================
 
-        public string GlueThresholdText =>
-            "Normal above " + _glueControl.LowGluePercent.ToString("0.#") + "%. "
-            + "At or below " + _glueControl.LowGluePercent.ToString("0.#") + "%: a staging request goes to MES and the "
-            + "green light flashes. At or below " + _glueControl.EmptyGluePercent.ToString("0.#") + "%: change the glue "
-            + "- buzzer and pop-up. Production does not stop.";
+        public ObservableCollection<HealthLegendRow> NozzleLegend { get; } = new ObservableCollection<HealthLegendRow>();
 
-        public string PotLifeThresholdText =>
-            "Below " + _glueControl.PotLifeWarningHours.ToString("0.0#") + " h: pop-up and siren, production continues. "
-            + "At 0 h the machine stops and HIVE goes to downtime. MES is asked every minute.";
+        public ObservableCollection<HealthLegendRow> GlueLegend { get; } = new ObservableCollection<HealthLegendRow>();
 
-        public string NozzleThresholdText =>
-            "Below " + _glueControl.NozzleWarningHours.ToString("0.#") + " h: prompt every 4 hours. Below "
-            + _glueControl.NozzleCriticalHours.ToString("0.#") + " h: prompt every 2 hours (PD-12).";
+        private void BuildLegends()
+        {
+            string warning = _glueControl.NozzleWarningHours.ToString("0.##");
+            string critical = _glueControl.NozzleCriticalHours.ToString("0.##");
+
+            NozzleLegend.Clear();
+            NozzleLegend.Add(new HealthLegendRow(HealthLevel.Normal,
+                "The machine remains in normal production mode. There is no need to worry about anything.",
+                warning, "N/A"));
+            NozzleLegend.Add(new HealthLegendRow(HealthLevel.Warning,
+                "The machine prompts once every 4 hours (pop-up a window + siren); the machine continues to run without stopping.",
+                critical, warning));
+            NozzleLegend.Add(new HealthLegendRow(HealthLevel.Critical,
+                "The machine prompts once every 2 hours (pop-up a window + siren); the machine continues to run without stopping.",
+                "0", critical));
+
+            string low = _glueControl.LowGluePercent.ToString("0.##") + "%";
+            string empty = _glueControl.EmptyGluePercent.ToString("0.##") + "%";
+
+            GlueLegend.Clear();
+            GlueLegend.Add(new HealthLegendRow(HealthLevel.Normal,
+                "The remaining glue weight is above the safety line.",
+                low, "100%"));
+            GlueLegend.Add(new HealthLegendRow(HealthLevel.Warning,
+                "Threshold for activating the notification of stock preparation and preheating to the KT warehouse (weight of glue remaining).",
+                empty, low));
+            GlueLegend.Add(new HealthLegendRow(HealthLevel.Critical,
+                "Always keep an eye on the remaining amount of glue on the machine, and change the glue in time when the machine sounds the alarm.",
+                "0", empty));
+        }
 
 
         // ==================================================================
@@ -297,13 +320,11 @@ namespace Nova.ViewModels.Pages.Audio
             if (!IsEditingGlueControl)
                 LoadGlueControlFields();
 
+            BuildLegends();
             UpdateHealthStatus();
 
             OnPropertyChanged(nameof(HasCartridges));
             OnPropertyChanged(nameof(HasNozzles));
-            OnPropertyChanged(nameof(GlueThresholdText));
-            OnPropertyChanged(nameof(PotLifeThresholdText));
-            OnPropertyChanged(nameof(NozzleThresholdText));
         }
 
 
@@ -311,13 +332,22 @@ namespace Nova.ViewModels.Pages.Audio
         // Export
         // ==================================================================
 
+        /// <summary>
+        /// One CSV for the whole tab: a Section column says which of the three tables a
+        /// row came from, and the columns are the tables' own, in the spec's order.
+        /// </summary>
         private static IReadOnlyList<string> HealthExportHeaders()
         {
             return new[]
             {
-                "Section", "Gantry", "Glue SN", "Valve SN", "Nozzle ID", "Cartridge (g)", "Glue/product (g)",
-                "Produced", "Long purge (g)", "Short purge (g)", "Weighing (g)", "Remaining (g)", "Remaining %",
-                "Est. output", "Pot life (h)", "Pot life threshold (h)", "Nozzle value (h)", "LSL", "USL", "Status"
+                "Section", "Gantry", "Valve SN", "Nozzle ID", "Value", "LSL", "USL",
+                "Glue SN", "Max Weight Per Glue Cartridge", "Theoretical Output Per Cartridge", "Glue Weight Per Product",
+                "Qty Produced", "Production Glue Consumption",
+                "Long Purge Cycles", "Long Purge Glue Usage Per Purge", "Long Purge Glue Consumption",
+                "Short Purge Cycles", "Short Purge Glue Usage Per Purge", "Short Purge Glue Consumption",
+                "Weighing Cycles", "Weighing Glue Consumption",
+                "Remaining Glue Weight", "Remaining %", "Estimated Remaining Output",
+                "Remaining Pot Life (Hours)", "Pot Life Threshold", "Status"
             };
         }
 
@@ -325,13 +355,27 @@ namespace Nova.ViewModels.Pages.Audio
         {
             var rows = new List<IReadOnlyList<string>>();
 
+            foreach (NozzleHealthRow r in Nozzles)
+            {
+                rows.Add(new[]
+                {
+                    "Nozzle Health", r.Gantry, r.ValveSn, r.NozzleId, r.ValueText, r.LowerLimitText, r.UpperLimitText,
+                    "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", r.StatusText
+                });
+            }
+
             foreach (GlueCartridgeRow r in GlueCartridges)
             {
                 rows.Add(new[]
                 {
-                    "Remaining glue", r.Gantry, r.GlueSn, "", "", r.CartridgeText, r.GluePerProductText,
-                    r.ProducedText, r.LongPurgeText, r.ShortPurgeText, r.WeighingText, r.RemainingText,
-                    r.RemainingPercentText, r.EstimatedOutputText, "", "", "", "", "", r.StatusText
+                    "Glue Control", r.Gantry, "", "", "", "", "",
+                    r.GlueSn, r.CartridgeText, r.TheoreticalOutputText, r.GluePerProductText,
+                    r.ProducedText, r.ProductGlueText,
+                    r.LongPurgeCyclesText, r.LongPurgeDoseText, r.LongPurgeTotalText,
+                    r.ShortPurgeCyclesText, r.ShortPurgeDoseText, r.ShortPurgeTotalText,
+                    r.WeighingCyclesText, r.WeighingTotalText,
+                    r.RemainingText, r.RemainingPercentText, r.EstimatedOutputText,
+                    "", "", r.StatusText
                 });
             }
 
@@ -339,17 +383,9 @@ namespace Nova.ViewModels.Pages.Audio
             {
                 rows.Add(new[]
                 {
-                    "Pot life", r.Gantry, r.GlueSn, "", "", "", "", "", "", "", "", "", "", "",
-                    r.RemainingText, r.ThresholdText, "", "", "", r.StatusText
-                });
-            }
-
-            foreach (NozzleHealthRow r in Nozzles)
-            {
-                rows.Add(new[]
-                {
-                    "Nozzle health", r.Gantry, "", r.ValveSn, r.NozzleId, "", "", "", "", "", "", "", "", "",
-                    "", "", r.ValueText, r.LowerLimitText, r.UpperLimitText, r.StatusText
+                    "Pot Life", r.Gantry, "", "", "", "", "",
+                    r.GlueSn, "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
+                    r.RemainingText, r.ThresholdText, r.StatusText
                 });
             }
 

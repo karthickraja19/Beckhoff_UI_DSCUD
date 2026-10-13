@@ -13,7 +13,7 @@
              it wears the button outline in every state; selection is shown by the
              lighter fill and the dot, not by swapping the border colour. -->
         <Style x:Key="ModeChip" TargetType="Button">
-            <Setter Property="Height" Value="42"/>
+            <Setter Property="Height" Value="{DynamicResource Nova.Button.Height}"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Margin" Value="0,0,0,8"/>
             <Setter Property="Template">
@@ -69,7 +69,7 @@
              by a lighter fill instead of the black border it used to grow. -->
         <DataTemplate x:Key="BypassRowTemplate">
 
-            <Border x:Name="row" CornerRadius="{DynamicResource Nova.Button.CornerRadius}" Padding="14,0" Height="42" Margin="0,0,0,8"
+            <Border x:Name="row" CornerRadius="{DynamicResource Nova.Button.CornerRadius}" Padding="14,0" Height="{DynamicResource Nova.Button.Height}" Margin="0,0,0,8"
                     BorderThickness="{DynamicResource Nova.Button.BorderThickness}"
                     BorderBrush="{DynamicResource Nova.Button.BorderBrush}"
                     Background="{DynamicResource Nova.Button.SurfaceBrush}"

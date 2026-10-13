@@ -1,26 +1,50 @@
-﻿[
-  {
-    "EnumName": "CCD1",
-    "Name": "CCD1",
-    "IPAddress": "127.0.0.1",
-    "Port": "8500"
-  },
-  {
-    "EnumName": "CCD2",
-    "Name": "CCD2",
-    "IPAddress": "127.0.0.1",
-    "Port": "8501"
-  },
-  {
-    "EnumName": "CCD3",
-    "Name": "CCD3",
-    "IPAddress": "127.0.0.1",
-    "Port": "8502"
-  },
-  {
-    "EnumName": "CCD4",
-    "Name": "CCD4",
-    "IPAddress": "127.0.0.1",
-    "Port": "8503"
-  }
+[
+    {
+        "EnumName":  "CCD1",
+        "Name":  "CCD1",
+        "Id":  1,
+        "ConnectTimeout":  6000,
+        "ResponseTimeout":  6000,
+        "PollIntervalMs":  10,
+        "StationName":  "",
+        "TriggerCommand":  "",
+        "IPAddress":  "127.0.0.1",
+        "Port":  8500
+    },
+    {
+        "EnumName":  "CCD2",
+        "Name":  "CCD2",
+        "Id":  2,
+        "ConnectTimeout":  6000,
+        "ResponseTimeout":  6000,
+        "PollIntervalMs":  10,
+        "StationName":  "",
+        "TriggerCommand":  "",
+        "IPAddress":  "127.0.0.1",
+        "Port":  8501
+    },
+    {
+        "EnumName":  "CCD3",
+        "Name":  "CCD3",
+        "Id":  3,
+        "ConnectTimeout":  6000,
+        "ResponseTimeout":  6000,
+        "PollIntervalMs":  10,
+        "StationName":  "",
+        "TriggerCommand":  "",
+        "IPAddress":  "127.0.0.1",
+        "Port":  8502
+    },
+    {
+        "EnumName":  "CCD4",
+        "Name":  "CCD4",
+        "Id":  4,
+        "ConnectTimeout":  6000,
+        "ResponseTimeout":  6000,
+        "PollIntervalMs":  10,
+        "StationName":  "",
+        "TriggerCommand":  "",
+        "IPAddress":  "127.0.0.1",
+        "Port":  8503
+    }
 ]

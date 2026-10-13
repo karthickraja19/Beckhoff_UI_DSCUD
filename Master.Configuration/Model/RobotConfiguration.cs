@@ -1,16 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace Master.Configuration.Model
 {
-    public class RobotConfigurations
+    /// <summary>
+    /// One entry of Robots.json: the library's RobotProperties, property for property. Id is the
+    /// robot's number in the PLC - Robot{Id}_hw_IO_GVL for its EtherCAT I/O and
+    /// RobotGVL.Robots[Id] for FB_RobotSD - starting at 1.
+    /// </summary>
+    public class RobotConfiguration
     {
         public string EnumName { get; set; }
         public string Name { get; set; }
-        public string IPAddress { get; set; }
-        public RobotPorts Ports { get; set; }
+        public int Id { get; set; }
+        public string StationName { get; set; }
     }
 }

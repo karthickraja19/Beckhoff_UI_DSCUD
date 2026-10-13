@@ -1,24 +1,34 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Nova.Abstractions.Hardware;
 using TealVacuum = Teal.Library.Vacuum.Vacuum;
+using Nova.Alarm;
+using Nova.Wpf.App.Services.Twincat.HmiDisplay;
 
 namespace Nova.Wpf.App.Services.Twincat
 {
     /// <summary>
     /// Nova <see cref="IVacuum"/> over one Beckhoff library vacuum. Vacuum/Blow/Off ask the
-    /// PLC through the library, which owns the valve outputs; status is the sensor and the
-    /// two outputs as the PLC holds them, so the Manual board shows what the PLC reports.
+    /// PLC through the library, which owns the valve outputs. While a screen follows the vacuum
+    /// (<see cref="FollowStatus"/>), the library reads its current status first
+    /// (UpdateVacuumProperties), then the PLC pushes every change of its HMI display struct -
+    /// where the library says it is, read as the struct App.config's VacuumHmiDisplayType
+    /// names - through <see cref="PlcSubscriptions"/>. Reading it never waits on the PLC.
     /// </summary>
-    public sealed class TwincatVacuumAdapter : IVacuum
+    public sealed class TwincatVacuumAdapter : IVacuum, ILiveStatus, ITwincatStatusSource, ILibraryStatusSource
     {
         private readonly TealVacuum _vacuum;
         private readonly TwincatPlcConnection _plc;
+        private readonly HmiDisplayStatus _display;
 
-        public TwincatVacuumAdapter(string componentId, TealVacuum vacuum, TwincatPlcConnection plc, string feedbackAddress)
+        /// <param name="displayType">The struct App.config's VacuumHmiDisplayType names; null when it names none that fits.</param>
+        public TwincatVacuumAdapter(
+            string componentId, TealVacuum vacuum, TwincatPlcConnection plc, PlcSubscriptions subscriptions, Type displayType, string feedbackAddress)
         {
             _vacuum = vacuum ?? throw new ArgumentNullException(nameof(vacuum));
             _plc = plc ?? throw new ArgumentNullException(nameof(plc));
+            _display = new HmiDisplayStatus(subscriptions, plc, vacuum, displayType, vacuum.UpdateVacuumProperties);
 
             ComponentId = componentId;
             VacuumName = _vacuum.Name ?? componentId;
@@ -28,6 +38,15 @@ namespace Nova.Wpf.App.Services.Twincat
         public string ComponentId { get; }
         public string VacuumName { get; }
         public string FeedbackAddress { get; }
+        public IReadOnlyList<string> WatchedSymbols => _display.WatchedSymbols;
+
+        public event EventHandler LibraryStatusRead
+        {
+            add { _display.LibraryRead += value; }
+            remove { _display.LibraryRead -= value; }
+        }
+
+        public IDisposable FollowStatus() => _display.Follow();
 
         /// <summary>
         /// The library's commands are void and log their own failures, so a request that
@@ -39,27 +58,21 @@ namespace Nova.Wpf.App.Services.Twincat
 
         public Task<bool> OffAsync() => RunLocked(_vacuum.Off);
 
-        /// <summary>Called off the IO poll thread. Never throws: a failed read reports everything off.</summary>
+        /// <summary>
+        /// The HMI display the PLC last pushed - or, until it pushes one, the vacuum feedback
+        /// the library read when the vacuum was followed. Never touches the PLC; with neither
+        /// everything reads off.
+        /// </summary>
         public VacuumStatusSnapshot ReadStatus()
         {
             var snapshot = new VacuumStatusSnapshot { ComponentId = ComponentId };
 
-            try
-            {
-                lock (_plc.SyncRoot)
-                {
-                    if (!_plc.IsConnected)
-                        return snapshot;
-
-                    snapshot.FeedbackOn = _vacuum.IsVacuumOn;
-                    snapshot.VacuumCommanded = _vacuum.IsVacuumCommanded;
-                    snapshot.BlowCommanded = _vacuum.IsBlowCommanded;
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine(ComponentId + " read failed: " + ex.Message);
-            }
+            IVacuumHmiDisplay display;
+            string reason;
+            if (_display.TryRead(out display, out reason))
+                display.Fill(snapshot);
+            else if (_display.HasLibraryStatus)
+                snapshot.FeedbackOn = _vacuum.IsVacuumOn;
 
             return snapshot;
         }

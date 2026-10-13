@@ -90,12 +90,7 @@ namespace Nova.ViewModels.Pages.Manual
                 SelectedColour = Colours[0];
 
             if (_controllers.Count == 0)
-            {
-                // Dev fallback (no controller): demo console.
-                IsConnected = true;
-                Console.Add(new CameraConsoleLine("OPT_CONNECT..."));
-                Console.Add(new CameraConsoleLine("ACK CONTROLLER_READY", isAck: true));
-            }
+                Console.Add(new CameraConsoleLine("No light controller is available: there is no light controller driver in this build yet."));
         }
 
         /// <summary>Loads the selected colour's channel values into the editable field.</summary>
@@ -106,17 +101,23 @@ namespace Nova.ViewModels.Pages.Manual
                 SendCommand = values;
         }
 
+        protected override bool ReadDeviceConnected()
+        {
+            var controller = Controller;
+            return controller != null && controller.IsConnected;
+        }
+
         protected override async Task<bool> DoConnectAsync()
         {
             var controller = Controller;
-            return controller == null ? true : await controller.ConnectAsync();
+            return controller != null && await controller.ConnectAsync();
         }
 
         protected override async Task<string> DoTriggerAsync()
         {
             var controller = Controller;
             if (controller == null)
-                return null; // fall back to fake
+                return "";
             bool ok = await controller.ApplyAsync(SendCommand);
             return ok ? "OPT_UPDATED [" + SendCommand + "]" : "";
         }
@@ -126,13 +127,5 @@ namespace Nova.ViewModels.Pages.Manual
             Controller?.Disconnect();
             return Task.CompletedTask;
         }
-
-        protected override void OnTrigger()
-        {
-            Console.Add(new CameraConsoleLine("WRITE_OPT [" + SendCommand + "]"));
-            Console.Add(new CameraConsoleLine("ACK OPT_UPDATED", isAck: true));
-        }
-
-        
     }
 }

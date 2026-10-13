@@ -8,7 +8,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Nova.Abstractions.Data.Models;
 using Nova.Abstractions.Hardware;
-using Nova.Abstractions.Hardware.Enums;
+using Nova.Abstractions.Machine.Interfaces;
 using Nova.Abstractions.Services;
 
 namespace Nova.ViewModels.Pages.Recipe
@@ -16,17 +16,25 @@ namespace Nova.ViewModels.Pages.Recipe
     /// <summary>
     /// "Gantry" tab of the Recipe screen (V3 RecipieForm gantry side).
     /// A gantry module is selected (GantryStructure.xml), its taught positions load
-    /// into the table (*Receipe_Param.csv) and can be edited/saved. Below the table:
+    /// into the table (*Receipe_Param.csv) and can be edited/saved; Save also writes it into
+    /// the module's gantry recipe in the PLC (IPlcRecipeService). Below the table:
     /// single-axis servo motion, a module jog pad with live positions, and loadcells.
     /// Rows are seeded from the reference data; in production they load from configuration.
     /// </summary>
-    public partial class GantryRecipeViewModel : ObservableObject, Nova.ViewModels.Common.IEditableTab
+    public partial class GantryRecipeViewModel : ObservableObject, Nova.ViewModels.Common.IEditableTab, Nova.ViewModels.Common.IActivatableTab
     {
+        private bool _isActive;
+
+        /// <summary>The live status of the axes the page shows and drives, followed while it is on screen.</summary>
+        private List<IDisposable> _following = new List<IDisposable>();
+
         private readonly IRecipeService _recipeService;
         private readonly IDialogService _dialogService;
         private readonly IAxisService _axisService;
         private readonly IAxisMonitorService _axisMonitor;
         private readonly ILoadCellMonitorService _loadCellMonitor;
+        private readonly IPlcRecipeService _plcRecipeService;
+        private readonly IMachineOrchestrator _orchestrator;
         private readonly Dictionary<string, IAxis> _axesById;
         private readonly Dictionary<string, LoadCellItem> _loadCellsByAlias;
         private readonly Dictionary<string, GantryModuleDefinition> _moduleDefinitions;
@@ -125,9 +133,13 @@ namespace Nova.ViewModels.Pages.Recipe
             IDialogService dialogService,
             IAxisService axisService,
             IAxisMonitorService axisMonitor,
-            ILoadCellMonitorService loadCellMonitor)
+            ILoadCellMonitorService loadCellMonitor,
+            IPlcRecipeService plcRecipeService,
+            IMachineOrchestrator orchestrator)
         {
             _recipeService = recipeService ?? throw new System.ArgumentNullException(nameof(recipeService));
+            _plcRecipeService = plcRecipeService ?? throw new ArgumentNullException(nameof(plcRecipeService));
+            _orchestrator = orchestrator ?? throw new ArgumentNullException(nameof(orchestrator));
             _dialogService = dialogService ?? throw new System.ArgumentNullException(nameof(dialogService));
             _axisService = axisService ?? throw new ArgumentNullException(nameof(axisService));
             _axisMonitor = axisMonitor ?? throw new ArgumentNullException(nameof(axisMonitor));
@@ -148,13 +160,6 @@ namespace Nova.ViewModels.Pages.Recipe
             Rows = new ObservableCollection<DynamicGridRow>();
 
             Axes = new ObservableCollection<string>(_axesById.Keys);
-            if (Axes.Count == 0)
-            {
-                foreach (var name in Enum.GetNames(typeof(Servos)))
-                {
-                    Axes.Add(name);
-                }
-            }
             SelectedAxis = Axes.Count > 0 ? Axes[0] : string.Empty;
 
             MotionModes = new ObservableCollection<string> { "Absolute", "Relative" };
@@ -194,6 +199,61 @@ namespace Nova.ViewModels.Pages.Recipe
         {
             LoadModule(value);
             RemapModuleAxes(value);
+        }
+
+        partial void OnSelectedAxisChanged(string value)
+        {
+            FollowAxes();
+        }
+
+        /// <summary>
+        /// The tab came on screen: manual mode on - the PLC takes the move, jog and enable
+        /// commands from the HMI only in MANUAL - and the axes' live status followed.
+        /// </summary>
+        public void Activate()
+        {
+            if (_isActive)
+                return;
+
+            _isActive = true;
+            _orchestrator.SetManualMode(true);
+            FollowAxes();
+        }
+
+        /// <summary>The tab left the screen: manual mode let go, as the Manual tab does.</summary>
+        public void Deactivate()
+        {
+            if (!_isActive)
+                return;
+
+            _isActive = false;
+            _orchestrator.SetManualMode(false);
+            foreach (IDisposable following in _following)
+                following.Dispose();
+            _following = new List<IDisposable>();
+        }
+
+        /// <summary>
+        /// Follows the live status of the selected module's X, Y, Z and R axes - the
+        /// positions on screen - and of the axis the move buttons drive, whose status is
+        /// checked before a move. The new set is followed before the old one is let go, so
+        /// an axis in both stays subscribed. Their values arrive through the monitor.
+        /// </summary>
+        private void FollowAxes()
+        {
+            if (!_isActive)
+                return;
+
+            List<IDisposable> previous = _following;
+            _following = new[] { _mappedXAxisId, _mappedYAxisId, _mappedZAxisId, _mappedRAxisId, SelectedAxis }
+                .Where(axisId => !string.IsNullOrWhiteSpace(axisId))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Select(axisId => (GetAxis(axisId) as ILiveStatus)?.FollowStatus())
+                .Where(following => following != null)
+                .ToList();
+
+            foreach (IDisposable following in previous)
+                following.Dispose();
         }
 
         private void LoadModule(string module)
@@ -244,7 +304,7 @@ namespace Nova.ViewModels.Pages.Recipe
         private void Edit() => IsEditing = true;
 
         [RelayCommand]
-        private void Save()
+        private async Task Save()
         {
             if (Rows.Any(r => r.HasErrors))
             {
@@ -264,15 +324,30 @@ namespace Nova.ViewModels.Pages.Recipe
                 Rows = Rows.Select(r => r.ToDictionary()).ToList(),
             };
 
-            var result = _recipeService.SaveGantryRecipeDynamic(SelectedGantryModule, doc);
-            _dialogService.ShowInfo(result.Message, "Recipe");
+            string module = SelectedGantryModule;
+            var result = _recipeService.SaveGantryRecipeDynamic(module, doc);
 
             // "No data modified !" ends the edit too — the operator pressed Save and
             // there was nothing to write. Leaving IsEditing set is what kept the grid
             // unlocked, and kept it unlocked across a trip to another tab.
-            if (result.IsSaved || result.IsNoChanges)
+            if (!result.IsSaved && !result.IsNoChanges)
             {
-                IsEditing = false;
+                _dialogService.ShowInfo(result.Message, "Recipe");
+                return;
+            }
+
+            IsEditing = false;
+
+            // The PLC drives the taught moves from its own copy, so the saved recipe is
+            // written to it - also when nothing changed, which resends a recipe the PLC lost.
+            try
+            {
+                await _plcRecipeService.WriteGantryRecipeAsync(module);
+                _dialogService.ShowInfo(result.Message + "\nWritten to the PLC.", "Recipe");
+            }
+            catch (Exception ex)
+            {
+                _dialogService.ShowError(result.Message + "\nNot written to the PLC: " + ex.Message, "Recipe");
             }
         }
 
@@ -591,6 +666,14 @@ namespace Nova.ViewModels.Pages.Recipe
             }
 
             UpdateJogAvailability();
+            FollowAxes();
+
+            // The monitor reports an axis when its status changes, which for an axis that is
+            // standing still may be never, so start the newly mapped axes from what they have now.
+            foreach (string axisId in new[] { _mappedXAxisId, _mappedYAxisId, _mappedZAxisId, _mappedRAxisId })
+            {
+                OnAxisStatusUpdated(this, GetAxis(axisId)?.ReadStatus());
+            }
         }
 
         private void UpdateJogAvailability()

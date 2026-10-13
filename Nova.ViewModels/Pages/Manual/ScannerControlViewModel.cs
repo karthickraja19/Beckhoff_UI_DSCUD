@@ -13,26 +13,10 @@ namespace Nova.ViewModels.Pages.Manual
         public override string TriggerLabel => "TRIGGER READ";
         public override string TriggerIcon => "ScanLine";
 
-        public ScannerControlViewModel(ICommDeviceService comm)
+        public ScannerControlViewModel(ICommDeviceService comm, IConnectionStatusService connectionStatus = null)
+            : base(connectionStatus)
         {
             LoadDevices(comm?.GetDevices(CommDeviceKind.Scanner));
-
-            if (!HasTransports)
-            {
-                // Dev fallback (no config): keep the seeded demo console.
-                Devices.Add(new ConsoleDeviceItem("Barcode_Scanner", "Cognex DM370", "SCAN_REQ, 1, MODE=AUTO, END"));
-                Devices.Add(new ConsoleDeviceItem("QR_Scanner", "Keyence SR-1000", "SCAN_REQ, 1, MODE=AUTO, END"));
-                SelectedDevice = Devices[0];
-                IsConnected = true;
-                Console.Add(new CameraConsoleLine("SCANNER_INIT..."));
-                Console.Add(new CameraConsoleLine("ACK READY", isAck: true));
-            }
-        }
-
-        protected override void OnTrigger()
-        {
-            Console.Add(new CameraConsoleLine("SCAN_TRIGGER"));
-            Console.Add(new CameraConsoleLine("ACK CODE 8901234567890", isAck: true));
         }
     }
 }

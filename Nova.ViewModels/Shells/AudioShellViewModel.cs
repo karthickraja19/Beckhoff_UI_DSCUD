@@ -49,8 +49,6 @@ namespace Nova.ViewModels.Shells
         /// <summary>HIVE state and its pop-ups (slides 47 and 49). Null with no PLC.</summary>
         private readonly IHiveStatePrompt _hivePrompt;
 
-        public AppTitleBarViewModel TitleBar { get; }
-
         /// <summary>The six menu buttons, in the order slide 42 draws them.</summary>
         public ObservableCollection<AudioNavItem> NavItems { get; } =
             new ObservableCollection<AudioNavItem>();
@@ -141,7 +139,7 @@ namespace Nova.ViewModels.Shells
         public string AccessLevelTooltip =>
             AccessLevel == AccessLevel.None
                 ? "Not signed in - click to sign in"
-                : "Signed in as " + _session.UserName + " (" + AccessLevel + ") - click to switch user";
+                : "Signed in as " + _session.UserName + " (" + AccessLevel + ") - click to switch user, right-click to log out";
 
         partial void OnAccessLevelChanged(AccessLevel value)
         {
@@ -243,23 +241,19 @@ namespace Nova.ViewModels.Shells
 
         // Slide 39 puts all three machine buttons at "No login: Enabled / L1, 2, 3:
         // Enabled", so access level does not gate them - only the machine's own state
-        // does.
+        // does: each is enabled where the PLC acts on it. START in IDLE and PAUSE, PAUSE
+        // while auto running, STOP while running or homing. In MANUAL, ALARM and STOP the
+        // PLC ignores all three, and while it is not live (Waiting) nothing can be sent.
         private bool CanStart() =>
             MachineStatus == MachineStatus.Pause ||
-            MachineStatus == MachineStatus.Stop ||
             MachineStatus == MachineStatus.Idle;
 
         private bool CanPause() =>
-            MachineStatus != MachineStatus.Pause &&
-            MachineStatus != MachineStatus.Stop &&
-            MachineStatus != MachineStatus.Idle &&
-            MachineStatus != MachineStatus.Homing &&
-            MachineStatus != MachineStatus.Alarm;
+            MachineStatus == MachineStatus.Running;
 
         private bool CanStop() =>
-            MachineStatus != MachineStatus.Stop &&
-            MachineStatus != MachineStatus.Idle &&
-            MachineStatus != MachineStatus.Alarm;
+            MachineStatus == MachineStatus.Running ||
+            MachineStatus == MachineStatus.Homing;
 
         // Not named OnMachineStatusChanged: [ObservableProperty] already generates a
         // partial hook by that name.
@@ -297,6 +291,7 @@ namespace Nova.ViewModels.Shells
                     return HiveState.Downtime;
                 case MachineStatus.Idle:
                 case MachineStatus.Waiting:
+                case MachineStatus.Manual:
                 case MachineStatus.Pause:
                 case MachineStatus.Stop:
                     return HiveState.Idle;
@@ -344,6 +339,22 @@ namespace Nova.ViewModels.Shells
         }
 
         /// <summary>
+        /// Right-click on the level chip. Slide 85: "Right click to log out", then "Popup
+        /// to confirm" - "Confirm to log out?" with Cancel and Yes.
+        /// </summary>
+        [RelayCommand]
+        private void LogOut()
+        {
+            if (!_session.IsLoggedIn)
+                return;
+
+            if (_dialog != null && !_dialog.Confirm("Confirm to log out?", "Dialog"))
+                return;
+
+            _session.Logout();
+        }
+
+        /// <summary>
         /// HIVE chip. Slide 49: "HIVE status bar shows current status. Click to change
         /// state", for Level 2/3 only. The pop-ups live in Nova.Hive and are reached
         /// through <see cref="IHiveStatePrompt"/>; with no PLC there is no HIVE to
@@ -382,7 +393,6 @@ namespace Nova.ViewModels.Shells
             INavigationService navigation,
             IAppSession session,
             IMachineOrchestrator orchestrator,
-            AppTitleBarViewModel titleBar,
             IStationProfileService profile = null,
             IDialogService dialog = null,
             IActiveAlarmService activeAlarms = null,
@@ -395,7 +405,6 @@ namespace Nova.ViewModels.Shells
             _dialog = dialog;
             _activeAlarms = activeAlarms;
             _hivePrompt = hivePrompt;
-            TitleBar = titleBar;
 
             // Slide 42, left to right. RequiresLogin is set for exactly the two the DFM
             // disables before login - unless the commissioning bypass has opened them.

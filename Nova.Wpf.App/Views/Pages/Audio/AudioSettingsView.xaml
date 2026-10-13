@@ -25,6 +25,24 @@
     </UserControl.Resources>
 
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>   <!-- tabs -->
+            <RowDefinition Height="*"/>      <!-- the chosen tab -->
+        </Grid.RowDefinitions>
+
+        <!-- Tabs: General, Manual, Calibration, Access Control, Valve Model, HIVE Control, Picture Qty. Check,
+             PDATA Mapping, Hash Key. Which are offered follows the level (and PD-15 for Hash Key). -->
+        <Border Grid.Row="0" Style="{StaticResource Audio.Card}" Padding="16,4">
+            <ListBox Style="{StaticResource Audio.SegmentedControl}"
+                     ItemsSource="{Binding Tabs}"
+                     SelectedItem="{Binding SelectedTab, Mode=TwoWay}"
+                     AutomationProperties.Name="Setting tab"/>
+        </Border>
+
+        <!-- ============================================================== -->
+        <!-- GENERAL (slides 62 to 64)                                        -->
+        <!-- ============================================================== -->
+        <Grid Grid.Row="1" Visibility="{Binding IsGeneralTab, Converter={StaticResource BoolToVisibility}}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>   <!-- General + Hardware Setting -->
             <ColumnDefinition Width="*"/>      <!-- resolved config -->
@@ -69,7 +87,7 @@
                                 <DataTemplate>
                                     <!-- The enum's own names are M / E / Normal / Common;
                                          the menu has to read as the slide letters it. -->
-                                    <TextBlock Text="{Binding Converter={StaticResource SkuToLabel}}"/>
+                                    <TextBlock Text="{Binding Converter={StaticResource SkuToLabel}, ConverterParameter=menu}"/>
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                         </ComboBox>
@@ -208,7 +226,7 @@
                                                  IsChecked="{Binding RemoteQualificationOff, Mode=TwoWay}"/>
                                 </StackPanel>
                                 <TextBlock Style="{StaticResource Audio.Footnote}" TextWrapping="Wrap" Margin="0,8,0,0"
-                                           Text="ON turns the Home page station card orange. The extra HIVE log for remote qualification (S2.4) is not written by this build yet."/>
+                                           Text="ON turns the Home page station card orange and writes every machine_state payload to the remote qualification log (HIVE log \ RemoteQualification, one JSON per line, S2.4)."/>
                             </StackPanel>
                         </Border>
                     </StackPanel>
@@ -289,5 +307,932 @@
                 </Grid>
             </Border>
         </Grid>
+        </Grid>
+
+        <!-- ============================================================== -->
+        <!-- MANUAL. The manual-operation GUI with the Homing button and the  -->
+        <!-- running log alongside it. 3/4 + 1/4: the manual screens carry    -->
+        <!-- device tables that need the width, the log is a narrow column of -->
+        <!-- lines. The machine is in manual mode while this tab is on screen. -->
+        <!-- ============================================================== -->
+        <Grid Grid.Row="1" DataContext="{Binding Manual}"
+              Visibility="{Binding DataContext.IsManualTab, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibility}}">
+
+            <!-- Nothing to host: say so rather than show a blank. -->
+            <Border Style="{StaticResource Audio.Card}"
+                    Visibility="{Binding HasGui, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}">
+                <TextBlock Style="{StaticResource Audio.EmptyState}" VerticalAlignment="Center" HorizontalAlignment="Center"
+                           Text="This build has no manual-operation screens."/>
+            </Border>
+
+            <Grid Visibility="{Binding HasGui, Converter={StaticResource BoolToVisibility}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3*"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Recessed, not a white card. The manual screens draw their own
+                     white panels; hosting them on white too made every panel edge
+                     disappear and the whole tab read as one blank sheet. -->
+                <Border Grid.Column="0"
+                        Background="{DynamicResource Audio.Surface.GroupedBrush}"
+                        CornerRadius="{DynamicResource Audio.Radius.Card}"
+                        Padding="4">
+                    <ContentControl Content="{Binding Gui}" Focusable="False"/>
+                </Border>
+
+                <Border Grid.Column="1" Style="{StaticResource Audio.Card}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Homing: sets the PLC's home command bit; the PLC homes every
+                             component and raises "homing done", which pops up a message. -->
+                        <Button Grid.Row="0"
+                                Style="{StaticResource Audio.Button}"
+                                Margin="16,12,16,0"
+                                HorizontalAlignment="Stretch"
+                                Content="{Binding HomingCaption}"
+                                Command="{Binding HomeMachineCommand}"
+                                IsEnabled="{Binding CanHome}"
+                                ToolTip="{Binding HomingTooltip}"
+                                Visibility="{Binding HasHoming, Converter={StaticResource BoolToVisibility}}"/>
+
+                        <TextBlock Grid.Row="1" Style="{StaticResource Audio.Title3}"
+                                   Text="Running Log" Margin="16,12,16,8"/>
+
+                        <TextBlock Grid.Row="2" Style="{StaticResource Audio.EmptyState}"
+                                   Margin="16,0" VerticalAlignment="Top"
+                                   Text="Nothing logged yet."
+                                   Visibility="{Binding RunningLog.IsEmpty, Converter={StaticResource BoolToVisibility}}"/>
+
+                        <!-- Auto-height rows, not Audio.ListRow: a log line wraps to two
+                             or three lines and that style pins a single row height, which
+                             clips the overflow. -->
+                        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled"
+                                      Margin="0,0,0,8">
+                            <ItemsControl ItemsSource="{Binding RunningLog.Logs}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="{DynamicResource Audio.Separator.SubtleBrush}"
+                                                BorderThickness="0,0,0,1"
+                                                Padding="16,7"
+                                                SnapsToDevicePixels="True">
+                                            <TextBlock Style="{StaticResource Audio.Caption1}"
+                                                       FontFamily="{DynamicResource Audio.FontFamily.Mono}"
+                                                       Text="{Binding}"
+                                                       TextWrapping="Wrap"
+                                                       LineHeight="16"
+                                                       LineStackingStrategy="BlockLineHeight"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- ============================================================== -->
+        <!-- CALIBRATION. Station and routine on the left with Start / Pause / -->
+        <!-- Stop (Start only once the PLC reports homing done), the routine's -->
+        <!-- parameters in the middle, the PLC's status and results on the    -->
+        <!-- right. The PLC runs the sequence; the machine is in manual mode  -->
+        <!-- while this tab is on screen.                                     -->
+        <!-- ============================================================== -->
+        <Grid Grid.Row="1" DataContext="{Binding Calibration}"
+              Visibility="{Binding DataContext.IsCalibrationTab, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibility}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="340"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Station, routine, homing and the run buttons -->
+            <Border Grid.Column="0" Style="{StaticResource Audio.Card}">
+                <Grid Margin="16,12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>   <!-- title -->
+                        <RowDefinition Height="Auto"/>   <!-- station -->
+                        <RowDefinition Height="Auto"/>   <!-- routine label -->
+                        <RowDefinition Height="*"/>      <!-- routines -->
+                        <RowDefinition Height="Auto"/>   <!-- homing -->
+                        <RowDefinition Height="Auto"/>   <!-- Start / Pause / Stop -->
+                        <RowDefinition Height="Auto"/>   <!-- why Start is disabled -->
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Style="{StaticResource Audio.Title3}" Text="Calibration" Margin="0,0,0,12"/>
+
+                    <StackPanel Grid.Row="1" Margin="0,0,0,12">
+                        <TextBlock Style="{StaticResource Audio.Headline}" Text="Station" Margin="0,0,0,6"/>
+                        <ListBox Style="{StaticResource Audio.SegmentedControl}"
+                                 ItemsSource="{Binding Stations}"
+                                 SelectedItem="{Binding SelectedStation, Mode=TwoWay}"
+                                 IsEnabled="{Binding CanChangeSelection}"
+                                 AutomationProperties.Name="Calibration station"/>
+                    </StackPanel>
+
+                    <TextBlock Grid.Row="2" Style="{StaticResource Audio.Headline}" Text="Routine" Margin="0,0,0,6"/>
+                    <Border Grid.Row="3"
+                            BorderBrush="{DynamicResource Audio.System.GrayBrush}" BorderThickness="1"
+                            CornerRadius="{DynamicResource Audio.Radius.Field}">
+                        <ListBox ItemsSource="{Binding Routines}"
+                                 SelectedItem="{Binding SelectedRoutine, Mode=TwoWay}"
+                                 IsEnabled="{Binding CanChangeSelection}"
+                                 Background="Transparent" BorderThickness="0"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 AutomationProperties.Name="Calibration routine">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Style="{StaticResource Audio.Callout}" Text="{Binding Name}"
+                                               TextWrapping="Wrap" Margin="6,8"/>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Border>
+
+                    <Border Grid.Row="4" Margin="0,12,0,0"
+                            Background="{DynamicResource Audio.Surface.RecessedBrush}"
+                            CornerRadius="{DynamicResource Audio.Radius.Field}" Padding="12,8">
+                        <StackPanel>
+                            <TextBlock TextWrapping="Wrap" Text="{Binding HomingText}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource Audio.Callout}">
+                                        <Setter Property="Foreground" Value="{DynamicResource Audio.System.OrangeBrush}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsHomed}" Value="True">
+                                                <Setter Property="Foreground" Value="{DynamicResource Audio.System.GreenBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                            <Button Style="{StaticResource Audio.Button}" Content="Homing" Margin="0,8,0,0"
+                                    HorizontalAlignment="Stretch"
+                                    Command="{Binding HomeCommand}"
+                                    ToolTip="Home every component (the PLC runs the homing sequence)"
+                                    Visibility="{Binding HasHoming, Converter={StaticResource BoolToVisibility}}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Grid Grid.Row="5" Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Style="{StaticResource Audio.FilledButton}" Height="56"
+                                Content="{Binding StartCaption}" Command="{Binding StartCommand}"
+                                ToolTip="Writes the station, routine and parameters to the PLC and starts the calibration; resumes when paused"/>
+                        <Button Grid.Column="2" Style="{StaticResource Audio.Button}" Height="56"
+                                Content="Pause" Command="{Binding PauseCommand}"/>
+                        <Button Grid.Column="4" Style="{StaticResource Audio.Button}" Height="56"
+                                Content="Stop" Command="{Binding StopCommand}"/>
+                    </Grid>
+
+                    <TextBlock Grid.Row="6" Style="{StaticResource Audio.Footnote}" TextWrapping="Wrap" Margin="0,8,0,0"
+                               Text="{Binding StartBlockedReason}"/>
+                </Grid>
+            </Border>
+
+            <!-- The routine's parameters and procedure -->
+            <Border Grid.Column="1" Style="{StaticResource Audio.Card}">
+                <Grid Margin="16,12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>   <!-- title -->
+                        <RowDefinition Height="Auto"/>   <!-- saved by -->
+                        <RowDefinition Height="Auto"/>   <!-- parameter rows -->
+                        <RowDefinition Height="Auto"/>   <!-- Save / Revert -->
+                        <RowDefinition Height="Auto"/>   <!-- access hint -->
+                        <RowDefinition Height="*"/>      <!-- procedure -->
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Style="{StaticResource Audio.Title3}" TextWrapping="Wrap" Margin="0,0,0,4"
+                               Text="{Binding SelectedRoutine.Name, StringFormat='Parameters - {0}'}"/>
+                    <TextBlock Grid.Row="1" Style="{StaticResource Audio.Footnote}" TextWrapping="Wrap" Margin="0,0,0,12"
+                               Text="{Binding SavedText}"/>
+
+                    <!-- Read only until Edit is pressed. -->
+                    <ItemsControl Grid.Row="2" ItemsSource="{Binding Parameters}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="170"/>
+                                        <ColumnDefinition Width="130"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Style="{StaticResource Audio.FieldLabel}"
+                                               Text="{Binding Label}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                    <TextBox Grid.Column="1" Style="{StaticResource Audio.TextBoxMono}"
+                                             Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}"
+                                             IsReadOnly="{Binding DataContext.IsNotEditing, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                             AutomationProperties.Name="{Binding Label}"/>
+                                    <StackPanel Grid.Column="2" Margin="8,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Style="{StaticResource Audio.Footnote}" Text="{Binding RangeText}"/>
+                                        <TextBlock Style="{StaticResource Audio.Footnote}" Text="{Binding Error}"
+                                                   Foreground="{DynamicResource Audio.System.RedBrush}"
+                                                   Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- Edit, then Save / Cancel - as the other Setting tabs. Save works
+                         unchanged too, to keep the SOP's values for a station as they are. -->
+                    <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0"
+                                Visibility="{Binding HasParameters, Converter={StaticResource BoolToVisibility}}">
+                        <Button Style="{StaticResource Audio.Button}" Width="120" Content="Edit" Command="{Binding EditCommand}"
+                                ToolTip="{Binding EditTooltip}" ToolTipService.ShowOnDisabled="True"
+                                Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"/>
+                        <StackPanel Orientation="Horizontal"
+                                    Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}}">
+                            <Button Style="{StaticResource Audio.Button}" Width="120" Content="Cancel" Command="{Binding CancelCommand}" Margin="0,0,8,0"
+                                    ToolTip="Drops the changes and shows the saved values"/>
+                            <Button Style="{StaticResource Audio.FilledButton}" Width="120" Content="Save" Command="{Binding SaveCommand}"
+                                    ToolTip="Saves the parameters for this station and routine"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <Border Grid.Row="4" Margin="0,12,0,0"
+                            Background="{DynamicResource Audio.Surface.RecessedBrush}"
+                            CornerRadius="{DynamicResource Audio.Radius.Field}" Padding="10,6">
+                        <TextBlock Style="{StaticResource Audio.Caption1}" TextWrapping="Wrap" Text="{Binding AccessHint}"/>
+                    </Border>
+
+                    <ScrollViewer Grid.Row="5" Margin="0,16,0,0" VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource Audio.Headline}" Text="Procedure" Margin="0,0,0,6"/>
+                            <ItemsControl ItemsSource="{Binding Procedure}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Style="{StaticResource Audio.Callout}" Text="{Binding}" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock Style="{StaticResource Audio.Footnote}" Margin="0,4,0,0" Text="{Binding Reference}"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!-- The PLC's status, the operator's check, and the results -->
+            <Border Grid.Column="2" Style="{StaticResource Audio.Card}">
+                <Grid Margin="16,12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>   <!-- title -->
+                        <RowDefinition Height="Auto"/>   <!-- state -->
+                        <RowDefinition Height="Auto"/>   <!-- step -->
+                        <RowDefinition Height="Auto"/>   <!-- operator check -->
+                        <RowDefinition Height="Auto"/>   <!-- results heading -->
+                        <RowDefinition Height="*"/>      <!-- results -->
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Style="{StaticResource Audio.Title3}" Text="Status" Margin="0,0,0,8"/>
+
+                    <TextBlock Grid.Row="1" FontSize="28" FontWeight="SemiBold" Text="{Binding StateText}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{DynamicResource Audio.Text.SecondaryBrush}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsStateActive}" Value="True">
+                                        <Setter Property="Foreground" Value="{DynamicResource Audio.System.BlueBrush}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsStateOk}" Value="True">
+                                        <Setter Property="Foreground" Value="{DynamicResource Audio.System.GreenBrush}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsStateFail}" Value="True">
+                                        <Setter Property="Foreground" Value="{DynamicResource Audio.System.RedBrush}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+
+                    <TextBlock Grid.Row="2" Style="{StaticResource Audio.Callout}" TextWrapping="Wrap" Margin="0,4,0,12"
+                               Text="{Binding RunText}"/>
+
+                    <Border Grid.Row="3" Margin="0,0,0,12" Padding="12,10"
+                            Background="{DynamicResource Audio.Surface.RecessedBrush}"
+                            BorderBrush="{DynamicResource Audio.System.OrangeBrush}" BorderThickness="2"
+                            CornerRadius="{DynamicResource Audio.Radius.Field}"
+                            Visibility="{Binding IsWaitingOperator, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource Audio.Headline}" Text="Operator check"/>
+                            <TextBlock Style="{StaticResource Audio.Callout}" TextWrapping="Wrap" Margin="0,4,0,10" Text="{Binding Prompt}"/>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Style="{StaticResource Audio.FilledButton}" Width="120" Content="OK" Command="{Binding AcceptCommand}" Margin="0,0,8,0"/>
+                                <Button Style="{StaticResource Audio.Button}" Width="120" Content="NG" Command="{Binding RejectCommand}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Grid.Row="4" Margin="0,0,0,6">
+                        <TextBlock Style="{StaticResource Audio.Headline}" Text="Results"/>
+                        <TextBlock Style="{StaticResource Audio.Footnote}" TextWrapping="Wrap" Text="{Binding ResultNote}"/>
+                    </StackPanel>
+
+                    <ScrollViewer Grid.Row="5" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <!-- Header: the row label column, then one per result column -->
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                <TextBlock Style="{StaticResource Audio.TableHeaderText}" Width="150" Text=""/>
+                                <ItemsControl ItemsSource="{Binding ResultHeaders}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Style="{StaticResource Audio.TableHeaderText}" Width="100"
+                                                       TextAlignment="Right" TextWrapping="Wrap" Text="{Binding}"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+
+                            <ItemsControl ItemsSource="{Binding ResultRows}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="{DynamicResource Audio.Separator.SubtleBrush}" BorderThickness="0,0,0,1" Padding="0,5">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Style="{StaticResource Audio.Callout}" Width="150" Text="{Binding Label}"/>
+                                                <ItemsControl ItemsSource="{Binding Cells}">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <StackPanel Orientation="Horizontal"/>
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock Width="100" TextAlignment="Right" Text="{Binding Text}">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock" BasedOn="{StaticResource Audio.CalloutMono}">
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding IsFail}" Value="True">
+                                                                                <Setter Property="Foreground" Value="{DynamicResource Audio.System.RedBrush}"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!-- No PLC calibration interface configured: say so over the tab. -->
+            <Border Grid.ColumnSpan="3" Style="{StaticResource Audio.Card}"
+                    Visibility="{Binding IsAvailable, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}">
+                <TextBlock Style="{StaticResource Audio.EmptyState}" VerticalAlignment="Center" HorizontalAlignment="Center"
+                           TextWrapping="Wrap" Text="{Binding UnavailableText}"/>
+            </Border>
+        </Grid>
+
+        <!-- ============================================================== -->
+        <!-- ACCESS CONTROL (Access Control V5.1, S1.2.2 and S1.2.3)          -->
+        <!-- The switch between MES and the local list, and the local list   -->
+        <!-- itself: Import CSV, Edit, Save at Level 3.                       -->
+        <!-- ============================================================== -->
+        <Grid Grid.Row="1" DataContext="{Binding AccessControl}"
+              Visibility="{Binding DataContext.IsAccessControlTab, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibility}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="310"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{StaticResource Audio.Card}">
+                <StackPanel Margin="16,12">
+                    <TextBlock Style="{StaticResource Audio.Title3}" Text="Access Control" Margin="0,0,0,12"/>
+
+                    <TextBlock Style="{StaticResource Audio.Headline}" Text="Access Control with MES" Margin="0,0,0,6"/>
+                    <StackPanel Orientation="Horizontal" IsEnabled="{Binding CanEditCritical}">
+                        <RadioButton GroupName="AccessMes" Content="TRUE (MES)" Margin="0,0,24,0"
+                                     IsEnabled="{Binding IsMesAvailable}"
+                                     IsChecked="{Binding AccessControlWithMes, Mode=TwoWay}"/>
+                        <RadioButton GroupName="AccessMes" Content="FALSE (local list)"
+                                     IsChecked="{Binding AccessControlLocal, Mode=TwoWay}"/>
+                    </StackPanel>
+                    <TextBlock Style="{StaticResource Audio.Footnote}" TextWrapping="Wrap" Margin="0,6,0,14" Text="{Binding MesNote}"/>
+
+                    <Grid Style="{StaticResource FieldRow}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="140"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource Audio.FieldLabel}" Text="Project Code:"/>
+                        <ComboBox Grid.Column="1" Style="{StaticResource Audio.ComboBox}"
+                                  ItemsSource="{Binding ProjectCodes}"
+                                  SelectedItem="{Binding ProjectCode, Mode=TwoWay}"
+                                  IsEnabled="{Binding CanEditCritical}"
+                                  ToolTip="Sent to MES with every badge check. Offered codes are listed under ProjectCodes in Data\Settings\AccessControl.json."/>
+                    </Grid>
+
+                    <Grid Style="{StaticResource FieldRow}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="140"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource Audio.FieldLabel}" Text="Sign out after (min):"/>
+                        <ComboBox Grid.Column="1" Style="{StaticResource Audio.ComboBox}"
+                                  ItemsSource="{Binding SignOutMinutes}"
+                                  SelectedItem="{Binding AutomaticSignOutMinutes, Mode=TwoWay}"
+                                  IsEnabled="{Binding CanEditCritical}"
+                                  ToolTip="Level 2 and 3 are signed out after this long with no input (slide 39: at most 5 minutes)."/>
+                    </Grid>
+
+                    <Grid Margin="0,4,0,16" Visibility="{Binding IsSettingsDirty, Converter={StaticResource BoolToVisibility}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Style="{StaticResource Audio.Button}" Content="Revert" Command="{Binding RevertSettingsCommand}"/>
+                        <Button Grid.Column="2" Style="{StaticResource Audio.FilledButton}" Content="Save" Command="{Binding SaveSettingsCommand}"/>
+                    </Grid>
+
+                    <Border Background="{DynamicResource Audio.Surface.RecessedBrush}"
+                            CornerRadius="{DynamicResource Audio.Radius.Field}" Padding="10,6">
+                        <TextBlock Style="{StaticResource Audio.Caption1}" TextWrapping="Wrap" Text="{Binding AccessHint}"/>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="1" Style="{StaticResource Audio.Card}">
+                <Grid Margin="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="8,4,8,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Style="{StaticResource Audio.Title3}" Text="Local access list" VerticalAlignment="Center"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button Style="{StaticResource Audio.Button}" Content="Import CSV" Command="{Binding ImportCommand}" Margin="0,0,8,0"/>
+                            <Button Style="{StaticResource Audio.Button}" Content="Export CSV" Command="{Binding ExportCommand}" Margin="0,0,8,0"/>
+                            <Button Style="{StaticResource Audio.Button}" Content="Edit" Command="{Binding EditCommand}"
+                                    Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"/>
+                            <StackPanel Orientation="Horizontal" Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}}">
+                                <Button Style="{StaticResource Audio.Button}" Content="Add" Command="{Binding AddRowCommand}" Margin="0,0,8,0"/>
+                                <Button Style="{StaticResource Audio.Button}" Content="Delete" Command="{Binding DeleteRowCommand}" Margin="0,0,8,0"/>
+                                <Button Style="{StaticResource Audio.Button}" Content="Cancel" Command="{Binding CancelCommand}" Margin="0,0,8,0"/>
+                                <Button Style="{StaticResource Audio.FilledButton}" Content="Save" Command="{Binding SaveCommand}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+
+                    <DataGrid Grid.Row="1" Style="{StaticResource Audio.DataGrid}"
+                              ItemsSource="{Binding Rows}"
+                              SelectedItem="{Binding SelectedRow, Mode=TwoWay}"
+                              IsReadOnly="{Binding IsReadOnly}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Name" Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Width="130"/>
+                            <DataGridTextColumn Header="Card_UID" Binding="{Binding CardUid, UpdateSourceTrigger=PropertyChanged}" Width="115"/>
+                            <DataGridTemplateColumn Header="Access_Level" Width="105">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding AccessLevel}" VerticalAlignment="Center" Margin="4,0"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.CellEditingTemplate>
+                                    <DataTemplate>
+                                        <ComboBox ItemsSource="{Binding DataContext.Levels, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                  SelectedItem="{Binding AccessLevel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellEditingTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="SW_Type" Width="95">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding SoftwareType}" VerticalAlignment="Center" Margin="4,0"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.CellEditingTemplate>
+                                    <DataTemplate>
+                                        <ComboBox ItemsSource="{Binding DataContext.SoftwareTypes, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                  SelectedItem="{Binding SoftwareType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellEditingTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Function" Binding="{Binding Function, UpdateSourceTrigger=PropertyChanged}" Width="115"/>
+                            <DataGridTemplateColumn Header="Organization" Width="110">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding Organization}" VerticalAlignment="Center" Margin="4,0"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                                <DataGridTemplateColumn.CellEditingTemplate>
+                                    <DataTemplate>
+                                        <ComboBox ItemsSource="{Binding DataContext.Organizations, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                  SelectedItem="{Binding Organization, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellEditingTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="terminalName" Binding="{Binding TerminalName, UpdateSourceTrigger=PropertyChanged}" Width="260"/>
+                            <DataGridTextColumn Header="Site" Binding="{Binding Site, UpdateSourceTrigger=PropertyChanged}" Width="70"/>
+                            <DataGridTextColumn Header="Project" Binding="{Binding Project, UpdateSourceTrigger=PropertyChanged}" Width="80"/>
+                            <DataGridTextColumn Header="Station_ID" Binding="{Binding StationId, UpdateSourceTrigger=PropertyChanged}" Width="95"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <TextBlock Grid.Row="2" Style="{StaticResource Audio.Footnote}" TextWrapping="Wrap" Margin="8,8,8,4"
+                               Text="{Binding ListStatus}"/>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ============================================================== -->
+        <!-- VALVE MODEL (S3.1 PD-04 page 5). Level 3 chooses each gantry's  -->
+        <!-- model from a list; the SNs come from the planned-downtime       -->
+        <!-- procedures and are only shown here.                              -->
+        <!-- ============================================================== -->
+        <Border Grid.Row="1" Style="{StaticResource Audio.Card}" DataContext="{Binding ValveModel}"
+                Visibility="{Binding DataContext.IsValveModelTab, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibility}}">
+            <Grid Margin="16,12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Style="{StaticResource Audio.Title3}" Text="Valve model setting" Margin="0,0,0,8"/>
+                <TextBlock Grid.Row="1" Style="{StaticResource Audio.Footnote}" Text="{Binding AccessHint}" Margin="0,0,0,12"/>
+
+                <ItemsControl Grid.Row="2" ItemsSource="{Binding Gantries}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{DynamicResource Audio.Surface.RecessedBrush}"
+                                    CornerRadius="{DynamicResource Audio.Radius.Field}" Padding="14,10" Margin="0,0,0,10">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="130"/>
+                                        <ColumnDefinition Width="220"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                        <TextBlock Style="{StaticResource Audio.Headline}" Text="{Binding Gantry, StringFormat='{}{0} Gantry'}"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Style="{StaticResource Audio.FieldLabel}" Text="Valve model:"/>
+                                        <ComboBox Style="{StaticResource Audio.ComboBox}" Margin="0,4,16,0"
+                                                  ItemsSource="{Binding Models}"
+                                                  SelectedItem="{Binding ValveModel, Mode=TwoWay}"
+                                                  IsEnabled="{Binding DataContext.CanEditCritical, RelativeSource={RelativeSource AncestorType=ItemsControl}}"/>
+                                    </StackPanel>
+                                    <Grid Grid.Column="2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="90"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition/>
+                                            <RowDefinition/>
+                                            <RowDefinition/>
+                                            <RowDefinition/>
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Grid.Row="0" Style="{StaticResource Audio.Footnote}" Text="Valve SN:"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="1" Style="{StaticResource Audio.Footnote}" Foreground="{DynamicResource Audio.Text.PrimaryBrush}" Text="{Binding ValveSn}"/>
+                                        <TextBlock Grid.Row="1" Style="{StaticResource Audio.Footnote}" Text="Valve usage:"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1" Style="{StaticResource Audio.Footnote}" Text="{Binding ValveUsage}"/>
+                                        <TextBlock Grid.Row="2" Style="{StaticResource Audio.Footnote}" Text="Nozzle SN:"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="1" Style="{StaticResource Audio.Footnote}" Foreground="{DynamicResource Audio.Text.PrimaryBrush}" Text="{Binding NozzleSn}"/>
+                                        <TextBlock Grid.Row="3" Style="{StaticResource Audio.Footnote}" Text="Glue SN:"/>
+                                        <TextBlock Grid.Row="3" Grid.Column="1" Style="{StaticResource Audio.Footnote}" Foreground="{DynamicResource Audio.Text.PrimaryBrush}" Text="{Binding GlueSn}"/>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right"
+                            Visibility="{Binding IsDirty, Converter={StaticResource BoolToVisibility}}">
+                    <Button Style="{StaticResource Audio.Button}" Width="120" Content="Revert" Command="{Binding RevertCommand}" Margin="0,0,8,0"/>
+                    <Button Style="{StaticResource Audio.FilledButton}" Width="120" Content="Save" Command="{Binding SaveCommand}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ============================================================== -->
+        <!-- HIVE CONTROL (S2.4 Extra Log for HIVE Remote Qualification p.5) -->
+        <!-- ============================================================== -->
+        <Border Grid.Row="1" Style="{StaticResource Audio.Card}" DataContext="{Binding HiveControl}"
+                Visibility="{Binding DataContext.IsHiveControlTab, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibility}}">
+            <StackPanel Margin="16,12" MaxWidth="900" HorizontalAlignment="Left">
+                <TextBlock Style="{StaticResource Audio.Title3}" Text="HIVE Control" Margin="0,0,0,12"/>
+
+                <Border Background="{DynamicResource Audio.Surface.RecessedBrush}" CornerRadius="{DynamicResource Audio.Radius.Field}" Padding="14,10" Margin="0,0,0,16">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource Audio.Headline}" Text="Disable HIVE"/>
+                        <TextBlock Style="{StaticResource Audio.Callout}" TextWrapping="Wrap" Margin="0,6,0,0" Text="{Binding HiveStatus}"/>
+                        <TextBlock Style="{StaticResource Audio.Footnote}" TextWrapping="Wrap" Margin="0,8,0,0" Foreground="{DynamicResource Audio.System.RedBrush}"
+                                   Text="Prior approval must be obtained from CM/BUD before execution. HIVE may only be disabled when network anomalies occur, or when the HIVE setup configuration remains incomplete."/>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0"
+                                    Visibility="{Binding IsHiveEnabled, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Style="{StaticResource Audio.FieldLabel}" Text="Reason:" Margin="0,0,8,0"/>
+                            <ComboBox Style="{StaticResource Audio.ComboBox}" Width="340"
+                                      ItemsSource="{Binding DisableReasons}"
+                                      SelectedItem="{Binding DisableReason, Mode=TwoWay}"
+                                      IsEnabled="{Binding CanEditCritical}"/>
+                            <Button Style="{StaticResource Audio.Button}" Content="Disable HIVE" Margin="12,0,0,0"
+                                    Command="{Binding DisableCommand}"/>
+                        </StackPanel>
+                        <Button Style="{StaticResource Audio.FilledButton}" Content="Enable HIVE" HorizontalAlignment="Left" Margin="0,12,0,0"
+                                Command="{Binding EnableCommand}"
+                                Visibility="{Binding IsHiveEnabled, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="{DynamicResource Audio.Surface.RecessedBrush}" CornerRadius="{DynamicResource Audio.Radius.Field}" Padding="14,10" Margin="0,0,0,16">
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource Audio.Headline}" Text="24-Hour Dry Run (function module)"/>
+                        <TextBlock Style="{StaticResource Audio.Callout}" TextWrapping="Wrap" Margin="0,6,0,0" Text="{Binding DryRunStatus}"/>
+                        <TextBlock Style="{StaticResource Audio.Footnote}" TextWrapping="Wrap" Margin="0,8,0,0"
+                                   Text="Initiate the 24-hour dry run procedure exclusively for FAT remote qualification. During the dry run, unit_sn and mac_addr come from UUID.DLL and unique_machine_state_id from UMSID.DLL."/>
+                        <Button Style="{StaticResource Audio.Button}" HorizontalAlignment="Left" Margin="0,12,0,0"
+                                Content="{Binding DryRunButtonText}" Command="{Binding ToggleDryRunCommand}"/>
+                    </StackPanel>
+                </Border>
+
+                <Border Background="{DynamicResource Audio.Surface.RecessedBrush}" CornerRadius="{DynamicResource Audio.Radius.Field}" Padding="10,6">
+                    <TextBlock Style="{StaticResource Audio.Caption1}" TextWrapping="Wrap" Text="{Binding AccessHint}"/>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <!-- ============================================================== -->
+        <!-- PICTURE QTY. CHECK (T5, X7). Level 2 and 3 only.                 -->
+        <!-- ============================================================== -->
+        <Grid Grid.Row="1" DataContext="{Binding PictureQty}"
+              Visibility="{Binding DataContext.IsPictureQtyTab, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibility}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="380"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{StaticResource Audio.Card}">
+                <StackPanel Margin="16,12">
+                    <TextBlock Style="{StaticResource Audio.Title3}" Text="Picture Qty. Check" Margin="0,0,0,12"/>
+
+                    <TextBlock Style="{StaticResource Audio.Headline}" Text="Dispensing control"/>
+                    <TextBlock FontSize="44" FontWeight="SemiBold" Margin="0,4,0,0" Text="{Binding DispensingValue}"
+                               Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"/>
+                    <ComboBox Style="{StaticResource Audio.ComboBox}" Width="100" HorizontalAlignment="Left" Margin="0,8,0,0"
+                              ItemsSource="{Binding EditValues}" SelectedItem="{Binding EditValue, Mode=TwoWay}"
+                              Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}}"/>
+                    <TextBlock Style="{StaticResource Audio.Callout}" TextWrapping="Wrap" Margin="0,6,0,0" Text="{Binding DispensingText}"/>
+                    <TextBlock Style="{StaticResource Audio.Footnote}" TextWrapping="Wrap" Margin="0,6,0,0" Text="{Binding LastChange}"/>
+                    <TextBlock Style="{StaticResource Audio.Footnote}" TextWrapping="Wrap" Margin="0,6,0,0" Text="{Binding VerifiedBy}"/>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                        <Button Style="{StaticResource Audio.Button}" Width="110" Content="Edit" Command="{Binding EditCommand}"
+                                ToolTip="Needs two-step verification"
+                                Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"/>
+                        <StackPanel Orientation="Horizontal" Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}}">
+                            <Button Style="{StaticResource Audio.Button}" Width="110" Content="Cancel" Command="{Binding CancelCommand}" Margin="0,0,8,0"/>
+                            <Button Style="{StaticResource Audio.FilledButton}" Width="110" Content="Save" Command="{Binding SaveCommand}"
+                                    ToolTip="Saves, then signs the authorized user out"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <TextBlock Style="{StaticResource Audio.Headline}" Text="Target" Margin="0,20,0,4"/>
+                    <TextBlock Style="{StaticResource Audio.Callout}" TextWrapping="Wrap" Text="{Binding LimitsText}"/>
+                    <TextBlock Style="{StaticResource Audio.Footnote}" TextWrapping="Wrap" Margin="0,4,0,0"
+                               Text="Set as Pic_Upload_quantity in Config > Spec Limits (Production). A unit outside it stops dispensing and puts the machine down."/>
+
+                    <TextBlock Style="{StaticResource Audio.Headline}" Text="Pic_Upload_Record" Margin="0,20,0,4"/>
+                    <TextBlock Style="{StaticResource Audio.CalloutMono}" TextWrapping="Wrap" Text="{Binding RecordFolder}"/>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="1" Style="{StaticResource Audio.Card}">
+                <Grid Margin="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Style="{StaticResource Audio.Title3}" Text="Recent units" Margin="8,4,8,8"/>
+                    <DataGrid Grid.Row="1" Style="{StaticResource Audio.DataGrid}" ItemsSource="{Binding Records}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Time" Binding="{Binding Time}" Width="170"/>
+                            <DataGridTextColumn Header="unit_sn" Binding="{Binding UnitSn}" Width="*"/>
+                            <DataGridTextColumn Header="pic_quantity" Binding="{Binding Quantity}" Width="110"/>
+                            <DataGridTextColumn Header="LSL / USL" Binding="{Binding Limits}" Width="110"/>
+                            <DataGridTextColumn Header="Match_Result" Binding="{Binding Match}" Width="110"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <TextBlock Grid.Row="1" Style="{StaticResource Audio.EmptyState}" Margin="16,48,16,12" TextWrapping="Wrap"
+                               Text="No unit has been recorded today."
+                               Visibility="{Binding HasRecords, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"/>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ============================================================== -->
+        <!-- PDATA MAPPING. Level 3. The fields of a unit's record on the    -->
+        <!-- left, the limits and units of the ticked ones on the right.      -->
+        <!-- ============================================================== -->
+        <Border Grid.Row="1" Style="{StaticResource Audio.Card}" DataContext="{Binding PdataMapping}"
+                Visibility="{Binding DataContext.IsPdataMappingTab, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibility}}">
+            <Grid Margin="16,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="300"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Field picker -->
+                <Grid Grid.Column="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Style="{StaticResource Audio.Title3}" Text="PDATA List" Margin="0,0,0,8"/>
+
+                    <Grid Grid.Row="1" Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Style="{StaticResource Audio.TextBox}"
+                                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                 ToolTip="Search fields"/>
+                        <Button Grid.Column="1" Style="{StaticResource Audio.Button}" Content="Clear" Margin="8,0,0,0"
+                                Command="{Binding ClearSearchCommand}"/>
+                    </Grid>
+
+                    <ListBox Grid.Row="2" ItemsSource="{Binding Fields}" BorderThickness="1"
+                             Background="Transparent"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             HorizontalContentAlignment="Stretch">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <CheckBox Content="{Binding Name}" Margin="2,2"
+                                          IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                          IsEnabled="{Binding DataContext.IsEditing, RelativeSource={RelativeSource AncestorType=ListBox}}"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <TextBlock Grid.Row="3" Style="{StaticResource Audio.Footnote}" Text="{Binding RangeText}" Margin="0,8,0,0"/>
+                    <Button Grid.Row="4" Style="{StaticResource Audio.Button}" Content="Import CSV" Margin="0,8,0,0"
+                            Command="{Binding ImportCsvCommand}"/>
+                </Grid>
+
+                <!-- Machine profile, toolbar and the grid -->
+                <Grid Grid.Column="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Style="{StaticResource Audio.FieldLabel}" Text="Machine:" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <!-- Editable so a new profile name can be typed while editing. -->
+                            <ComboBox Style="{StaticResource Audio.ComboBox}" Width="240" IsEditable="True"
+                                      ItemsSource="{Binding Machines}"
+                                      Text="{Binding SelectedMachine, UpdateSourceTrigger=PropertyChanged}"/>
+                            <CheckBox Content="Ignore Limits" Margin="16,0,0,0" VerticalAlignment="Center"
+                                      IsChecked="{Binding IgnoreLimits, Mode=TwoWay}"
+                                      IsEnabled="{Binding IsEditing}"/>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button Style="{StaticResource Audio.Button}" Content="Preview" Command="{Binding PreviewCommand}" Margin="0,0,8,0"/>
+                            <Button Style="{StaticResource Audio.Button}" Content="Clear All" Command="{Binding ClearAllCommand}" Margin="0,0,8,0"/>
+                            <Button Style="{StaticResource Audio.Button}" Content="Edit" Command="{Binding EditCommand}" Margin="0,0,8,0"/>
+                            <Button Style="{StaticResource Audio.Button}" Content="Cancel" Command="{Binding CancelCommand}" Margin="0,0,8,0"/>
+                            <Button Style="{StaticResource Audio.FilledButton}" Content="Save" Command="{Binding SaveCommand}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock Grid.Row="1" Style="{StaticResource Audio.Footnote}" Text="{Binding AccessHint}" Margin="0,0,0,8"/>
+
+                    <DataGrid Grid.Row="2" Style="{StaticResource Audio.DataGrid}"
+                              ItemsSource="{Binding Rows}"
+                              IsReadOnly="{Binding IsReadOnly}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Placeholder" Binding="{Binding Placeholder, Mode=OneWay}" IsReadOnly="True" Width="*"/>
+                            <DataGridTextColumn Header="Prefix" Binding="{Binding Prefix, Mode=OneWay}" IsReadOnly="True" Width="80"/>
+                            <DataGridTextColumn Header="Datatype" Binding="{Binding Datatype, Mode=OneWay}" IsReadOnly="True" Width="90"/>
+                            <DataGridTextColumn Header="Suffix" Binding="{Binding Suffix, Mode=OneWay}" IsReadOnly="True" Width="90"/>
+                            <DataGridTextColumn Header="Min Limit" Width="100"
+                                                Binding="{Binding MinLimit, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
+                            <DataGridTextColumn Header="Max Limit" Width="100"
+                                                Binding="{Binding MaxLimit, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"/>
+                            <DataGridTextColumn Header="Unit" Width="80"
+                                                Binding="{Binding Unit, UpdateSourceTrigger=PropertyChanged}"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <!-- ============================================================== -->
+        <!-- HASH KEY (PD-15, slides 78-90). Level 3 in PD-15 only.           -->
+        <!-- ============================================================== -->
+        <Border Grid.Row="1" Style="{StaticResource Audio.Card}" DataContext="{Binding HashKey}"
+                Visibility="{Binding DataContext.IsHashKeyTab, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BoolToVisibility}}">
+            <Grid Margin="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="8,4,8,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Style="{StaticResource Audio.Title3}" Text="General Hash Key" VerticalAlignment="Center"/>
+                        <CheckBox Content="Show every key" Margin="16,0,0,0" VerticalAlignment="Center"
+                                  IsChecked="{Binding ShowAllKeys, Mode=TwoWay}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <Button Style="{StaticResource Audio.FilledButton}" Content="2-Step Verification" Command="{Binding VerifyCommand}"
+                                Visibility="{Binding IsVerified, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"/>
+                        <StackPanel Orientation="Horizontal" Visibility="{Binding IsVerified, Converter={StaticResource BoolToVisibility}}">
+                            <Button Style="{StaticResource Audio.Button}" Content="File Path Setting" Command="{Binding EditPathsCommand}" Margin="0,0,8,0"/>
+                            <Button Style="{StaticResource Audio.FilledButton}" Content="Save" Command="{Binding SavePathsCommand}" Margin="0,0,8,0"
+                                    Visibility="{Binding IsEditingPaths, Converter={StaticResource BoolToVisibility}}"/>
+                            <Button Style="{StaticResource Audio.Button}" Content="Refresh all hash keys" Command="{Binding RefreshCommand}" Margin="0,0,8,0"/>
+                            <Button Style="{StaticResource Audio.Button}" Content="Export all hash keys" Command="{Binding ExportCommand}" Margin="0,0,8,0"/>
+                            <Button Style="{StaticResource Audio.Button}" Content="Cancel" Command="{Binding CancelCommand}" Margin="0,0,8,0"/>
+                            <Button Style="{StaticResource Audio.FilledButton}" Content="Upload to MES" Command="{Binding UploadCommand}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+
+                <DataGrid Grid.Row="1" Style="{StaticResource Audio.DataGrid}" ItemsSource="{Binding VisibleRows}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Hash Key" Binding="{Binding Key}" Width="110"/>
+                        <DataGridTextColumn Header="SW / File Being Controlled" Binding="{Binding Controls}" Width="230"/>
+                        <DataGridTextColumn Header="File Path" Binding="{Binding FilePath}" Width="*"/>
+                        <DataGridTemplateColumn Header="" Width="150">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal"
+                                                Visibility="{Binding DataContext.IsEditingPaths, RelativeSource={RelativeSource AncestorType=DataGrid}, Converter={StaticResource BoolToVisibility}}">
+                                        <Button Style="{StaticResource Audio.PlainButton}" Content="Browse" Margin="0,0,8,0"
+                                                Command="{Binding DataContext.BrowseCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"/>
+                                        <Button Style="{StaticResource Audio.PlainButton}" Content="Clear"
+                                                Command="{Binding DataContext.ClearCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                CommandParameter="{Binding}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Value" Binding="{Binding Value}" Width="330" FontFamily="{DynamicResource Audio.FontFamily.Mono}"/>
+                        <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="220"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <StackPanel Grid.Row="2" Margin="8,8,8,4">
+                    <TextBlock Style="{StaticResource Audio.Footnote}" TextWrapping="Wrap" Text="{Binding Status}"/>
+                    <TextBlock Style="{StaticResource Audio.Footnote}" TextWrapping="Wrap" Text="{Binding VerifiedBy}"/>
+                    <TextBlock Style="{StaticResource Audio.Footnote}" TextWrapping="Wrap" Text="{Binding MesNote}"/>
+                    <TextBlock Style="{StaticResource Audio.Footnote}" TextWrapping="Wrap"
+                               Text="Each path must be the complete path and file name, with its extension. Leave a key without a path when its file does not exist or is not monitored. The keys are read after start-up and on every HIVE state change; a missing file puts the machine into downtime."/>
+                </StackPanel>
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>

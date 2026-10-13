@@ -1,53 +1,67 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Nova.Abstractions.Hardware;
+using Nova.Alarm;
+using Nova.Wpf.App.Services.Twincat.HmiDisplay;
 using Teal.Library.Stepper;
-using TealStepper = Teal.Library.Contracts.IStepper;
 
 namespace Nova.Wpf.App.Services.Twincat
 {
     /// <summary>
-    /// Nova <see cref="IStepper"/> over one Beckhoff library stepper bound to its ST_STEPPER
-    /// in the PLC (GLOBAL_STEPPER.gStepper[Id]). Commands set hmicmd bits through the
-    /// library, which FB_STEPPER latches into cmd and clears itself; status is read back
-    /// from the same ST_STEPPER, so the Stepper tab shows what the PLC reports rather than
-    /// what was last clicked.
+    /// Nova <see cref="IStepper"/> over one Beckhoff library I/O stepper, driven from the Stepper
+    /// tab. The library gives an I/O stepper Forward, Reverse, Stop and Reset; it runs at its
+    /// own speed and has no on or off, so the tab's speed is ignored and enabling it does nothing.
     /// </summary>
-    public sealed class TwincatStepperAdapter : IStepper
+    /// <remarks>
+    /// Status - running and error - is read as an axis's is: while the Stepper tab follows the
+    /// stepper (<see cref="FollowStatus"/>), the library reads its current status first
+    /// (UpdateIOStepperProperties), then the PLC pushes every change of its HMI display struct
+    /// - where the library says it is, read as the struct App.config's IOStepperHmiDisplayType
+    /// names - through <see cref="PlcSubscriptions"/>.
+    /// </remarks>
+    public sealed class TwincatStepperAdapter : IStepper, ILiveStatus, ITwincatStatusSource, ILibraryStatusSource
     {
-        private readonly TealStepper _stepper;
+        private readonly IOStepper _stepper;
         private readonly TwincatPlcConnection _plc;
+        private readonly HmiDisplayStatus _display;
 
-        public TwincatStepperAdapter(string componentId, string instance, TealStepper stepper, TwincatPlcConnection plc)
+        /// <param name="displayType">The struct App.config's IOStepperHmiDisplayType names; null when it names none that fits.</param>
+        public TwincatStepperAdapter(
+            string componentId, IOStepper stepper, TwincatPlcConnection plc, PlcSubscriptions subscriptions, Type displayType)
         {
             ComponentId = componentId;
-            Instance = instance;
             _stepper = stepper ?? throw new ArgumentNullException(nameof(stepper));
             _plc = plc ?? throw new ArgumentNullException(nameof(plc));
+            _display = new HmiDisplayStatus(subscriptions, plc, stepper, displayType, stepper.UpdateIOStepperProperties);
         }
+
+        public event EventHandler LibraryStatusRead
+        {
+            add { _display.LibraryRead += value; }
+            remove { _display.LibraryRead -= value; }
+        }
+
+        public IDisposable FollowStatus() => _display.Follow();
 
         public string ComponentId { get; }
 
-        /// <summary>PLC symbol of this stepper, e.g. GLOBAL_STEPPER.gStepper[1].</summary>
-        public string Instance { get; }
+        public IReadOnlyList<string> WatchedSymbols => _display.WatchedSymbols;
 
-        public bool IsAxisBased => _stepper.IsAxisBased;
+        public bool IsAxisBased => false;
 
-        /// <summary>
-        /// FB_STEPPER only runs while in.blockEnable and in.operationEnable are set; On()
-        /// sets both and selects the mode. It is idempotent, so the Stepper tab enabling
-        /// before every move is safe.
-        /// </summary>
-        public Task<bool> EnableAsync() => RunLocked(() => _stepper.On());
+        /// <summary>An I/O stepper has no on or off; the Stepper tab calls this before each move.</summary>
+        public Task<bool> EnableAsync() => Task.FromResult(true);
 
-        /// <summary>A speed of -1 uses the Speed configured in Data\Steppers.json.</summary>
-        public Task<bool> ForwardAsync(double speed) => RunLocked(() => _stepper.Forward(speed));
+        /// <summary>Runs forward at the stepper's own speed; <paramref name="speed"/> is ignored.</summary>
+        public Task<bool> ForwardAsync(double speed) => RunLocked(_stepper.Forward);
 
-        public Task<bool> ReverseAsync(double speed) => RunLocked(() => _stepper.Reverse(speed));
+        /// <summary>Runs in reverse at the stepper's own speed; <paramref name="speed"/> is ignored.</summary>
+        public Task<bool> ReverseAsync(double speed) => RunLocked(_stepper.Reverse);
 
-        public Task<bool> StopAsync() => RunLocked(() => _stepper.Stop());
+        public Task<bool> StopAsync() => RunLocked(_stepper.Stop);
 
-        public Task ResetAlarmAsync() => RunLocked(() => _stepper.Reset());
+        public Task ResetAlarmAsync() => RunLocked(_stepper.Reset);
 
         /// <summary>Stop sent from the shutdown path, so a manual move started here does not outlive the HMI.</summary>
         public void StopOnExit()
@@ -56,7 +70,8 @@ namespace Nova.Wpf.App.Services.Twincat
             {
                 lock (_plc.SyncRoot)
                 {
-                    _stepper.Stop();
+                    if (_plc.IsConnected)
+                        _stepper.Stop();
                 }
             }
             catch (Exception ex)
@@ -66,66 +81,54 @@ namespace Nova.Wpf.App.Services.Twincat
         }
 
         /// <summary>
-        /// Called by the axis monitor every 250 ms. Never throws: a failed read shows in
-        /// <see cref="AxisStatusSnapshot.State"/> instead.
+        /// Running and error as the PLC last pushed them - or, until it pushes them, as the
+        /// library read them when the stepper was followed. Never touches the PLC, so it is
+        /// safe on any thread; with neither it says why instead of showing old values as current.
         /// </summary>
         public AxisStatusSnapshot ReadStatus()
         {
             var snapshot = new AxisStatusSnapshot { ComponentId = ComponentId };
 
-            try
+            IAxisHmiDisplay display;
+            string reason;
+            if (_display.TryRead(out display, out reason))
             {
-                lock (_plc.SyncRoot)
-                {
-                    if (!_plc.IsConnected)
-                    {
-                        snapshot.State = "PLC not connected";
-                        return snapshot;
-                    }
-
-                    snapshot.IsEnabled = _stepper.PowerOn;
-                    snapshot.IsInError = _stepper.AlarmHappen() || _stepper.HasError;
-                    snapshot.IsMoving = _stepper.IsRunning;
-                    snapshot.DirectionForward = _stepper.IsForward;
-                    snapshot.DirectionReverse = _stepper.IsReverse;
-
-                    if (IsAxisBased)
-                    {
-                        snapshot.ActualPosition = _stepper.ActualPosition;
-                        snapshot.ActualSpeed = _stepper.ActualVelocity;
-                        snapshot.IsHomed = _stepper.IsHomed;
-                        snapshot.PositiveLimit = _stepper.PositiveLimit;
-                        snapshot.NegativeLimit = _stepper.NegativeLimit;
-                    }
-                    else
-                    {
-                        // An I/O conveyor has no encoder. io.lVelocity is the setpoint the PLC
-                        // is sending the drive (negative in reverse), the closest thing to a
-                        // speed readout it has.
-                        var ioStepper = _stepper as IOStepper;
-                        snapshot.ActualSpeed = ioStepper != null ? Math.Abs(ioStepper.CommandedVelocity) : 0;
-                    }
-
-                    snapshot.State = snapshot.IsInError
-                        ? "Error " + _stepper.ErrorId
-                        : (snapshot.IsMoving ? "Running" : "Ready");
-                }
+                display.Fill(snapshot);
             }
-            catch (Exception ex)
+            else if (_display.HasLibraryStatus)
             {
-                snapshot.State = "Read failed: " + ex.Message;
+                snapshot.IsInError = _stepper.Error;
+                snapshot.IsMoving = _stepper.Running;
+                snapshot.State = _stepper.Error ? "Error" : (_stepper.Running ? "Running" : "Ready");
+            }
+            else
+            {
+                snapshot.State = reason;
             }
 
             return snapshot;
         }
 
-        private Task<bool> RunLocked(Func<bool> action)
+        /// <summary>The library's commands are void and log their own failures, so a command that did not take shows in the log.</summary>
+        private Task<bool> RunLocked(Action action)
         {
             return Task.Run(() =>
             {
                 lock (_plc.SyncRoot)
                 {
-                    return action();
+                    try
+                    {
+                        if (!_plc.IsConnected)
+                            return false;
+
+                        action();
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine(ComponentId + " command failed: " + ex.Message);
+                        return false;
+                    }
                 }
             });
         }

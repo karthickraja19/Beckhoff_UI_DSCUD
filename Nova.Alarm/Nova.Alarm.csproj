@@ -12,6 +12,11 @@
     <PackageReference Include="Beckhoff.TwinCAT.Ads" Version="7.0.317" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Nova.Abstractions\Nova.Abstractions.csproj" />
+    <!-- IDataAccess: the [Alarms] table is written through it. -->
+    <ProjectReference Include="..\Master.Repository\Master.Repository.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <!-- Only for Logger.WriteLog, so alarm errors land in the same log files as the rest of the HMI. -->
     <Reference Include="Teal.Library.Contracts">
       <HintPath>..\References\Beckhoff\Teal.Library.Contracts.dll</HintPath>
@@ -19,8 +24,5 @@
     <Reference Include="Teal.Library.Log">
       <HintPath>..\References\Beckhoff\Teal.Library.Log.dll</HintPath>
     </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Nova.Abstractions\Nova.Abstractions.csproj" />
   </ItemGroup>
 </Project>

@@ -11,5 +11,8 @@ namespace Master.Repository
         public bool ProductionStatus { get; set; }
         public double CycleTime { get; set; }
         public int Iteration { get; set; }
+
+        /// <summary>True when the unit was tossed by the pre-process CCD check.</summary>
+        public bool Tossing { get; set; }
     }
 }

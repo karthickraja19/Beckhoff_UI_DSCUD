@@ -3,18 +3,35 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
+using Nova.Abstractions.Data;
+using Nova.Abstractions.Services;
 
 namespace Nova.Hive
 {
     /// <summary>
     /// The alarm pop-up of Audio SW DFM v5.4, slide 50. It shows the alarm that stopped
     /// the machine, offers a repair action and a replacement error detail, and can only
-    /// be left by pressing Confirm and swiping a badge in <see cref="OperatorDialog"/>.
+    /// be left by pressing Confirm and swiping a badge in <see cref="OperatorDialog"/>,
+    /// or by the Close button when that is enabled.
     /// </summary>
     public partial class AlarmPopup : Window
     {
         private readonly string _definedDetail;
         private bool _acknowledged;
+        private bool _closeRequested;
+
+        /// <summary>Checks the closing badge; null accepts any badge from the reader.</summary>
+        public IAccessControlService CloseAccess { get; set; }
+
+        /// <summary>The lowest level whose badge may close the pop-up (Level 1 = any operator).</summary>
+        public AccessLevel CloseLevel { get; set; } = AccessLevel.Level1;
+
+        /// <summary>Shows the title bar's Close button, which dismisses the pop-up without a badge.</summary>
+        public bool AllowClose
+        {
+            get { return CloseWindowButton.Visibility == Visibility.Visible; }
+            set { CloseWindowButton.Visibility = value ? Visibility.Visible : Visibility.Collapsed; }
+        }
 
         public AlarmPopup(string startTime, string errorCode, string errorMessage, string errorDetail)
         {
@@ -79,7 +96,11 @@ namespace Nova.Hive
         /// </summary>
         private void ConfirmButton_Click(object sender, RoutedEventArgs e)
         {
-            var operatorDialog = new OperatorDialog { Owner = this };
+            // Slide 50: any operator's badge. The Alarm page spec asks for Level 2/3 to close
+            // the pop-up (Q8 with AME), so the level is a setting (AlarmPopupCloseLevel).
+            var operatorDialog = CloseAccess != null && CloseLevel >= AccessLevel.Level2
+                ? new OperatorDialog("Processing Downtime", CloseAccess, CloseLevel) { Owner = this }
+                : new OperatorDialog { Owner = this };
 
             if (operatorDialog.ShowDialog() != true)
                 return;   // cancelled: the alarm window stays on the screen
@@ -89,10 +110,17 @@ namespace Nova.Hive
             DialogResult = true;
         }
 
-        /// <summary>The window stays on the screen until a badge has been swiped.</summary>
+        /// <summary>Closes the window without a badge: nothing is sent to HIVE for this alarm.</summary>
+        private void CloseWindowButton_Click(object sender, RoutedEventArgs e)
+        {
+            _closeRequested = true;
+            DialogResult = false;
+        }
+
+        /// <summary>The window stays on the screen until a badge has been swiped or Close is pressed.</summary>
         protected override void OnClosing(CancelEventArgs e)
         {
-            e.Cancel = !_acknowledged;
+            e.Cancel = !_acknowledged && !_closeRequested;
             base.OnClosing(e);
         }
     }
@@ -111,7 +139,7 @@ namespace Nova.Hive
         /// <summary>What is added to the error code, e.g. "-09". Empty when none was chosen.</summary>
         public string Code { get; }
 
-        /// <summary>The repair actions of Audio SW DFM v5.4, "Repair Action Code".</summary>
+        /// <summary>The repair actions of Audio SW DFM v5.4 slide 35, in its order.</summary>
         public static IReadOnlyList<RepairAction> All { get; } = new List<RepairAction>
         {
             new RepairAction("<Add repair action>", ""),
@@ -128,6 +156,8 @@ namespace Nova.Hive
             new RepairAction("Stretched", "-11"),
             new RepairAction("Tightened", "-12"),
             new RepairAction("Trained", "-13"),
+            new RepairAction("Tuned", "-14"),
+            new RepairAction("Other", "-99"),
         };
     }
 }

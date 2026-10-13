@@ -388,23 +388,35 @@ namespace Nova.ViewModels.Pages.Audio
         public string Name { get; }
 
         /// <summary>Capture metadata the detail pane lists under "Information".</summary>
-        public System.Collections.Generic.IReadOnlyList<SummaryRow> Information { get; }
+        [ObservableProperty]
+        private System.Collections.Generic.IReadOnlyList<SummaryRow> _information;
 
         [ObservableProperty]
         private bool _isSelected;
 
         /// <summary>
-        /// Set once a real frame is available. Until a vision adapter exists this stays
-        /// false and the tile draws its placeholder, rather than showing an empty frame
-        /// that looks like a camera fault.
+        /// Set once a real frame is available. Until then the tile draws its placeholder,
+        /// rather than showing an empty frame that looks like a camera fault.
         /// </summary>
         [ObservableProperty]
         private bool _hasImage;
 
+        /// <summary>The image file of the newest capture; null when there is none.</summary>
+        [ObservableProperty]
+        private string _imagePath;
+
+        /// <summary>One line under the tile: time, unit SN and OK/NG of the capture.</summary>
+        [ObservableProperty]
+        private string _caption = string.Empty;
+
+        /// <summary>True when the capture was judged NG, so the tile can say so.</summary>
+        [ObservableProperty]
+        private bool _isNg;
+
         public CcdTile(string name, System.Collections.Generic.IReadOnlyList<SummaryRow> information)
         {
             Name = name;
-            Information = information;
+            _information = information;
         }
     }
 

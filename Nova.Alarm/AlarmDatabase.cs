@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
+using Master.Repository;
 
 namespace Nova.Alarm
 {
     /// <summary>
-    /// Saves alarms to the [Alarms] table that the Alarm page reads.
+    /// Saves alarms to the [Alarms] table that the Alarm page reads, through
+    /// <see cref="IDataAccess"/>.
     /// </summary>
     /// <remarks>
     /// The row is written when the alarm starts, with EndTime left empty (the Alarm page
@@ -14,21 +15,20 @@ namespace Nova.Alarm
     /// </remarks>
     public sealed class AlarmDatabase
     {
-        private readonly string _connectionString;
-        private readonly Func<string> _getShiftName;
+        private readonly IDataAccess _dataAccess;
 
-        /// <param name="connectionString">The TEAL_Master connection string from App.config.</param>
-        /// <param name="getShiftName">Returns the name of the shift running now.</param>
-        public AlarmDatabase(string connectionString, Func<string> getShiftName)
+        /// <param name="dataAccess">The SQL Server data access of TEAL_Master; it also says which shift is running now.</param>
+        public AlarmDatabase(IDataAccess dataAccess)
         {
-            _connectionString = connectionString;
-            _getShiftName = getShiftName;
+            _dataAccess = dataAccess ?? throw new ArgumentNullException(nameof(dataAccess));
         }
 
         /// <summary>Saves a new alarm (EndTime empty) and remembers its row ID.</summary>
         public void SaveStart(AlarmRecord alarm)
         {
-            alarm.DatabaseId = Insert(alarm);
+            // Always without an end time, even if the alarm has ended by now: the end is
+            // saved by SaveEnd, which is queued after this.
+            alarm.DatabaseId = Insert(alarm, null);
         }
 
         /// <summary>Fills in the EndTime of the alarm's row.</summary>
@@ -37,21 +37,11 @@ namespace Nova.Alarm
             // The start was never saved (e.g. the database was down then): save the whole alarm now.
             if (alarm.DatabaseId == 0)
             {
-                alarm.DatabaseId = Insert(alarm);
+                alarm.DatabaseId = Insert(alarm, alarm.EndTime);
                 return;
             }
 
-            const string sql = "UPDATE [dbo].[Alarms] SET [EndTime] = @EndTime WHERE [ID] = @ID";
-
-            using (var connection = new SqlConnection(_connectionString))
-            using (var command = new SqlCommand(sql, connection))
-            {
-                command.Parameters.AddWithValue("@EndTime", alarm.EndTime.Value);
-                command.Parameters.AddWithValue("@ID", alarm.DatabaseId);
-
-                connection.Open();
-                command.ExecuteNonQuery();
-            }
+            _dataAccess.UpdateAlarmEndTime(alarm.DatabaseId, alarm.EndTime.Value);
         }
 
         /// <summary>
@@ -59,59 +49,33 @@ namespace Nova.Alarm
         /// </summary>
         public List<AlarmRecord> LoadOpenAlarms()
         {
-            const string sql = @"
-                SELECT [ID], [AlarmCode], [AlarmType], [AlarmDescription], [StartTime]
-                FROM [dbo].[Alarms]
-                WHERE [EndTime] IS NULL AND [StartTime] IS NOT NULL";
-
             var alarms = new List<AlarmRecord>();
 
-            using (var connection = new SqlConnection(_connectionString))
-            using (var command = new SqlCommand(sql, connection))
+            foreach (OpenAlarm row in _dataAccess.GetOpenAlarms())
             {
-                connection.Open();
-                using (SqlDataReader reader = command.ExecuteReader())
+                alarms.Add(new AlarmRecord
                 {
-                    while (reader.Read())
-                    {
-                        alarms.Add(new AlarmRecord
-                        {
-                            DatabaseId = (int)reader["ID"],
-                            ErrorCode = reader["AlarmCode"] as string ?? "",
-                            ErrorType = reader["AlarmType"] as string ?? "",
-                            ErrorDetail = reader["AlarmDescription"] as string ?? "",
-                            StartTime = (DateTime)reader["StartTime"],
-                        });
-                    }
-                }
+                    DatabaseId = row.Id,
+                    ErrorCode = row.AlarmCode,
+                    ErrorType = row.AlarmType,
+                    ErrorDetail = row.AlarmDescription,
+                    StartTime = row.StartTime,
+                });
             }
 
             return alarms;
         }
 
         /// <summary>Inserts one alarm row and returns its new ID.</summary>
-        private int Insert(AlarmRecord alarm)
+        private int Insert(AlarmRecord alarm, DateTime? end)
         {
-            const string sql = @"
-                INSERT INTO [dbo].[Alarms] ([AlarmCode], [AlarmType], [AlarmDescription], [Shift], [StartTime], [EndTime])
-                VALUES (@AlarmCode, @AlarmType, @AlarmDescription, @Shift, @StartTime, @EndTime);
-                SELECT CAST(SCOPE_IDENTITY() AS INT);";
-
-            object endTime = alarm.EndTime.HasValue ? (object)alarm.EndTime.Value : DBNull.Value;
-
-            using (var connection = new SqlConnection(_connectionString))
-            using (var command = new SqlCommand(sql, connection))
-            {
-                command.Parameters.AddWithValue("@AlarmCode", alarm.ErrorCode);
-                command.Parameters.AddWithValue("@AlarmType", alarm.ErrorType);
-                command.Parameters.AddWithValue("@AlarmDescription", alarm.ErrorDetail);
-                command.Parameters.AddWithValue("@Shift", _getShiftName() ?? "");
-                command.Parameters.AddWithValue("@StartTime", alarm.StartTime);
-                command.Parameters.AddWithValue("@EndTime", endTime);
-
-                connection.Open();
-                return (int)command.ExecuteScalar();
-            }
+            return _dataAccess.InsertAlarm(
+                _dataAccess.GetCurrentShift()?.ShiftName ?? string.Empty,
+                alarm.ErrorType,
+                alarm.ErrorCode,
+                alarm.ErrorDetail,
+                alarm.StartTime,
+                end);
         }
     }
 }

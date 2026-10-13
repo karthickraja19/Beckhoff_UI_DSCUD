@@ -59,7 +59,9 @@ namespace Nova.Wpf.App.Converters
                 case ProductSku.Normal: return "Normal(E/M)";
                 case ProductSku.M: return "M-SKU";
                 case ProductSku.E: return "E-SKU";
-                default: return string.Empty;
+                // The plate shows nothing for a common product; the Setting page's menu
+                // (ConverterParameter=menu) still has to name the choice.
+                default: return string.Equals(parameter as string, "menu", StringComparison.OrdinalIgnoreCase) ? "Common" : string.Empty;
             }
         }
 
@@ -178,7 +180,9 @@ namespace Nova.Wpf.App.Converters
 
     /// <summary>
     /// A Data page health level (Normal, Warning, Critical, Unknown) to green, orange,
-    /// red or grey - the Health tab's status colours (S2.4.4.4).
+    /// red or grey - the Health tab's status colours (S2.4.4.4). Pass "fill" for a
+    /// filled bar or swatch, where Warning is S2.4.4.4's yellow rather than the orange
+    /// that stays legible as text.
     /// </summary>
     /// <remarks>
     /// Matched on the level's name rather than the ViewModels enum type, and resolved
@@ -188,11 +192,13 @@ namespace Nova.Wpf.App.Converters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
+            bool fill = string.Equals(parameter as string, "fill", StringComparison.OrdinalIgnoreCase);
+
             string key;
             switch (value != null ? value.ToString() : string.Empty)
             {
                 case "Normal": key = "Audio.System.GreenBrush"; break;
-                case "Warning": key = "Audio.System.OrangeBrush"; break;
+                case "Warning": key = fill ? "Audio.System.YellowBrush" : "Audio.System.OrangeBrush"; break;
                 case "Critical": key = "Audio.System.RedBrush"; break;
                 default: key = "Audio.System.GrayBrush"; break;
             }

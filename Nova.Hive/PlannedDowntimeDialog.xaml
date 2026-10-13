@@ -27,16 +27,38 @@
                     <ItemsControl x:Name="ReasonList">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <RadioButton GroupName="PlannedDowntime"
-                                             Content="{Binding Label}"
-                                             Tag="{Binding}"
-                                             IsEnabled="{Binding IsSelectable}"
-                                             FontWeight="Bold"
-                                             Margin="0,0,0,9"
-                                             Checked="Reason_Checked" />
+                                <StackPanel Margin="0,0,0,9">
+                                    <RadioButton x:Name="ReasonButton" GroupName="PlannedDowntime"
+                                                 Content="{Binding Label}"
+                                                 Tag="{Binding}"
+                                                 IsEnabled="{Binding IsEnabled}"
+                                                 FontWeight="Bold"
+                                                 Checked="Reason_Checked" />
+                                    <!-- Why a greyed-out reason cannot be chosen now. A tooltip
+                                         would not show on the touch screen. -->
+                                    <TextBlock x:Name="BlockedNote" Text="{Binding BlockedBecause}"
+                                               FontSize="11" Foreground="#8A8A8A" TextWrapping="Wrap"
+                                               Margin="20,1,0,0" Visibility="Collapsed" />
+                                </StackPanel>
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding IsEnabled}" Value="False">
+                                        <Setter TargetName="BlockedNote" Property="Visibility" Value="Visible" />
+                                        <!-- Greyed out as slide 49 draws PD-14 and PD-15. -->
+                                        <Setter TargetName="ReasonButton" Property="Foreground" Value="#A0A0A0" />
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
+
+                    <!-- Slide 31: Offline Processing "Must enter DOE details" and Other
+                         "Specify action details". Details only; the code itself is never typed. -->
+                    <StackPanel x:Name="DetailsPanel" Visibility="Collapsed" Margin="0,4,0,0">
+                        <TextBlock x:Name="DetailsLabel" FontWeight="Bold" Margin="0,0,0,4" TextWrapping="Wrap" />
+                        <TextBox x:Name="DetailsBox" MinHeight="54" Padding="6,4" MaxLength="200"
+                                 TextWrapping="Wrap" AcceptsReturn="False"
+                                 TextChanged="DetailsBox_TextChanged" />
+                    </StackPanel>
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
                         <Button Content="Cancel" MinWidth="92" Padding="14,6" Margin="0,0,10,0"

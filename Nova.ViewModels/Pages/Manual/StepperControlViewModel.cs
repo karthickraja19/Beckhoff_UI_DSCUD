@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Nova.Abstractions.Hardware;
-using Nova.Abstractions.Hardware.Enums;
 using Nova.Abstractions.Services;
 using Nova.ViewModels.Common;
 
@@ -17,13 +16,19 @@ namespace Nova.ViewModels.Pages.Manual
     /// conveyor-stepper behaviour (motor select + Forward/Reverse/Stop): commands
     /// delegate to the selected <see cref="IStepper"/> via
     /// <see cref="IStepperService"/>, and live read-back arrives through
-    /// <see cref="IAxisMonitorService"/> events (steppers share the axis snapshot).
+    /// <see cref="IAxisMonitorService"/> events (steppers share the axis snapshot) - for
+    /// the selected motor only, and only while the tab is on screen.
     /// </summary>
-    public partial class StepperControlViewModel : ViewModelBase
+    public partial class StepperControlViewModel : ViewModelBase, IActivatableTab
     {
         private readonly IStepperService _stepperService;
         private readonly IAxisMonitorService _monitor;
         private readonly IDialogService _dialog;
+
+        private bool _isActive;
+
+        /// <summary>The selected motor's live status, followed while the tab is on screen.</summary>
+        private IDisposable _following;
 
         // ---- Stepper selection --------------------------------------------
         public ObservableCollection<string> Motors { get; }
@@ -46,11 +51,9 @@ namespace Nova.ViewModels.Pages.Manual
         // ---- Device status (data-driven indicator list) -------------------
         public ObservableCollection<AxisStatusItem> DeviceStatus { get; }
 
-        private readonly AxisStatusItem _enableStatus;
+        // An I/O stepper reports two things: whether it is running and whether it is in error.
         private readonly AxisStatusItem _alarmStatus;
         private readonly AxisStatusItem _runningStatus;
-        private readonly AxisStatusItem _forwardStatus;
-        private readonly AxisStatusItem _reverseStatus;
 
         public StepperControlViewModel(IStepperService stepperService, IAxisMonitorService monitor,
             IDialogService dialog = null)
@@ -60,41 +63,26 @@ namespace Nova.ViewModels.Pages.Manual
             _dialog = dialog;
 
             Motors = new ObservableCollection<string>();
-            // IO steppers only. Axis-based steppers drive a real IAxis and are listed on
-            // the Axis screen instead, where position, homing and jog actually apply;
-            // this screen offers Forward/Reverse/Stop, which is all an IO stepper has.
+            // IO steppers only, from Data\Steppers.json. Axis-based steppers drive a real
+            // IAxis and are listed on the Axis screen instead, where position, homing and
+            // jog actually apply; this screen offers Forward/Reverse/Stop, which is all an
+            // IO stepper has. The list is empty when every stepper is axis-based.
             var all = _stepperService?.GetAllSteppers();
-            if (all != null && all.Count > 0)
+            if (all != null)
             {
-                // Configured machine: list the IO steppers, and leave the list empty if
-                // every stepper is axis-based. Falling back to the enum here would put
-                // the axis-based ones straight back on this screen.
                 foreach (var stepper in all.Where(s => !s.IsAxisBased))
                     Motors.Add(stepper.ComponentId);
-            }
-            else
-            {
-                // No stepper service at all (dev PC): show the enum so the screen is
-                // still navigable.
-                foreach (var name in Enum.GetNames(typeof(Steppers)))
-                    Motors.Add(name);
             }
 
             _selectedMotor = Motors.Count > 0 ? Motors[0] : null;
 
-            _enableStatus = new AxisStatusItem("Motor Enabled");
             _alarmStatus = new AxisStatusItem("In Alarm", isAlarm: true);
             _runningStatus = new AxisStatusItem("Running");
-            _forwardStatus = new AxisStatusItem("Direction Forward");
-            _reverseStatus = new AxisStatusItem("Direction Reverse");
 
             DeviceStatus = new ObservableCollection<AxisStatusItem>
             {
-                _enableStatus,
                 _alarmStatus,
                 _runningStatus,
-                _forwardStatus,
-                _reverseStatus,
             };
 
             if (_monitor != null)
@@ -118,11 +106,8 @@ namespace Nova.ViewModels.Pages.Manual
                 return;
 
             ActualSpeed = s.ActualSpeed;
-            _enableStatus.IsActive = s.IsEnabled;
             _alarmStatus.IsActive = s.IsInError;
             _runningStatus.IsActive = s.IsMoving;
-            _forwardStatus.IsActive = s.DirectionForward;
-            _reverseStatus.IsActive = s.DirectionReverse;
 
             StatusText = s.IsInError ? "Alarm" : (s.IsMoving ? "Running" : "Ready");
         }
@@ -131,9 +116,8 @@ namespace Nova.ViewModels.Pages.Manual
         /// is not shown against the new one for the poll or two before it reports.</summary>
         private void ClearMotionIndicators()
         {
+            _alarmStatus.IsActive = false;
             _runningStatus.IsActive = false;
-            _forwardStatus.IsActive = false;
-            _reverseStatus.IsActive = false;
             ActualSpeed = 0;
             StatusText = "Ready";
         }
@@ -141,6 +125,41 @@ namespace Nova.ViewModels.Pages.Manual
         partial void OnSelectedMotorChanged(string value)
         {
             ClearMotionIndicators();
+            FollowSelectedMotor();
+        }
+
+        public void Activate()
+        {
+            if (_isActive)
+                return;
+
+            _isActive = true;
+            ClearMotionIndicators();
+            FollowSelectedMotor();
+        }
+
+        public void Deactivate()
+        {
+            if (!_isActive)
+                return;
+
+            _isActive = false;
+            _following?.Dispose();
+            _following = null;
+        }
+
+        /// <summary>
+        /// Follows the live status of the selected motor, and lets go of the one selected
+        /// before. Its values arrive through the monitor once the PLC sends them.
+        /// </summary>
+        private void FollowSelectedMotor()
+        {
+            if (!_isActive)
+                return;
+
+            IDisposable previous = _following;
+            _following = (CurrentStepper as ILiveStatus)?.FollowStatus();
+            previous?.Dispose();
         }
 
         // ---- Commands -----------------------------------------------------
@@ -211,8 +230,12 @@ namespace Nova.ViewModels.Pages.Manual
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing && !IsDisposed && _monitor != null)
-                _monitor.AxisStatusUpdated -= OnStatusUpdated;
+            if (disposing && !IsDisposed)
+            {
+                if (_monitor != null)
+                    _monitor.AxisStatusUpdated -= OnStatusUpdated;
+                Deactivate();
+            }
             base.Dispose(disposing);
         }
     }

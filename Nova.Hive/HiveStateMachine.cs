@@ -16,6 +16,12 @@ namespace Nova.Hive
 
         /// <summary>Badge of the operator, only when the state was changed by hand.</summary>
         public string OperatorId { get; set; }
+
+        /// <summary>
+        /// The hash keys as read when this change was sent (slide 12). Filled in by
+        /// <see cref="HiveService"/>; null sends only MS_SHA1 from the settings.
+        /// </summary>
+        public System.Collections.Generic.IReadOnlyList<Nova.Abstractions.Services.HashKeyReading> HashKeys { get; set; }
     }
 
     /// <summary>
@@ -31,6 +37,7 @@ namespace Nova.Hive
     /// <item>another alarm while already down changes nothing - no second payload</item>
     /// <item>the PLC stopping with no alarm to explain it also goes to downtime</item>
     /// <item>leaving downtime is only possible by hand, by a level 2/3 operator with a badge</item>
+    /// <item>idle is never chosen by hand (automatic only since v5.1), and unplanned downtime never becomes planned</item>
     /// <item>resetting the alarm or pressing Start does not change the HIVE state</item>
     /// </list>
     /// Nothing in here talks to the gateway or the screen, so the rules can be read on
@@ -67,6 +74,15 @@ namespace Nova.Hive
 
         public int CurrentState { get; private set; }
 
+        /// <summary>
+        /// True when the PLC reports each unit that enters (<see cref="PlcUnitReader"/>), so
+        /// Running and Idle follow the units (slides 7 and 8). The PLC being in auto then no
+        /// longer counts as processing: a machine waiting for units in auto goes Idle after
+        /// 90 seconds, and the first unit takes it back to Running. False keeps the PLC mode
+        /// as the stand-in: auto is Running, and the 90 seconds start once it leaves auto.
+        /// </summary>
+        public bool FollowsUnits { get; set; }
+
         /// <summary>The alarm that put the machine into downtime, or null.</summary>
         public HiveError RootError { get; private set; }
 
@@ -96,7 +112,7 @@ namespace Nova.Hive
 
             _stoppedWithoutAlarmSince = null;
 
-            if (state == PlcMachineState.AutoRunning)
+            if (state == PlcMachineState.AutoRunning && !FollowsUnits)
             {
                 _lastUnitTime = time;
                 ChangeTo(Running, time, null, null);
@@ -154,9 +170,9 @@ namespace Nova.Hive
             }
 
             // While the PLC is in auto the machine is processing, so the 90 seconds only
-            // start once it leaves auto. When the PLC reports units, call UnitEntered
-            // instead and this can follow the units themselves.
-            if (_machineState == PlcMachineState.AutoRunning)
+            // start once it leaves auto - unless the PLC reports units (FollowsUnits), then
+            // it is the units themselves that keep HIVE Running.
+            if (_machineState == PlcMachineState.AutoRunning && !FollowsUnits)
                 _lastUnitTime = now;
 
             if (CurrentState == Running && now - _lastUnitTime >= IdleAfter)
@@ -164,17 +180,132 @@ namespace Nova.Hive
         }
 
         /// <summary>
-        /// The operator changed the state by hand (level 2/3 with a badge). This is the
-        /// only way out of downtime.
+        /// Why the operator may not make this change by hand right now, or null when they
+        /// may. Slide 8 gives the manual switches: into downtime from running or idle, and
+        /// out of downtime to running - nothing else.
         /// </summary>
-        /// <param name="plannedDowntime">The "PD-" reason when going to planned downtime, otherwise null.</param>
-        public void ChangeManually(int newState, string operatorId, DateTime time, HiveError plannedDowntime = null)
+        /// <param name="reason">The downtime reason when going to downtime, otherwise null.</param>
+        public string CheckManualChange(int newState, HiveError reason)
         {
+            switch (newState)
+            {
+                case Idle:
+                    // v5.1: idle is automatic only.
+                    return "Idle is automatic: HIVE goes to Idle 90 seconds after the machine stops processing units.";
+
+                case Running:
+                    if (CurrentState == Running)
+                        return "HIVE is already Running.";
+
+                    if (CurrentState == Idle)
+                        return "HIVE goes back to Running by itself when a unit enters the machine.";
+
+                    return null;
+
+                case Downtime:
+                    return CurrentState == Downtime ? CheckDowntimeChange(reason) : null;
+
+                default:
+                    return "Unknown HIVE state " + newState + ".";
+            }
+        }
+
+        /// <summary>
+        /// Already down, the reason may change, within slides 9 and 31: unplanned
+        /// downtime never becomes planned, and PD-17 only follows a reason marked "*".
+        /// </summary>
+        private string CheckDowntimeChange(HiveError reason)
+        {
+            string currentCode = RootError != null ? RootError.Code : null;
+            string newCode = reason != null ? reason.Code : null;
+
+            // Slide 75: "Any manual change of HIVE status during this period should be disabled."
+            if (string.Equals(currentCode, PoseCalibrationCode, StringComparison.OrdinalIgnoreCase))
+            {
+                return "Dispensing pose calibration (PD-14) is running: the HIVE state cannot be changed by hand "
+                    + "until it finishes. A Level 3 user ends it by changing to Running.";
+            }
+
+            if (!IsPlanned(currentCode))
+            {
+                if (IsPlanned(newCode))
+                {
+                    return "The machine is in unplanned downtime" + CodeText(currentCode)
+                        + ". Changing unplanned downtime to planned downtime is prohibited.";
+                }
+
+                return "The machine is already in unplanned downtime" + CodeText(currentCode) + ".";
+            }
+
+            if (string.Equals(currentCode, newCode, StringComparison.OrdinalIgnoreCase))
+                return "The machine is already in this planned downtime.";
+
+            if (string.Equals(newCode, PlannedDowntimeReason.DebugRunCode, StringComparison.OrdinalIgnoreCase))
+            {
+                PlannedDowntimeReason current = PlannedDowntimeReason.Find(currentCode);
+                if (current == null || !current.AllowsDebugRun)
+                {
+                    return "A debug run can only follow a planned downtime marked * (such as Glue Change), not "
+                        + (current != null ? current.Name : currentCode) + ".";
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>Dispensing Pose Calibration (slides 74-75).</summary>
+        public const string PoseCalibrationCode = "PD-14";
+
+        /// <summary>Slide 9: planned downtime is any code beginning with "PD-".</summary>
+        public static bool IsPlanned(string code)
+        {
+            return code != null && code.StartsWith("PD-", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string CodeText(string code)
+        {
+            return string.IsNullOrEmpty(code) ? "" : " (" + code + ")";
+        }
+
+        /// <summary>
+        /// The operator changed the state by hand (level 2/3 with a badge). This is the
+        /// only way out of downtime. While down, a new reason goes out as a 5 to 5
+        /// payload, for example Glue Change followed by a Tuning/Debug Material Run.
+        /// </summary>
+        /// <param name="reason">The downtime reason when going to downtime, otherwise null.</param>
+        /// <returns>Null when the change was made; otherwise why it was refused.</returns>
+        public string ChangeManually(int newState, string operatorId, DateTime time, HiveError reason = null)
+        {
+            // Checked again here: the state can change while the operator is in the dialogs.
+            string refused = CheckManualChange(newState, reason);
+            if (refused != null)
+                return refused;
+
             if (newState == Running)
                 _lastUnitTime = time;   // do not fall straight back to idle
 
-            RootError = newState == Downtime ? plannedDowntime : null;
-            ChangeTo(newState, time, plannedDowntime, operatorId);
+            RootError = newState == Downtime ? reason : null;
+            ChangeTo(newState, time, reason, operatorId, alwaysSend: newState == Downtime);
+            return null;
+        }
+
+        /// <summary>
+        /// Slide 47: the GUI Stop button was pressed, and the operator swiped a badge
+        /// before HIVE goes down. If the machine went down while the badge dialog was
+        /// open - the PLC stopped and the fallback above reported it - the downtime is
+        /// sent again (5 to 5) with the badge, keeping the code that put it down.
+        /// </summary>
+        public void StopPressed(HiveError error, string operatorId, DateTime time)
+        {
+            if (CurrentState == Downtime)
+            {
+                ChangeTo(Downtime, time, RootError, operatorId, alwaysSend: true);
+                return;
+            }
+
+            _stoppedWithoutAlarmSince = null;
+            RootError = error;
+            ChangeTo(Downtime, time, error, operatorId);
         }
 
         /// <summary>

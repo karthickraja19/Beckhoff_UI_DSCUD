@@ -85,6 +85,13 @@ namespace Nova.Hive
             return codes;
         }
 
+        /// <summary>The mapped error for a PLC code, or null when the file has no line for it. Logs nothing.</summary>
+        public HiveError Lookup(string plcCode)
+        {
+            HiveError known;
+            return _byPlcCode.TryGetValue(plcCode ?? "", out known) ? known.Copy() : null;
+        }
+
         /// <summary>The HIVE error for one alarm from the PLC.</summary>
         public HiveError Find(AlarmRecord alarm)
         {

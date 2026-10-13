@@ -1,5 +1,5 @@
 using System;
-using Teal.Library.Contracts.Models;
+using Nova.Alarm;
 using Teal.Library.Log;
 using Teal.Library.Twincat;
 using TwinCAT.Ads;
@@ -11,28 +11,30 @@ namespace Nova.Wpf.App.Services.Twincat
     /// Wraps the Beckhoff library's <see cref="TwincatCard"/> and serialises access to it:
     /// the monitor thread polls status while command buttons write from the thread pool,
     /// and each library call is a state check plus a read or write that should not
-    /// interleave with another.
+    /// interleave with another. The alarm and HIVE readers use it too, through
+    /// <see cref="IPlcConnection"/>, so the HMI has one ADS connection to the PLC.
     /// </summary>
-    public sealed class TwincatPlcConnection : IDisposable
+    public sealed class TwincatPlcConnection : IPlcConnection, IDisposable
     {
         private static readonly TimeSpan ReconnectInterval = TimeSpan.FromSeconds(5);
 
         private DateTime _nextConnectAttemptUtc;
 
-        public TwincatPlcConnection(string amsNetId, int port, string stepperGvl, string stepperArray)
+        /// <param name="card">
+        /// The card Master.Configuration builds from Data\CardsConfiguration.json: the PLC's
+        /// AMS Net ID and port, and the GVL and array the steppers live in.
+        /// </param>
+        public TwincatPlcConnection(TwincatCard card)
         {
-            AmsNetId = amsNetId;
-            Port = port;
-            Card = new TwincatCard(new CardProperties
-            {
-                ConnectionId = amsNetId,
-                PortNo = port,
-                DBName = stepperGvl,
-                StepperDUTName = stepperArray,
-            });
+            Card = card ?? throw new ArgumentNullException(nameof(card));
+            AmsNetId = card.ConnectionId;
+            Port = card.PortNo;
         }
 
         public TwincatCard Card { get; }
+
+        /// <summary>The library's ADS client. It is created once with the card and reconnected in place, so notification handlers attached to it survive a reconnect.</summary>
+        public AdsClient Client => Card.Client;
 
         /// <summary>Held around every library call made through this connection.</summary>
         public object SyncRoot { get; } = new object();
@@ -104,12 +106,6 @@ namespace Nova.Wpf.App.Services.Twincat
             }
         }
 
-        /// <summary>Symbol of one stepper's ST_STEPPER, built the way the library builds it.</summary>
-        public string StepperInstance(int id)
-        {
-            return Card.DBName + "." + Card.StepperDUTName + "[" + id + "]";
-        }
-
         /// <summary>
         /// True when the PLC declares the symbol. Uses the ADS client directly because the
         /// library's Read swallows a missing symbol and returns the default value.
@@ -126,6 +122,55 @@ namespace Nova.Wpf.App.Services.Twincat
                 catch (Exception)
                 {
                     return false;
+                }
+            }
+        }
+
+        /// <summary>The size in bytes the PLC declares the symbol with, or null when it does not declare it.</summary>
+        public int? SymbolSize(string symbolPath)
+        {
+            lock (SyncRoot)
+            {
+                try
+                {
+                    return Card.Client.ReadSymbol(symbolPath).ByteSize;
+                }
+                catch (Exception)
+                {
+                    return null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Writes one PLC variable by name - for the few HMI-owned values the PLC reads
+        /// (e.g. the picture check's dispensing control). Throws when the write fails.
+        /// </summary>
+        public void WriteSymbol(string symbolPath, object value)
+        {
+            lock (SyncRoot)
+            {
+                Card.Client.WriteValue(symbolPath, value);
+            }
+        }
+
+        /// <summary>
+        /// Writes a whole PLC variable - an array or struct - as its raw bytes, in one ADS
+        /// write. <paramref name="data"/> is laid out as the PLC lays the variable out, and is
+        /// as long as it (<see cref="SymbolSize"/>). Throws when the write fails.
+        /// </summary>
+        public void WriteBytes(string symbolPath, byte[] data)
+        {
+            lock (SyncRoot)
+            {
+                uint handle = Card.Client.CreateVariableHandle(symbolPath);
+                try
+                {
+                    Card.Client.Write(handle, new ReadOnlyMemory<byte>(data));
+                }
+                finally
+                {
+                    Card.Client.DeleteVariableHandle(handle);
                 }
             }
         }

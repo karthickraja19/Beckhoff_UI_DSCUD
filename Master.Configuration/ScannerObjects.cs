@@ -1,50 +1,31 @@
-﻿using Master.Configuration.Model;
-using Newtonsoft.Json;
-using System;
+using Master.Configuration.Model;
 using System.Collections.Generic;
-using System.Data;
-using System.IO;
-using System.Linq;
-using System.Windows.Forms;
-using System.Xml.Linq;
 using Teal.Library.Contracts;
-using Teal.Library.Log;
 using Teal.Library.TcpIp;
+using Teal.Library.Twincat;
 
 namespace Master.Configuration
 {
+    /// <summary>
+    /// The library scanner for each member of the <see cref="Master.Configuration.Scanners"/>
+    /// enum configured in Data\Scanners.json. Created by <see cref="DeviceObjects.Create"/>.
+    /// </summary>
     public static class ScannerObjects
     {
-        public static Dictionary<Scanners, TcpDevice> Scanners = new Dictionary<Scanners, TcpDevice>();
+        public static readonly Dictionary<Scanners, TcpDevice> Scanners = new Dictionary<Scanners, TcpDevice>();
 
-        public static void LoadScanners()
+        /// <summary>
+        /// Each is bound to {DBName}.{ScannerDUTName}.ScannerData[Id] from CardsConfiguration.json
+        /// (MAIN.scannercall.ScannerData[1]). Without a ScannerDUTName no scanner is created. The PLC array starts at 1.
+        /// </summary>
+        internal static void Load(TwincatCard card, List<string> problems)
         {
-            try
+            Scanners.Clear();
+
+            foreach (var scanner in MachineConfiguration.Configured<Master.Configuration.Scanners, NetworkDeviceConfiguration>(ConfigGlobalClass.ScannerConfigurations, c => c.EnumName))
             {
-                var scannerJsonString = File.ReadAllText(Application.StartupPath + "\\Data\\Scanners.json");
-
-                ConfigGlobalClass.ScannerConfigurations = JsonConvert.DeserializeObject<List<SocketClientConfiguration>>(scannerJsonString);
-
-                foreach (var scannerEnum in Enum.GetValues(typeof(Scanners)).Cast<Scanners>())
-                {
-                    string scannerName = scannerEnum.ToString();
-
-                    var scannerConfig = ConfigGlobalClass.ScannerConfigurations.Where(x => x.EnumName == scannerName).FirstOrDefault();
-                    NetworkDeviceProperties networkDeviceProperties = new NetworkDeviceProperties
-                    {
-                        Name = scannerConfig.Name,
-                        EnumName = scannerConfig.EnumName,
-                        DeviceType = NetworkDeviceType.Scanner,
-                        Id = scannerConfig.Id,
-                    };
-                    var scanner = TcpDeviceFactory.Create(ConfigGlobalClass.cardManager.Card,networkDeviceProperties);
-                    Scanners[scannerEnum] = scanner;
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("LoadScanners: " + ex.Message, "", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                Logger.WriteLog(LogType.Error, "LoadScanners", "ScannerObjects", ex.Message, ex.StackTrace);
+                var properties = DeviceObjects.NetworkProperties<ScannerProperties>(scanner.Value, card, ConfigGlobalClass.CardConfiguration?.ScannerDUTName);
+                DeviceObjects.Add(Scanners, scanner.Key, () => TcpDeviceFactory.Create(card, properties), problems);
             }
         }
     }

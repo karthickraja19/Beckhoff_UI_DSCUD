@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -12,11 +13,17 @@ namespace Nova.ViewModels.Pages.Manual
     /// ViewModel backing the "Camera" tab of the Manual screen — a TCP camera/CCD
     /// console mirroring the V3 flow (select CCD, connect, edit the outbound command,
     /// trigger a capture, watch the response). Devices come from CCDs.json via
-    /// <see cref="ICommDeviceService"/>; Connect/Trigger/Disconnect do real TCP, with a
-    /// seeded dev fallback when no config is present.
+    /// <see cref="ICommDeviceService"/>; Connect/Trigger/Disconnect do real TCP.
+    ///
+    /// The connection status is the CCD's own: read when the tab comes on screen and when
+    /// another CCD is selected, and followed through
+    /// <see cref="IConnectionStatusService.StatusChanged"/> while the tab is on screen.
     /// </summary>
-    public partial class CameraControlViewModel : ViewModelBase
+    public partial class CameraControlViewModel : ViewModelBase, IActivatableTab
     {
+        private readonly IConnectionStatusService _connectionStatus;
+        private bool _isActive;
+
         public ObservableCollection<CcdDeviceViewModel> Devices { get; }
 
         [ObservableProperty]
@@ -35,8 +42,9 @@ namespace Nova.ViewModels.Pages.Manual
         public bool CanConnect => !IsConnected;
         public string StatusText => IsConnected ? "CONNECTED" : "DISCONNECTED";
 
-        public CameraControlViewModel(ICommDeviceService comm)
+        public CameraControlViewModel(ICommDeviceService comm, IConnectionStatusService connectionStatus = null)
         {
+            _connectionStatus = connectionStatus;
             Devices = new ObservableCollection<CcdDeviceViewModel>();
             Console = new ObservableCollection<CameraConsoleLine>();
 
@@ -50,21 +58,44 @@ namespace Nova.ViewModels.Pages.Manual
                 _selectedDevice = Devices[0];
                 _sendCommand = ccds[0].DefaultCommand ?? _sendCommand;
             }
-            else
-            {
-                // Dev fallback (no config): seeded handshake so the console reads live.
-                Devices.Add(new CcdDeviceViewModel("CCD1", "Sony IMX250"));
-                Devices.Add(new CcdDeviceViewModel("CCD3", "Sony IMX264"));
-                _selectedDevice = Devices[0];
-                _isConnected = true;
-                Console.Add(new CameraConsoleLine("CAM_INIT_REQ..."));
-                Console.Add(new CameraConsoleLine("ACK INIT_SUCCESS", isAck: true));
-                Console.Add(new CameraConsoleLine("GET_STATUS"));
-                Console.Add(new CameraConsoleLine("TEMP: 42°C | BUFFER: 2%"));
-            }
+
+            RefreshConnection();
         }
 
         private INetworkProtocol ActiveProtocol => SelectedDevice?.Protocol;
+
+        partial void OnSelectedDeviceChanged(CcdDeviceViewModel value) => RefreshConnection();
+
+        public void Activate()
+        {
+            if (_isActive)
+                return;
+
+            _isActive = true;
+            if (_connectionStatus != null)
+                _connectionStatus.StatusChanged += OnConnectionStatusChanged;
+            RefreshConnection();
+        }
+
+        public void Deactivate()
+        {
+            if (!_isActive)
+                return;
+
+            _isActive = false;
+            if (_connectionStatus != null)
+                _connectionStatus.StatusChanged -= OnConnectionStatusChanged;
+        }
+
+        // Raised on the UI thread when any device's connection changes.
+        private void OnConnectionStatusChanged(object sender, EventArgs e) => RefreshConnection();
+
+        /// <summary>Shows the selected CCD's connection as it reports it.</summary>
+        private void RefreshConnection()
+        {
+            var p = ActiveProtocol;
+            IsConnected = p != null && p.IsConnected;
+        }
 
         [RelayCommand]
         private async Task ConnectDevice()
@@ -72,8 +103,10 @@ namespace Nova.ViewModels.Pages.Manual
             if (IsConnected) return;
             Console.Add(new CameraConsoleLine("CONNECT " + (SelectedDevice?.Name ?? "CCD") + "..."));
             var p = ActiveProtocol;
-            bool ok = p == null ? true : await p.ConnectAsync();
-            IsConnected = ok;
+            bool ok = p != null && await p.ConnectAsync();
+            // The CCD's own status can arrive a moment after the connect returns; the
+            // status change then confirms it.
+            IsConnected = ok || (p != null && p.IsConnected);
             Console.Add(new CameraConsoleLine(ok ? "ACK LINK_ESTABLISHED" : "CONNECT_FAILED", isAck: ok));
         }
 
@@ -83,11 +116,7 @@ namespace Nova.ViewModels.Pages.Manual
             if (!IsConnected) return;
             var p = ActiveProtocol;
             if (p == null)
-            {
-                Console.Add(new CameraConsoleLine("TRIGGER_CAPTURE"));
-                Console.Add(new CameraConsoleLine("ACK CAPTURE_DONE", isAck: true));
                 return;
-            }
             Console.Add(new CameraConsoleLine(SendCommand));
             string response = await p.SendAndReceiveAsync(SendCommand);
             Console.Add(new CameraConsoleLine(
@@ -100,9 +129,10 @@ namespace Nova.ViewModels.Pages.Manual
         {
             if (!IsConnected) return;
             ActiveProtocol?.Disconnect();
-            IsConnected = false;
+            // The PLC closes the link in the background, so the CCD can still report
+            // connected here; the status change shows it closed.
+            RefreshConnection();
             Console.Add(new CameraConsoleLine("DISCONNECT"));
-            Console.Add(new CameraConsoleLine("LINK_CLOSED"));
             await Task.CompletedTask;
         }
 
@@ -110,6 +140,13 @@ namespace Nova.ViewModels.Pages.Manual
         private void RefreshResponse()
         {
             Console.Clear();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && !IsDisposed)
+                Deactivate();
+            base.Dispose(disposing);
         }
 
     }

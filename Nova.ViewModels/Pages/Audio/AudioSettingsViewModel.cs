@@ -7,8 +7,10 @@ using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Nova.Abstractions.Data;
+using Nova.Abstractions.Machine.Interfaces;
 using Nova.Abstractions.Services;
 using Nova.ViewModels.Common;
+using ManualViewModel = Nova.ViewModels.Pages.Manual.ManualViewModel;
 
 namespace Nova.ViewModels.Pages.Audio
 {
@@ -141,6 +143,12 @@ namespace Nova.ViewModels.Pages.Audio
             OnPropertyChanged(nameof(CanEditIdentity));
             OnPropertyChanged(nameof(CanEditLanguage));
             OnPropertyChanged(nameof(AccessHint));
+
+            if (AccessControl != null)
+            {
+                ApplyLevelToTabs();
+                BuildTabs();
+            }
 
             // Dropping below Level 3 with the hardware dialog open closes it unsaved.
             if (!CanEditCritical && IsHardwareDialogOpen)
@@ -368,11 +376,149 @@ namespace Nova.ViewModels.Pages.Audio
             IsHardwareDialogOpen = false;
         }
 
+        /// <summary>
+        /// Coming back to the page on the Manual or Calibration tab puts the machine back in
+        /// manual mode (and the Calibration tab follows the PLC's calibration status). The other tabs re-read what they show when they are selected, as before.
+        /// </summary>
+        public override void OnNavigatedTo()
+        {
+            base.OnNavigatedTo();
+            if (IsManualTab)
+                Manual.OnShown();
+            else if (IsCalibrationTab)
+                Calibration.OnShown();
+        }
+
         /// <summary>Leaving the page abandons an open Hardware Setting dialog.</summary>
         public override void OnNavigatedFrom()
         {
             IsHardwareDialogOpen = false;
+            SettingsTabBase tab = TabFor(SelectedTab);
+            if (tab != null)
+                tab.OnHidden();
             base.OnNavigatedFrom();
+        }
+
+
+        // ==================================================================
+        // Tabs: General, Manual, Calibration, Access Control, Valve Model, HIVE Control, Picture Qty.
+        // Check, PDATA Mapping (Level 3) and Hash Key. Which are offered depends on the level (and, for Hash
+        // Key, on the HIVE state), so the list is rebuilt when either changes.
+        // ==================================================================
+
+        public const string GeneralTab = "General";
+
+        private readonly IHiveControl _hive;
+
+        public ObservableCollection<string> Tabs { get; } = new ObservableCollection<string>();
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(IsGeneralTab), nameof(IsManualTab), nameof(IsCalibrationTab), nameof(IsAccessControlTab), nameof(IsValveModelTab),
+            nameof(IsHiveControlTab), nameof(IsPictureQtyTab), nameof(IsHashKeyTab), nameof(IsPdataMappingTab))]
+        private string _selectedTab = GeneralTab;
+
+        public bool IsGeneralTab => SelectedTab == GeneralTab;
+        public bool IsManualTab => Manual != null && SelectedTab == Manual.Title;
+        public bool IsCalibrationTab => Calibration != null && SelectedTab == Calibration.Title;
+        public bool IsAccessControlTab => AccessControl != null && SelectedTab == AccessControl.Title;
+        public bool IsValveModelTab => ValveModel != null && SelectedTab == ValveModel.Title;
+        public bool IsHiveControlTab => HiveControl != null && SelectedTab == HiveControl.Title;
+        public bool IsPictureQtyTab => PictureQty != null && SelectedTab == PictureQty.Title;
+        public bool IsHashKeyTab => HashKey != null && SelectedTab == HashKey.Title;
+        public bool IsPdataMappingTab => PdataMapping != null && SelectedTab == PdataMapping.Title;
+
+        /// <summary>The manual-operation GUI, with the Homing button and the running log.</summary>
+        public ManualTabViewModel Manual { get; }
+
+        /// <summary>The PLC calibration routines, per station: parameters, Start / Pause / Stop and results.</summary>
+        public CalibrationTabViewModel Calibration { get; }
+        public AccessControlTabViewModel AccessControl { get; }
+        public ValveModelTabViewModel ValveModel { get; }
+        public HiveControlTabViewModel HiveControl { get; }
+        public PictureQtyTabViewModel PictureQty { get; }
+        public HashKeyTabViewModel HashKey { get; }
+        public PdataMappingTabViewModel PdataMapping { get; }
+
+        partial void OnSelectedTabChanged(string oldValue, string newValue)
+        {
+            // The Hardware Setting pop-up belongs to General.
+            if (newValue != GeneralTab)
+                IsHardwareDialogOpen = false;
+
+            // The new tab first: going from Manual to Calibration (or back) the machine must
+            // stay in manual mode throughout - leaving it sends the PLC to IDLE, homing required.
+            SettingsTabBase after = TabFor(newValue);
+            if (after != null)
+                after.OnShown();
+
+            SettingsTabBase before = TabFor(oldValue);
+            if (before != null)
+                before.OnHidden();
+        }
+
+        private SettingsTabBase TabFor(string title)
+        {
+            if (title == null || AccessControl == null)
+                return null;
+            if (title == Manual.Title) return Manual;
+            if (title == Calibration.Title) return Calibration;
+            if (title == AccessControl.Title) return AccessControl;
+            if (title == ValveModel.Title) return ValveModel;
+            if (title == HiveControl.Title) return HiveControl;
+            if (title == PictureQty.Title) return PictureQty;
+            if (title == HashKey.Title) return HashKey;
+            if (title == PdataMapping.Title) return PdataMapping;
+            return null;
+        }
+
+        private void ApplyLevelToTabs()
+        {
+            Manual.Level = AccessLevel;
+            Calibration.Level = AccessLevel;
+            AccessControl.Level = AccessLevel;
+            ValveModel.Level = AccessLevel;
+            HiveControl.Level = AccessLevel;
+            PictureQty.Level = AccessLevel;
+            HashKey.Level = AccessLevel;
+            PdataMapping.Level = AccessLevel;
+        }
+
+        /// <summary>
+        /// Picture Qty. Check: "only displayed on the GUI when the Level 2 and Level 3
+        /// user logs in" (T5). Hash Key: "only displayed on the GUI when the Level 3 user
+        /// logs in and changes the HIVE state to the planned DT (PD-15)" (slide 80). On a
+        /// machine without HIVE there is no PD-15 to enter, so Level 3 is enough there.
+        /// </summary>
+        private void BuildTabs()
+        {
+            var wanted = new List<string> { GeneralTab, Manual.Title, Calibration.Title };
+            if (IsLoggedIn)
+                wanted.Add(AccessControl.Title);
+            wanted.Add(ValveModel.Title);
+            if (IsLoggedIn)
+                wanted.Add(HiveControl.Title);
+            if (CanEdit)
+                wanted.Add(PictureQty.Title);
+            if (CanEditCritical)
+                wanted.Add(PdataMapping.Title);
+            if (CanEditCritical && (_hive == null || !_hive.IsAvailable
+                                    || string.Equals(_hive.CurrentDowntimeCode, "PD-15", StringComparison.OrdinalIgnoreCase)))
+                wanted.Add(HashKey.Title);
+
+            if (Tabs.SequenceEqual(wanted))
+                return;
+
+            string selected = SelectedTab;
+            Tabs.Clear();
+            foreach (string tab in wanted)
+                Tabs.Add(tab);
+
+            SelectedTab = wanted.Contains(selected) ? selected : GeneralTab;
+        }
+
+        private void OnHiveChanged(object sender, EventArgs e)
+        {
+            RunOnUi(BuildTabs);
         }
 
         // ==================================================================
@@ -381,12 +527,47 @@ namespace Nova.ViewModels.Pages.Audio
             IAppSession session,
             IStationProfileService profile = null,
             IMachineIdentityService identity = null,
-            IDialogService dialog = null)
+            IDialogService dialog = null,
+            IAccessControlAdmin accessAdmin = null,
+            IAccessControlService access = null,
+            IFileDialogService files = null,
+            IAccessLog accessLog = null,
+            IConsumableStore consumables = null,
+            IHiveControl hive = null,
+            IBadgePrompt badges = null,
+            IPictureQuantityCheck pictures = null,
+            IHashKeyService hashes = null,
+            IMesClient mes = null,
+            IPdataMappingService pdata = null,
+            // The Manual tab: the manual-operation GUI, the Homing button, the running
+            // log, and the machine's manual mode while the tab is on screen.
+            ManualViewModel manual = null,
+            IRunningLogService runningLog = null,
+            IHomingService homing = null,
+            IMachineOrchestrator orchestrator = null,
+            // The Calibration tab: the PLC calibration routines, per station.
+            ICalibrationService calibration = null)
             : base(session, AccessBypass.ConfigAndSettings)
         {
             _profile = profile;
             _identity = identity;
             _dialog = dialog;
+            _hive = hive;
+
+            Manual = new ManualTabViewModel(manual, runningLog, homing, orchestrator, dialog, session, accessLog);
+            Calibration = new CalibrationTabViewModel(calibration, homing, orchestrator, dialog, session, accessLog);
+            AccessControl = new AccessControlTabViewModel(accessAdmin, access, files, dialog, session, accessLog);
+            ValveModel = new ValveModelTabViewModel(consumables, dialog, session, accessLog);
+            HiveControl = new HiveControlTabViewModel(hive, badges, dialog, session, accessLog);
+            PictureQty = new PictureQtyTabViewModel(pictures, badges, dialog, session, accessLog);
+            HashKey = new HashKeyTabViewModel(hashes, mes, badges, files, dialog, session, accessLog);
+            PdataMapping = new PdataMappingTabViewModel(pdata, dialog, session, accessLog);
+
+            if (_hive != null)
+                _hive.Changed += OnHiveChanged;
+
+            ApplyLevelToTabs();
+            BuildTabs();
 
             SaveCommand = new RelayCommand(Save, CanSave);
             RevertCommand = new RelayCommand(Revert, () => IsDirty);
@@ -580,7 +761,28 @@ namespace Nova.ViewModels.Pages.Audio
             if (disposing && _profile != null)
                 _profile.ProfileChanged -= OnProfileChanged;
 
+            if (disposing && _hive != null)
+                _hive.Changed -= OnHiveChanged;
+
+            if (disposing)
+            {
+                Manual.Dispose();
+                Calibration.Dispose();
+            }
+
             base.Dispose(disposing);
+        }
+
+        private readonly System.Threading.SynchronizationContext _ui = System.Threading.SynchronizationContext.Current;
+
+        /// <summary>HIVE changes arrive on the thread that caused them; the tab list is bound.</summary>
+        private void RunOnUi(Action action)
+        {
+            // Always posted: WPF may give the UI thread a different context instance.
+            if (_ui == null)
+                action();
+            else
+                _ui.Post(_ => action(), null);
         }
     }
 }

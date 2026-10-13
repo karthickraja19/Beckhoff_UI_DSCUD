@@ -5,7 +5,7 @@ using Nova.Abstractions.Services;
 namespace Nova.Core.Services
 {
     /// <summary>
-    /// Registry of TCP comm devices grouped by kind (CCD/Scanner/Robot/SFC),
+    /// Registry of TCP comm devices grouped by kind (CCD/Scanner/SFC),
     /// supplied by the composition root from the machine's *.json config.
     /// </summary>
     public sealed class CommDeviceService : ICommDeviceService

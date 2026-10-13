@@ -30,8 +30,22 @@
     <PackageReference Include="System.Text.Json" Version="10.0.7" />
   </ItemGroup>
   <ItemGroup>
-    <!-- Beckhoff library, built from source into References\Beckhoff. After changing the
-         library, run References\Beckhoff\Update-BeckhoffLibrary.ps1 and rebuild.
+    <!-- The MES WebAPI client (Core\Comm\MesClient.cs). -->
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Nova.Abstractions\Nova.Abstractions.csproj" />
+    <ProjectReference Include="..\Nova.ViewModels\Nova.ViewModels.csproj" />
+    <ProjectReference Include="..\Nova.Wpf.UI\Nova.Wpf.UI.csproj" />
+    <ProjectReference Include="..\Master.Repository\Master.Repository.csproj" />
+    <!-- Device configuration (Data\*.json) is read through Master.Configuration, not directly. -->
+    <ProjectReference Include="..\Master.Configuration\Master.Configuration.csproj" />
+    <ProjectReference Include="..\Nova.Alarm\Nova.Alarm.csproj" />
+    <ProjectReference Include="..\Nova.Hive\Nova.Hive.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Beckhoff library, built from D:\BeckhOffLibrary\BeckhOffLibrary into References\Beckhoff.
+         After changing the library, run References\Beckhoff\Update-BeckhoffLibrary.ps1 and rebuild.
          Teal.Library.Log is also the queue RunningLogService drains into the Home screen. -->
     <Reference Include="Teal.Library.Contracts">
       <HintPath>..\References\Beckhoff\Teal.Library.Contracts.dll</HintPath>
@@ -45,29 +59,18 @@
     <Reference Include="Teal.Library.Servo">
       <HintPath>..\References\Beckhoff\Teal.Library.Servo.dll</HintPath>
     </Reference>
+    <Reference Include="Teal.Library.Stepper">
+      <HintPath>..\References\Beckhoff\Teal.Library.Stepper.dll</HintPath>
+    </Reference>
     <Reference Include="Teal.Library.TcpIp">
       <HintPath>..\References\Beckhoff\Teal.Library.TcpIp.dll</HintPath>
     </Reference>
     <Reference Include="Teal.Library.Twincat">
       <HintPath>..\References\Beckhoff\Teal.Library.Twincat.dll</HintPath>
     </Reference>
-    <Reference Include="Teal.Library.Cylinder">
-      <HintPath>..\References\Beckhoff\Teal.Library.Cylinder.dll</HintPath>
-    </Reference>
-    <Reference Include="Teal.Library.Stepper">
-      <HintPath>..\References\Beckhoff\Teal.Library.Stepper.dll</HintPath>
-    </Reference>
     <Reference Include="Teal.Library.Vacuum">
       <HintPath>..\References\Beckhoff\Teal.Library.Vacuum.dll</HintPath>
     </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Nova.Abstractions\Nova.Abstractions.csproj" />
-    <ProjectReference Include="..\Nova.ViewModels\Nova.ViewModels.csproj" />
-    <ProjectReference Include="..\Nova.Wpf.UI\Nova.Wpf.UI.csproj" />
-    <ProjectReference Include="..\Master.Repository\Master.Repository.csproj" />
-    <ProjectReference Include="..\Nova.Alarm\Nova.Alarm.csproj" />
-    <ProjectReference Include="..\Nova.Hive\Nova.Hive.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Assets\app.ico" />
@@ -84,5 +87,8 @@
     <!-- Except the station profile: the Settings page saves it next to the exe only, so
          re-copying it on every build would throw away what the operator chose. -->
     <None Update="Data\Settings\StationProfile.json" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Likewise the files the Setting page's tabs and the planned-downtime procedures
+         write (access control, HIVE control, hash key paths, consumables, picture check). -->
+    <None Update="Data\Settings\AccessControl.json;Data\Settings\HiveControl.json;Data\Settings\HashKeys.json;Data\Settings\Consumables.json;Data\Settings\PictureQuantityCheck.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

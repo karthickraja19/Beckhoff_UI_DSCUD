@@ -31,11 +31,27 @@ namespace Nova.ViewModels.Pages.Settings
         [ObservableProperty]
         private TabItemViewModel _selectedTab;
 
+        /// <summary>True while this page is on screen.</summary>
+        private bool _isOnScreen;
+
         /// <summary>Switching tabs abandons an unsaved edit on the one being left,
-        /// nested sub-tabs included.</summary>
+        /// nested sub-tabs included. The tab in front is told it is on screen, so the
+        /// I/O Diagnostics tab reads the IO only while it can be seen.</summary>
         partial void OnSelectedTabChanged(TabItemViewModel oldValue, TabItemViewModel newValue)
         {
             oldValue?.CancelEdits();
+            oldValue?.Deactivate();
+
+            if (_isOnScreen)
+                newValue?.Activate();
+        }
+
+        public override void OnNavigatedTo()
+        {
+            base.OnNavigatedTo();
+
+            _isOnScreen = true;
+            SelectedTab?.Activate();
         }
 
         /// <summary>
@@ -45,6 +61,9 @@ namespace Nova.ViewModels.Pages.Settings
         /// </summary>
         public override void OnNavigatedFrom()
         {
+            _isOnScreen = false;
+            SelectedTab?.Deactivate();
+
             foreach (var tab in Tabs)
             {
                 tab?.CancelEdits();

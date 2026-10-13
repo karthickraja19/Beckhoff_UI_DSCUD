@@ -2,7 +2,8 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
-    xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks">
+    xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+    xmlns:hc="https://handyorg.github.io/handycontrol">
 
     <!-- ================================================================ -->
     <!-- NOVA DESIGN SYSTEM                                               -->
@@ -43,12 +44,14 @@
     <!-- METRICS                   -->
     <!-- ========================= -->
 
-    <!-- HIG metrics, matching Styles/AudioTokens.xaml. 44 is the guideline's
-         minimum hit target and the size the Audio controls already use, so a
-         button on a legacy screen is now the same size as one on an Audio page. -->
-    <sys:Double x:Key="Nova.Button.Height">44</sys:Double>
-    <sys:Double x:Key="Nova.Button.HeightCompact">32</sys:Double>
-    <sys:Double x:Key="Nova.Button.MinWidth">96</sys:Double>
+    <!-- The Audio pages' metrics (Styles/AudioTokens.xaml: Audio.Button.Height,
+         Audio.Row.Height, Audio.TableHeader.Height), so a button, field or row on
+         a legacy screen - the Vendor pane, the Config sections - is the same size
+         as one on Home, Alarm or Data. These were 44, which made every hosted
+         screen read a size larger than the page around it. -->
+    <sys:Double x:Key="Nova.Button.Height">32</sys:Double>
+    <sys:Double x:Key="Nova.Button.HeightCompact">28</sys:Double>
+    <sys:Double x:Key="Nova.Button.MinWidth">88</sys:Double>
     <!-- Audio.Radius.Control. -->
     <CornerRadius x:Key="Nova.Button.CornerRadius">10</CornerRadius>
     <!-- Inner radius of the focus ring: outer radius minus its 2px inset. -->
@@ -57,8 +60,16 @@
          templates bind to it; zero thickness is what removes the hard black box
          these buttons used to draw. -->
     <Thickness x:Key="Nova.Button.BorderThickness">0</Thickness>
-    <Thickness x:Key="Nova.Button.Padding">16,0</Thickness>
-    <sys:Double x:Key="Nova.Row.Height">44</sys:Double>
+    <Thickness x:Key="Nova.Button.Padding">14,0</Thickness>
+    <sys:Double x:Key="Nova.Row.Height">32</sys:Double>
+
+    <!-- Text box / combo box / search box. The button height, so a field and the
+         button beside it on one line are the same height. -->
+    <sys:Double x:Key="Nova.Field.Height">32</sys:Double>
+
+    <!-- Card inner padding, and the gap a card keeps from its neighbours. -->
+    <Thickness x:Key="Nova.Card.Padding">12</Thickness>
+    <Thickness x:Key="Nova.Card.Gap">4</Thickness>
 
     <!-- ========================= -->
     <!-- TABLES                    -->
@@ -81,7 +92,8 @@
         <Setter Property="Background" Value="{DynamicResource Nova.TableHeaderBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource Nova.TableHeaderBorderBrush}"/>
         <Setter Property="BorderThickness" Value="0,0,0,1"/>
-        <Setter Property="Height" Value="44"/>
+        <!-- Audio.TableHeader.Height. -->
+        <Setter Property="Height" Value="34"/>
         <Setter Property="CornerRadius" Value="8,8,0,0"/>
     </Style>
 
@@ -247,7 +259,7 @@
     <!-- Card / section title. -->
     <Style x:Key="Nova.SectionTitle" TargetType="TextBlock">
         <Setter Property="FontSize" Value="{DynamicResource Nova.FontSize.Heading}"/>
-        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
@@ -289,7 +301,7 @@
         <!-- Hairline, not the old 1px mid-grey box. Enough to hold the card's edge
              where two cards sit side by side on the grouped grey. -->
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="Padding" Value="16"/>
+        <Setter Property="Padding" Value="{DynamicResource Nova.Card.Padding}"/>
     </Style>
 
     <!-- ================================================================ -->
@@ -562,18 +574,18 @@
 
     <!-- Small square outline button (pager arrows, compact icon actions). -->
     <Style x:Key="Nova.ButtonIconSmall" TargetType="Button" BasedOn="{StaticResource Nova.ButtonOutline}">
-        <Setter Property="Width" Value="34"/>
-        <Setter Property="Height" Value="34"/>
-        <Setter Property="MinWidth" Value="34"/>
+        <Setter Property="Width" Value="28"/>
+        <Setter Property="Height" Value="28"/>
+        <Setter Property="MinWidth" Value="28"/>
         <Setter Property="Padding" Value="0"/>
     </Style>
 
-    <!-- Toolbar icon button, no label (36px hit target). Sits on the toolbar
+    <!-- Toolbar icon button, no label (the button height, square). Sits on the toolbar
          surface, so it takes the neutral button fill rather than the card one. -->
     <Style x:Key="Nova.ButtonIconToolbar" TargetType="Button" BasedOn="{StaticResource Nova.ButtonSecondary}">
-        <Setter Property="Width" Value="36"/>
-        <Setter Property="Height" Value="36"/>
-        <Setter Property="MinWidth" Value="36"/>
+        <Setter Property="Width" Value="32"/>
+        <Setter Property="Height" Value="32"/>
+        <Setter Property="MinWidth" Value="32"/>
         <Setter Property="Padding" Value="0"/>
     </Style>
 
@@ -597,6 +609,84 @@
         <Setter Property="MinWidth" Value="56"/>
         <Setter Property="Padding" Value="0"/>
         <Setter Property="Foreground" Value="{DynamicResource ReverseTextBrush}"/>
+    </Style>
+
+    <!-- ================================================================ -->
+    <!-- SCROLLING                                                        -->
+    <!-- HandyControl's ScrollViewer (and its hc:ScrollViewer, inside     -->
+    <!-- every ListBox) lays its content under the scroll bar - both span -->
+    <!-- the full width - and fades the bar in over the last pixels of    -->
+    <!-- every row, so a right-aligned value, indicator or switch sits    -->
+    <!-- under it. Nova.ScrollViewerTemplate gives the bar a column of    -->
+    <!-- its own; the implicit styles below put every ScrollViewer and    -->
+    <!-- hc:ScrollViewer in the app on it. The bar shows only while there -->
+    <!-- is something to scroll, and takes no space otherwise.            -->
+    <!--                                                                  -->
+    <!-- The gap between the content and the bar is on the bar itself     -->
+    <!-- (the implicit ScrollBar style), so it is also there for the bars -->
+    <!-- other templates place in their own column - the DataGrids', the  -->
+    <!-- drop-down lists'.                                                -->
+    <!-- ================================================================ -->
+    <Thickness x:Key="Nova.ScrollBar.Gap.Vertical">8,0,0,0</Thickness>
+    <Thickness x:Key="Nova.ScrollBar.Gap.Horizontal">0,8,0,0</Thickness>
+
+    <Style TargetType="{x:Type ScrollBar}" BasedOn="{StaticResource {x:Type ScrollBar}}">
+        <Setter Property="Margin" Value="{StaticResource Nova.ScrollBar.Gap.Vertical}"/>
+        <Style.Triggers>
+            <Trigger Property="Orientation" Value="Horizontal">
+                <Setter Property="Margin" Value="{StaticResource Nova.ScrollBar.Gap.Horizontal}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <ControlTemplate x:Key="Nova.ScrollViewerTemplate" TargetType="{x:Type ScrollViewer}">
+        <Grid x:Name="Grid" Background="{TemplateBinding Background}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <ScrollContentPresenter x:Name="PART_ScrollContentPresenter" Grid.Column="0" Grid.Row="0"
+                                    CanContentScroll="{TemplateBinding CanContentScroll}"
+                                    CanHorizontallyScroll="False" CanVerticallyScroll="False"
+                                    Content="{TemplateBinding Content}"
+                                    ContentTemplate="{TemplateBinding ContentTemplate}"
+                                    Margin="{TemplateBinding Padding}"/>
+            <ScrollBar x:Name="PART_VerticalScrollBar" Grid.Column="1" Grid.Row="0"
+                       AutomationProperties.AutomationId="VerticalScrollBar" Cursor="Arrow"
+                       Minimum="0" Maximum="{TemplateBinding ScrollableHeight}"
+                       ViewportSize="{TemplateBinding ViewportHeight}"
+                       Value="{Binding VerticalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}"
+                       Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"/>
+            <ScrollBar x:Name="PART_HorizontalScrollBar" Grid.Column="0" Grid.Row="1" Orientation="Horizontal"
+                       AutomationProperties.AutomationId="HorizontalScrollBar" Cursor="Arrow"
+                       Minimum="0" Maximum="{TemplateBinding ScrollableWidth}"
+                       ViewportSize="{TemplateBinding ViewportWidth}"
+                       Value="{Binding HorizontalOffset, Mode=OneWay, RelativeSource={RelativeSource TemplatedParent}}"
+                       Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"/>
+        </Grid>
+    </ControlTemplate>
+
+    <Style TargetType="{x:Type ScrollViewer}" BasedOn="{StaticResource {x:Type ScrollViewer}}">
+        <Setter Property="Template" Value="{StaticResource Nova.ScrollViewerTemplate}"/>
+    </Style>
+
+    <Style TargetType="{x:Type hc:ScrollViewer}" BasedOn="{StaticResource {x:Type hc:ScrollViewer}}">
+        <Setter Property="Template" Value="{StaticResource Nova.ScrollViewerTemplate}"/>
+    </Style>
+
+    <!-- HandyControl's TextBox widens its scroller 2px past each side of the
+         box, so a multi-line box's bar would cover the box's right border:
+         inside a text box the bar is kept clear of the border. -->
+    <Style TargetType="{x:Type TextBox}" BasedOn="{StaticResource {x:Type TextBox}}">
+        <Style.Resources>
+            <Style TargetType="{x:Type ScrollBar}" BasedOn="{StaticResource {x:Type ScrollBar}}">
+                <Setter Property="Margin" Value="8,1,3,1"/>
+            </Style>
+        </Style.Resources>
     </Style>
 
 </ResourceDictionary>

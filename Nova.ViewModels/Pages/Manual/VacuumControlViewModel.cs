@@ -9,11 +9,17 @@ namespace Nova.ViewModels.Pages.Manual
     /// <summary>
     /// ViewModel backing the "Vacuum" tab of the Manual screen. Hydrates its units
     /// from <see cref="IVacuumService"/> (the machine's Vacuums.xml catalogue) and
-    /// refreshes feedback on each digital-IO poll tick.
+    /// refreshes feedback each time the IO service reports a change. Only the unit
+    /// selected in the dropdown follows live status, and only while the tab is on screen.
     /// </summary>
-    public partial class VacuumControlViewModel : ViewModelBase
+    public partial class VacuumControlViewModel : ViewModelBase, IActivatableTab
     {
         private readonly IDigitalIOService _io;
+
+        private bool _isActive;
+
+        /// <summary>The selected unit's live status, followed while the tab is on screen.</summary>
+        private IDisposable _following;
 
         public ObservableCollection<VacuumUnitViewModel> Units { get; }
 
@@ -34,8 +40,47 @@ namespace Nova.ViewModels.Pages.Manual
                 _io.IOChanged += OnIOChanged;
         }
 
-        // IO poll thread: each unit only sets scalar INPC props (safe); the Units
-        // collection itself is never mutated here.
+        partial void OnSelectedUnitChanged(VacuumUnitViewModel value)
+        {
+            FollowSelectedUnit();
+        }
+
+        public void Activate()
+        {
+            if (_isActive)
+                return;
+
+            _isActive = true;
+            FollowSelectedUnit();
+        }
+
+        public void Deactivate()
+        {
+            if (!_isActive)
+                return;
+
+            _isActive = false;
+            _following?.Dispose();
+            _following = null;
+        }
+
+        /// <summary>
+        /// Follows the live status of the selected unit, and lets go of the one selected
+        /// before. Its values arrive as IO changes once the PLC sends them.
+        /// </summary>
+        private void FollowSelectedUnit()
+        {
+            if (!_isActive)
+                return;
+
+            IDisposable previous = _following;
+            _following = SelectedUnit?.FollowStatus();
+            previous?.Dispose();
+            SelectedUnit?.RefreshFromHardware();
+        }
+
+        // Raised on the ADS thread when a followed signal changes: each unit only sets
+        // scalar INPC props (safe); the Units collection itself is never mutated here.
         private void OnIOChanged(object sender, EventArgs e)
         {
             foreach (var unit in Units)
@@ -44,8 +89,12 @@ namespace Nova.ViewModels.Pages.Manual
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing && !IsDisposed && _io != null)
-                _io.IOChanged -= OnIOChanged;
+            if (disposing && !IsDisposed)
+            {
+                if (_io != null)
+                    _io.IOChanged -= OnIOChanged;
+                Deactivate();
+            }
             base.Dispose(disposing);
         }
     }

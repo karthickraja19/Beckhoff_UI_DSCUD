@@ -1,22 +1,28 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using Nova.Abstractions.Services;
 
 namespace Nova.ViewModels.Pages.Manual
 {
     /// <summary>
-    /// One robot digital I/O point. Digital inputs render <see cref="IsOn"/> as a
-    /// read-only indicator; digital outputs bind it two-way to a toggle switch.
+    /// One robot I/O point. A Bool renders <see cref="IsOn"/> - a read-only indicator for an
+    /// input, a toggle switch for an output; a Byte or Word renders <see cref="Value"/>, read only.
     /// </summary>
     public partial class RobotSignal : ObservableObject
     {
         public string Name { get; }
+        public RobotIOKind Kind { get; }
 
         [ObservableProperty]
-        private bool _isOn;
+        [NotifyPropertyChangedFor(nameof(IsOn))]
+        private int _value;
 
-        public RobotSignal(string name, bool isOn = false)
+        public bool IsOn => Value != 0;
+
+        public RobotSignal(string name, RobotIOKind kind, int value = 0)
         {
             Name = name;
-            _isOn = isOn;
+            Kind = kind;
+            _value = value;
         }
     }
 }

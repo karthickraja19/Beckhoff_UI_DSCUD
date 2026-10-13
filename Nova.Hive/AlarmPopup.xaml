@@ -59,10 +59,17 @@
 
     <Border BorderBrush="#B0B0B0" BorderThickness="1" CornerRadius="6">
         <StackPanel>
-            <!-- Title bar. There is no close button: the slide's window is closed by
-                 confirming and swiping a badge, nothing else. -->
+            <!-- Title bar. The Close button dismisses the pop-up without a badge (nothing is
+                 sent to HIVE); Confirm + badge is still the way to acknowledge the alarm. -->
             <Border Background="#ECECEC" CornerRadius="6,6,0,0" Padding="10,8">
-                <TextBlock Text="Dialog" FontWeight="Bold" Foreground="#3C3C3C" HorizontalAlignment="Center" />
+                <Grid>
+                    <TextBlock Text="Dialog" FontWeight="Bold" Foreground="#3C3C3C" HorizontalAlignment="Center" />
+                    <Button x:Name="CloseWindowButton" Content="&#x2715;" ToolTip="Close window"
+                            HorizontalAlignment="Right" VerticalAlignment="Center"
+                            Width="26" Height="22" Padding="0" FontSize="12" FontWeight="Bold"
+                            Background="Transparent" Foreground="#3C3C3C" BorderThickness="0"
+                            Cursor="Hand" Click="CloseWindowButton_Click" />
+                </Grid>
             </Border>
 
             <!-- Body -->

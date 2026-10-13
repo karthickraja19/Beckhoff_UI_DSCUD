@@ -3,18 +3,20 @@ using Nova.Abstractions.Hardware.Interfaces;
 
 namespace Nova.Abstractions.Services
 {
-    /// <summary>The kinds of TCP-connected external devices the Manual console tabs drive.</summary>
+    /// <summary>
+    /// The kinds of TCP-connected external devices the Manual console tabs drive. The robots
+    /// are on EtherCAT, not here: see <see cref="IRobotIOService"/>.
+    /// </summary>
     public enum CommDeviceKind
     {
         Ccd,
         Scanner,
-        Robot,
         Sfc
     }
 
     /// <summary>
     /// One selectable console device: display info plus the network transport that
-    /// backs it. For robots the <see cref="Protocol"/> is the Communication channel.
+    /// backs it.
     /// </summary>
     public sealed class CommDevice
     {
@@ -33,7 +35,7 @@ namespace Nova.Abstractions.Services
     }
 
     /// <summary>
-    /// Registry of TCP comm devices (CCD, Scanner, Robot, SFC), config-driven from
+    /// Registry of TCP comm devices (CCD, Scanner, SFC), config-driven from
     /// the machine's *.json files. The console ViewModels resolve their device list
     /// and per-device transport through this.
     /// </summary>

@@ -9,8 +9,7 @@
 
     <UserControl.Resources>
         <Style x:Key="ManualCard" TargetType="Border" BasedOn="{StaticResource Nova.Card}">
-            <Setter Property="Padding" Value="14"/>
-            <Setter Property="Margin" Value="5"/>
+            <Setter Property="Margin" Value="{DynamicResource Nova.Card.Gap}"/>
         </Style>
 
         <Style x:Key="CardHeaderText" TargetType="TextBlock" BasedOn="{StaticResource Nova.SectionTitle}"/>
@@ -31,23 +30,17 @@
         <!-- Conveyor speed is a number the view model parses; letters here used to fall
              through TryParse as 0 and silently become "use the default speed". -->
         <Style x:Key="InputField" TargetType="TextBox">
-            <Setter Property="Height" Value="34"/>
+            <Setter Property="Height" Value="{DynamicResource Nova.Field.Height}"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Padding" Value="8,0,42,0"/>
             <Setter Property="behaviors:NumericInput.Mode" Value="Decimal"/>
         </Style>
 
-        <Style x:Key="ActionButton" TargetType="Button" BasedOn="{StaticResource Nova.ButtonPrimary}">
-            <Setter Property="Height" Value="40"/>
-        </Style>
+        <Style x:Key="ActionButton" TargetType="Button" BasedOn="{StaticResource Nova.ButtonPrimary}"/>
 
-        <Style x:Key="InfoButton" TargetType="Button" BasedOn="{StaticResource Nova.ButtonInfo}">
-            <Setter Property="Height" Value="40"/>
-        </Style>
+        <Style x:Key="InfoButton" TargetType="Button" BasedOn="{StaticResource Nova.ButtonInfo}"/>
 
-        <Style x:Key="StopButton" TargetType="Button" BasedOn="{StaticResource Nova.ButtonDanger}">
-            <Setter Property="Height" Value="40"/>
-        </Style>
+        <Style x:Key="StopButton" TargetType="Button" BasedOn="{StaticResource Nova.ButtonDanger}"/>
     </UserControl.Resources>
 
     <Grid Margin="4">
@@ -61,8 +54,8 @@
         <!-- ============ Stepper Selector ============ -->
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="6,4,0,6">
             <TextBlock Text="Stepper :" VerticalAlignment="Center" FontWeight="SemiBold"
-                       FontSize="{DynamicResource Nova.FontSize.Heading}" Margin="0,0,10,0" Foreground="{DynamicResource PrimaryTextBrush}"/>
-            <ComboBox Width="240" Height="34" VerticalContentAlignment="Center"
+                       FontSize="{DynamicResource Nova.FontSize.Body}" Margin="0,0,10,0" Foreground="{DynamicResource PrimaryTextBrush}"/>
+            <ComboBox Width="240" Height="{DynamicResource Nova.Field.Height}" VerticalContentAlignment="Center"
                       ItemsSource="{Binding Motors}"
                       SelectedItem="{Binding SelectedMotor, Mode=TwoWay}"/>
         </StackPanel>

@@ -1,0 +1,32 @@
+﻿[
+  {
+    "Position": "SafePosition",
+    "X": "0",
+    "XVel": "0",
+    "XAcc": "0",
+    "XDeAcc": "0",
+    "Y": "0",
+    "YVel": "0",
+    "YAcc": "0",
+    "YDeAcc": "0",
+    "Z": "0",
+    "ZVel": "0",
+    "ZAcc": "0",
+    "ZDeAcc": "0"
+  },
+  {
+    "Position": "Pressing",
+    "X": "-200",
+    "XVel": "10",
+    "XAcc": "10",
+    "XDeAcc": "10",
+    "Y": "-100",
+    "YVel": "10",
+    "YAcc": "10",
+    "YDeAcc": "10",
+    "Z": "40",
+    "ZVel": "10",
+    "ZAcc": "10",
+    "ZDeAcc": "10"
+  }
+]

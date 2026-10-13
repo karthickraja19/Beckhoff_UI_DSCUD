@@ -31,10 +31,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\References\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
@@ -45,6 +41,58 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="CardManager.cs" />
+    <Compile Include="DeviceObjects.cs" />
+    <Compile Include="MachineConfiguration.cs" />
+    <Compile Include="Enum\Cards.cs" />
+    <Compile Include="Enum\CardType.cs" />
+    <Compile Include="Enum\Pdca.cs" />
+    <Compile Include="Enum\Robots.cs" />
+    <Compile Include="Model\CardConfiguration.cs" />
+    <Compile Include="Model\GantryConfiguration.cs" />
+    <Compile Include="Model\GantryRoot.cs" />
+    <Compile Include="Model\NetworkDeviceConfiguration.cs" />
+    <Compile Include="Model\RobotConfiguration.cs" />
+    <Compile Include="Model\VisionConfiguration.cs" />
+    <Compile Include="PdcaObject.cs" />
+    <Compile Include="RobotObjects.cs" />
+    <Compile Include="ScannerObjects.cs" />
+    <Compile Include="CCDObjects.cs" />
+    <Compile Include="CylinderObjects.cs" />
+    <Compile Include="DIDO.cs" />
+    <Compile Include="Enum\Analog_Input.cs" />
+    <Compile Include="Enum\Scanners.cs" />
+    <Compile Include="Enum\EOutput.cs" />
+    <Compile Include="Enum\EInput.cs" />
+    <Compile Include="Enum\Cylinders.cs" />
+    <Compile Include="Enum\EAxis.cs" />
+    <Compile Include="Enum\Servos.cs" />
+    <Compile Include="Enum\Steppers.cs" />
+    <Compile Include="Enum\CCDs.cs" />
+    <Compile Include="Enum\Vacuums.cs" />
+    <Compile Include="ConfigGlobalClass.cs" />
+    <Compile Include="Model\AxisPosition.cs" />
+    <Compile Include="Model\SocketClientConfiguration.cs" />
+    <Compile Include="Model\CylinderConfiguration.cs" />
+    <Compile Include="Model\IOParam.cs" />
+    <Compile Include="Model\AxisParam.cs" />
+    <Compile Include="Model\ServoConfiguration.cs" />
+    <Compile Include="Model\StepperConfiguration.cs" />
+    <Compile Include="Model\VacuumConfiguration.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ServoObjects.cs" />
+    <Compile Include="StepperObjects.cs" />
+    <Compile Include="VacuumObjects.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Same version as the rest of the solution. The old HintPath (..\References\Newtonsoft.Json.dll) did not exist. -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Beckhoff library, built from D:\BeckhOffLibrary\BeckhOffLibrary into References\Beckhoff
+         (References\Beckhoff\Update-BeckhoffLibrary.ps1). -->
     <Reference Include="Teal.Library.Contracts">
       <HintPath>..\References\Beckhoff\Teal.Library.Contracts.dll</HintPath>
     </Reference>
@@ -69,53 +117,6 @@
     <Reference Include="Teal.Library.Vacuum">
       <HintPath>..\References\Beckhoff\Teal.Library.Vacuum.dll</HintPath>
     </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="CardManager.cs" />
-    <Compile Include="Enum\Cards.cs" />
-    <Compile Include="Enum\CardType.cs" />
-    <Compile Include="Enum\Pdca.cs" />
-    <Compile Include="Enum\Robots.cs" />
-    <Compile Include="Model\CardConfiguration.cs" />
-    <Compile Include="Model\GantryConfiguration.cs" />
-    <Compile Include="Model\GantryRoot.cs" />
-    <Compile Include="Model\RobotConfiguration.cs" />
-    <Compile Include="Model\RobotPorts.cs" />
-    <Compile Include="PdcaObject.cs" />
-    <Compile Include="RobotObjects.cs" />
-    <Compile Include="ScannerObjects.cs" />
-    <Compile Include="CCDObjects.cs" />
-    <Compile Include="CylinderObjects.cs" />
-    <Compile Include="DIDO.cs" />
-    <Compile Include="Enum\Analog_Input.cs" />
-    <Compile Include="Enum\Scanners.cs" />
-    <Compile Include="Enum\RobotInputs.cs" />
-    <Compile Include="Enum\RobotOutputs.cs" />
-    <Compile Include="Enum\EOutput.cs" />
-    <Compile Include="Enum\EInput.cs" />
-    <Compile Include="Enum\Cylinders.cs" />
-    <Compile Include="Enum\EAxis.cs" />
-    <Compile Include="Enum\Servos.cs" />
-    <Compile Include="Enum\Steppers.cs" />
-    <Compile Include="Enum\CCDs.cs" />
-    <Compile Include="Enum\Vacuums.cs" />
-    <Compile Include="ConfigGlobalClass.cs" />
-    <Compile Include="Model\AxisPosition.cs" />
-    <Compile Include="Model\Button.cs" />
-    <Compile Include="Model\CylinderButtons.cs" />
-    <Compile Include="Model\SocketClientConfiguration.cs" />
-    <Compile Include="Model\CylinderConfiguration.cs" />
-    <Compile Include="Model\IOParam.cs" />
-    <Compile Include="Model\AxisParam.cs" />
-    <Compile Include="Model\ServoConfiguration.cs" />
-    <Compile Include="Model\SoftLimit.cs" />
-    <Compile Include="Model\StepperConfiguration.cs" />
-    <Compile Include="Model\VacuumButtons.cs" />
-    <Compile Include="Model\VacuumConfiguration.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ServoObjects.cs" />
-    <Compile Include="StepperObjects.cs" />
-    <Compile Include="VacuumObjects.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

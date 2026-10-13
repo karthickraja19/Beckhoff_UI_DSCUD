@@ -14,15 +14,4 @@
 # THE CODES BELOW ARE PROVISIONAL - they must be confirmed with AME before the machine ships,
 # and completed as the PLC alarm list grows.
 PlcCode,HiveCode,ErrorMessage,ErrorDetail,Severity,StopsMachine
-E201,F01ESOO-01,Safety Error,Emergency stop button pressed,critical,yes
-E202,F02SCOO-01,Safety Error,Safety door open,critical,yes
-E203,F02SCOO-02,Safety Error,Light curtain interrupted,critical,yes
-E101,C02PNCY-01,Cylinder Error,Cylinder did not reach the work position,error,yes
-E102,C01PNCY-01,Cylinder Error,Cylinder did not reach the home position,error,yes
-E105,M06GAMO-01,Motion Error,Servo is not safe to operate,error,yes
-E106,M06GAMO-02,Motion Error,Servo is not enabled,error,yes
-E117,M02GAMO-01,Motion Error,Homing was not done,error,yes
-E118,M03GAMO-01,Motion Error,Homing timeout,error,yes
-E119,M03GAMO-02,Motion Error,Move timeout,error,yes
-E120,M99GADE-01,Motion Error,Servo drive error,error,yes
-E121,M02GAMO-02,Motion Error,Position is not within tolerance,error,yes
+

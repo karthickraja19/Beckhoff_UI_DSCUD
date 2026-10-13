@@ -46,7 +46,7 @@ namespace Nova.ViewModels.Pages.Audio
                 else
                 {
                     row.Apply(LinkState.Disconnected, name == "HIVE"
-                        ? "HIVE reporting runs only with HardwareMode=Twincat."
+                        ? "HIVE reporting is not available."
                         : "There is no " + name + " client in this build yet.");
                 }
 
@@ -73,6 +73,22 @@ namespace Nova.ViewModels.Pages.Audio
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(IsDashboardVisible), nameof(IsSensorDashboardVisible))]
         private bool _isSensorDashboardOpen;
+
+        /// <summary>The machine's sensors are read only while the dashboard shows them.</summary>
+        private IDisposable _sensorFollow;
+
+        partial void OnIsSensorDashboardOpenChanged(bool value)
+        {
+            if (value && _sensorFollow == null && _sensors is Nova.Abstractions.Hardware.ILiveStatus live)
+            {
+                _sensorFollow = live.FollowStatus();
+            }
+            else if (!value && _sensorFollow != null)
+            {
+                _sensorFollow.Dispose();
+                _sensorFollow = null;
+            }
+        }
 
         /// <summary>The four panels and the station card.</summary>
         public bool IsDashboardVisible => IsMainTab && !IsSensorDashboardOpen;

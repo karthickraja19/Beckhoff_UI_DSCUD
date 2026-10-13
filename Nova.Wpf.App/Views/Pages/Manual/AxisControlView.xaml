@@ -4,21 +4,25 @@
              xmlns:hc="https://handyorg.github.io/handycontrol"
              xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
              xmlns:behaviors="clr-namespace:Nova.Wpf.UI.Behaviors;assembly=Nova.Wpf.UI"
-             Background="Transparent"
-             Loaded="UserControl_Loaded"
-             Unloaded="UserControl_Unloaded">
+             Background="Transparent">
 
     <UserControl.Resources>
         <Style x:Key="ManualCard" TargetType="Border" BasedOn="{StaticResource Nova.Card}">
-            <Setter Property="Padding" Value="14"/>
-            <Setter Property="Margin" Value="5"/>
+            <Setter Property="Margin" Value="{DynamicResource Nova.Card.Gap}"/>
+            <!-- A card that does not apply to the selected axis (Motion, Homing and point to
+                 point for an axis stepper, which only jogs) is dimmed as well as disabled. -->
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.45"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
 
         <!-- Uppercase card title ("MOTION CONTROL"). Same role — and therefore the
              same size — as the card titles on every other page, so it inherits
              Nova.SectionTitle and only adds this page's spacing. -->
         <Style x:Key="SectionHeader" TargetType="TextBlock" BasedOn="{StaticResource Nova.SectionTitle}">
-            <Setter Property="Margin" Value="0,0,0,12"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
         </Style>
 
         <!-- Small uppercase metric label ("ACTUAL POSITION"). Regular weight, like
@@ -35,9 +39,9 @@
              character at the keyboard instead. Speeds and counts are unsigned; a
              position can be either side of home, so those override to SignedDecimal. -->
         <Style x:Key="PlaceholderField" TargetType="TextBox" BasedOn="{StaticResource TextBoxExtend}">
-            <Setter Property="Height" Value="36"/>
+            <Setter Property="Height" Value="{DynamicResource Nova.Field.Height}"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="Margin" Value="0,0,0,12"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
             <Setter Property="behaviors:NumericInput.Mode" Value="Decimal"/>
         </Style>
 
@@ -87,7 +91,7 @@
                 <Border x:Name="ChipBg" CornerRadius="6"
                         Background="{DynamicResource Nova.TableHeaderBrush}"/>
                 
-                <StackPanel Orientation="Horizontal" Margin="12,9">
+                <StackPanel Orientation="Horizontal" Margin="10,6">
                     <Ellipse x:Name="ChipDot" Width="7" Height="7" VerticalAlignment="Center" Margin="0,0,7,0"
                              Fill="{DynamicResource ThirdlyTextBrush}"/>
                     <TextBlock x:Name="ChipText" Text="{Binding Label}" FontSize="{DynamicResource Nova.FontSize.Caption}" FontWeight="SemiBold"
@@ -137,7 +141,7 @@
 
             <!-- ============ Axis Selector + configured parameters ============ -->
             <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="6,4,0,6">
-                <ComboBox Width="260" Height="36" VerticalContentAlignment="Center"
+                <ComboBox Width="260" Height="{DynamicResource Nova.Field.Height}" VerticalContentAlignment="Center"
                       ItemsSource="{Binding Axes}"
                       SelectedItem="{Binding SelectedAxis, Mode=TwoWay}"/>
 
@@ -205,7 +209,7 @@
                 <!-- Live values -->
                 <Border Grid.Column="1" Style="{StaticResource ManualCard}">
                     <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                             <iconPacks:PackIconLucide Kind="Activity" Width="15" Height="15" VerticalAlignment="Center"
                                                   Margin="0,0,8,0" Foreground="{DynamicResource PrimaryBrush}"/>
                             <TextBlock Text="LIVE VALUES" Style="{StaticResource SectionHeader}" Margin="0"/>
@@ -272,7 +276,7 @@
                         </StackPanel>
 
                         <Button Style="{StaticResource DangerOutlineButton}" Command="{Binding ClearErrorCommand}"
-                            HorizontalAlignment="Center" Margin="0,24,0,0">
+                            HorizontalAlignment="Center" Margin="0,16,0,0">
                             <StackPanel Orientation="Horizontal">
                                 <iconPacks:PackIconLucide Kind="RotateCcw" Width="13" Height="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
                                 <TextBlock Text="Clear error" VerticalAlignment="Center"/>
@@ -285,7 +289,7 @@
                          needs when an axis refuses a command and no chip explains it.
                          Verbatim, so it matches the vendor documentation. -->
                         <TextBlock Text="AXIS STATE" Style="{StaticResource MetricLabel}"
-                               HorizontalAlignment="Center" Margin="0,24,0,6"/>
+                               HorizontalAlignment="Center" Margin="0,16,0,6"/>
                         <Grid HorizontalAlignment="Center">
                             <Border Background="{DynamicResource PrimaryBrush}" Opacity="0.08" CornerRadius="8"/>
                             <TextBlock Text="{Binding AxisState}" Margin="12,5"
@@ -298,7 +302,7 @@
                 </Border>
 
                 <!-- Motion control -->
-                <Border Grid.Column="1" Style="{StaticResource ManualCard}">
+                <Border Grid.Column="1" Style="{StaticResource ManualCard}" IsEnabled="{Binding SupportsPositioning}">
                     <StackPanel>
                         <TextBlock Text="MOTION CONTROL" Style="{StaticResource SectionHeader}"/>
 
@@ -325,14 +329,16 @@
                 </Border>
 
                 <!-- Homing control -->
-                <Border Grid.Column="2" Style="{StaticResource ManualCard}">
+                <Border Grid.Column="2" Style="{StaticResource ManualCard}" IsEnabled="{Binding SupportsPositioning}">
                     <StackPanel>
                         <TextBlock Text="HOMING CONTROL" Style="{StaticResource SectionHeader}"/>
 
                         <TextBox Style="{StaticResource PlaceholderField}" hc:InfoElement.Placeholder="{Binding HomeVelocityHint}"
                              Text="{Binding HomeVelocity, UpdateSourceTrigger=PropertyChanged}"/>
 
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,56,0,0">
+                        <!-- Top margin = one more field (height + its 8 bottom margin), so
+                             these buttons sit on the same line as Motion Control's. -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,48,0,0">
                             <Button Style="{StaticResource ActionButton}" Command="{Binding HomeCommand}">
                                 <StackPanel Orientation="Horizontal">
                                     <iconPacks:PackIconLucide Kind="House" Width="13" Height="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
@@ -360,11 +366,13 @@
                         <!-- Jog runs only while the button is held down (see the PreviewMouseDown /
                          PreviewMouseUp handlers below); operators kept clicking once and
                          reporting the axis "did not move". -->
-                        <TextBlock Text="Press and Hold" HorizontalAlignment="Center" Margin="0,16,0,0"
+                        <TextBlock Text="Press and Hold" HorizontalAlignment="Center" Margin="0,8,0,0"
                                FontSize="{DynamicResource Nova.FontSize.Caption}"
                                Foreground="{DynamicResource SecondaryTextBrush}"/>
 
-                        <Grid Margin="0,24,0,0">
+                        <!-- 23 puts the jog buttons on Motion Control's button line: field
+                             40 + caption 8 + ~17 + 23 = the two Motion fields' 80 + 8. -->
+                        <Grid Margin="0,23,0,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="10"/>
@@ -402,7 +410,7 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- Point to point control -->
-                <Border Grid.Column="0" Style="{StaticResource ManualCard}" VerticalAlignment="Top">
+                <Border Grid.Column="0" Style="{StaticResource ManualCard}" VerticalAlignment="Top" IsEnabled="{Binding SupportsPositioning}">
                     <StackPanel>
                         <TextBlock Text="POINT TO POINT CONTROL" Style="{StaticResource SectionHeader}"/>
 

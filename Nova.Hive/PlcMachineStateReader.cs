@@ -1,8 +1,7 @@
 using System;
-using System.Threading;
-using Teal.Library.Contracts.Models;
+using System.Threading.Tasks;
+using Nova.Alarm;
 using Teal.Library.Log;
-using TwinCAT.Ads;
 
 namespace Nova.Hive
 {
@@ -25,32 +24,30 @@ namespace Nova.Hive
     }
 
     /// <summary>
-    /// Reads the PLC's machine state over ADS and reports it whenever it changes.
-    /// <see cref="HiveStateMachine"/> turns that into the HIVE state.
+    /// The PLC's machine state, reported whenever it changes.
+    /// <see cref="HiveStateMachine"/> turns that into the HIVE state. The state is an ADS
+    /// notification through the HMI's shared <see cref="PlcSubscriptions"/>: the PLC pushes
+    /// it when it changes, and nothing polls.
     /// </summary>
     public sealed class PlcMachineStateReader : IDisposable
     {
-        private static readonly TimeSpan CheckInterval = TimeSpan.FromMilliseconds(500);
-
-        private readonly string _amsNetId;
-        private readonly int _port;
+        private readonly PlcSubscriptions _subscriptions;
         private readonly string _symbol;
-        private readonly AdsClient _client = new AdsClient();
         private readonly object _sync = new object();
 
-        private Timer _timer;
-        private int _reading;
+        /// <summary>Changes are handed on in order, off the ADS thread: the HIVE side writes files.</summary>
+        private Task _delivery = Task.FromResult(0);
+
+        private bool _started;
         private bool _hasState;
         private PlcMachineState _state;
-        private bool _readFailing;
 
-        /// <summary>Raised on the reader's thread when the PLC reports a different state.</summary>
+        /// <summary>Raised on a worker thread, in order, when the PLC reports a different state.</summary>
         public event EventHandler<PlcMachineState> MachineStateChanged;
 
-        public PlcMachineStateReader(string amsNetId, int port, string symbol)
+        public PlcMachineStateReader(PlcSubscriptions subscriptions, string symbol)
         {
-            _amsNetId = amsNetId;
-            _port = port;
+            _subscriptions = subscriptions ?? throw new ArgumentNullException(nameof(subscriptions));
             _symbol = symbol;
         }
 
@@ -58,72 +55,76 @@ namespace Nova.Hive
         {
             lock (_sync)
             {
-                if (_timer == null)
-                    _timer = new Timer(OnTimer, null, TimeSpan.Zero, CheckInterval);
+                if (_started)
+                    return;
+
+                _started = true;
             }
+
+            // E_MachineState is an INT in the PLC, so two bytes.
+            _subscriptions.ValueChanged += OnValueChanged;
+            _subscriptions.Watch(_symbol, typeof(short));
+
+            // Already subscribed by the time this starts: take the value the PLC last pushed.
+            Report();
         }
 
         public void Stop()
         {
             lock (_sync)
             {
-                if (_timer != null)
-                {
-                    _timer.Dispose();
-                    _timer = null;
-                }
+                if (!_started)
+                    return;
+
+                _started = false;
             }
+
+            _subscriptions.ValueChanged -= OnValueChanged;
         }
 
+        /// <summary>The subscriptions are shared and belong to their creator, so they are left running.</summary>
         public void Dispose()
         {
             Stop();
-            _client.Dispose();
         }
 
-        private void OnTimer(object state)
+        /// <summary>Runs on the ADS thread: no ADS calls, and nothing slow.</summary>
+        private void OnValueChanged(object sender, string symbol)
         {
-            // Skip this tick if the previous read is still running.
-            if (Interlocked.Exchange(ref _reading, 1) == 1)
+            if (string.Equals(symbol, _symbol, StringComparison.OrdinalIgnoreCase))
+                Report();
+        }
+
+        private void Report()
+        {
+            short value;
+            if (!_subscriptions.TryGet(_symbol, out value))
                 return;
 
+            var machineState = (PlcMachineState)value;
+
+            lock (_sync)
+            {
+                if (!_started || (_hasState && machineState == _state))
+                    return;
+
+                _hasState = true;
+                _state = machineState;
+                _delivery = _delivery.ContinueWith(_ => Deliver(machineState), TaskScheduler.Default);
+            }
+        }
+
+        private void Deliver(PlcMachineState machineState)
+        {
             try
             {
-                Read();
-                _readFailing = false;
+                MachineStateChanged?.Invoke(this, machineState);
             }
             catch (Exception ex)
             {
-                // Logged once, not every half second.
-                if (!_readFailing)
-                {
-                    _readFailing = true;
-                    Logger.WriteLog(LogType.Error, "Hive", "MachineState",
-                        "Cannot read the machine state " + _symbol + " from the PLC: " + ex.Message, ex.ToString());
-                }
+                Logger.WriteLog(LogType.Error, "Hive", "MachineState",
+                    "Handling the machine state " + machineState + " failed: " + ex.Message, ex.ToString());
             }
-            finally
-            {
-                Interlocked.Exchange(ref _reading, 0);
-            }
-        }
-
-        private void Read()
-        {
-            if (!_client.IsConnected)
-                _client.Connect(_amsNetId, _port);
-
-            // E_MachineState is an INT in the PLC, so two bytes.
-            var value = (short)_client.ReadAny(_symbol, typeof(short));
-            var machineState = (PlcMachineState)value;
-
-            if (_hasState && machineState == _state)
-                return;
-
-            _hasState = true;
-            _state = machineState;
-
-            MachineStateChanged?.Invoke(this, machineState);
         }
     }
 }

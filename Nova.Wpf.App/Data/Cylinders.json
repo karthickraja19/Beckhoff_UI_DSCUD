@@ -1,529 +1,331 @@
 [
   {
-    "EnumName": "Light_Mask_ZAxis_Cyl",
-    "ValveType": 2,
-    "Name": "Light Mask Z Axis Cylinder",
-    "ExtendValves": [
-      "Light_Mask_ZAxis_Cyl_FW"
-    ],
-    "RetractValves": [
-      "Light_Mask_ZAxis_Cyl_BW"
-    ],
+    "EnumName": "TC_UC_Ent_Stopper_Cyl",
+    "Name": "Transfer Conveyor UC Entry Stopper Cylinder",
+    "Id": 1,
+    "ExtendOutput": "TC_UC_Ent_Stop_Up",
+    "RetractOutput": "TC_UC_Ent_Stop_Dn",
     "ExtendSenses": [
-      "Light_Mask_ZAxis_Cyl_FW"
+      "TC_UC_Ent_Stop_Up"
     ],
     "RetractSenses": [
-      "Light_Mask_ZAxis_Cyl_BW"
-    ],
-    "Timeout": 5,
-    "StableCount": 1,
-    "ActionTime": 700,
-    "BothSenseTimeout": 5,
-    "Buttons": {
-      "Extend": {
-        "Text": "Work",
-        "IsEnabled": true
-      },
-      "Retract": {
-        "Text": "Home",
-        "IsEnabled": true
-      }
-    }
+      "TC_UC_Ent_Stop_Dn"
+    ]
   },
   {
-    "EnumName": "Light_Mask_XAxis_Cyl",
-    "ValveType": 2,
-    "Name": "Light Mask X Axis Cylinder",
-    "ExtendValves": [
-      "Light_Mask_XAxis_Cyl_FW"
-    ],
-    "RetractValves": [
-      "Light_Mask_XAxis_Cyl_BW"
-    ],
+    "EnumName": "TC_UC_Scan_Stopper_Cyl",
+    "Name": "Transfer Conveyor UC Scanning Stopper Cylinder",
+    "Id": 2,
+    "ExtendOutput": "TC_UC_Scan_Stop_Up",
+    "RetractOutput": "TC_UC_Scan_Stop_Dn",
     "ExtendSenses": [
-      "Light_Mask_XAxis_Cyl_FW"
+      "TC_UC_Scan_Stop_Up"
     ],
     "RetractSenses": [
-      "Light_Mask_XAxis_Cyl_BW"
-    ],
-    "Timeout": 5,
-    "StableCount": 1,
-    "ActionTime": 950,
-    "BothSenseTimeout": 5,
-    "Buttons": {
-      "Extend": {
-        "Text": "Work",
-        "IsEnabled": true
-      },
-      "Retract": {
-        "Text": "Home",
-        "IsEnabled": true
-      }
-    }
+      "TC_UC_Scan_Stop_Dn"
+    ]
   },
   {
-    "EnumName": "Load_Conv_Stopper_Cyl",
-    "ValveType": 2,
-    "Name": "Loading Conveyor Stopper Cylinder",
-    "ExtendValves": [
-      "Loading_Conv_Stop_Cyl_Up"
-    ],
-    "RetractValves": [
-      "Loading_Conv_Stop_Cyl_Down"
-    ],
+    "EnumName": "TC_UC_Ld_Stopper_Cyl",
+    "Name": "Transfer Conveyor UC Loading Stopper Cylinder",
+    "Id": 3,
+    "ExtendOutput": "TC_UC_Ld_Stop_Up",
+    "RetractOutput": "TC_UC_Ld_Stop_Dn",
     "ExtendSenses": [
-      "Loading_Conv_Stop_Cyl_Up"
+      "TC_UC_Ld_Stop_Up"
     ],
     "RetractSenses": [
-      "Loading_Conv_Stop_Cyl_Down"
-    ],
-    "Timeout": 5,
-    "StableCount": 1,
-    "ActionTime": 2000,
-    "BothSenseTimeout": 5,
-    "Buttons": {
-      "Extend": {
-        "Text": "Work",
-        "IsEnabled": true
-      },
-      "Retract": {
-        "Text": "Home",
-        "IsEnabled": true
-      }
-    }
+      "TC_UC_Ld_Stop_Dn"
+    ]
   },
   {
-    "EnumName": "Wrk_Conv_Stopper_Cyl",
-    "ValveType": 2,
-    "Name": "Working Conveyor Stopper Cylinder",
-    "ExtendValves": [
-      "Wor_Conv_Cyl_Stop_Up"
-    ],
-    "RetractValves": [
-      "Wor_Conv_Cyl_Stop_Down"
-    ],
+    "EnumName": "TC_Int_Stopper1_Cyl",
+    "Name": "Transfer Conveyor Intermediate Stopper 1 Cylinder (entry)",
+    "Id": 4,
+    "ExtendOutput": "TC_Int_Stop1_Up",
+    "RetractOutput": "TC_Int_Stop1_Dn",
     "ExtendSenses": [
-      "Work_Conv_Cyl_Stop_Up"
+      "TC_Int_Ent_Stop_Up"
     ],
     "RetractSenses": [
-      "Work_Conv_Cyl_Stop_Down"
-    ],
-    "Timeout": 5,
-    "StableCount": 1,
-    "ActionTime": 800,
-    "BothSenseTimeout": 5,
-    "Buttons": {
-      "Extend": {
-        "Text": "Work",
-        "IsEnabled": true
-      },
-      "Retract": {
-        "Text": "Home",
-        "IsEnabled": true
-      }
-    }
+      "TC_Int_Ent_Stop_Dn"
+    ]
   },
   {
-    "EnumName": "Wrk_Conv_Pall_Clamp_Cyl",
-    "ValveType": 2,
-    "Name": "Working Conveyor Pallet Clamping Cylinder",
-    "ExtendValves": [
-      "Work_Conv_Pall_Clamp_Cyl_Clamp"
-    ],
-    "RetractValves": [
-      "Work_Conv_Pall_Clamp_Cyl_UnClamp"
-    ],
+    "EnumName": "TC_Int_Stopper2_Cyl",
+    "Name": "Transfer Conveyor Intermediate Stopper 2 Cylinder",
+    "Id": 5,
+    "ExtendOutput": "TC_Int_Stop2_Up",
+    "RetractOutput": "TC_Int_Stop2_Dn",
     "ExtendSenses": [
-      "Work_Conv_Pall_Clamp_Cyl_Clamp"
+      "TC_Int_Stop_Up"
     ],
     "RetractSenses": [
-      "Work_Conv_Pall_Clamp_Cyl_UnClamp"
-    ],
-    "Timeout": 5,
-    "StableCount": 1,
-    "ActionTime": 5000,
-    "BothSenseTimeout": 5,
-    "Buttons": {
-      "Extend": {
-        "Text": "Work",
-        "IsEnabled": true
-      },
-      "Retract": {
-        "Text": "Home",
-        "IsEnabled": true
-      }
-    }
+      "TC_Int_Stop_Dn"
+    ]
   },
   {
-    "EnumName": "Wrk_Conv_Pall_Lift_Cyl",
-    "ValveType": 2,
-    "Name": "Working Conveyor Pallet Lifting Cylinder",
-    "ExtendValves": [
-      "Work_Conv_Pall_Lift_Cyl_Up"
-    ],
-    "RetractValves": [
-      "Work_Conv_Pall_Lift_Cyl_Down"
-    ],
+    "EnumName": "TC_UC_Ld_Lifter_Cyl",
+    "Name": "Transfer Conveyor UC Loading Lifter Cylinder",
+    "Id": 6,
+    "ExtendOutput": "TC_UC_Ld_Lift_Up",
+    "RetractOutput": "TC_UC_Ld_Lift_Dn",
     "ExtendSenses": [
-      "Work_Conv_Pall_Lift_Cyl_Up"
+      "TC_UC_Ld_Lift_Up"
     ],
     "RetractSenses": [
-      "Work_Conv_Pall_Lift_Cyl_Down"
-    ],
-    "Timeout": 5,
-    "StableCount": 1,
-    "ActionTime": 4000,
-    "BothSenseTimeout": 5,
-    "Buttons": {
-      "Extend": {
-        "Text": "Work",
-        "IsEnabled": true
-      },
-      "Retract": {
-        "Text": "Home",
-        "IsEnabled": true
-      }
-    }
+      "TC_UC_Ld_Lift_Dn"
+    ]
   },
   {
-    "EnumName": "Wrk_Conv_HSG_Clamp_Cyl1",
-    "ValveType": 2,
-    "Name": "Working Conveyor HSG Clamping Cylinder 1",
-    "ExtendValves": [
-      "Work_Conv_HSG_Clamp_Cyl1_Clamp"
-    ],
-    "RetractValves": [
-      "Work_Conv_HSG_Clamp_Cyl1_UnClamp"
-    ],
+    "EnumName": "TC_UC_Unld_Lifter_Cyl",
+    "Name": "Transfer Conveyor UC Unloading Lifter Cylinder",
+    "Id": 7,
+    "ExtendOutput": "TC_UC_Unld_Lift_Up",
+    "RetractOutput": "TC_UC_Unld_Lift_Dn",
     "ExtendSenses": [
-      "Work_Conv_HSG_Clamp_Cyl1_Clamp"
+      "TC_UC_Unld_Lift_Up"
     ],
     "RetractSenses": [
-      "Work_Conv_HSG_Clamp_Cyl1_Unclamp"
-    ],
-    "Timeout": 5,
-    "StableCount": 1,
-    "ActionTime": 800,
-    "BothSenseTimeout": 5,
-    "Buttons": {
-      "Extend": {
-        "Text": "Work",
-        "IsEnabled": true
-      },
-      "Retract": {
-        "Text": "Home",
-        "IsEnabled": true
-      }
-    }
+      "TC_UC_Unld_Lift_Dwn"
+    ]
   },
   {
-    "EnumName": "Wrk_Conv_HSG_Clamp_Cyl2",
-    "ValveType": 2,
-    "Name": "Working Conveyor HSG Clamping Cylinder 2",
-    "ExtendValves": [
-      "Work_Conv_HSG_Clamp_Cyl2_Clamp"
-    ],
-    "RetractValves": [
-      "Work_Conv_HSG_Clamp_Cyl2_UnClamp"
-    ],
+    "EnumName": "BFC_Stopper1_Cyl",
+    "Name": "Backflow Conveyor Stopper 1 Cylinder",
+    "Id": 8,
+    "ExtendOutput": "BFC_Stop1_Up",
+    "RetractOutput": "BFC_Stop1_Dn",
     "ExtendSenses": [
-      "Work_Conv_HSG_Clamp_Cyl2_Clamp"
+      "BFC_Stop1_Up"
     ],
     "RetractSenses": [
-      "Work_Conv_HSG_Clamp_Cyl2_Unclamp"
-    ],
-    "Timeout": 5,
-    "StableCount": 1,
-    "ActionTime": 800,
-    "BothSenseTimeout": 5,
-    "Buttons": {
-      "Extend": {
-        "Text": "Work",
-        "IsEnabled": true
-      },
-      "Retract": {
-        "Text": "Home",
-        "IsEnabled": true
-      }
-    }
+      "BFC_Stop1_Dn"
+    ]
   },
   {
-    "EnumName": "Unload_Conv_Stopper_Cyl",
-    "ValveType": 2,
-    "Name": "Unloading Conveyor Stopper Cylinder",
-    "ExtendValves": [
-      "Unload_Conv_Stop_Cyl_Up"
-    ],
-    "RetractValves": [
-      "Unload_Conv_Stop_Cyl_Down"
-    ],
+    "EnumName": "BFC_Stopper2_Cyl",
+    "Name": "Backflow Conveyor Stopper 2 Cylinder",
+    "Id": 9,
+    "ExtendOutput": "BFC_Stop2_Up",
+    "RetractOutput": "BFC_Stop2_Dn",
     "ExtendSenses": [
-      "Unload_Conv_Stop_Cyl_Up"
+      "BFC_Stop2_Up"
     ],
     "RetractSenses": [
-      "Unload_Conv_Stop_Cyl_Down"
-    ],
-    "Timeout": 5,
-    "StableCount": 1,
-    "ActionTime": 800,
-    "BothSenseTimeout": 5,
-    "Buttons": {
-      "Extend": {
-        "Text": "Work",
-        "IsEnabled": true
-      },
-      "Retract": {
-        "Text": "Home",
-        "IsEnabled": true
-      }
-    }
+      "BFC_Stop2_Dn"
+    ]
   },
   {
-    "EnumName": "Unload_Conv_Pall_Clamp_Cyl",
-    "ValveType": 2,
-    "Name": "Unloading Conveyor Pallet Clamping Cylinder",
-    "ExtendValves": [
-      "Unload_Conv_Pall_Clamp_Cyl_Clamp"
-    ],
-    "RetractValves": [
-      "Unload_Conv_Pall_Clamp_Cyl_UnClamp"
-    ],
+    "EnumName": "UC_Ld_Lifter_Hold_Cyl",
+    "Name": "UC Loading Lifter Holding Cylinder",
+    "Id": 10,
+    "ExtendOutput": "UC_Ld_Lift_Hold_Cyl_Fwd",
+    "RetractOutput": "UC_Ld_Lift_Hold_Cyl_Rev",
     "ExtendSenses": [
-      "Unload_Conv_Pall_Clamp_Cyl_Clamp"
+      "UC_Ld_Lift_Hold_Cyl1_Fwd",
+      "UC_Ld_Lift_Hold_Cyl2_Fwd"
     ],
     "RetractSenses": [
-      "Unload_Conv_Pall_Clamp_Cyl_Unclamp"
-    ],
-    "Timeout": 5,
-    "StableCount": 1,
-    "ActionTime": 2000,
-    "BothSenseTimeout": 5,
-    "Buttons": {
-      "Extend": {
-        "Text": "Work",
-        "IsEnabled": true
-      },
-      "Retract": {
-        "Text": "Home",
-        "IsEnabled": true
-      }
-    }
+      "UC_Ld_Lift_Hold_Cyl1_Rev",
+      "UC_Ld_Lift_Hold_Cyl2_Rev"
+    ]
   },
   {
-    "EnumName": "Unload_Conv_Pall_Lift_Cyl",
-    "ValveType": 2,
-    "Name": "Unloading Conveyor Pallet Lifting Cylinder",
-    "ExtendValves": [
-      "Unload_Conv_Pall_Lift_Cyl_Up"
-    ],
-    "RetractValves": [
-      "Unload_Conv_Pall_Lift_Cyl_Down"
-    ],
+    "EnumName": "UC_Unld_Lifter_Hold_Cyl",
+    "Name": "UC Unloading Lifter Holding Cylinder",
+    "Id": 11,
+    "ExtendOutput": "UC_Unld_Lift_Hold_Cyl_Fwd",
+    "RetractOutput": "UC_Unld_Lift_Hold_Cyl_Rev",
     "ExtendSenses": [
-      "Unload_Conv_Pall_Lift_Cyl_UP"
+      "UC_Unld_Lift_Hold_Cyl1_Fwd",
+      "UC_Unld_Lift_Hold_Cyl2_Fwd"
     ],
     "RetractSenses": [
-      "Unload_Conv_Pall_Lift_Cyl_Down"
-    ],
-    "Timeout": 5,
-    "StableCount": 1,
-    "ActionTime": 1000,
-    "BothSenseTimeout": 5,
-    "Buttons": {
-      "Extend": {
-        "Text": "Work",
-        "IsEnabled": true
-      },
-      "Retract": {
-        "Text": "Home",
-        "IsEnabled": true
-      }
-    }
+      "UC_Unld_Lift_Hold_Cyl1_Rev",
+      "UC_Unld_Lift_Hold_Cyl2_Rev"
+    ]
   },
   {
-    "EnumName": "UnLoad_Conv_HSG_Clamp_Cyl1",
-    "ValveType": 2,
-    "Name": "UnLoading Conveyor HSG Clamping Cylinder 1",
-    "ExtendValves": [
-      "Unload_Conv_HSG_Clamp_Cyl1_Clamp"
-    ],
-    "RetractValves": [
-      "Unload_Conv_HSG_Clamp_Cyl1_UnClamp"
-    ],
+    "EnumName": "UC_Ld_Gripper_Cyl",
+    "Name": "UC Loading Gripper Cylinder",
+    "Id": 12,
+    "ExtendOutput": "UC_Ld_Grip_Cyl_Up",
+    "RetractOutput": "UC_Ld_Grip_Cyl_Dn",
     "ExtendSenses": [
-      "Unload_Conv_HSG_Clamp_Cyl1_Clamp"
+      "UC_Ld_Grip_Cyl_Fwd"
     ],
     "RetractSenses": [
-      "Unload_Conv_HSG_Clamp_Cyl1_Unclamp"
-    ],
-    "Timeout": 5,
-    "StableCount": 1,
-    "ActionTime": 800,
-    "BothSenseTimeout": 5,
-    "Buttons": {
-      "Extend": {
-        "Text": "Work",
-        "IsEnabled": true
-      },
-      "Retract": {
-        "Text": "Home",
-        "IsEnabled": true
-      }
-    }
+      "UC_Ld_Grip_Cyl_Rev"
+    ]
   },
   {
-    "EnumName": "UnLoad_Conv_HSG_Clamp_Cyl2",
-    "ValveType": 2,
-    "Name": "UnLoading Conveyor HSG Clamping Cylinder 2",
-    "ExtendValves": [
-      "Unload_Conv_HSG_Clamp_Cyl2_Clamp"
-    ],
-    "RetractValves": [
-      "Unload_Conv_HSG_Clamp_Cyl2_UnClamp"
-    ],
+    "EnumName": "UC_Unld_Gripper_Cyl",
+    "Name": "UC Unloading Gripper Cylinder",
+    "Id": 13,
+    "ExtendOutput": "UC_Unld_Grip_Cyl_Up",
+    "RetractOutput": "UC_Unld_Grip_Cyl_Dn",
     "ExtendSenses": [
-      "Unload_Conv_HSG_Clamp_Cyl2_Clamp"
+      "UC_Unld_Grip_Cyl_Fwd"
     ],
     "RetractSenses": [
-      "Unload_Conv_HSG_Clamp_Cyl2_Unclamp"
-    ],
-    "Timeout": 5,
-    "StableCount": 1,
-    "ActionTime": 800,
-    "BothSenseTimeout": 5,
-    "Buttons": {
-      "Extend": {
-        "Text": "Work",
-        "IsEnabled": true
-      },
-      "Retract": {
-        "Text": "Home",
-        "IsEnabled": true
-      }
-    }
+      "UC_Unld_Grip_Cyl_Rev"
+    ]
   },
   {
-    "EnumName": "BTH_PP_ZAxis_Cyl",
-    "ValveType": 2,
-    "Name": "BTH Pick Place Z Axis Cylinder",
-    "ExtendValves": [
-      "BTH_PP_ZAxis_Cyl_Up"
-    ],
-    "RetractValves": [
-      "BTH_PP_ZAxis_Cyl_Down"
-    ],
+    "EnumName": "Glue_Weigh_Cover_Cyl",
+    "Name": "Glue Weighing Module Cover Cylinder",
+    "Id": 14,
+    "ExtendOutput": "Glue_Weigh_Mod_Cov_Cyl_Up",
+    "RetractOutput": "Glue_Weigh_Mod_Cov_Cyl_Dn",
     "ExtendSenses": [
-      "BTH_PP_ZAxis_Cyl_Up"
+      "AWM_Cov_Cyl_Up"
     ],
     "RetractSenses": [
-      "BTH_PP_ZAxis_Cyl_Down"
-    ],
-    "Timeout": 5,
-    "StableCount": 1,
-    "ActionTime": 2000,
-    "BothSenseTimeout": 5,
-    "Buttons": {
-      "Extend": {
-        "Text": "Work",
-        "IsEnabled": true
-      },
-      "Retract": {
-        "Text": "Home",
-        "IsEnabled": true
-      }
-    }
+      "AWM_Cov_Cyl_Dn"
+    ]
   },
   {
-    "EnumName": "BTH_Load_LHS_Lock_Cyl",
-    "ValveType": 2,
-    "Name": "BTH Loading Feeder LHS Locking Cylinder",
-    "ExtendValves": [
-      "BTH_Load_Feeder_LHS_Lock_Cyl_Up"
-    ],
-    "RetractValves": [
-      "BTH_Load_Feeder_LHS_Lock_Cyl_Down"
-    ],
+    "EnumName": "NG_Stopper_Cyl",
+    "Name": "NG Stopper Cylinder",
+    "Id": 15,
+    "ExtendOutput": "NG_Stop_Cyl_Up",
+    "RetractOutput": "NG_Stop_Cyl_Dn",
     "ExtendSenses": [
-      "BTH_Load_Feeder_LHS_Lock_Cyl_Up"
+      "NG_Stop_Cyl_Up"
     ],
     "RetractSenses": [
-      "BTH_Load_Feeder_LHS_Lock_Cyl_Down"
-    ],
-    "Timeout": 5,
-    "StableCount": 1,
-    "ActionTime": 500,
-    "BothSenseTimeout": 5,
-    "Buttons": {
-      "Extend": {
-        "Text": "Work",
-        "IsEnabled": true
-      },
-      "Retract": {
-        "Text": "Home",
-        "IsEnabled": true
-      }
-    }
+      "NG_Stop_Cyl_Dn"
+    ]
   },
   {
-    "EnumName": "BTH_Load_RHS_Lock_Cyl",
-    "ValveType": 2,
-    "Name": "BTH Loading Feeder RHS Locking Cylinder",
-    "ExtendValves": [
-      "BTH_Load_Feeder_RHS_Lock_Cyl_Up"
-    ],
-    "RetractValves": [
-      "BTH_Load_Feeder_RHS_Lock_Cyl_Down"
-    ],
+    "EnumName": "Stn1_Wiping_Cyl1",
+    "Name": "Station 1 Wiping Module Cylinder 1",
+    "Id": 16,
+    "ExtendOutput": "Stn1_Wip_Mod_Cyl1_Up",
+    "RetractOutput": "Stn1_Wip_Mod_Cyl1_Dn",
     "ExtendSenses": [
-      "BTH_Load_Feeder_RHS_Lock_Cyl_Up"
+      "Stn1_Wip_Mod_Cyl1_Up_Reserved"
     ],
     "RetractSenses": [
-      "BTH_Load_Feeder_RHS_Lock_Cyl_Down"
-    ],
-    "Timeout": 5,
-    "StableCount": 1,
-    "ActionTime": 500,
-    "BothSenseTimeout": 5,
-    "Buttons": {
-      "Extend": {
-        "Text": "Work",
-        "IsEnabled": true
-      },
-      "Retract": {
-        "Text": "Home",
-        "IsEnabled": true
-      }
-    }
+      "Stn1_Wip_Mod_Cyl1_Dn_Reserved"
+    ]
   },
   {
-    "EnumName": "Peel_Off_Clamp_Cyl",
-    "ValveType": 2,
-    "Name": "Peel Off Clamping Cylinder",
-    "ExtendValves": [
-      "Peel_Off_Cyl_Clamp"
-    ],
-    "RetractValves": [
-      "Peel_Off_Cyl_UnClamp"
-    ],
+    "EnumName": "Stn1_Wiping_Cyl2",
+    "Name": "Station 1 Wiping Module Cylinder 2",
+    "Id": 17,
+    "ExtendOutput": "Stn1_Wip_Mod_Cyl2_Up",
+    "RetractOutput": "Stn1_Wip_Mod_Cyl2_Dn",
     "ExtendSenses": [
-      "Peel_Off_Cyl_Clamp"
+      "Stn1_Wip_Mod_Cyl2_Up_Reserved"
     ],
     "RetractSenses": [
-      "Peel_Off_Cyl_Unclamp"
+      "Stn1_Wip_Mod_Cyl2_Dn_Reserved"
+    ]
+  },
+  {
+    "EnumName": "Stn1_Maint_Door_Cyl",
+    "Name": "Station 1 Maintenance Door Cylinder",
+    "Id": 18,
+    "ExtendOutput": "Stn1_Maint_Dr_Cyl_Up",
+    "RetractOutput": "Stn1_Maint_Dr_Cyl_Dn",
+    "ExtendSenses": [
+      "Stn1_Maint_Dr_Cyl_Up"
     ],
-    "Timeout": 5,
-    "StableCount": 1,
-    "ActionTime": 300,
-    "BothSenseTimeout": 5,
-    "Buttons": {
-      "Extend": {
-        "Text": "Work",
-        "IsEnabled": true
-      },
-      "Retract": {
-        "Text": "Home",
-        "IsEnabled": true
-      }
-    }
+    "RetractSenses": [
+      "Stn1_Maint_Dr_Cyl_Dn"
+    ]
+  },
+  {
+    "EnumName": "Stn1_Disp_Lock_Cyl",
+    "Name": "Station 1 Dispenser Locking Cylinder",
+    "Id": 19,
+    "ExtendOutput": "Stn1_Disp_Lock_Cyl_Up",
+    "RetractOutput": "Stn1_Disp_Lock_Cyl_Dn",
+    "ExtendSenses": [
+      "Stn1_Disp_Lock_Cyl_Up"
+    ],
+    "RetractSenses": [
+      "Stn1_Disp_Lock_Cyl_Dn"
+    ]
+  },
+  {
+    "EnumName": "Stn1_Glue_Disp_Cyl",
+    "Name": "Station 1 Glue Dispenser Cylinder",
+    "Id": 20,
+    "ExtendOutput": "Stn1_Glue_Disp_Cyl_Up",
+    "RetractOutput": "Stn1_Glue_Disp_Cyl_Dn",
+    "ExtendSenses": [
+      "Stn1_Glue_Disp_Cyl_Up"
+    ],
+    "RetractSenses": [
+      "Stn1_Glue_Disp_Cyl_Dn"
+    ]
+  },
+  {
+    "EnumName": "Stn2_Wiping_Cyl1",
+    "Name": "Station 2 Wiping Module Cylinder 1",
+    "Id": 21,
+    "ExtendOutput": "Stn2_Wip_Mod_Cyl1_Up",
+    "RetractOutput": "Stn2_Wip_Mod_Cyl1_Dn",
+    "ExtendSenses": [
+      "Stn2_Wip_Mod_Cyl1_Up_Reserved"
+    ],
+    "RetractSenses": [
+      "Stn2_Wip_Mod_Cyl1_Dn_Reserved"
+    ]
+  },
+  {
+    "EnumName": "Stn2_Wiping_Cyl2",
+    "Name": "Station 2 Wiping Module Cylinder 2",
+    "Id": 22,
+    "ExtendOutput": "Stn2_Wip_Mod_Cyl2_Up",
+    "RetractOutput": "Stn2_Wip_Mod_Cyl2_Dn",
+    "ExtendSenses": [
+      "Stn2_Wip_Mod_Cyl2_Up_Reserved"
+    ],
+    "RetractSenses": [
+      "Stn2_Wip_Mod_Cyl2_Dn_Reserved"
+    ]
+  },
+  {
+    "EnumName": "Stn2_Maint_Door_Cyl",
+    "Name": "Station 2 Maintenance Door Cylinder",
+    "Id": 23,
+    "ExtendOutput": "Stn2_Maint_Dr_Cyl_Up",
+    "RetractOutput": "Stn2_Maint_Dr_Cyl_Dn",
+    "ExtendSenses": [
+      "Stn2_Maint_Dr_Cyl_Up"
+    ],
+    "RetractSenses": [
+      "Stn2_Maint_Dr_Cyl_Dn"
+    ]
+  },
+  {
+    "EnumName": "Stn2_Disp_Lock_Cyl",
+    "Name": "Station 2 Dispenser Locking Cylinder",
+    "Id": 24,
+    "ExtendOutput": "Stn2_Disp_Lock_Cyl_Up",
+    "RetractOutput": "Stn2_Disp_Lock_Cyl_Dn",
+    "ExtendSenses": [
+      "Stn2_Disp_Lock_Cyl_Up"
+    ],
+    "RetractSenses": [
+      "Stn2_Disp_Lock_Cyl_Dn"
+    ]
+  },
+  {
+    "EnumName": "Stn2_Glue_Disp_Cyl",
+    "Name": "Station 2 Glue Dispenser Cylinder",
+    "Id": 25,
+    "ExtendOutput": "Stn2_Glue_Disp_Cyl_Up",
+    "RetractOutput": "Stn2_Glue_Disp_Cyl_Dn",
+    "ExtendSenses": [
+      "Stn2_Glue_Disp_Cyl_Up"
+    ],
+    "RetractSenses": [
+      "Stn2_Glue_Disp_Cyl_Dn"
+    ]
   }
 ]

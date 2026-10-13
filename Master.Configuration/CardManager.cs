@@ -1,61 +1,62 @@
-﻿using Master.Configuration.Model;
-using Newtonsoft.Json;
+using Master.Configuration.Model;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using Teal.Library.Contracts;
 using Teal.Library.Contracts.Models;
 using Teal.Library.Log;
 using Teal.Library.Twincat;
 
 namespace Master.Configuration
 {
+    /// <summary>
+    /// The Beckhoff card (the PLC's ADS connection) described by CardsConfiguration.json. Its
+    /// <see cref="Card"/> is null when the file is missing or is not a Beckhoff card
+    /// configuration; <see cref="MachineConfiguration.Load"/> reports why.
+    /// </summary>
     public class CardManager
     {
         private TwincatCard _card;
-        string configPath = Path.Combine(Application.StartupPath, "Data", "CardsConfiguration.json");
+
         public CardManager()
         {
             LoadCard();
         }
+
         public TwincatCard Card => _card;
 
+        /// <summary>
+        /// Builds the card from the configuration already loaded; reads the Data folder beside
+        /// the application first if nothing has been loaded yet.
+        /// </summary>
         public void LoadCard()
         {
             try
             {
-                if (!File.Exists(configPath))
+                if (!MachineConfiguration.IsLoaded)
                 {
-                    MessageBox.Show($"Card Configuration file not found: {configPath}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
+                    foreach (string problem in MachineConfiguration.Load(Path.Combine(Application.StartupPath, "Data")))
+                        Logger.WriteLog(LogType.Error, "CardManager", "LoadCard", problem, "");
                 }
-                string jsonContent = File.ReadAllText(configPath);
-                CardConfiguration configFile = JsonConvert.DeserializeObject<CardConfiguration>(jsonContent);
-                if (configFile == null)
-                {
-                    MessageBox.Show($"Failed to deserialize card configuration from file: {configPath}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-                InitializeCards(configFile);
+
+                InitializeCards(ConfigGlobalClass.CardConfiguration);
             }
             catch (Exception ex)
             {
                 Logger.WriteLog(LogType.Error, "CardManager", "", "LoadCard", ex.Message);
             }
         }
+
         public void InitializeCards(CardConfiguration cardConfigs)
         {
             try
             {
                 if (cardConfigs == null)
                 {
-                    MessageBox.Show("No card configurations provided", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    Logger.WriteLog(LogType.Error, "CardManager", "InitializeCards", "No card configuration",
+                        "CardsConfiguration.json is missing or is not a Beckhoff card configuration.");
                     return;
                 }
+
                 CardProperties cardproperties = new CardProperties()
                 {
                     ConnectionId = cardConfigs.ConnectionId,
@@ -78,4 +79,3 @@ namespace Master.Configuration
         }
     }
 }
-

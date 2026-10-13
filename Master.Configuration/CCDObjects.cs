@@ -1,50 +1,34 @@
-﻿using Master.Configuration.Model;
-using Newtonsoft.Json;
-using System;
+using Master.Configuration.Model;
 using System.Collections.Generic;
-using System.Data;
-using System.IO;
-using System.Linq;
-using System.Windows.Forms;
 using Teal.Library.Contracts;
-using Teal.Library.Log;
 using Teal.Library.TcpIp;
+using Teal.Library.Twincat;
 
 namespace Master.Configuration
 {
+    /// <summary>
+    /// The library vision device for each member of the <see cref="Master.Configuration.CCDs"/>
+    /// enum configured in Data\CCDs.json. Created by <see cref="DeviceObjects.Create"/>.
+    /// </summary>
     public static class CCDObjects
     {
-        public static Dictionary<CCDs, TcpDevice> CCDs = new Dictionary<CCDs, TcpDevice>();
+        public static readonly Dictionary<CCDs, TcpDevice> CCDs = new Dictionary<CCDs, TcpDevice>();
 
-        public static void LoadCCDs()
+        /// <summary>
+        /// Each is bound to {DBName}.{VisionDUTName}.VisionData[Id] from CardsConfiguration.json
+        /// (MAIN.visioncall.VisionData[1]). Without a VisionDUTName no CCD is created. The PLC array starts at 1.
+        /// </summary>
+        internal static void Load(TwincatCard card, List<string> problems)
         {
-            try
+            CCDs.Clear();
+
+            foreach (var ccd in MachineConfiguration.Configured<Master.Configuration.CCDs, VisionConfiguration>(ConfigGlobalClass.CCDConfigurations, c => c.EnumName))
             {
-                var ccdJsonString = File.ReadAllText(Application.StartupPath + "\\Data\\CCDs.json");
+                var properties = DeviceObjects.NetworkProperties<VisionProperties>(ccd.Value, card, ConfigGlobalClass.CardConfiguration?.VisionDUTName);
+                if (ccd.Value.TriggerCommand != null)
+                    properties.TriggerCommand = ccd.Value.TriggerCommand;
 
-                ConfigGlobalClass.CCDConfigurations = JsonConvert.DeserializeObject<List<SocketClientConfiguration>>(ccdJsonString);
-
-                foreach (var ccdEnum in Enum.GetValues(typeof(CCDs)).Cast<CCDs>())
-                {
-                    string ccdName = ccdEnum.ToString();
-
-                    var ccdConfig = ConfigGlobalClass.CCDConfigurations.Where(x => x.EnumName == ccdName).FirstOrDefault();
-                    NetworkDeviceProperties networkDeviceProperties = new NetworkDeviceProperties
-                    {
-                        Name = ccdConfig.Name,
-                        EnumName = ccdConfig.EnumName,
-                        DeviceType = NetworkDeviceType.Vision,
-                        Id = ccdConfig.Id,
-                    };
-                    var ccd = TcpDeviceFactory.Create(ConfigGlobalClass.cardManager.Card, networkDeviceProperties);
-
-                    CCDs[ccdEnum] = ccd;
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("LoadCCDs: " + ex.Message, "", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                Logger.WriteLog(LogType.Error, "LoadCCDs", "CCDConfig", ex.Message, ex.StackTrace);
+                DeviceObjects.Add(CCDs, ccd.Key, () => TcpDeviceFactory.Create(card, properties), problems);
             }
         }
     }

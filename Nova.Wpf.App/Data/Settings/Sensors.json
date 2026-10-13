@@ -1,0 +1,33 @@
+{
+  "Sensors": [
+    { "Id": "CC1-1", "Name": "CC1 unit entry",       "Location": "Carrier conveyor 1", "IsCritical": false, "Input": "CC1_UC_Ent_Feedback", "DisableSymbol": "" },
+    { "Id": "CC1-2", "Name": "CC1 unit exit",        "Location": "Carrier conveyor 1", "IsCritical": false, "Input": "CC1_UC_Ext_Feedback", "DisableSymbol": "" },
+    { "Id": "CC2-1", "Name": "CC2 unit entry",       "Location": "Carrier conveyor 2", "IsCritical": false, "Input": "CC2_UC_Ent_Feedback", "DisableSymbol": "" },
+    { "Id": "CC2-2", "Name": "CC2 unit exit",        "Location": "Carrier conveyor 2", "IsCritical": false, "Input": "CC2_UC_Ext_Feedback", "DisableSymbol": "" },
+    { "Id": "TC-1",  "Name": "UC in place",          "Location": "Transfer conveyor",  "IsCritical": true,  "Input": "TC_UC_IP_Fb",         "DisableSymbol": "" },
+    { "Id": "TC-2",  "Name": "UC at scan stop exit", "Location": "Transfer conveyor",  "IsCritical": false, "Input": "TC_UC_Scan_Ext_Fb",   "DisableSymbol": "" },
+    { "Id": "TC-3",  "Name": "UC in place (load)",   "Location": "Transfer conveyor",  "IsCritical": true,  "Input": "TC_UC_Ld_IP_Fb",      "DisableSymbol": "" },
+    { "Id": "TC-4",  "Name": "Intermediate in place","Location": "Transfer conveyor",  "IsCritical": true,  "Input": "TC_Int_IP_Fb",        "DisableSymbol": "" },
+    { "Id": "TC-5",  "Name": "UC exit",              "Location": "Transfer conveyor",  "IsCritical": false, "Input": "TC_UC_Ext_Fb",        "DisableSymbol": "" },
+    { "Id": "LL-1",  "Name": "UC present on lift",   "Location": "Load lift",          "IsCritical": true,  "Input": "UC_Ld_Lift_UC_Prs_Fb","DisableSymbol": "" },
+    { "Id": "UL-1",  "Name": "UC present on lift",   "Location": "Unload lift",        "IsCritical": true,  "Input": "UC_Unld_Lift_UC_Prs_Fb","DisableSymbol": "" },
+    { "Id": "UL-2",  "Name": "UC in place",          "Location": "Unload lift",        "IsCritical": true,  "Input": "TC_UC_Unld_Lift_IP_Fb","DisableSymbol": "" },
+    { "Id": "BF-1",  "Name": "UC entry",             "Location": "Buffer conveyor",    "IsCritical": false, "Input": "BFC_UC_Ent_Fb",       "DisableSymbol": "" },
+    { "Id": "BF-2",  "Name": "UC in place",          "Location": "Buffer conveyor",    "IsCritical": true,  "Input": "BFC_UC_Ip_Fb",        "DisableSymbol": "" },
+    { "Id": "BF-3",  "Name": "UC exit",              "Location": "Buffer conveyor",    "IsCritical": false, "Input": "BFC_UC_Ext_Fb",       "DisableSymbol": "" },
+    { "Id": "NG-1",  "Name": "NG unit entry",        "Location": "NG conveyor",        "IsCritical": false, "Input": "NG_UC_Ent_Fb",        "DisableSymbol": "" },
+    { "Id": "NG-2",  "Name": "NG unit exit",         "Location": "NG conveyor",        "IsCritical": false, "Input": "NG_UC_Ext_Fb",        "DisableSymbol": "" },
+    { "Id": "S1-1",  "Name": "R-axis UC present 1",  "Location": "Station 1",          "IsCritical": true,  "Input": "Stn1_Work_Mod_R_Axis_UC_Pres_Fb_1", "DisableSymbol": "" },
+    { "Id": "S1-2",  "Name": "R-axis UC present 2",  "Location": "Station 1",          "IsCritical": true,  "Input": "Stn1_Work_Mod_R_Axis_UC_Pres_Fb_2", "DisableSymbol": "" },
+    { "Id": "S2-1",  "Name": "R-axis UC present 1",  "Location": "Station 2",          "IsCritical": true,  "Input": "Stn2_Work_Mod_R_Axis_UC_Pres_Fb_1", "DisableSymbol": "" },
+    { "Id": "S2-2",  "Name": "R-axis UC present 2",  "Location": "Station 2",          "IsCritical": true,  "Input": "Stn2_Work_Mod_R_Axis_UC_Pres_Fb_2", "DisableSymbol": "" }
+  ],
+  "Locations": [
+    { "Name": "Transfer conveyor", "Input": "TC_UC_IP_Fb" },
+    { "Name": "Load lift",         "Input": "UC_Ld_Lift_UC_Prs_Fb" },
+    { "Name": "Unload lift",       "Input": "UC_Unld_Lift_UC_Prs_Fb" },
+    { "Name": "Buffer conveyor",   "Input": "BFC_UC_Ip_Fb" },
+    { "Name": "Station 1",         "Input": "Stn1_Work_Mod_R_Axis_UC_Pres_Fb_1" },
+    { "Name": "Station 2",         "Input": "Stn2_Work_Mod_R_Axis_UC_Pres_Fb_1" }
+  ]
+}

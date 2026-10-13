@@ -30,6 +30,18 @@ namespace Master.Repository
         void DeleteAlarmDataBefore(DateTime retentionDate);
         void DeleteOEEDataBefore(DateTime retentionDate);
         void InsertAlarmQuery(string _shift, string _smsg, string _command, DateTime Starttime);
+
+        /// <summary>
+        /// Saves one alarm and returns its new row ID. <paramref name="endTime"/> is null
+        /// while the alarm is active (the Alarm page shows that as "Ongoing").
+        /// </summary>
+        int InsertAlarm(string shift, string alarmType, string alarmCode, string alarmDescription, DateTime startTime, DateTime? endTime);
+
+        /// <summary>Fills in the EndTime of an alarm's row.</summary>
+        void UpdateAlarmEndTime(int alarmId, DateTime endTime);
+
+        /// <summary>Alarms that have no EndTime: still active when the HMI last closed.</summary>
+        List<OpenAlarm> GetOpenAlarms();
         System.Data.DataTable AlarmviewQuery(string _shift, DateTime Starttime, DateTime Endtime);
 
         /// <summary>Reports -> Machine Status, via SP_GetMachineStatusReport.</summary>

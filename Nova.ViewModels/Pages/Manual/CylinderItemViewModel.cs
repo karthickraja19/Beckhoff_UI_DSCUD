@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -76,6 +77,9 @@ namespace Nova.ViewModels.Pages.Manual
                 sensors.Add(new CylinderSensor(address, false, compact));
             return sensors;
         }
+
+        /// <summary>Keeps this cylinder's live status up to date until the handle is disposed; null for a device that always has it.</summary>
+        public IDisposable FollowStatus() => (_cylinder as ILiveStatus)?.FollowStatus();
 
         /// <summary>
         /// Pulls the latest device snapshot and updates scalar props + reed chips.

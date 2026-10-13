@@ -81,6 +81,18 @@ namespace Nova.ViewModels.Audio
         /// <summary>Second series in a two-series comparison (Data page day/night shift).</summary>
         public static readonly SKColor SeriesSecondary = new SKColor(111, 121, 128);
 
+        // ---- Glue weight SPC and regression (S2.4.4.5) ----
+        // HIG system colours, the same as Audio.System.*Brush in AudioTokens.xaml.
+
+        /// <summary>USL and LSL, dashed: S2.4.4.5 draws them blue. HIG systemBlue.</summary>
+        public static readonly SKColor SpecLimit = new SKColor(0, 122, 255);
+
+        /// <summary>Nominal, dashed: S2.4.4.5 draws it green. HIG systemGreen.</summary>
+        public static readonly SKColor SpecNominal = new SKColor(52, 199, 89);
+
+        /// <summary>An out-of-spec weighing, and the regression's calibration points. HIG systemRed.</summary>
+        public static readonly SKColor Fail = new SKColor(255, 59, 48);
+
         /// <summary>
         /// A solid fill paint, optionally with the hairline separator stroke that keeps
         /// stacked bars and pie slices from bleeding into each other.

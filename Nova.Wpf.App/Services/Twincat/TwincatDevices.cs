@@ -1,193 +1,166 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Nova.Abstractions.Hardware.Interfaces;
-using Nova.Core.Config;
-using Teal.Library.Contracts;
+using Master.Configuration;
+using Master.Configuration.Model;
 using Teal.Library.Servo;
 using Teal.Library.Stepper;
 using Teal.Library.TcpIp;
+using Teal.Library.Twincat;
 using NovaAxis = Nova.Abstractions.Hardware.IAxis;
 using NovaCylinder = Nova.Abstractions.Hardware.ICylinder;
 using NovaStepper = Nova.Abstractions.Hardware.IStepper;
 using NovaVacuum = Nova.Abstractions.Hardware.IVacuum;
-using TealCylinder = Teal.Library.Cylinder.Cylinder;
+using TealCylinder = Teal.Library.Contracts.ICylinder;
 using TealStepper = Teal.Library.Contracts.IStepper;
-using TealVacuum = Teal.Library.Vacuum.Vacuum;
+using TealVacuum = Teal.Library.Contracts.IVacuum;
+using Nova.Alarm;
 
 namespace Nova.Wpf.App.Services.Twincat
 {
-    /// <summary>Builds the TwinCAT device adapters from the machine profile under Data\.</summary>
+    /// <summary>
+    /// Puts the Beckhoff library devices Master.Configuration created
+    /// (<see cref="DeviceObjects"/>, keyed by its enums) behind the Nova contracts. When a
+    /// screen opens a device, its adapter has the library read the device's current status
+    /// (its Update...Properties); after that the status is the device's HMI display struct -
+    /// where the library says it is (<see cref="HmiDisplays.SymbolOf"/>), read as the struct
+    /// App.config names for that kind of device, passed in here - pushed by the PLC through
+    /// the shared <see cref="PlcSubscriptions"/>. Status is never polled.
+    /// </summary>
+    /// <remarks>
+    /// The devices are taken in the order of their enum, and each adapter's ComponentId is
+    /// the name of its enum member - the Nova contracts cannot reference Master.Configuration.
+    /// A member with no device - not configured, or not created, both reported at startup -
+    /// is left out. When the PLC is up, each device's HMI display and the symbols the library
+    /// commands are checked against the PLC's declarations, so a wrong Id, name or struct is
+    /// reported at startup instead of as a screen that silently shows nothing.
+    /// </remarks>
     public static class TwincatDevices
     {
         /// <summary>
-        /// One adapter per Steppers.json entry, bound to {PlcStepperGvl}.{PlcStepperArray}[Id].
-        /// IsAxisEnabled picks the FB_STEPPER branch: false = I/O conveyor (IOStepper),
-        /// true = NC axis (AxisStepper). When the PLC is up, each binding is checked against
-        /// the PLC's symbols and the mode flag is written, so a wrong Id is reported at
-        /// startup instead of as a button that silently does nothing.
+        /// One adapter per stepper, for the Stepper tab. Every stepper is an I/O stepper: one
+        /// driven as an NC axis is a servo, created by <see cref="CreateAxes"/>.
         /// </summary>
+        /// <param name="displayType">The struct App.config's IOStepperHmiDisplayType names; null when it names none that fits.</param>
         public static List<NovaStepper> CreateSteppers(
-            TwincatPlcConnection plc, IEnumerable<StepperConfiguration> configs, ICollection<string> warnings)
+            TwincatPlcConnection plc,
+            PlcSubscriptions subscriptions,
+            List<StepperConfiguration> configs,
+            IReadOnlyDictionary<Steppers, TealStepper> created,
+            Type displayType,
+            ICollection<string> warnings)
         {
             var steppers = new List<NovaStepper>();
-            bool connected = plc.IsConnected;
+            var displays = new DisplayCheck("I/O steppers", plc, displayType);
 
-            foreach (var cfg in configs)
+            foreach (var (name, _, device) in Created(configs, c => c.EnumName, created))
             {
-                var properties = new StepperProperties
-                {
-                    Name = cfg.Name,
-                    EnumName = cfg.EnumName,
-                    Id = cfg.Id,
-                    AxisEnabled = cfg.IsAxisEnabled,
-                    Speed = cfg.Speed,
-                    Acceleration = cfg.Acceleration,
-                    Deacceleration = cfg.Deceleration,
-                    Pitch = cfg.Pitch,
-                    Pulse = cfg.Pulse,
-                    PPR = cfg.PPR,
-                    Card = plc.Card,
-                };
+                var stepper = device as IOStepper;
+                if (stepper == null)
+                    continue;
 
-                TealStepper stepper = cfg.IsAxisEnabled
-                    ? (TealStepper)new AxisStepper(plc.Card, properties)
-                    : new IOStepper(plc.Card, properties);
-
-                string instance = plc.StepperInstance(cfg.Id);
-
-                if (connected)
-                {
-                    if (!plc.SymbolExists(instance + ".config.axisstepper"))
-                    {
-                        warnings.Add(cfg.EnumName + ": " + instance + " does not exist in the PLC. "
-                            + "Check its Id in Data\\Steppers.json - the PLC array starts at 1.");
-                    }
-                    else
-                    {
-                        bool modeWritten;
-                        lock (plc.SyncRoot)
-                        {
-                            modeWritten = stepper.ApplyMode();
-                        }
-
-                        if (!modeWritten)
-                            warnings.Add(cfg.EnumName + ": could not write " + instance + ".config.axisstepper.");
-                    }
-                }
-
-                steppers.Add(new TwincatStepperAdapter(cfg.EnumName, instance, stepper, plc));
+                displays.Check(name.ToString(), stepper);
+                steppers.Add(new TwincatStepperAdapter(name.ToString(), stepper, plc, subscriptions, displayType));
             }
 
+            displays.Report(warnings);
             return steppers;
         }
 
         /// <summary>
-        /// One adapter per Cylinders.json entry. The valve and reed names in that file are
-        /// the PLC's variable names, so the symbol is {ioGvl}.{name} - for example
-        /// GVL_IO.Light_Mask_ZAxis_Cyl_FW. Leave PlcIoGvl blank in App.config when the PLC
-        /// declares them at the top level instead.
-        ///
-        /// When the PLC is up, every symbol is checked against its declarations, so a name
-        /// that does not exist is reported at startup rather than as a button that silently
-        /// does nothing or a reed chip that never lights.
+        /// One adapter per cylinder. The valve and reed symbols the library commands are the
+        /// PLC names from Cylinders.json under App.config's PlcIoGvl - for example
+        /// GVL_IO.Light_Mask_ZAxis_Cyl_FW.
         /// </summary>
+        /// <param name="displayType">The struct App.config's CylinderHmiDisplayType names; null when it names none that fits.</param>
         /// <param name="resolveAddress">
         /// Maps a PLC name to its wiring address from Data\Config.csv, for display on the
         /// Manual board. Pass null to show the PLC names instead.
         /// </param>
         public static List<NovaCylinder> CreateCylinders(
             TwincatPlcConnection plc,
-            IEnumerable<CylinderConfiguration> configs,
-            string ioGvl,
+            PlcSubscriptions subscriptions,
+            List<CylinderConfiguration> configs,
+            IReadOnlyDictionary<Cylinders, TealCylinder> created,
+            Type displayType,
             Func<string, bool, string> resolveAddress,
             ICollection<string> warnings)
         {
             var cylinders = new List<NovaCylinder>();
-            bool connected = plc.IsConnected;
+            var displays = new DisplayCheck("cylinders", plc, displayType);
 
-            foreach (var cfg in configs)
+            foreach (var (name, cfg, device) in Created(configs, c => c.EnumName, created))
             {
-                var extendValves = Names(cfg.ExtendValves);
-                var retractValves = Names(cfg.RetractValves);
-                var extendSenses = Names(cfg.ExtendSenses);
-                var retractSenses = Names(cfg.RetractSenses);
+                var cylinder = device as Teal.Library.Cylinder.Cylinder;
+                if (cylinder == null)
+                    continue;
 
-                // The library takes full PLC symbol paths, the way the stepper takes
-                // GLOBAL_STEPPER.gStepper[Id].
-                var properties = new CylinderProperties
+                if (displays.Connected)
                 {
-                    Name = cfg.Name,
-                    EnumName = cfg.EnumName,
-                    ExtendOutput = extendValves.Count > 0 ? Symbol(ioGvl, extendValves[0]) : "",
-                    RetractOutput = retractValves.Count > 0 ? Symbol(ioGvl, retractValves[0]) : "",
-                    ExtendSenses = extendSenses.Select(n => Symbol(ioGvl, n)).ToList(),
-                    RetractSenses = retractSenses.Select(n => Symbol(ioGvl, n)).ToList(),
-                };
-
-                if (connected)
-                {
-                    var missing = new[] { properties.ExtendOutput, properties.RetractOutput }
-                        .Concat(properties.ExtendSenses)
-                        .Concat(properties.RetractSenses)
+                    var missing = new[] { cylinder.ExtendName, cylinder.RetractName }
+                        .Concat(cylinder.ExtendSenses ?? new List<string>())
+                        .Concat(cylinder.RetractSenses ?? new List<string>())
                         .Where(s => !string.IsNullOrEmpty(s) && !plc.SymbolExists(s))
                         .ToList();
 
                     if (missing.Count > 0)
                     {
-                        warnings.Add(cfg.EnumName + ": " + string.Join(", ", missing)
+                        warnings.Add(name + ": " + string.Join(", ", missing)
                             + " " + (missing.Count == 1 ? "does" : "do")
                             + " not exist in the PLC. Check the names in Data\\Cylinders.json "
                             + "and the PlcIoGvl setting in App.config.");
                     }
                 }
 
+                displays.Check(name.ToString(), cylinder);
                 cylinders.Add(new TwincatCylinderAdapter(
-                    cfg.EnumName,
-                    new TealCylinder(plc.Card, properties),
+                    name.ToString(),
+                    cylinder,
                     plc,
-                    Addresses(extendSenses, resolveAddress),
-                    Addresses(retractSenses, resolveAddress)));
+                    subscriptions,
+                    displayType,
+                    Addresses(Names(cfg.ExtendSenses), resolveAddress),
+                    Addresses(Names(cfg.RetractSenses), resolveAddress)));
             }
 
+            displays.Report(warnings);
             return cylinders;
         }
 
         /// <summary>
-        /// One adapter per Vacuums.json entry. As with the cylinders, the sensor and output
-        /// names are PLC variable names under {ioGvl}, and a name the PLC does not declare
-        /// is reported at startup.
+        /// One adapter per vacuum. As with the cylinders, the sensor and output names in
+        /// Vacuums.json are PLC variable names under PlcIoGvl.
         /// </summary>
+        /// <param name="displayType">The struct App.config's VacuumHmiDisplayType names; null when it names none that fits.</param>
         public static List<NovaVacuum> CreateVacuums(
             TwincatPlcConnection plc,
-            IEnumerable<VacuumConfiguration> configs,
-            string ioGvl,
+            PlcSubscriptions subscriptions,
+            List<VacuumConfiguration> configs,
+            IReadOnlyDictionary<Vacuums, TealVacuum> created,
+            Type displayType,
             Func<string, bool, string> resolveAddress,
             ICollection<string> warnings)
         {
             var vacuums = new List<NovaVacuum>();
-            bool connected = plc.IsConnected;
+            var displays = new DisplayCheck("vacuums", plc, displayType);
 
-            foreach (var cfg in configs)
+            foreach (var (name, cfg, device) in Created(configs, c => c.EnumName, created))
             {
-                var properties = new VacuumProperties
-                {
-                    Name = cfg.Name,
-                    EnumName = cfg.EnumName,
-                    VacuumSense = Symbol(ioGvl, cfg.VacuumSense),
-                    VacuumOutput = Symbol(ioGvl, cfg.VacuumOutput),
-                    BlowOutput = Symbol(ioGvl, cfg.BlowOutput),
-                };
+                var vacuum = device as Teal.Library.Vacuum.Vacuum;
+                if (vacuum == null)
+                    continue;
 
-                if (connected)
+                if (displays.Connected)
                 {
-                    var missing = new[] { properties.VacuumSense, properties.VacuumOutput, properties.BlowOutput }
+                    var missing = new[] { vacuum.VacuumSense, vacuum.VacuumOutput, vacuum.BlowOutput }
                         .Where(s => !string.IsNullOrEmpty(s) && !plc.SymbolExists(s))
                         .ToList();
 
                     if (missing.Count > 0)
                     {
-                        warnings.Add(cfg.EnumName + ": " + string.Join(", ", missing)
+                        warnings.Add(name + ": " + string.Join(", ", missing)
                             + " " + (missing.Count == 1 ? "does" : "do")
                             + " not exist in the PLC. Check the names in Data\\Vacuums.json "
                             + "and the PlcIoGvl setting in App.config.");
@@ -195,83 +168,141 @@ namespace Nova.Wpf.App.Services.Twincat
                 }
 
                 string feedback = string.IsNullOrWhiteSpace(cfg.VacuumSense) || resolveAddress == null
-                    ? properties.VacuumSense
+                    ? vacuum.VacuumSense
                     : resolveAddress(cfg.VacuumSense, false);
 
-                vacuums.Add(new TwincatVacuumAdapter(cfg.EnumName, new TealVacuum(plc.Card, properties), plc, feedback));
+                displays.Check(name.ToString(), vacuum);
+                vacuums.Add(new TwincatVacuumAdapter(name.ToString(), vacuum, plc, subscriptions, displayType, feedback));
             }
 
+            displays.Report(warnings);
             return vacuums;
         }
 
-        /// <summary>One adapter per Servos.json entry.</summary>
-        public static List<NovaAxis> CreateAxes(TwincatPlcConnection plc, IEnumerable<ServoConfiguration> configs)
+        /// <summary>One adapter per servo.</summary>
+        /// <param name="displayType">The struct App.config's ServoHmiDisplayType names; null when it names none that fits.</param>
+        public static List<NovaAxis> CreateAxes(
+            TwincatPlcConnection plc,
+            PlcSubscriptions subscriptions,
+            List<ServoConfiguration> configs,
+            IReadOnlyDictionary<Servos, AxisServo> created,
+            Type displayType,
+            ICollection<string> warnings)
         {
             var axes = new List<NovaAxis>();
+            var displays = new DisplayCheck("servos", plc, displayType);
 
-            foreach (var cfg in configs)
+            foreach (var (name, _, servo) in Created(configs, c => c.EnumName, created))
             {
-                var properties = new AxisProperties
-                {
-                    Id = cfg.Id,
-                    Name = cfg.Name,
-                    EnumName = cfg.EnumName,
-                    Pulse = cfg.Pulse,
-                    PositiveLimit = cfg.SoftLimits != null ? cfg.SoftLimits.Positive : 0,
-                    NegativeLimit = cfg.SoftLimits != null ? cfg.SoftLimits.Negative : 0,
-                    Velocity = cfg.Speed,
-                    Acceleration = cfg.Acceleration,
-                    Deceleration = cfg.Deceleration,
-                    Type = MotorType.Servo,
-                };
-
-                axes.Add(new TwincatAxisAdapter(cfg.EnumName, new AxisServo(plc.Card, properties), plc));
+                displays.Check(name.ToString(), servo);
+                axes.Add(new TwincatAxisAdapter(name.ToString(), servo, plc, subscriptions, displayType));
             }
 
+            displays.Report(warnings);
             return axes;
         }
 
         /// <summary>
-        /// One TCP/IP device per entry, bound to the library's default PLC array for its
-        /// type (ScannerGVL.Scanners[n], VisionGVL.Visions[n], RobotGVL.Robots[n]). n is the entry's position in
-        /// its file, starting at 0 as the PLC arrays do. When the PLC is up, each binding is
-        /// checked, so a file with more devices than the PLC array is reported at startup.
+        /// The robots, each with the name it is shown by, for the Robot tab's I/O. When the PLC is
+        /// up, each one's I/O image is checked against the PLC's declaration - the library reads
+        /// typeRobotFBHwInputs and typeRobotFBHwOutputs by their members' offsets, so a different
+        /// size means the two have drifted - and its connection flag is checked to exist.
         /// </summary>
-        public static List<INetworkProtocol> CreateTcpDevices(
+        public static List<KeyValuePair<string, TwincatRobot>> CreateRobots(
             TwincatPlcConnection plc,
-            NetworkDeviceType type,
-            IEnumerable<SocketClientConfiguration> configs,
+            List<RobotConfiguration> configs,
+            IReadOnlyDictionary<Robots, TwincatRobot> created,
             ICollection<string> warnings)
         {
-            var devices = new List<INetworkProtocol>();
+            var robots = new List<KeyValuePair<string, TwincatRobot>>();
             bool connected = plc.IsConnected;
-            int id = 0;
 
-            foreach (var cfg in configs)
+            foreach (var (name, _, robot) in Created(configs, c => c.EnumName, created))
             {
-                NetworkDeviceProperties properties;
-                switch (type)
+                if (connected)
                 {
-                    case NetworkDeviceType.Vision: properties = new VisionProperties(); break;
-                    case NetworkDeviceType.Robot: properties = new RobotProperties(); break;
-                    default: properties = new ScannerProperties(); break;
-                }
-                properties.Id = id++;
-                properties.Name = cfg.Name;
-                properties.EnumName = cfg.EnumName;
-
-                var device = TcpDeviceFactory.Create(plc.Card, properties);
-
-                if (connected && !plc.SymbolExists(device.Instance + ".status.connected"))
-                {
-                    warnings.Add(cfg.EnumName + ": " + device.Instance + " does not exist in the PLC. "
-                        + "Its position in the device file is its index in the PLC array, starting at 0.");
+                    CheckImage(plc, name.ToString(), robot.InputSymbol, robot.InputSize, "typeRobotFBHwInputs", warnings);
+                    CheckImage(plc, name.ToString(), robot.OutputSymbol, robot.OutputSize, "typeRobotFBHwOutputs", warnings);
+                    if (!plc.SymbolExists(robot.ConnectedSymbol))
+                    {
+                        warnings.Add(name + ": " + robot.ConnectedSymbol + " does not exist in the PLC, so the Robot tab "
+                            + "shows it disconnected. Check its Id in Data\\Robots.json - the PLC array starts at 1.");
+                    }
                 }
 
-                devices.Add(new TwincatTcpDeviceAdapter(device, plc));
+                robots.Add(new KeyValuePair<string, TwincatRobot>(
+                    string.IsNullOrWhiteSpace(robot.Name) ? name.ToString() : robot.Name, robot));
             }
 
+            return robots;
+        }
+
+        private static void CheckImage(TwincatPlcConnection plc, string name, string symbol, int size, string type, ICollection<string> warnings)
+        {
+            int? declared = plc.SymbolSize(symbol);
+            if (declared == null)
+            {
+                warnings.Add(name + ": " + symbol + " does not exist in the PLC, so the Robot tab shows its points at 0. "
+                    + "Check its Id in Data\\Robots.json.");
+            }
+            else if (declared.Value != size)
+            {
+                warnings.Add(name + ": " + symbol + " is " + declared.Value + " bytes in the PLC but the library's " + type
+                    + " is " + size + ", so the Robot tab shows wrong values - the PLC struct and "
+                    + "Teal.Library.Twincat\\RobotHwIO.cs must declare the same members in the same order.");
+            }
+        }
+
+        /// <summary>
+        /// One adapter per TCP/IP device of one kind (CCDs or scanners), each with its
+        /// entry in the file, for the console tabs to show its address. When the PLC is up,
+        /// each binding is checked, so a wrong Id or DUT name is reported at startup.
+        /// </summary>
+        /// <param name="kind">What the devices are called in the startup warnings - "CCDs", "scanners".</param>
+        /// <param name="displayType">The struct App.config names for this kind of device; null when it names none that fits.</param>
+        public static List<KeyValuePair<TConfig, INetworkProtocol>> CreateTcpDevices<TEnum, TConfig>(
+            TwincatPlcConnection plc,
+            PlcSubscriptions subscriptions,
+            string kind,
+            List<TConfig> configs,
+            IReadOnlyDictionary<TEnum, TcpDevice> created,
+            Type displayType,
+            ICollection<string> warnings)
+            where TEnum : struct, Enum
+            where TConfig : NetworkDeviceConfiguration
+        {
+            var devices = new List<KeyValuePair<TConfig, INetworkProtocol>>();
+            var displays = new DisplayCheck(kind, plc, displayType);
+
+            foreach (var (name, cfg, device) in Created(configs, c => c.EnumName, created))
+            {
+                if (displays.Connected && !plc.SymbolExists(device.Instance + ".status.connected"))
+                {
+                    warnings.Add(name + ": " + device.Instance + " does not exist in the PLC. Check its Id in the "
+                        + "device file and its DUT name in Data\\CardsConfiguration.json - the PLC array starts at 1.");
+                }
+
+                displays.Check(name.ToString(), device);
+                devices.Add(new KeyValuePair<TConfig, INetworkProtocol>(
+                    cfg, new TwincatTcpDeviceAdapter(device, plc, subscriptions, displayType)));
+            }
+
+            displays.Report(warnings);
             return devices;
+        }
+
+        /// <summary>Each device Master.Configuration created, with its enum member and its entry in the file, in the enum's order.</summary>
+        private static IEnumerable<(TEnum Name, TConfig Config, TDevice Device)> Created<TEnum, TConfig, TDevice>(
+            List<TConfig> configs, Func<TConfig, string> enumName, IReadOnlyDictionary<TEnum, TDevice> created)
+            where TEnum : struct, Enum
+            where TConfig : class
+        {
+            foreach (var configured in MachineConfiguration.Configured<TEnum, TConfig>(configs, enumName))
+            {
+                TDevice device;
+                if (created.TryGetValue(configured.Key, out device))
+                    yield return (configured.Key, configured.Value, device);
+            }
         }
 
         private static List<string> Names(List<string> configured)
@@ -281,19 +312,89 @@ namespace Nova.Wpf.App.Services.Twincat
                 : configured.Where(n => !string.IsNullOrWhiteSpace(n)).ToList();
         }
 
-        private static string Symbol(string ioGvl, string name)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-                return "";
-
-            return string.IsNullOrWhiteSpace(ioGvl) ? name : ioGvl + "." + name;
-        }
-
         private static List<string> Addresses(List<string> names, Func<string, bool, string> resolveAddress)
         {
             return resolveAddress == null
                 ? names
                 : names.Select(n => resolveAddress(n, false)).ToList();
+        }
+
+        /// <summary>
+        /// Checks the HMI display of each device of one kind, and reports the problems together
+        /// rather than once per device: the devices the library gives no symbol for, and - when
+        /// the PLC is up - the symbols it does not declare, or declares at another size than
+        /// the struct App.config names.
+        /// </summary>
+        private sealed class DisplayCheck
+        {
+            private readonly string _kind;
+            private readonly TwincatPlcConnection _plc;
+            private readonly Type _type;
+            private readonly List<string> _noSymbol = new List<string>();
+            private readonly List<string> _notInPlc = new List<string>();
+            private readonly SortedDictionary<int, List<string>> _wrongSize = new SortedDictionary<int, List<string>>();
+
+            public DisplayCheck(string kind, TwincatPlcConnection plc, Type type)
+            {
+                _kind = kind;
+                _plc = plc;
+                _type = type;
+                Connected = plc.IsConnected;
+            }
+
+            /// <summary>The PLC was up when the check began, so symbols can be checked against it.</summary>
+            public bool Connected { get; }
+
+            public void Check(string name, object libraryDevice)
+            {
+                string symbol = HmiDisplays.SymbolOf(libraryDevice);
+                if (symbol == null)
+                {
+                    _noSymbol.Add(name);
+                    return;
+                }
+
+                if (!Connected)
+                    return;
+
+                int? size = _plc.SymbolSize(symbol);
+                if (size == null)
+                {
+                    _notInPlc.Add(name + " (" + symbol + ")");
+                }
+                else if (_type != null && size.Value != Marshal.SizeOf(_type))
+                {
+                    List<string> names;
+                    if (!_wrongSize.TryGetValue(size.Value, out names))
+                        _wrongSize[size.Value] = names = new List<string>();
+
+                    names.Add(name);
+                }
+            }
+
+            public void Report(ICollection<string> warnings)
+            {
+                if (_noSymbol.Count > 0)
+                {
+                    warnings.Add("The library gives no " + HmiDisplays.SymbolProperty + " for these " + _kind
+                        + ", so they show what the library reads when a screen opens them, but no changes after: "
+                        + string.Join(", ", _noSymbol) + ".");
+                }
+
+                if (_notInPlc.Count > 0)
+                {
+                    warnings.Add("The HMI displays of these " + _kind + " do not exist in the PLC, so they show no "
+                        + "live status: " + string.Join(", ", _notInPlc) + ".");
+                }
+
+                foreach (KeyValuePair<int, List<string>> size in _wrongSize)
+                {
+                    warnings.Add("The HMI displays of these " + _kind + " are " + size.Key + " bytes in the PLC but "
+                        + _type.Name + " is " + Marshal.SizeOf(_type) + ", so they show no live status - the PLC "
+                        + "struct and Services\\Twincat\\HmiDisplay\\" + _type.Name + ".cs must declare the same "
+                        + "fields in the same order: " + string.Join(", ", size.Value) + ".");
+                }
+            }
         }
     }
 }

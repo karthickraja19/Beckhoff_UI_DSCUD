@@ -1,14 +1,24 @@
-﻿[
-  {
-    "EnumName": "Barcode_Scanner1",
-    "Name": "Barcode_Scanner1",
-    "IPAddress": "192.168.250.11",
-    "Port": "23"
-  },
-  {
-    "EnumName": "Barcode_Scanner2",
-    "Name": "Barcode_Scanner2",
-    "IPAddress": "192.168.250.13",
-    "Port": "23"
-  }
+[
+    {
+        "EnumName":  "Barcode_Scanner1",
+        "Name":  "Barcode_Scanner1",
+        "Id":  1,
+        "ConnectTimeout":  6000,
+        "ResponseTimeout":  10000,
+        "PollIntervalMs":  10,
+        "StationName":  "",
+        "IPAddress":  "192.168.250.11",
+        "Port":  23
+    },
+    {
+        "EnumName":  "Barcode_Scanner2",
+        "Name":  "Barcode_Scanner2",
+        "Id":  2,
+        "ConnectTimeout":  6000,
+        "ResponseTimeout":  6000,
+        "PollIntervalMs":  10,
+        "StationName":  "",
+        "IPAddress":  "192.168.250.13",
+        "Port":  23
+    }
 ]

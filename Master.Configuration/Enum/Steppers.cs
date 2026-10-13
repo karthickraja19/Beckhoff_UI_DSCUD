@@ -7,16 +7,16 @@ using System.Threading.Tasks;
 namespace Master.Configuration
 {
     #region List of all Steppers
-    /// <summary>List of all Steppers. Generated from the real machine profile under Nova.Wpf.App\Data.</summary>
+    /// <summary>
+    /// List of all I/O steppers. A stepper driven as an NC axis is a servo, listed in
+    /// <see cref="Servos"/> and Data\Servos.json instead.
+    /// </summary>
     public enum Steppers
     {
         LiftingStepper0,
         LiftingStepper1,
         LiftingStepper2,
-        LiftingStepper3,
-        LoadingConveyor,
-        WorkingConveyor,
-        UnloadingConveyor
+        LiftingStepper3
     }
     #endregion
 }

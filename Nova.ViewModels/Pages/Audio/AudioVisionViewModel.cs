@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Nova.Abstractions.Data;
@@ -67,11 +68,99 @@ namespace Nova.ViewModels.Pages.Audio
             SelectedTile = ReferenceEquals(tile, SelectedTile) ? null : tile;
         }
 
-        public AudioVisionViewModel(IAppSession session)
+        private readonly ICcdImageSource _images;
+        private readonly System.Threading.SynchronizationContext _ui = System.Threading.SynchronizationContext.Current;
+
+        /// <summary>Where the frames come from, or why there are none.</summary>
+        public string SourceText { get; }
+
+        public AudioVisionViewModel(IAppSession session, ICcdImageSource images = null)
             : base(session)
         {
-            for (int i = 1; i <= 6; i++)
-                Tiles.Add(new CcdTile("CCD" + i, BuildInformation(i)));
+            _images = images;
+
+            // The source's cameras first, then "CCDn" up to the slide's six tiles.
+            var names = new List<string>();
+            if (images != null)
+                names.AddRange(images.Cameras);
+            for (int i = 1; names.Count < 6; i++)
+            {
+                if (!names.Contains("CCD" + i))
+                    names.Add("CCD" + i);
+            }
+
+            for (int i = 0; i < names.Count && i < 6; i++)
+            {
+                var tile = new CcdTile(names[i], BuildInformation(i + 1));
+                Tiles.Add(tile);
+                Apply(tile);
+            }
+
+            SourceText = images != null
+                ? images.Description
+                : "No image source is configured (App.config VisionImageFolder): set it to the folder the vision software saves its images in.";
+
+            if (images != null)
+                images.CaptureChanged += OnCaptureChanged;
+        }
+
+        private void OnCaptureChanged(object sender, string camera)
+        {
+            // Raised on the file watcher's thread; the tiles are bound.
+            if (_ui != null)
+                _ui.Post(_ => ApplyCamera(camera), null);
+            else
+                ApplyCamera(camera);
+        }
+
+        private void ApplyCamera(string camera)
+        {
+            foreach (CcdTile tile in Tiles)
+            {
+                if (string.Equals(tile.Name, camera, System.StringComparison.OrdinalIgnoreCase))
+                    Apply(tile);
+            }
+        }
+
+        /// <summary>Puts the camera's newest capture on its tile.</summary>
+        private void Apply(CcdTile tile)
+        {
+            CcdCapture capture = _images != null ? _images.Latest(tile.Name) : null;
+            if (capture == null)
+                return;
+
+            // Cleared first, so a file rewritten under the same name is read again.
+            tile.ImagePath = null;
+            tile.ImagePath = capture.ImagePath;
+            tile.HasImage = true;
+            tile.IsNg = capture.Result == "NG" || capture.Result == "FAIL";
+            tile.Caption = capture.Time.ToString("HH:mm:ss")
+                + (string.IsNullOrWhiteSpace(capture.UnitSn) ? string.Empty : "   " + capture.UnitSn)
+                + (string.IsNullOrWhiteSpace(capture.Result) ? string.Empty : "   " + capture.Result);
+
+            var information = new List<SummaryRow>
+            {
+                new SummaryRow("CCD", tile.Name),
+                new SummaryRow("Time", capture.Time.ToString("yyyy-MM-dd HH:mm:ss")),
+                new SummaryRow("Unit SN", string.IsNullOrWhiteSpace(capture.UnitSn) ? "—" : capture.UnitSn),
+                new SummaryRow("Result", string.IsNullOrWhiteSpace(capture.Result) ? "—" : capture.Result),
+            };
+
+            if (capture.Information != null && capture.Information.Count > 0)
+            {
+                foreach (var pair in capture.Information)
+                    information.Add(new SummaryRow(pair.Key, pair.Value));
+            }
+            else
+            {
+                // The slide's fields, still unmeasured: the vision software wrote no
+                // information file beside this image.
+                foreach (SummaryRow row in BuildInformation(Tiles.IndexOf(tile) + 1).Skip(2))
+                    information.Add(row);
+            }
+
+            information.Add(new SummaryRow("File", System.IO.Path.GetFileName(capture.ImagePath)));
+            tile.Information = information;
         }
 
         /// <summary>

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
@@ -10,22 +11,35 @@ using Nova.ViewModels.Common;
 namespace Nova.ViewModels.Pages.Manual
 {
     /// <summary>
-    /// Shared shell for the console-style Manual device tabs (Scanner, Light Control,
-    /// SFC &amp; PDCA, Robot): a device selector + live connection status, a "Send
+    /// Shared shell for the console-style Manual device tabs (Scanner, CCD, Light Control,
+    /// SFC &amp; PDCA): a device selector + live connection status, a "Send
     /// Command" editor, a "Received Response" console and Connect / Trigger /
     /// Disconnect actions.
     ///
     /// Connect/Trigger/Disconnect route through <see cref="DoConnectAsync"/> /
     /// <see cref="DoTriggerAsync"/> / <see cref="DoDisconnectAsync"/>. The default
     /// implementations resolve the selected device's <see cref="INetworkProtocol"/>
-    /// (loaded via <see cref="LoadDevices"/>) and do real TCP send/receive; when no
-    /// transport is configured they fall back to the legacy seeded-console behaviour,
-    /// so a tab still demos on a dev PC with no config.
+    /// (loaded via <see cref="LoadDevices"/>) and send/receive through it. A device with
+    /// no transport cannot be connected.
+    ///
+    /// The connection status is the device's own: it is read when the tab comes on screen
+    /// and when another device is selected, and followed through
+    /// <see cref="IConnectionStatusService.StatusChanged"/> while the tab is on screen. So a
+    /// device that is already connected shows CONNECTED, with Connect disabled and the
+    /// other buttons enabled, without pressing Connect first.
     /// </summary>
-    public abstract partial class ConsoleDeviceViewModel : ViewModelBase
+    public abstract partial class ConsoleDeviceViewModel : ViewModelBase, IActivatableTab
     {
         private readonly Dictionary<string, INetworkProtocol> _protocols =
             new Dictionary<string, INetworkProtocol>();
+
+        private readonly IConnectionStatusService _connectionStatus;
+        private bool _isActive;
+
+        protected ConsoleDeviceViewModel(IConnectionStatusService connectionStatus = null)
+        {
+            _connectionStatus = connectionStatus;
+        }
 
         public ObservableCollection<ConsoleDeviceItem> Devices { get; } = new ObservableCollection<ConsoleDeviceItem>();
 
@@ -61,11 +75,11 @@ namespace Nova.ViewModels.Pages.Manual
         public virtual string TriggerLabel => "TRIGGER";
         public virtual string TriggerIcon => "Play";
 
-        /// <summary>The transport for the current selection, or null when unconfigured (fake mode).</summary>
+        /// <summary>The transport for the current selection, or null when it has none.</summary>
         protected INetworkProtocol ActiveProtocol
             => SelectedDevice != null && _protocols.TryGetValue(SelectedDevice.Name, out var p) ? p : null;
 
-        /// <summary>True when at least one real transport is wired (skips legacy fake seeding).</summary>
+        /// <summary>True when at least one transport is wired.</summary>
         protected bool HasTransports => _protocols.Count > 0;
 
         /// <summary>Populate Devices + transports from the config-driven registry.</summary>
@@ -99,6 +113,47 @@ namespace Nova.ViewModels.Pages.Manual
         protected virtual void OnDeviceSelected(ConsoleDeviceItem item)
         {
             SendCommand = string.Empty;
+            RefreshConnection();
+        }
+
+        public void Activate()
+        {
+            if (_isActive)
+                return;
+
+            _isActive = true;
+            if (_connectionStatus != null)
+                _connectionStatus.StatusChanged += OnConnectionStatusChanged;
+            RefreshConnection();
+        }
+
+        public void Deactivate()
+        {
+            if (!_isActive)
+                return;
+
+            _isActive = false;
+            if (_connectionStatus != null)
+                _connectionStatus.StatusChanged -= OnConnectionStatusChanged;
+        }
+
+        // Raised on the UI thread when any device's connection changes.
+        private void OnConnectionStatusChanged(object sender, EventArgs e) => RefreshConnection();
+
+        /// <summary>Shows the selected device's connection as the device reports it.</summary>
+        protected void RefreshConnection()
+        {
+            IsConnected = ReadDeviceConnected();
+        }
+
+        /// <summary>
+        /// Whether the device the buttons act on is connected, as it reports it. False when
+        /// it has no transport.
+        /// </summary>
+        protected virtual bool ReadDeviceConnected()
+        {
+            var p = ActiveProtocol;
+            return p != null && p.IsConnected;
         }
 
         [RelayCommand]
@@ -107,7 +162,9 @@ namespace Nova.ViewModels.Pages.Manual
             if (IsConnected) return;
             Console.Add(new CameraConsoleLine("CONNECT " + (SelectedDevice?.Name ?? "DEVICE") + "..."));
             bool ok = await DoConnectAsync();
-            IsConnected = ok;
+            // The device's own status can arrive a moment after the connect returns; the
+            // status change then confirms it.
+            IsConnected = ok || ReadDeviceConnected();
             Console.Add(new CameraConsoleLine(ok ? "ACK LINK_ESTABLISHED" : "CONNECT_FAILED", isAck: ok));
             if (ok) OnConnected();
         }
@@ -116,19 +173,12 @@ namespace Nova.ViewModels.Pages.Manual
         private async Task Trigger()
         {
             if (!IsConnected) return;
-            string response = await DoTriggerAsync();
-            if (response != null)
-            {
-                if (!string.IsNullOrEmpty(SendCommand))
-                    Console.Add(new CameraConsoleLine(SendCommand));
-                Console.Add(new CameraConsoleLine(
-                    response.Length == 0 ? "(no response)" : response.Trim(),
-                    isAck: response.Length > 0));
-            }
-            else
-            {
-                OnTrigger(); // legacy fake fallback
-            }
+            string response = await DoTriggerAsync() ?? string.Empty;
+            if (!string.IsNullOrEmpty(SendCommand))
+                Console.Add(new CameraConsoleLine(SendCommand));
+            Console.Add(new CameraConsoleLine(
+                response.Length == 0 ? "(no response)" : response.Trim(),
+                isAck: response.Length > 0));
         }
 
         [RelayCommand]
@@ -136,9 +186,10 @@ namespace Nova.ViewModels.Pages.Manual
         {
             if (!IsConnected) return;
             await DoDisconnectAsync();
-            IsConnected = false;
+            // A TCP device closes its link in the background, so it can still report
+            // connected here; the status change shows it closed.
+            RefreshConnection();
             Console.Add(new CameraConsoleLine("DISCONNECT"));
-            Console.Add(new CameraConsoleLine("LINK_CLOSED"));
         }
 
        
@@ -155,14 +206,14 @@ private void RefreshResponse()
         protected virtual async Task<bool> DoConnectAsync()
         {
             var p = ActiveProtocol;
-            return p == null ? true : await p.ConnectAsync();
+            return p != null && await p.ConnectAsync();
         }
 
-        /// <summary>Returns the device response, or null to fall back to the legacy fake OnTrigger().</summary>
+        /// <summary>Returns the device response; empty when there was none.</summary>
         protected virtual async Task<string> DoTriggerAsync()
         {
             var p = ActiveProtocol;
-            return p == null ? null : await p.SendAndReceiveAsync(SendCommand);
+            return p == null ? string.Empty : await p.SendAndReceiveAsync(SendCommand);
         }
 
         protected virtual Task DoDisconnectAsync()
@@ -174,7 +225,11 @@ private void RefreshResponse()
         /// <summary>Subclass hook after a successful connect.</summary>
         protected virtual void OnConnected() { }
 
-        /// <summary>Legacy fake Trigger action, used only when no real transport is configured.</summary>
-        protected virtual void OnTrigger() { }
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && !IsDisposed)
+                Deactivate();
+            base.Dispose(disposing);
+        }
     }
 }

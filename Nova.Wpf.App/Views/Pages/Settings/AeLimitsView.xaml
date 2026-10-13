@@ -17,7 +17,7 @@
         <DockPanel Margin="14">
             <!-- Toolbar -->
             <Grid DockPanel.Dock="Top" Margin="0,0,0,12">
-                <Border CornerRadius="8" Height="36" Width="320" HorizontalAlignment="Left"
+                <Border CornerRadius="8" Height="{DynamicResource Nova.Field.Height}" Width="320" HorizontalAlignment="Left"
                         Background="{DynamicResource RegionBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -80,11 +80,11 @@
                     </Style>
                 </StackPanel.Style>
 
-                <ComboBox Width="180" Height="34" VerticalContentAlignment="Center"
+                <ComboBox Width="180" Height="{DynamicResource Nova.Field.Height}" VerticalContentAlignment="Center"
                           ItemsSource="{Binding FilterColumns}"
                           SelectedItem="{Binding FilterColumn, Mode=TwoWay}"/>
 
-                <Border CornerRadius="8" Height="34" Width="280" Margin="8,0,0,0"
+                <Border CornerRadius="8" Height="{DynamicResource Nova.Field.Height}" Width="280" Margin="8,0,0,0"
                         Background="{DynamicResource RegionBrush}"
                         BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
                     <Grid>

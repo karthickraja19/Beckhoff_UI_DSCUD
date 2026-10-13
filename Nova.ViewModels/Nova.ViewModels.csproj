@@ -6,18 +6,11 @@
     <RootNamespace>Nova.ViewModels</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Beckhoff.TwinCAT.Ads" Version="7.0.371" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="LiveChartsCore.SkiaSharpView" Version="2.0.4" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Master.Configuration\Master.Configuration.csproj" />
     <ProjectReference Include="..\Nova.Abstractions\Nova.Abstractions.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="Teal.Library.Twincat">
-      <HintPath>..\References\Beckhoff\Teal.Library.Twincat.dll</HintPath>
-    </Reference>
   </ItemGroup>
 </Project>
 

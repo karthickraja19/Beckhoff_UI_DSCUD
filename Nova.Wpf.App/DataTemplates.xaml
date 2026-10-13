@@ -54,7 +54,7 @@
     </DataTemplate>
 
     <!-- Hosted screens. None of these is navigated to: Manual is the content of the
-         Home page's Vendor pane (slide 57), and the machine-configuration tree and
+         Setting page's Manual tab, and the machine-configuration tree and
          Recipe are the two sections of the Config page's Machine Configs area
          (slide 58). They are mapped here so the ContentControl that hosts each one
          resolves its view. -->

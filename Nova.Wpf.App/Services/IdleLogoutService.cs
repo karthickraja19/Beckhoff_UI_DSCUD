@@ -33,20 +33,25 @@ namespace Nova.Wpf.App.Services
     /// </remarks>
     public sealed class IdleLogoutService : IDisposable
     {
-        /// <summary>Slide 39's five minutes.</summary>
-        private static readonly TimeSpan IdleLimit = TimeSpan.FromMinutes(5);
+        /// <summary>Slide 39's five minutes, when no setting says otherwise.</summary>
+        private static readonly TimeSpan DefaultIdleLimit = TimeSpan.FromMinutes(5);
 
         private readonly IAppSession _session;
         private readonly IAccessLog _log;
+        private readonly IAccessControlAdmin _settings;
         private readonly DispatcherTimer _timer;
 
         private DateTime _lastActivity = DateTime.Now;
         private bool _disposed;
 
-        public IdleLogoutService(IAppSession session, IAccessLog log)
+        /// <param name="settings">
+        /// Where "Automatically Sign out" is set (Access Control V5.1); null keeps five minutes.
+        /// </param>
+        public IdleLogoutService(IAppSession session, IAccessLog log, IAccessControlAdmin settings = null)
         {
             _session = session;
             _log = log;
+            _settings = settings;
 
             _timer = new DispatcherTimer(DispatcherPriority.Background)
             {
@@ -103,7 +108,8 @@ namespace Nova.Wpf.App.Services
             if (_session.Level < AccessLevel.Level2)
                 return;
 
-            if (DateTime.Now - _lastActivity < IdleLimit)
+            TimeSpan idleLimit = IdleLimit;
+            if (DateTime.Now - _lastActivity < idleLimit)
                 return;
 
             string name = _session.UserName;
@@ -113,7 +119,17 @@ namespace Nova.Wpf.App.Services
             _lastActivity = DateTime.Now;
 
             if (_log != null)
-                _log.Logout(name, level, "automatic - idle for " + (int)IdleLimit.TotalMinutes + " minutes");
+                _log.Logout(name, level, "automatic - idle for " + (int)idleLimit.TotalMinutes + " minutes");
+        }
+
+        /// <summary>The Access Control tab's minutes, read on every tick so a change applies at once.</summary>
+        private TimeSpan IdleLimit
+        {
+            get
+            {
+                int minutes = _settings != null ? _settings.Settings.AutomaticSignOutMinutes : 0;
+                return minutes >= 1 && minutes <= 5 ? TimeSpan.FromMinutes(minutes) : DefaultIdleLimit;
+            }
         }
 
         public void Dispose()

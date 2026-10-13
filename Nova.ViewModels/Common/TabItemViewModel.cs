@@ -46,6 +46,12 @@ namespace Nova.ViewModels.Common
             CancelEdits(ViewModel);
         }
 
+        /// <summary>Tells the tab it has come into view, if it does work only while on screen.</summary>
+        public void Activate() => (ViewModel as IActivatableTab)?.Activate();
+
+        /// <summary>Tells the tab it has gone out of view.</summary>
+        public void Deactivate() => (ViewModel as IActivatableTab)?.Deactivate();
+
         internal static void CancelEdits(object viewModel)
         {
             var editable = viewModel as IEditableTab;

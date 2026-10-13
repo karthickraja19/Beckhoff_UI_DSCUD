@@ -7,13 +7,13 @@ using Nova.ViewModels.Common;
 namespace Nova.ViewModels.Pages.Manual
 {
     /// <summary>
-    /// The manual-operation GUI, hosted in the Home page's Vendor pane.
+    /// The manual-operation GUI, hosted in the Setting page's Manual tab.
     /// </summary>
     /// <remarks>
-    /// Audio SW DFM v5.4 slide 57 defines the Vendor tab for semi-auto stations that
-    /// require operator loading or scanning, and gives its content as the GUI for
-    /// manual operation. This is that GUI. It is no longer a routable page of its own -
-    /// <see cref="Nova.ViewModels.Pages.Audio.AudioHomeViewModel"/> hosts it.
+    /// Audio SW DFM v5.4 slide 57 gives the GUI for manual operation as the Home page's
+    /// Vendor tab; this HMI keeps it on the Setting page instead and leaves the Vendor tab
+    /// empty. It is not a routable page of its own -
+    /// <see cref="Nova.ViewModels.Pages.Audio.ManualTabViewModel"/> hosts it.
     /// </remarks>
     public partial class ManualViewModel : PageViewModel, ITabHost
     {
@@ -24,6 +24,43 @@ namespace Nova.ViewModels.Pages.Manual
         [ObservableProperty]
         private TabItemViewModel _selectedTab;
 
+        /// <summary>True while the manual GUI is on screen - the Setting page with its Manual tab in front.</summary>
+        private bool _isShown;
+
+        /// <summary>Only the tab in front follows the live status of its devices.</summary>
+        partial void OnSelectedTabChanged(TabItemViewModel oldValue, TabItemViewModel newValue)
+        {
+            if (!_isShown)
+                return;
+
+            oldValue?.Deactivate();
+            newValue?.Activate();
+        }
+
+        /// <summary>Called by the Setting page when the Manual tab comes into view.</summary>
+        public override void OnNavigatedTo()
+        {
+            base.OnNavigatedTo();
+
+            if (_isShown)
+                return;
+
+            _isShown = true;
+            SelectedTab?.Activate();
+        }
+
+        /// <summary>Called by the Setting page when the Manual tab, or the page, is left.</summary>
+        public override void OnNavigatedFrom()
+        {
+            if (_isShown)
+            {
+                _isShown = false;
+                SelectedTab?.Deactivate();
+            }
+
+            base.OnNavigatedFrom();
+        }
+
         public ManualViewModel(IAxisService axisService, IAxisMonitorService axisMonitor,
             IStepperService stepperService, IDigitalIOService digitalIO,
             ICylinderService cylinderService, IVacuumService vacuumService,
@@ -32,7 +69,11 @@ namespace Nova.ViewModels.Pages.Manual
             // Axis and Stepper tabs need somewhere to say so.
             IDialogService dialogService = null,
             // Supplies the Axis tab's read-only parameter panel from Axis_Parameters.xml.
-            IMachineSettingsService settingsService = null)
+            IMachineSettingsService settingsService = null,
+            // Lets the TCP/IP device tabs show a device that is already connected.
+            IConnectionStatusService connectionStatus = null,
+            // The robots' EtherCAT I/O for the Robot tab.
+            IRobotIOService robotIO = null)
         {
             // Icons mirror the sidebar's Manual entries (Lucide kinds). Order is the
             // one QA signed off on: Axis, IO Stepper, Cylinder, Vacuum, Scanner, CCD,
@@ -46,10 +87,10 @@ namespace Nova.ViewModels.Pages.Manual
                 new TabItemViewModel("IO Stepper", "Activity", new StepperControlViewModel(stepperService, axisMonitor, dialogService), "Manual.Stepper"),
                 new TabItemViewModel("Cylinder", "CircleDot", new CylinderControlViewModel(cylinderService, digitalIO), "Manual.Cylinder"),
                 new TabItemViewModel("Vacuum", "Wind", new VacuumControlViewModel(vacuumService, digitalIO), "Manual.Vacuum"),
-                new TabItemViewModel("Scanner", "ScanLine", new ScannerControlViewModel(commService), "Manual.Scanner"),
-                new TabItemViewModel("CCD", "Camera", new CameraControlViewModel(commService), "Manual.Camera"),
-                new TabItemViewModel("SFC & PDCA", "ClipboardList", new SfcPdcaControlViewModel(commService), "Manual.SFC"),
-                new TabItemViewModel("Robot", "Bot", new RobotControlViewModel(commService, digitalIO), "Manual.Robot"),
+                new TabItemViewModel("Scanner", "ScanLine", new ScannerControlViewModel(commService, connectionStatus), "Manual.Scanner"),
+                new TabItemViewModel("CCD", "Camera", new CameraControlViewModel(commService, connectionStatus), "Manual.Camera"),
+                new TabItemViewModel("SFC & PDCA", "ClipboardList", new SfcPdcaControlViewModel(commService, connectionStatus), "Manual.SFC"),
+                new TabItemViewModel("Robot", "Bot", new RobotControlViewModel(robotIO), "Manual.Robot"),
                 new TabItemViewModel("Light Control", "Lightbulb", new LightControlViewModel(lightService), "Manual.LightControl"),
             };
 

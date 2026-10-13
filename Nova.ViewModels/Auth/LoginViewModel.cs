@@ -137,7 +137,11 @@ namespace Nova.ViewModels.Auth
 
             try
             {
-                AccessCheckResult result = await _access.CheckAccessAsync(cardUid);
+                // The second step asks whether this card may approve (V5.1 "Authorize"),
+                // not whether it may sign in.
+                AccessCheckResult result = IsAwaitingVerification
+                    ? await _access.CheckApproverAsync(cardUid)
+                    : await _access.CheckAccessAsync(cardUid);
 
                 if (result == null || !result.Granted)
                 {
@@ -201,8 +205,8 @@ namespace Nova.ViewModels.Auth
 
         /// <summary>
         /// Second badge. Slide 45 says to "Follow same MES access control flow in each
-        /// step", so this badge went through the identical check - it only has to be
-        /// the right level and the right organisation, and a different person.
+        /// step", so this badge went through the approver check of the same access list
+        /// (an "Authorize" record, or a Level 3 CM user) - and it has to be a different person.
         /// </summary>
         private void CompleteSecondStep(AccessCheckResult verifier)
         {
@@ -220,14 +224,6 @@ namespace Nova.ViewModels.Auth
                 // requirement is that a second person is present. Checked before the
                 // level so re-swiping the same L3 SI card gives the useful message.
                 ErrorMessage = "The second approval must come from a different badge.";
-                return;
-            }
-
-            if (verifier.Level != AccessLevel.Level3 || verifier.Organization != AccessOrganization.CM)
-            {
-                ErrorMessage = "The second approval must be a Level 3 CM badge. "
-                    + verifier.Name + " is " + Describe(verifier.Level)
-                    + " (" + verifier.Organization + ").";
                 return;
             }
 

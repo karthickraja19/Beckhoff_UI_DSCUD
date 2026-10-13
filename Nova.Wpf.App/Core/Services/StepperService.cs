@@ -7,8 +7,8 @@ namespace Nova.Core.Services
 {
     /// <summary>
     /// Registry over whatever stepper set the composition root supplies —
-    /// simulated on a dev PC, legacy Advantech / IO-conveyor adapters on the
-    /// machine. Replaces the V3 StepperObjects.StepperMotorObj static dictionary.
+    /// simulated on a dev PC, TwinCAT adapters over Master.Configuration's
+    /// StepperObjects on the machine.
     /// </summary>
     public sealed class StepperService : IStepperService
     {

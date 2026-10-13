@@ -268,6 +268,8 @@
     <SolidColorBrush x:Key="Audio.System.GreenBrush"  Color="#FF34C759"/>
     <SolidColorBrush x:Key="Audio.System.RedBrush"    Color="#FFFF3B30"/>
     <SolidColorBrush x:Key="Audio.System.OrangeBrush" Color="#FFFF9500"/>
+    <!-- Filled warning bands only (S2.4.4.4's yellow): too light for text on white. -->
+    <SolidColorBrush x:Key="Audio.System.YellowBrush" Color="#FFFFCC00"/>
     <SolidColorBrush x:Key="Audio.System.PurpleBrush" Color="#FFAF52DE"/>
     <SolidColorBrush x:Key="Audio.System.GrayBrush"   Color="#FF8E8E93"/>
     <SolidColorBrush x:Key="Audio.System.Gray3Brush"  Color="#FFC7C7CC"/>

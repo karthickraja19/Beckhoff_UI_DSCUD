@@ -21,14 +21,14 @@
     <!--   Key            px   Role                                       -->
     <!--   Caption        13   field captions, table column headers,      -->
     <!--                      IO chips, units, sub-labels                 -->
-    <!--   Body           14   EVERYTHING else that is read as text:      -->
+    <!--   Body           15   EVERYTHING else that is read as text:      -->
     <!--                      cells, rows, labels, buttons, inputs,       -->
     <!--                      status text, tabs. Also the app default.    -->
-    <!--   Heading        18   EVERY heading: card, panel and section     -->
+    <!--   Heading        17   EVERY heading: card, panel and section     -->
     <!--                      titles, dialog titles, empty-state text     -->
-    <!--   Readout        24   prominent numeric values (KPI tiles, jog   -->
+    <!--   Readout        22   prominent numeric values (KPI tiles, jog   -->
     <!--                      and weight readouts) — numerals, not prose  -->
-    <!--   ReadoutLarge   40   the one hero readout per screen (axis      -->
+    <!--   ReadoutLarge   28   the one hero readout per screen (axis      -->
     <!--                      position / speed)                           -->
     <!-- ================================================================ -->
 
@@ -36,15 +36,18 @@
          screen and an Audio screen set the same text at the same size:
            Caption      -> Audio.FontSize.Footnote     13
            Body         -> Audio.FontSize.Subheadline  15
-           Heading      -> Audio.FontSize.Title3       20
-           Readout      -> Audio.FontSize.Title1       28
-         ReadoutLarge has no HIG step - it is the one hero numeral per screen
-         (axis position) and stays at its own size. -->
+           Heading      -> Audio.FontSize.Headline     17
+           Readout      -> Audio.FontSize.Title2       22
+           ReadoutLarge -> Audio.FontSize.Title1       28
+         Heading is Headline, not Title3: the legacy screens are always hosted
+         INSIDE an Audio card (the Vendor pane, the Config sections), whose own
+         title is already Title3 20. A card title inside that card is one step
+         down, or the hosted screen out-shouts the page it sits in. -->
     <sys:Double x:Key="Nova.FontSize.Caption">13</sys:Double>
     <sys:Double x:Key="Nova.FontSize.Body">15</sys:Double>
-    <sys:Double x:Key="Nova.FontSize.Heading">20</sys:Double>
-    <sys:Double x:Key="Nova.FontSize.Readout">28</sys:Double>
-    <sys:Double x:Key="Nova.FontSize.ReadoutLarge">40</sys:Double>
+    <sys:Double x:Key="Nova.FontSize.Heading">17</sys:Double>
+    <sys:Double x:Key="Nova.FontSize.Readout">22</sys:Double>
+    <sys:Double x:Key="Nova.FontSize.ReadoutLarge">28</sys:Double>
 
     <!-- App-wide inherited default, set on the shell window. Control.FontSize is
          TextElement.FontSize, so it flows down the whole tree to any element that
@@ -64,7 +67,9 @@
          and weight, not from a different number on every page. -->
     <Style x:Key="Nova.PageTitle" TargetType="TextBlock">
         <Setter Property="FontSize" Value="{DynamicResource Nova.FontSize.Heading}"/>
-        <Setter Property="FontWeight" Value="Bold"/>
+        <!-- SemiBold, as Audio.Headline / Audio.Title3: Bold made every legacy
+             card title heavier than the page title around it. -->
+        <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
         <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
         <Setter Property="VerticalAlignment" Value="Center"/>

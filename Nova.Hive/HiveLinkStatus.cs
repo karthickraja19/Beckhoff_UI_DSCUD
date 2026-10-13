@@ -30,12 +30,23 @@ namespace Nova.Hive
             if (!settings.Enabled)
             {
                 State = LinkState.Disabled;
-                Detail = "HIVE is switched off in App.config (HiveEnabled). Nothing is sent to the gateway.";
-                return;
+                Detail = DisabledDetail;
+            }
+            else
+            {
+                Detail = "Checking " + settings.GatewayUrl + "...";
             }
 
-            Detail = "Checking " + settings.GatewayUrl + "...";
+            // Always running: HIVE can be switched on and off on the HIVE Control tab.
             _timer = new Timer(_ => Check(), null, TimeSpan.Zero, CheckInterval);
+        }
+
+        private const string DisabledDetail = "HIVE is switched off (App.config HiveEnabled, or the HIVE Control tab). Nothing is sent to the gateway.";
+
+        /// <summary>Checks again now, e.g. after HIVE was switched on or off.</summary>
+        public void Refresh()
+        {
+            ThreadPool.QueueUserWorkItem(_ => Check());
         }
 
         public string Name => "HIVE";
@@ -59,6 +70,12 @@ namespace Nova.Hive
 
             try
             {
+                if (!_settings.Enabled)
+                {
+                    Set(LinkState.Disabled, DisabledDetail);
+                    return;
+                }
+
                 Uri gateway;
                 if (!Uri.TryCreate(_settings.GatewayUrl, UriKind.Absolute, out gateway))
                 {

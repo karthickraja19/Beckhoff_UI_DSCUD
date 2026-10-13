@@ -194,9 +194,9 @@ namespace Master.Repository
         public void AddProductionData(ProductionData productionData)
         {
             string query = @"INSERT INTO [TEAL_Master].[dbo].[ProductionData]
-           ([Date] ,[Shift] ,[ProductionTime] ,[ProductCode] ,[ProductionStatus] ,[CycleTime] ,[Iteration])
+           ([Date] ,[Shift] ,[ProductionTime] ,[ProductCode] ,[ProductionStatus] ,[CycleTime] ,[Iteration] ,[Tossing])
                 VALUES
-           ( @Date, @Shift, @ProductionTime, @ProductCode, @ProductionStatus, @CycleTime, @Iteration)";
+           ( @Date, @Shift, @ProductionTime, @ProductCode, @ProductionStatus, @CycleTime, @Iteration, @Tossing)";
 
 
             using (SqlConnection connection = new SqlConnection(_connectionString))
@@ -209,6 +209,7 @@ namespace Master.Repository
                 command.Parameters.AddWithValue("@ProductionStatus", productionData.ProductionStatus ? 1 : 0);
                 command.Parameters.AddWithValue("@CycleTime", productionData.CycleTime);
                 command.Parameters.AddWithValue("@Iteration", productionData.Iteration);
+                command.Parameters.AddWithValue("@Tossing", productionData.Tossing ? 1 : 0);
 
                 connection.Open();
                 command.ExecuteNonQuery();
@@ -568,8 +569,8 @@ namespace Master.Repository
         {
             List<ProductionData> productionList = new List<ProductionData>();
 
-            string query = @"SELECT [Date], [Shift], [ProductionTime], [ProductCode], [ProductionStatus], [CycleTime], [Iteration] 
-                            FROM [TEAL_Master].[dbo].[ProductionData] 
+            string query = @"SELECT [Date], [Shift], [ProductionTime], [ProductCode], [ProductionStatus], [CycleTime], [Iteration], [Tossing]
+                            FROM [TEAL_Master].[dbo].[ProductionData]
                             WHERE [ProductionTime] >= @StartTime AND [ProductionTime] < @EndTime";
 
             try
@@ -592,7 +593,8 @@ namespace Master.Repository
                                 ProductCode = reader.IsDBNull(reader.GetOrdinal("ProductCode")) ? string.Empty : reader.GetString(reader.GetOrdinal("ProductCode")),
                                 ProductionStatus = reader.IsDBNull(reader.GetOrdinal("ProductionStatus")) ? false : reader.GetBoolean(reader.GetOrdinal("ProductionStatus")),
                                 CycleTime = reader.IsDBNull(reader.GetOrdinal("CycleTime")) ? 0 : reader.GetDouble(reader.GetOrdinal("CycleTime")),
-                                Iteration = reader.IsDBNull(reader.GetOrdinal("Iteration")) ? 0 : reader.GetInt32(reader.GetOrdinal("Iteration"))
+                                Iteration = reader.IsDBNull(reader.GetOrdinal("Iteration")) ? 0 : reader.GetInt32(reader.GetOrdinal("Iteration")),
+                                Tossing = !reader.IsDBNull(reader.GetOrdinal("Tossing")) && reader.GetBoolean(reader.GetOrdinal("Tossing"))
                             };
 
                             productionList.Add(productionData);
@@ -698,6 +700,75 @@ namespace Master.Repository
                 command.ExecuteNonQuery();
             }
         }
+        public int InsertAlarm(string shift, string alarmType, string alarmCode, string alarmDescription, DateTime startTime, DateTime? endTime)
+        {
+            const string query = @"
+                INSERT INTO [TEAL_Master].[dbo].[Alarms] ([AlarmCode], [AlarmType], [AlarmDescription], [Shift], [StartTime], [EndTime])
+                VALUES (@AlarmCode, @AlarmType, @AlarmDescription, @Shift, @StartTime, @EndTime);
+                SELECT CAST(SCOPE_IDENTITY() AS INT);";
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@AlarmCode", alarmCode ?? string.Empty);
+                command.Parameters.AddWithValue("@AlarmType", alarmType ?? string.Empty);
+                command.Parameters.AddWithValue("@AlarmDescription", alarmDescription ?? string.Empty);
+                command.Parameters.AddWithValue("@Shift", shift ?? string.Empty);
+                command.Parameters.AddWithValue("@StartTime", startTime);
+                command.Parameters.AddWithValue("@EndTime", endTime.HasValue ? (object)endTime.Value : DBNull.Value);
+
+                connection.Open();
+                return (int)command.ExecuteScalar();
+            }
+        }
+
+        public void UpdateAlarmEndTime(int alarmId, DateTime endTime)
+        {
+            const string query = "UPDATE [TEAL_Master].[dbo].[Alarms] SET [EndTime] = @EndTime WHERE [ID] = @ID";
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                command.Parameters.AddWithValue("@EndTime", endTime);
+                command.Parameters.AddWithValue("@ID", alarmId);
+
+                connection.Open();
+                command.ExecuteNonQuery();
+            }
+        }
+
+        public List<OpenAlarm> GetOpenAlarms()
+        {
+            const string query = @"
+                SELECT [ID], [AlarmCode], [AlarmType], [AlarmDescription], [StartTime]
+                FROM [TEAL_Master].[dbo].[Alarms]
+                WHERE [EndTime] IS NULL AND [StartTime] IS NOT NULL";
+
+            var alarms = new List<OpenAlarm>();
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                connection.Open();
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        alarms.Add(new OpenAlarm
+                        {
+                            Id = (int)reader["ID"],
+                            AlarmCode = reader["AlarmCode"] as string ?? string.Empty,
+                            AlarmType = reader["AlarmType"] as string ?? string.Empty,
+                            AlarmDescription = reader["AlarmDescription"] as string ?? string.Empty,
+                            StartTime = (DateTime)reader["StartTime"],
+                        });
+                    }
+                }
+            }
+
+            return alarms;
+        }
+
         public DataTable AlarmviewQuery(string _shift, DateTime Starttime, DateTime Endtime)
         {
             DataTable dt = new DataTable();

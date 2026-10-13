@@ -14,15 +14,20 @@
 
     <UserControl.Resources>
         <converters:AudioBoolToVisibilityConverter x:Key="BoolToVisibility"/>
+        <converters:FilePathToImageConverter x:Key="PathToImage"/>
     </UserControl.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>   <!-- where the frames come from -->
             <RowDefinition Height="*"/>      <!-- 3x2 grid -->
             <RowDefinition Height="Auto"/>   <!-- detail, once a tile is chosen -->
         </Grid.RowDefinitions>
 
-        <ItemsControl Grid.Row="0" ItemsSource="{Binding Tiles}">
+        <TextBlock Grid.Row="0" Style="{StaticResource Audio.Footnote}" Margin="16,6,16,0"
+                   Text="{Binding SourceText}" TextTrimming="CharacterEllipsis" ToolTip="{Binding SourceText}"/>
+
+        <ItemsControl Grid.Row="1" ItemsSource="{Binding Tiles}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <UniformGrid Rows="2" Columns="3"/>
@@ -36,6 +41,23 @@
                             CommandParameter="{Binding}"
                             AutomationProperties.Name="{Binding Name}">
                         <Grid>
+                            <!-- The newest capture, with its time, unit SN and OK/NG. -->
+                            <Grid Visibility="{Binding HasImage, Converter={StaticResource BoolToVisibility}}">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Image Grid.Row="0" Margin="6,6,6,2" Stretch="Uniform"
+                                       Source="{Binding ImagePath, Converter={StaticResource PathToImage}, ConverterParameter=640}"/>
+                                <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,6">
+                                    <TextBlock Style="{StaticResource Audio.Footnote}" FontWeight="SemiBold" Text="{Binding Name}" Margin="0,0,10,0"/>
+                                    <TextBlock Style="{StaticResource Audio.Footnote}" Text="{Binding Caption}"/>
+                                </StackPanel>
+                                <Border Grid.RowSpan="2" BorderBrush="{DynamicResource Audio.System.RedBrush}" BorderThickness="3"
+                                        CornerRadius="{DynamicResource Audio.Radius.Card}" IsHitTestVisible="False"
+                                        Visibility="{Binding IsNg, Converter={StaticResource BoolToVisibility}}"/>
+                            </Grid>
+
                             <!-- Placeholder. Deliberately says there is no frame rather
                                  than showing an empty rectangle, which on a vision page
                                  reads as a dead camera. -->
@@ -63,7 +85,7 @@
         </ItemsControl>
 
         <!-- Detail pane -->
-        <Border Grid.Row="1" Style="{StaticResource Audio.Card}" MinHeight="260"
+        <Border Grid.Row="2" Style="{StaticResource Audio.Card}" MinHeight="260"
                 Visibility="{Binding HasSelection, Converter={StaticResource BoolToVisibility}}">
             <Grid Margin="16,12">
                 <Grid.ColumnDefinitions>
@@ -105,12 +127,19 @@
                         Background="{DynamicResource Audio.Surface.RecessedBrush}"
                         CornerRadius="{DynamicResource Audio.Radius.Field}"
                         Margin="16,0,0,0">
-                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="460">
-                        <TextBlock Style="{StaticResource Audio.Title3}"
-                                   Text="{Binding SelectedTile.Name}" HorizontalAlignment="Center"/>
-                        <TextBlock Style="{StaticResource Audio.EmptyState}" Margin="0,8,0,0"
-                                   Text="No frame source yet. The machine's cameras are reachable as comm devices, but nothing retrieves an image buffer from them in this build."/>
-                    </StackPanel>
+                    <Grid>
+                        <!-- Slide 61: "Clicking image magnifies image". -->
+                        <Image Margin="6" Stretch="Uniform" MaxHeight="300"
+                               Source="{Binding SelectedTile.ImagePath, Converter={StaticResource PathToImage}}"
+                               Visibility="{Binding SelectedTile.HasImage, Converter={StaticResource BoolToVisibility}}"/>
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="460"
+                                    Visibility="{Binding SelectedTile.HasImage, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}">
+                            <TextBlock Style="{StaticResource Audio.Title3}"
+                                       Text="{Binding SelectedTile.Name}" HorizontalAlignment="Center"/>
+                            <TextBlock Style="{StaticResource Audio.EmptyState}" Margin="0,8,0,0" TextWrapping="Wrap"
+                                       Text="This camera has no capture yet."/>
+                        </StackPanel>
+                    </Grid>
                 </Border>
             </Grid>
         </Border>

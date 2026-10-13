@@ -31,8 +31,8 @@ namespace Nova.ViewModels.Pages.Audio
     /// nothing about either changes.
     /// </para>
     /// <para>
-    /// The Manual screens are NOT here - slide 57 puts the manual-operation GUI in the
-    /// Home page's Vendor tab, which is where it lives.
+    /// The Manual screens are NOT here - the manual-operation GUI is the Setting page's
+    /// Manual tab.
     /// </para>
     /// </remarks>
     public partial class AudioConfigViewModel : AudioPageViewModel
@@ -58,14 +58,32 @@ namespace Nova.ViewModels.Pages.Audio
         [ObservableProperty]
         private ConfigSection _selectedSection;
 
+        /// <summary>True while this page is the one on screen.</summary>
+        private bool _isOnScreen;
+
         /// <summary>
         /// Abandons an unsaved edit on the section being left. These view models are DI
         /// singletons, so without this a grid left unlocked - with whatever was typed
-        /// into it - was still unlocked on the way back.
+        /// into it - was still unlocked on the way back. The section in front is told it
+        /// is on screen, so the Gantry tab follows its axes only while it can be seen.
         /// </summary>
         partial void OnSelectedSectionChanged(ConfigSection oldValue, ConfigSection newValue)
         {
             oldValue?.Tab.CancelEdits();
+
+            if (_isOnScreen)
+            {
+                oldValue?.Page?.OnNavigatedFrom();
+                newValue?.Page?.OnNavigatedTo();
+            }
+        }
+
+        public override void OnNavigatedTo()
+        {
+            base.OnNavigatedTo();
+
+            _isOnScreen = true;
+            SelectedSection?.Page?.OnNavigatedTo();
         }
 
         /// <summary>
@@ -75,6 +93,8 @@ namespace Nova.ViewModels.Pages.Audio
         /// </summary>
         public override void OnNavigatedFrom()
         {
+            _isOnScreen = false;
+
             foreach (ConfigSection section in Sections)
             {
                 section?.Tab.CancelEdits();

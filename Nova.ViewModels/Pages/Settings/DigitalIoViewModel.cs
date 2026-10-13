@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Nova.Abstractions.Hardware;
 using Nova.Abstractions.Services;
+using Nova.ViewModels.Common;
 
 namespace Nova.ViewModels.Pages.Settings
 {
@@ -29,11 +30,15 @@ namespace Nova.ViewModels.Pages.Settings
     /// <summary>
     /// I/O Diagnostics &gt; Digital I/O — live input indicators and forceable outputs,
     /// each with its own name search. Rows are config-driven from Data\Config.csv
-    /// through <see cref="IDigitalIOService"/>.
+    /// through <see cref="IDigitalIOService"/>. The IO is read only while the tab is on
+    /// screen: <see cref="Activate"/> starts the service reading it (when it is an
+    /// <see cref="ILiveStatus"/>), and <see cref="Deactivate"/> stops it.
     /// </summary>
-    public partial class DigitalIoViewModel : ObservableObject
+    public partial class DigitalIoViewModel : ObservableObject, IActivatableTab
     {
        private readonly IDigitalIOService _ioService;
+       private IDisposable _following;
+       private bool _isActive;
 
        public string Title => "Digital I/O";
 
@@ -75,10 +80,33 @@ namespace Nova.ViewModels.Pages.Settings
                 _outputsByBit[output.Bit] = row;
             }
 
-            _ioService.IOChanged += OnIoChanged;
             RefreshInputs();
             RefreshOutputs();
             RecalculateCounts();
+        }
+
+        public void Activate()
+        {
+            if (_isActive)
+                return;
+
+            _isActive = true;
+            _ioService.IOChanged += OnIoChanged;
+            _following = (_ioService as ILiveStatus)?.FollowStatus();
+
+            // What the IO is now, not what was left from the last visit.
+            OnIoChanged(this, EventArgs.Empty);
+        }
+
+        public void Deactivate()
+        {
+            if (!_isActive)
+                return;
+
+            _isActive = false;
+            _ioService.IOChanged -= OnIoChanged;
+            _following?.Dispose();
+            _following = null;
         }
 
         private static DigitalIoPointRow CreateRow(IOPointSnapshot point) =>

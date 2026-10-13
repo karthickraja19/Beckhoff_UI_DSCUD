@@ -6,6 +6,8 @@ using System.Text;
 using System.Xml.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Master.Configuration;
+using Master.Configuration.Model;
 using Nova.Abstractions.Data.Models;
 using Nova.Abstractions.Services;
 
@@ -17,8 +19,6 @@ namespace Nova.Core.Services
         private const string AxisParametersFile = "Axis_Parameters.xml";
         private const string SettingsFolder = "Settings";
 
-        private const string GantryJsonFile = "Gantry.json";
-        private const string ServosJsonFile = "Servos.json";
         private const string RobotRecipeJsonFile = "RobotRecipe.json";
         private const string LightRecipeJsonFile = "LightRecipe.json";
         private const string RobotRecipeCsvFile = "RoboReceipe_Param.csv";
@@ -94,6 +94,9 @@ namespace Nova.Core.Services
         {
             public List<string> MovementPriority { get; set; }
             public List<string> SafePositionPriority { get; set; }
+
+            /// <summary>The PLC gantry (E_Recipe) the module's recipe is written to; 0 = none.</summary>
+            public int PlcGantry { get; set; }
         }
 
         private Dictionary<string, GantryPriorityConfig> LoadGantryStructureConfig()
@@ -118,28 +121,18 @@ namespace Nova.Core.Services
 
         public IReadOnlyList<string> GetGantryModules()
         {
-            string gantryJsonPath = Path.Combine(_dataDirectory, GantryJsonFile);
-            if (File.Exists(gantryJsonPath))
+            // Gantry.json is machine configuration, read through Master.Configuration.
+            var gantryRoot = MachineConfiguration.LoadGantry(_dataDirectory);
+            if (gantryRoot?.Gantry != null && gantryRoot.Gantry.Count > 0)
             {
-                try
+                var modules = gantryRoot.Gantry
+                    .Where(g => g.Name != null)
+                    .Select(g => g.Name.Trim())
+                    .Where(n => !string.IsNullOrWhiteSpace(n) && !n.Equals("Select", StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+                if (modules.Count > 0)
                 {
-                    string content = File.ReadAllText(gantryJsonPath, Encoding.UTF8);
-                    var gantryRoot = JsonConvert.DeserializeObject<Nova.Core.Config.GantryRoot>(content);
-                    if (gantryRoot?.Gantry != null && gantryRoot.Gantry.Count > 0)
-                    {
-                        var modules = gantryRoot.Gantry
-                            .Select(g => g.Name.Trim())
-                            .Where(n => !string.IsNullOrWhiteSpace(n) && !n.Equals("Select", StringComparison.OrdinalIgnoreCase))
-                            .ToList();
-                        if (modules.Count > 0)
-                        {
-                            return modules;
-                        }
-                    }
-                }
-                catch
-                {
-                    // Fallback
+                    return modules;
                 }
             }
 
@@ -164,6 +157,7 @@ namespace Nova.Core.Services
                     ModuleName = moduleName.Trim(),
                     MovementPriority = priorities.MovementPriority ?? new List<string>(0),
                     SafePositionPriority = priorities.SafePositionPriority ?? new List<string>(0),
+                    PlcGantry = priorities.PlcGantry,
                 };
             }
 
@@ -343,7 +337,7 @@ namespace Nova.Core.Services
                 return RecipeSaveResult.NoChanges("No data modified !");
             }
 
-            WriteTextDual(jsonPath, string.Equals(moduleName, "Gantry", StringComparison.OrdinalIgnoreCase) ? GantryJsonFile : moduleName + "_Gantry.json", newJson);
+            WriteTextDual(jsonPath, string.Equals(moduleName, "Gantry", StringComparison.OrdinalIgnoreCase) ? MachineConfiguration.GantryFile : moduleName + "_Gantry.json", newJson);
 
             // Sync with Servos.json if present
             var legacyRecords = LoadGantryRecipe(moduleName);
@@ -796,25 +790,19 @@ namespace Nova.Core.Services
             return SaveGantryRecipeDynamic(moduleName, newDoc);
         }
 
+        /// <summary>
+        /// Copies the taught positions into Servos.json. Gantry.json and Servos.json are machine
+        /// configuration, so both are read and written through Master.Configuration.
+        /// </summary>
         private void SyncServosJsonIfPresent(string moduleName, IReadOnlyList<GantryPositionRecord> rows)
         {
-            string servosPath = Path.Combine(_dataDirectory, ServosJsonFile);
-            string gantryPath = Path.Combine(_dataDirectory, GantryJsonFile);
-
-            if (!File.Exists(servosPath) || !File.Exists(gantryPath))
-            {
-                return;
-            }
-
             try
             {
-                string gantryContent = File.ReadAllText(gantryPath, Encoding.UTF8);
-                var gantryRoot = JsonConvert.DeserializeObject<Nova.Core.Config.GantryRoot>(gantryContent);
-                var module = gantryRoot?.Gantry?.FirstOrDefault(g => g.Name.Equals(moduleName, StringComparison.OrdinalIgnoreCase));
+                var gantryRoot = MachineConfiguration.LoadGantry(_dataDirectory);
+                var module = gantryRoot?.Gantry?.FirstOrDefault(g => string.Equals(g.Name, moduleName, StringComparison.OrdinalIgnoreCase));
                 if (module?.Axes == null) return;
 
-                string servosContent = File.ReadAllText(servosPath, Encoding.UTF8);
-                var servoList = JsonConvert.DeserializeObject<List<Nova.Core.Config.ServoConfiguration>>(servosContent);
+                var servoList = MachineConfiguration.ReadServos(_dataDirectory);
                 if (servoList == null) return;
 
                 foreach (var axisRef in module.Axes)
@@ -824,7 +812,7 @@ namespace Nova.Core.Services
 
                     if (servo.ConfiguredPositions == null)
                     {
-                        servo.ConfiguredPositions = new List<Nova.Core.Config.AxisPosition>();
+                        servo.ConfiguredPositions = new List<AxisPosition>();
                     }
 
                     foreach (var record in rows)
@@ -867,7 +855,7 @@ namespace Nova.Core.Services
                         }
                         else
                         {
-                            servo.ConfiguredPositions.Add(new Nova.Core.Config.AxisPosition
+                            servo.ConfiguredPositions.Add(new AxisPosition
                             {
                                 Name = record.Position,
                                 Value = val,
@@ -879,8 +867,7 @@ namespace Nova.Core.Services
                     }
                 }
 
-                string updatedServosJson = JsonConvert.SerializeObject(servoList, Formatting.Indented);
-                File.WriteAllText(servosPath, updatedServosJson, Encoding.UTF8);
+                MachineConfiguration.SaveServos(_dataDirectory, servoList);
             }
             catch
             {

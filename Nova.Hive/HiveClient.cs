@@ -4,6 +4,7 @@ using System.IO;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
+using Newtonsoft.Json;
 using Teal.Library.Contracts.Models;
 using Teal.Library.Log;
 
@@ -18,8 +19,9 @@ namespace Nova.Hive
     /// fails: a 4xx answer is our mistake, so the payload is dropped and logged instead
     /// of being sent again; anything else is tried again every 5 minutes for 3 days.
     ///
-    /// The queue is only in memory, so payloads that have not been sent are lost if the
-    /// HMI is closed.
+    /// The queue is kept in <see cref="HiveSettings.PendingFile"/> as well as in memory:
+    /// payloads that have not been sent when the HMI is closed are loaded again at the
+    /// next start and sent in their original order, still inside the 3 day limit.
     /// </remarks>
     public sealed class HiveClient : IDisposable
     {
@@ -41,6 +43,19 @@ namespace Nova.Hive
         public HiveClient(HiveSettings settings)
         {
             _settings = settings;
+            _pendingFile = PendingFilePath(settings);
+            LoadPending();
+        }
+
+        private readonly string _pendingFile;
+
+        private static string PendingFilePath(HiveSettings settings)
+        {
+            if (!string.IsNullOrWhiteSpace(settings.PendingFile))
+                return settings.PendingFile;
+
+            string folder = string.IsNullOrWhiteSpace(settings.StateFile) ? null : Path.GetDirectoryName(settings.StateFile);
+            return string.IsNullOrEmpty(folder) ? null : Path.Combine(folder, "HivePending.json");
         }
 
         public void Start()
@@ -73,7 +88,32 @@ namespace Nova.Hive
         /// <summary>Queues one state change for the gateway.</summary>
         public void Send(HiveStateChange change)
         {
-            Queue("machinestate", HivePayload.MachineState(change, _settings), change);
+            string json = HivePayload.MachineState(change, _settings);
+            WriteRemoteQualificationLog(json);
+            Queue("machinestate", json, change);
+        }
+
+        /// <summary>
+        /// S2.4 Extra Log for HIVE Remote Qualification: while Remote Qualification is ON,
+        /// each machine_state payload is also written to its own folder under the HIVE log -
+        /// plain JSON, one full payload per line. Sequence 0 only: data from other
+        /// sequences must not be in this log.
+        /// </summary>
+        private void WriteRemoteQualificationLog(string json)
+        {
+            try
+            {
+                if (_settings.RemoteQualification == null || !_settings.RemoteQualification() || _settings.Sequence != 0)
+                    return;
+
+                string folder = Path.Combine(_settings.LogFolder, "RemoteQualification", "MachineState");
+                Directory.CreateDirectory(folder);
+                File.AppendAllText(Path.Combine(folder, DateTime.Now.ToString("yyyyMMdd") + ".log"), json + Environment.NewLine);
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteLog(LogType.Error, "Hive", "Log", "Could not write the remote qualification log: " + ex.Message, ex.ToString());
+            }
         }
 
         /// <summary>Queues one cleared alarm for the gateway.</summary>
@@ -88,7 +128,7 @@ namespace Nova.Hive
             // log so it can be checked on a desk.
             if (!_settings.Enabled)
             {
-                WriteLog(kind, json, "not sent - HIVE is switched off in App.config");
+                WriteLog(kind, json, "not sent - HIVE is switched off");
                 return;
             }
 
@@ -104,6 +144,88 @@ namespace Nova.Hive
             lock (_sync)
             {
                 _queue.Add(message);
+                SavePending();
+            }
+        }
+
+        /// <summary>Writes the unsent payloads to the pending file. Call with <c>_sync</c> held.</summary>
+        private void SavePending()
+        {
+            if (_pendingFile == null)
+                return;
+
+            try
+            {
+                if (_queue.Count == 0)
+                {
+                    if (File.Exists(_pendingFile))
+                        File.Delete(_pendingFile);
+                    return;
+                }
+
+                var entries = new List<PendingEntry>();
+                foreach (Message message in _queue)
+                {
+                    entries.Add(new PendingEntry
+                    {
+                        Kind = message.Kind,
+                        Json = message.Json,
+                        Created = message.Created,
+                        State = message.StateChange != null ? message.StateChange.State : (int?)null,
+                    });
+                }
+
+                Directory.CreateDirectory(Path.GetDirectoryName(_pendingFile));
+                string temp = _pendingFile + ".tmp";
+                File.WriteAllText(temp, JsonConvert.SerializeObject(entries, Formatting.Indented));
+                if (File.Exists(_pendingFile))
+                    File.Delete(_pendingFile);
+                File.Move(temp, _pendingFile);
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteLog(LogType.Error, "Hive", "Client", "Could not write " + _pendingFile + ": " + ex.Message, ex.ToString());
+            }
+        }
+
+        /// <summary>Loads what was still waiting when the HMI was last closed, oldest first.</summary>
+        private void LoadPending()
+        {
+            if (_pendingFile == null)
+                return;
+
+            try
+            {
+                if (!File.Exists(_pendingFile))
+                    return;
+
+                List<PendingEntry> entries = JsonConvert.DeserializeObject<List<PendingEntry>>(File.ReadAllText(_pendingFile));
+                if (entries == null)
+                    return;
+
+                foreach (PendingEntry entry in entries)
+                {
+                    if (string.IsNullOrWhiteSpace(entry.Kind) || string.IsNullOrWhiteSpace(entry.Json))
+                        continue;
+
+                    // Only the state is needed from the change: it is what the state file is
+                    // written from once the gateway accepts the payload.
+                    _queue.Add(new Message
+                    {
+                        Kind = entry.Kind,
+                        Json = entry.Json,
+                        StateChange = entry.State.HasValue ? new HiveStateChange { State = entry.State.Value } : null,
+                        Created = entry.Created,
+                        NextTry = DateTime.Now,
+                    });
+                }
+
+                if (_queue.Count > 0)
+                    Logger.WriteLog(LogType.Info, "Hive", "Client", _queue.Count + " HIVE payload(s) from the last run are still waiting to be sent.", "");
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteLog(LogType.Error, "Hive", "Client", "Could not read " + _pendingFile + ": " + ex.Message, ex.ToString());
             }
         }
 
@@ -208,6 +330,7 @@ namespace Nova.Hive
             lock (_sync)
             {
                 _queue.Remove(message);
+                SavePending();
             }
         }
 
@@ -250,6 +373,17 @@ namespace Nova.Hive
             Sent,
             Rejected,
             Failed,
+        }
+
+        /// <summary>One unsent payload as it is kept in the pending file.</summary>
+        private sealed class PendingEntry
+        {
+            public string Kind { get; set; }
+            public string Json { get; set; }
+            public DateTime Created { get; set; }
+
+            /// <summary>The state of a machine_state payload; null for any other kind.</summary>
+            public int? State { get; set; }
         }
 
         private sealed class Message

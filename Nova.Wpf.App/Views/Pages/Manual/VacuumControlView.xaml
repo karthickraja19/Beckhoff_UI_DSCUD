@@ -10,7 +10,7 @@
         <Style x:Key="Card" TargetType="Border">
             <Setter Property="Background" Value="{DynamicResource RegionBrush}"/>
             <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Padding" Value="16"/>
+            <Setter Property="Padding" Value="{DynamicResource Nova.Card.Padding}"/>
             <Setter Property="Effect" Value="{StaticResource EffectShadow1}"/>
         </Style>
 
@@ -23,18 +23,16 @@
         </Style>
 
         <!-- ===== Mode button (neutral by default, filled accent when active) =====
-             Shared Nova affordance at the local 54px mode-button height. The
+             Shared Nova affordance at the shared button height. The
              black outline is constant across all three modes and both states —
              the fill is what says which mode the unit is in. -->
         <Style x:Key="ModeButton" TargetType="Button" BasedOn="{StaticResource Nova.ButtonSecondary}">
-            <Setter Property="Height" Value="54"/>
             <Setter Property="MinWidth" Value="0"/>
         </Style>
 
         <Style x:Key="VacuumButton"
        TargetType="Button"
        BasedOn="{StaticResource Nova.ButtonOutline}">
-            <Setter Property="Height" Value="40"/>
             <Setter Property="MinWidth" Value="120"/>
             <Setter Property="Padding" Value="14,0"/>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
@@ -45,7 +43,6 @@
         <Style x:Key="OffButton"
        TargetType="Button"
        BasedOn="{StaticResource Nova.ButtonOutline}">
-            <Setter Property="Height" Value="40"/>
             <Setter Property="MinWidth" Value="120"/>
             <Setter Property="Padding" Value="14,0"/>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
@@ -56,7 +53,6 @@
         <Style x:Key="BlowButton"
        TargetType="Button"
        BasedOn="{StaticResource Nova.ButtonOutline}">
-            <Setter Property="Height" Value="40"/>
             <Setter Property="MinWidth" Value="120"/>
             <Setter Property="Padding" Value="14,0"/>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
@@ -77,7 +73,7 @@
         <!-- ============ Unit selector ============ -->
         <StackPanel Grid.Row="0" HorizontalAlignment="Left">
             <TextBlock Text="Select Vacuum Unit" Style="{StaticResource SectionCaption}" Margin="2,0,0,6"/>
-            <Border CornerRadius="8" Height="42" Width="360"
+            <Border CornerRadius="8" Height="{DynamicResource Nova.Field.Height}" Width="360"
                     Background="{DynamicResource RegionBrush}"
                     BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
                 <Grid>
@@ -106,13 +102,13 @@
                         <!-- Device status -->
                         <Border Style="{StaticResource Card}">
                             <StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                     <iconPacks:PackIconLucide Kind="Info" Width="18" Height="18" VerticalAlignment="Center"
                                                               Margin="0,0,8,0" Foreground="{DynamicResource PrimaryTextBrush}"/>
                                     <TextBlock Text="Device status" Style="{StaticResource CardHeaderText}"/>
                                 </StackPanel>
 
-                                <Grid Height="66">
+                                <Grid Height="52">
                                     <Border x:Name="StatusBg" CornerRadius="8"
                                             Background="{DynamicResource DangerBrush}" Opacity="0.12"/>
                                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">

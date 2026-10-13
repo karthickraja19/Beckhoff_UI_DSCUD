@@ -1,54 +1,45 @@
-﻿using Master.Configuration.Model;
-using Newtonsoft.Json;
-using System;
+using Master.Configuration.Model;
 using System.Collections.Generic;
-using System.Data;
-using System.IO;
-using System.Linq;
-using System.Windows.Forms;
 using Teal.Library.Contracts;
 using Teal.Library.Cylinder;
-using Teal.Library.Log;
+using Teal.Library.Twincat;
 
 namespace Master.Configuration
 {
+    /// <summary>
+    /// The library cylinder for each member of <see cref="Cylinders"/> configured in
+    /// Data\Cylinders.json. Created by <see cref="DeviceObjects.Create"/>.
+    /// </summary>
     public static class CylinderObjects
     {
-        public static Dictionary<Cylinders, ICylinder> CylinderObjs = new Dictionary<Cylinders, ICylinder>();
+        public static readonly Dictionary<Cylinders, ICylinder> CylinderObjs = new Dictionary<Cylinders, ICylinder>();
 
-        public static void LoadCylinders()
+        /// <summary>
+        /// The valve and reed names in the file are the PLC's variable names; the library takes
+        /// them as full symbols, {ioGvl}.{name}. A single-valve cylinder has no retract valve.
+        /// </summary>
+        internal static void Load(TwincatCard card, string ioGvl, List<string> problems)
         {
-            try
+            CylinderObjs.Clear();
+
+            foreach (var cylinder in MachineConfiguration.Configured<Cylinders, CylinderConfiguration>(ConfigGlobalClass.CylinderConfigurations, c => c.EnumName))
             {
-                var cylinderJsonString = File.ReadAllText(Application.StartupPath + "\\Data\\Cylinders.json");
-
-                ConfigGlobalClass.CylinderConfigurations = JsonConvert.DeserializeObject<List<CylinderConfiguration>>(cylinderJsonString);
-
-                foreach (var cylinderEnum in Enum.GetValues(typeof(Cylinders)).Cast<Cylinders>())
+                CylinderConfiguration config = cylinder.Value;
+                DeviceObjects.Add(CylinderObjs, cylinder.Key, () =>
                 {
-                    string cylinderName = cylinderEnum.ToString();
-
-                    var cylinderConfig = ConfigGlobalClass.CylinderConfigurations.Where(x => x.EnumName == cylinderName).FirstOrDefault();
-
-                    var props = new CylinderProperties
+                    var properties = new CylinderProperties
                     {
-                        Name = cylinderConfig.Name,
-                        ExtendSenses = cylinderConfig.ExtendSenses,
-                        RetractSenses = cylinderConfig.RetractSenses,
-                        ExtendOutput = cylinderConfig.ExtendValves,
-                        RetractOutput = cylinderConfig.RetractValves,
+                        Name = config.Name,
+                        EnumName = config.EnumName,
+                        Id = config.Id,
+                        ExtendOutput = DeviceObjects.Symbol(ioGvl, config.ExtendOutput),
+                        RetractOutput = DeviceObjects.Symbol(ioGvl, config.RetractOutput),
+                        ExtendSenses = DeviceObjects.Symbols(ioGvl, config.ExtendSenses),
+                        RetractSenses = DeviceObjects.Symbols(ioGvl, config.RetractSenses),
                     };
-                    
-                    ICylinder cylinder = new Cylinder(ConfigGlobalClass.cardManager.Card,props);
 
-                    CylinderObjs[cylinderEnum] = cylinder;
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Cylinder_Config_Error: " + ex.Message, "", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                Logger.WriteLog(LogType.Error, "Cylinder_Config", "CylinderConfig", ex.Message, ex.StackTrace);
-                //throw;
+                    return new Cylinder(card, properties);
+                }, problems);
             }
         }
     }

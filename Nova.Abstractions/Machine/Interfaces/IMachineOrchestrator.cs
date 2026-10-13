@@ -18,5 +18,12 @@ namespace Nova.Abstractions.Machine.Interfaces
         void Resume();
         Task StartHomingAsync();
         void ResetAlarms();
+
+        /// <summary>
+        /// Holds the machine in manual mode, or lets it go (the Setting page's Manual and
+        /// Calibration tabs, the Recipe page's Gantry tab). Each caller pairs a true with a false; the machine stays in manual
+        /// mode while any caller holds it.
+        /// </summary>
+        void SetManualMode(bool on);
     }
 }

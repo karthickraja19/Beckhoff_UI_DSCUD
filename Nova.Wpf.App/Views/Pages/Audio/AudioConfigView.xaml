@@ -52,7 +52,7 @@
                                                 Converter={StaticResource BoolToVisibility},
                                                 ConverterParameter=invert}"/>
 
-                <!-- Recessed host, for the same reason as the Vendor pane: the
+                <!-- Recessed host, for the same reason as the Setting page's Manual tab: the
                      hosted screens draw their own white panels and need a grey to
                      sit on, or their edges vanish into this card. Margin plus
                      horizontal padding is 16, the segmented control's left margin, so

@@ -1,18 +1,14 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Master.Configuration;
 using Nova.Abstractions.Data.Models;
 using Nova.Abstractions.Hardware;
-using Nova.Abstractions.Hardware.Enums;
 using Nova.Abstractions.Services;
 using Nova.ViewModels.Common;
-using Nova.ViewModels.TwinCatModels;
 using System;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
-using TwinCAT.Ads;
 
 namespace Nova.ViewModels.Pages.Manual
 {
@@ -21,14 +17,20 @@ namespace Nova.ViewModels.Pages.Manual
     /// ViewModel backing the "Axis" tab of the Manual screen. Operator inputs
     /// (targets, speeds) live here as strings; commands delegate to the selected
     /// <see cref="IAxis"/> via <see cref="IAxisService"/>, and live read-back
-    /// arrives through <see cref="IAxisMonitorService"/> events.
+    /// arrives through <see cref="IAxisMonitorService"/> events - for the selected axis
+    /// only, and only while the tab is on screen.
     /// </summary>
-    public partial class AxisControlViewModel : ViewModelBase
+    public partial class AxisControlViewModel : ViewModelBase, IActivatableTab
     {
         private readonly IAxisService _axisService;
         private readonly IAxisMonitorService _monitor;
         private readonly IDialogService _dialog;
         private readonly IMachineSettingsService _settings;
+
+        private bool _isActive;
+
+        /// <summary>The selected axis's live status, followed while the tab is on screen.</summary>
+        private IDisposable _following;
         /// <summary>Message V3's ManualScreen shows for every out-of-range manual speed
         /// (home, jog, move, point-to-point). Kept verbatim so operators and the QA
         /// scripts see the same wording they already know.</summary>
@@ -36,6 +38,9 @@ namespace Nova.ViewModels.Pages.Manual
             "Please Enter Speed greater than 0 and less than Axis Parameter speed";
 
         private const string DialogTitle = "Manual Screen";
+
+        /// <summary>How long the drive gets to follow an On/Off command before the toggle is put back to the PLC's status.</summary>
+        private const int EnableConfirmMs = 1000;
 
         /// <summary>
         /// Ceiling for the point-to-point iteration count, and the digit limit of the
@@ -70,6 +75,13 @@ namespace Nova.ViewModels.Pages.Manual
         // ---- Axis Device Control ------------------------------------------
         [ObservableProperty]
         private bool _isEnabled;
+
+        /// <summary>
+        /// False while an axis stepper is selected: it only jogs, so the Motion, Homing and
+        /// point-to-point cards are disabled for it.
+        /// </summary>
+        [ObservableProperty]
+        private bool _supportsPositioning = true;
 
         // ---- Motion Control -----------------------------------------------
         [ObservableProperty]
@@ -181,17 +193,13 @@ namespace Nova.ViewModels.Pages.Manual
             _dialog = dialog;
             _settings = settings;
 
+            // The servos in Data\Servos.json (a stepper driven as an NC axis is one of them).
             Axes = new ObservableCollection<string>();
             var all = _axisService?.GetAllAxes();
-            if (all != null && all.Count > 0)
+            if (all != null)
             {
                 foreach (var axis in all)
                     Axes.Add(axis.ComponentId);
-            }
-            else
-            {
-                foreach (var name in Enum.GetNames(typeof(Servos)))
-                    Axes.Add(name);
             }
 
             _selectedAxis = Axes.Count > 0 ? Axes[0] : null;
@@ -219,9 +227,13 @@ namespace Nova.ViewModels.Pages.Manual
                 _negativeLimitStatus,
             };
 
-            //if (_monitor != null)
-            //    _monitor.AxisStatusUpdated += OnAxisStatusUpdated;
+            if (_monitor != null)
+                _monitor.AxisStatusUpdated += OnAxisStatusUpdated;
 
+            // The monitor reports an axis when its status changes, which for an axis that is
+            // standing still may be never, so start from what the axis has now.
+            SupportsPositioning = CurrentAxis?.SupportsPositioning ?? true;
+            ShowStatus(CurrentAxis?.ReadStatus());
             RefreshAxisParameters();
         }
 
@@ -242,17 +254,56 @@ namespace Nova.ViewModels.Pages.Manual
 
         partial void OnSelectedAxisChanged(string value)
         {
-            CurrentAxis.UpdateAxisProperties();
-            OnAxisStatusUpdated(UpdateAxisStatus());
+            // An axis stepper only jogs: its Motion, Homing and point-to-point cards are disabled.
+            SupportsPositioning = CurrentAxis?.SupportsPositioning ?? true;
+            FollowSelectedAxis();
+
+            // Same reason as in the constructor: the newly selected axis may not change
+            // again for a long time.
+            ShowStatus(CurrentAxis?.ReadStatus());
             RefreshAxisParameters();
+        }
+
+        public void Activate()
+        {
+            if (_isActive)
+                return;
+
+            _isActive = true;
+            FollowSelectedAxis();
+            ShowStatus(CurrentAxis?.ReadStatus());
+        }
+
+        public void Deactivate()
+        {
+            if (!_isActive)
+                return;
+
+            _isActive = false;
+            _following?.Dispose();
+            _following = null;
+        }
+
+        /// <summary>
+        /// Follows the live status of the selected axis, and lets go of the one selected
+        /// before. Its values arrive through the monitor once the PLC sends them.
+        /// </summary>
+        private void FollowSelectedAxis()
+        {
+            if (!_isActive)
+                return;
+
+            IDisposable previous = _following;
+            _following = (CurrentAxis as ILiveStatus)?.FollowStatus();
+            previous?.Dispose();
         }
 
         private void RefreshAxisParameters()
         {
             AxisParameters.Clear();
 
-            // Optional dependency: the designer and the simulated stack run without a
-            // settings service, and a missing profile must not break the Manual screen.
+            // Optional dependency: the designer runs without a settings service, and a
+            // missing profile must not break the Manual screen.
             if (_settings == null || string.IsNullOrWhiteSpace(SelectedAxis))
             {
                 HasAxisParameters = false;
@@ -303,11 +354,13 @@ namespace Nova.ViewModels.Pages.Manual
 
         private IAxis CurrentAxis => _axisService?.GetAxis(SelectedAxis);
 
+        private void OnAxisStatusUpdated(object sender, AxisStatusSnapshot s) => ShowStatus(s);
+
         // Raised on the monitor's background thread: scalar INPC setters only here
         // (WPF marshals those); the DeviceStatus collection itself is never mutated.
-        private void OnAxisStatusUpdated(AxisStatusSnapshot s)
+        private void ShowStatus(AxisStatusSnapshot s)
         {
-            if (s.ComponentId != SelectedAxis)
+            if (s == null || s.ComponentId != SelectedAxis)
                 return;
 
             ActualPosition = s.ActualPosition;
@@ -331,7 +384,6 @@ namespace Nova.ViewModels.Pages.Manual
         /// <summary>Enable toggle: commands the drive unless the change came from read-back.</summary>
         partial void OnIsEnabledChanged(bool value)
         {
-            _enableStatus.IsActive = value;
             if (_syncingFromHardware)
                 return;
 
@@ -339,7 +391,22 @@ namespace Nova.ViewModels.Pages.Manual
             if (axis == null)
                 return;
 
-            _ = value ? axis.EnableAsync() : axis.DisableAsync();
+            _ = CommandEnableAsync(axis, value);
+        }
+
+        /// <summary>
+        /// Sends On or Off, then puts the toggle and the Enable lamp back to what the PLC
+        /// reports. The PLC only pushes a status that changed, so a command that could not be
+        /// sent (PLC not connected or not in Run) or that the drive did not follow would
+        /// otherwise leave the toggle showing what was clicked.
+        /// </summary>
+        private async Task CommandEnableAsync(IAxis axis, bool enable)
+        {
+            bool sent = await (enable ? axis.EnableAsync() : axis.DisableAsync());
+            if (sent)
+                await Task.Delay(EnableConfirmMs);
+
+            ShowStatus(axis.ReadStatus());
         }
 
         // ---- Commands -----------------------------------------------------
@@ -357,7 +424,7 @@ namespace Nova.ViewModels.Pages.Manual
         private async Task Move()
         {
             var axis = CurrentAxis;
-            if (axis == null) return;
+            if (axis == null || !axis.SupportsPositioning) return;
             if (!TryReadPosition(Position, out double target)) return;
             if (!TryReadSpeed(Speed, out double speed)) return;
             await axis.MoveAbsAsync(target, speed);
@@ -376,7 +443,7 @@ namespace Nova.ViewModels.Pages.Manual
         private async Task Home()
         {
             var axis = CurrentAxis;
-            if (axis == null) return;
+            if (axis == null || !axis.SupportsPositioning) return;
 
             // V3's btnHome_Click asks for the velocity before anything else, then gates
             // it on 0 < v <= axis parameter speed. Nova had neither check: a home
@@ -404,6 +471,9 @@ namespace Nova.ViewModels.Pages.Manual
 [RelayCommand]
 private async Task PointToPointMove()
         {
+            if (!SupportsPositioning)
+                return;
+
             // Start and end positions must be different.
             // Compare the actual numeric values rather than the raw strings,
             // so values such as "10" and "10.0" are also treated as equal.
@@ -597,68 +667,17 @@ private async Task PointToPointMove()
                 cts.Dispose();
             }
         }
-        private AxisStatusSnapshot UpdateAxisStatus()
-        {
-            var axis = CurrentAxis.ReadStatus();
-            return axis;
-        }
-        private void UpdateStatustoObj(object sender,AdsNotificationExEventArgs e)
-        {
-            ServoSdHmiDisplay axisStatus = new ServoSdHmiDisplay();
-            if(e.Value is ServoSdHmiDisplay status)
-            {
-                axisStatus.AxisEnable = status.AxisEnable;
-                axisStatus.AxisError = status.AxisError;
-                axisStatus.NegLimit = status.NegLimit;
-                axisStatus.PosLimit = status.PosLimit;
-                axisStatus.AxisHomed = status.AxisHomed;
-                axisStatus.AxisHome = status.AxisHome;
-                axisStatus.AxisRunning = status.AxisRunning;
-                axisStatus.CurrentPosition = status.CurrentPosition;
-                axisStatus.CurrentVelocity = status.CurrentVelocity;
-                CurrentAxis.UpdateAxisStatus(axisStatus);
-            }
-            OnAxisStatusUpdated(UpdateAxisStatus());
-        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing && !IsDisposed)
             {
-                //if (_monitor != null)
-                //    _monitor.AxisStatusUpdated -= OnAxisStatusUpdated;
+                if (_monitor != null)
+                    _monitor.AxisStatusUpdated -= OnAxisStatusUpdated;
                 CancelPointToPoint();
+                Deactivate();
             }
             base.Dispose(disposing);
-        }
-        private uint _notificationHandle;
-
-        public void SubscribeAdsNotification()
-        {
-            ConfigGlobalClass.cardManager.Card.Client.AdsNotificationEx += UpdateStatustoObj;
-
-            var setting = new NotificationSettings(
-                AdsTransMode.OnChange,
-                100,
-                0);
-
-            _notificationHandle =
-                ConfigGlobalClass.cardManager.Card.Client.AddDeviceNotificationEx(
-                    "",
-                    setting,
-                    null,
-                    typeof(ServoSdHmiDisplay));
-        }
-        public void UnsubscribeAdsNotification()
-        {
-            if (_notificationHandle != 0)
-            {
-                ConfigGlobalClass.cardManager.Card.Client.DeleteDeviceNotification(
-                    _notificationHandle);
-
-                _notificationHandle = 0;
-            }
-
-            ConfigGlobalClass.cardManager.Card.Client.AdsNotificationEx -= UpdateStatustoObj;
         }
     }
 }

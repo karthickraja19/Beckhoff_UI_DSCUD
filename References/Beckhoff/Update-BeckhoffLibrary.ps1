@@ -4,7 +4,7 @@
 #   powershell -ExecutionPolicy Bypass -File References\Beckhoff\Update-BeckhoffLibrary.ps1
 
 param(
-    [string]$LibraryRoot = 'C:\Users\karth\OneDrive\Desktop\Beckhoff_Library\Beckhoff_Library',
+    [string]$LibraryRoot = 'D:\BeckhOffLibrary\BeckhOffLibrary',
     [string]$Configuration = 'Debug'
 )
 
@@ -14,16 +14,32 @@ $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer
 $msbuild = & $vswhere -latest -prerelease -products * -requires Microsoft.Component.MSBuild -find 'MSBuild\**\Bin\MSBuild.exe' | Select-Object -First 1
 if (-not $msbuild) { throw 'MSBuild not found - Visual Studio with the .NET desktop workload is required.' }
 
-# Teal.Library.Stepper references Contracts, Log and Twincat (Card), so building it builds all four.
-$project = Join-Path $LibraryRoot 'Teal.Library.Stepper\Teal.Library.Stepper.csproj'
-& $msbuild $project /t:Build "/p:Configuration=$Configuration" /v:minimal /nologo
-if ($LASTEXITCODE -ne 0) { throw "Library build failed (MSBuild exit $LASTEXITCODE)." }
+# Each device project references Contracts, Log and Twincat (Card), so building the five device
+# projects builds all eight. The Twincat DLL is built from Teal.Library.Twincat\Teal.Library.Card.csproj.
+$devices = 'Cylinder', 'Servo', 'Stepper', 'TcpIp', 'Vacuum'
+foreach ($device in $devices) {
+    $project = Join-Path $LibraryRoot "Teal.Library.$device\Teal.Library.$device.csproj"
+    & $msbuild $project /t:Build "/p:Configuration=$Configuration" /v:minimal /nologo
+    if ($LASTEXITCODE -ne 0) { throw "Library build failed for $device (MSBuild exit $LASTEXITCODE)." }
+}
 
-$output = Join-Path $LibraryRoot "Teal.Library.Stepper\bin\$Configuration"
-foreach ($name in 'Teal.Library.Contracts', 'Teal.Library.Log', 'Teal.Library.Twincat', 'Teal.Library.Stepper') {
+# Assembly name -> project folder.
+$assemblies = [ordered]@{
+    'Teal.Library.Contracts' = 'Teal.Library.Contracts'
+    'Teal.Library.Log'       = 'Teal.Library.Logger'
+    'Teal.Library.Twincat'   = 'Teal.Library.Twincat'
+    'Teal.Library.Cylinder'  = 'Teal.Library.Cylinder'
+    'Teal.Library.Servo'     = 'Teal.Library.Servo'
+    'Teal.Library.Stepper'   = 'Teal.Library.Stepper'
+    'Teal.Library.TcpIp'     = 'Teal.Library.TcpIp'
+    'Teal.Library.Vacuum'    = 'Teal.Library.Vacuum'
+}
+
+foreach ($name in $assemblies.Keys) {
+    $output = Join-Path $LibraryRoot "$($assemblies[$name])\bin\$Configuration"
     Copy-Item (Join-Path $output "$name.dll") $PSScriptRoot -Force
     $pdb = Join-Path $output "$name.pdb"
     if (Test-Path $pdb) { Copy-Item $pdb $PSScriptRoot -Force }
 }
 
-Write-Host "Copied library DLLs from $output"
+Write-Host "Copied $($assemblies.Count) library DLLs from $LibraryRoot"

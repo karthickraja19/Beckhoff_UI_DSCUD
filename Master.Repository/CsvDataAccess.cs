@@ -191,7 +191,7 @@ namespace Master.Repository
 
         // ---- Alarm log ---------------------------------------------------------
         // The CSV stand-in for [TEAL_Master].[dbo].[Alarms]. Column names and order
-        // match the table, because LegacyAlarmLogRepository reads the DataTable this
+        // match the table, because AlarmLogRepository reads the DataTable this
         // returns by column name and SQLDataAccess.AlarmviewQuery is a SELECT *.
         // Both alarm methods used to throw NotImplementedException, which surfaced on
         // the Alarm report as "Could not load alarm history: The method or operation
@@ -241,6 +241,23 @@ namespace Master.Repository
 
                 File.AppendAllText(path, line + Environment.NewLine);
             }
+        }
+
+        // Alarms are kept with a row ID and an open EndTime only in SQL Server. In CSV mode
+        // the HMI does not save alarms (no connection string), so these are not needed.
+        public int InsertAlarm(string shift, string alarmType, string alarmCode, string alarmDescription, DateTime startTime, DateTime? endTime)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void UpdateAlarmEndTime(int alarmId, DateTime endTime)
+        {
+            throw new NotImplementedException();
+        }
+
+        public List<OpenAlarm> GetOpenAlarms()
+        {
+            throw new NotImplementedException();
         }
 
         public DataTable AlarmviewQuery(string _shift, DateTime Starttime, DateTime Endtime)

@@ -39,6 +39,18 @@ namespace Nova.ViewModels.Pages.Audio
         [ObservableProperty]
         private Axis[] _stateChangeYAxes = new Axis[0];
 
+        /// <summary>PLC code to DFM error type, as the Alarm page shows it; null for sample data.</summary>
+        private readonly IErrorCodeCatalog _errorCodes;
+
+        /// <summary>The DFM error type an alarm counts under (slide 43's Error Statistics).</summary>
+        private string ErrorTypeOf(AlarmData alarm)
+        {
+            if (_errorCodes != null)
+                return _errorCodes.Translate(alarm.AlarmCode, alarm.AlarmDescription).Message;
+
+            return string.IsNullOrWhiteSpace(alarm.AlarmType) ? "Unclassified" : alarm.AlarmType.Trim();
+        }
+
         /// <summary>Shown under the chart when there is nothing to draw, or no source.</summary>
         [ObservableProperty]
         private string _stateChangeNote = string.Empty;
@@ -283,7 +295,7 @@ namespace Nova.ViewModels.Pages.Audio
 
             DateTime until = DateTime.Now;
             var byType = alarms
-                .GroupBy(a => string.IsNullOrWhiteSpace(a.AlarmType) ? "Unclassified" : a.AlarmType.Trim())
+                .GroupBy(a => ErrorTypeOf(a))
                 .Select(g => new
                 {
                     Name = g.Key,

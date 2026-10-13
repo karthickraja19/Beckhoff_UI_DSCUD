@@ -1,55 +1,45 @@
-﻿using Master.Configuration.Model;
-using Newtonsoft.Json;
-using System;
+using Master.Configuration.Model;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Windows.Forms;
-using System.Xml.Linq;
 using Teal.Library.Contracts;
 using Teal.Library.Servo;
+using Teal.Library.Twincat;
 
 namespace Master.Configuration
 {
+    /// <summary>
+    /// The library servo axis for each member of <see cref="Servos"/> configured in
+    /// Data\Servos.json. Created by <see cref="DeviceObjects.Create"/>.
+    /// </summary>
     public static class ServoObjects
     {
-        public static Dictionary<Servos, IAxis> ServoMotorObj = new Dictionary<Servos, IAxis>();
-        
-        public static void LoadServos()
+        public static readonly Dictionary<Servos, AxisServo> ServoMotorObj = new Dictionary<Servos, AxisServo>();
+
+        internal static void Load(TwincatCard card, List<string> problems)
         {
-            var servoJsonString = File.ReadAllText(Application.StartupPath + "\\Data\\Servos.json");
+            ServoMotorObj.Clear();
 
-            ConfigGlobalClass.ServoConfigurations = JsonConvert.DeserializeObject<List<ServoConfiguration>>(servoJsonString);
-
-            foreach (var servoEnum in Enum.GetValues(typeof(Servos)).Cast<Servos>())
+            foreach (var servo in MachineConfiguration.Configured<Servos, ServoConfiguration>(ConfigGlobalClass.ServoConfigurations, c => c.EnumName))
             {
-                string servoEnumName = servoEnum.ToString();
-
-                var servoConfig = ConfigGlobalClass.ServoConfigurations.Where(x => x.EnumName == servoEnumName).FirstOrDefault();
-
-                try
+                ServoConfiguration config = servo.Value;
+                DeviceObjects.Add(ServoMotorObj, servo.Key, () =>
                 {
-                    AxisProperties axisProperties = new AxisProperties
+                    var properties = new AxisProperties
                     {
-                        Id = servoConfig.Id,
-                        Name = servoConfig.Name,
-                        Pulse = servoConfig.Pulse,
-                        Velocity = servoConfig.Speed,
-                        Acceleration = servoConfig.Acceleration,
-                        Deceleration = servoConfig.Deceleration,
-                        NegativeLimit = servoConfig.SoftLimits.Negative,
-                        PositiveLimit = servoConfig.SoftLimits.Positive,
-                        Type = MotorType.Servo,
+                        Id = config.Id,
+                        Name = config.Name,
+                        EnumName = config.EnumName,
+                        Type = config.Type,
+                        Pulse = config.Pulse,
+                        Velocity = config.Velocity,
+                        Acceleration = config.Acceleration,
+                        Deceleration = config.Deceleration,
+                        PositiveLimit = config.PositiveLimit,
+                        NegativeLimit = config.NegativeLimit,
+                        Timeout = config.Timeout,
                     };
 
-                    IAxis axis = new AxisServo(ConfigGlobalClass.cardManager.Card, axisProperties);
-                    ServoMotorObj[servoEnum] = axis;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error parsing config for {servoEnumName}: {ex.Message}");
-                    MessageBox.Show($"Error parsing config for {servoEnumName}: {ex.Message}");
-                }
+                    return new AxisServo(card, properties);
+                }, problems);
             }
         }
     }

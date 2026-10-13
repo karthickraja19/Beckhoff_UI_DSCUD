@@ -49,7 +49,6 @@
                TargetType="{x:Type Button}"
                BasedOn="{StaticResource Nova.ButtonSecondary}">
 
-            <Setter Property="Height" Value="44"/>
             <Setter Property="MinWidth" Value="0"/>
 
         </Style>
@@ -438,7 +437,7 @@
 
                 <Border
                     CornerRadius="8"
-                    Height="40"
+                    Height="{DynamicResource Nova.Field.Height}"
                     Width="320"
                     Background="{DynamicResource RegionBrush}"
                     BorderBrush="{DynamicResource BorderBrush}"
@@ -649,7 +648,7 @@
     Margin="0,16,0,6"/>
 
                         
-                        <Button FontSize="12"
+                        <Button FontSize="{DynamicResource Nova.FontSize.Caption}"
         VerticalAlignment="Bottom"
         HorizontalAlignment="Right"
         Margin="0,0,0,3"

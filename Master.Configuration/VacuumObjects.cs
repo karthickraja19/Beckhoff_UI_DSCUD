@@ -1,55 +1,41 @@
-﻿using Master.Configuration.Model;
-using Newtonsoft.Json;
-using System;
+using Master.Configuration.Model;
 using System.Collections.Generic;
-using System.Data;
-using System.IO;
-using System.Linq;
-using System.Windows.Forms;
 using Teal.Library.Contracts;
-using Teal.Library.Contracts.Enum;
-using Teal.Library.Log;
+using Teal.Library.Twincat;
 using Teal.Library.Vacuum;
 
 namespace Master.Configuration
 {
+    /// <summary>
+    /// The library vacuum for each member of <see cref="Vacuums"/> configured in
+    /// Data\Vacuums.json. Created by <see cref="DeviceObjects.Create"/>.
+    /// </summary>
     public static class VacuumObjects
     {
-        public static Dictionary<Vacuums, IVacuum> VacuumObjs = new Dictionary<Vacuums, IVacuum>();
+        public static readonly Dictionary<Vacuums, IVacuum> VacuumObjs = new Dictionary<Vacuums, IVacuum>();
 
-        public static void LoadVacuums()
+        /// <summary>As with the cylinders, the sensor and output names are PLC variable names under {ioGvl}.</summary>
+        internal static void Load(TwincatCard card, string ioGvl, List<string> problems)
         {
-            try
+            VacuumObjs.Clear();
+
+            foreach (var vacuum in MachineConfiguration.Configured<Vacuums, VacuumConfiguration>(ConfigGlobalClass.VacuumConfigurations, c => c.EnumName))
             {
-                var vacuumJsonString = File.ReadAllText(Application.StartupPath + "\\Data" + "\\Vacuums.json");
-
-                ConfigGlobalClass.VacuumConfigurations = JsonConvert.DeserializeObject<List<VacuumConfiguration>>(vacuumJsonString);
-
-                foreach (var vacuumEnum in Enum.GetValues(typeof(Vacuums)).Cast<Vacuums>())
+                VacuumConfiguration config = vacuum.Value;
+                DeviceObjects.Add(VacuumObjs, vacuum.Key, () =>
                 {
-                    string vacuumName = vacuumEnum.ToString();
-
-                    var vacuumConfig = ConfigGlobalClass.VacuumConfigurations.Where(x => x.EnumName == vacuumName).FirstOrDefault();
-
-                    VacuumProperties vacuumProps = new VacuumProperties
+                    var properties = new VacuumProperties
                     {
-                        Name = vacuumConfig.Name,
-                        EnumName = vacuumConfig.EnumName,
-                        VacuumOutput = vacuumConfig.VacuumOutput,
-                        VacuumSense = vacuumConfig.VacuumSense,
-                        BlowOutput = vacuumConfig.BlowOutput
+                        Name = config.Name,
+                        EnumName = config.EnumName,
+                        Id = config.Id,
+                        VacuumSense = DeviceObjects.Symbol(ioGvl, config.VacuumSense),
+                        VacuumOutput = DeviceObjects.Symbol(ioGvl, config.VacuumOutput),
+                        BlowOutput = DeviceObjects.Symbol(ioGvl, config.BlowOutput),
                     };
 
-                    var vacuum = new Vacuum(ConfigGlobalClass.cardManager.Card, vacuumProps);
-
-                    VacuumObjs[vacuumEnum] = vacuum;
-                }
-            }
-
-            catch (Exception ex)
-            {
-                Logger.WriteLog(LogType.Error, "Vacuum_Config", "VacuumCOnfigConstr", ex.Message, ex.StackTrace);
-                MessageBox.Show("Vacuum_Config_Error: " + ex.Message, "", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return new Vacuum(card, properties);
+                }, problems);
             }
         }
     }

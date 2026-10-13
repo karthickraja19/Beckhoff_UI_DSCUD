@@ -1,8 +1,7 @@
-using System;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Nova.Hive;
 using Nova.ViewModels.Auth;
 
 namespace Nova.Wpf.App.Views.Auth
@@ -26,28 +25,22 @@ namespace Nova.Wpf.App.Views.Auth
     /// ever appended to by a key event, and is never rendered.
     /// </para>
     /// <para>
-    /// A stale partial scan is discarded after <see cref="ScanTimeout"/>. Without it,
-    /// a keystroke from a bumped keyboard would sit in the buffer and prefix itself
-    /// onto the next genuine badge, turning a valid card into "card not recognised".
+    /// The scan itself follows slide 37 through <see cref="CardScan"/>: the whole badge
+    /// within 200 ms, a nominal length, and no Control key or right mouse button on
+    /// this screen. A scan that breaks a rule is thrown away and the reason shown. A
+    /// stale partial scan is discarded too, so a keystroke from a bumped keyboard does
+    /// not prefix itself onto the next genuine badge.
     /// </para>
     /// </remarks>
     public partial class LoginView : UserControl
     {
-        /// <summary>
-        /// A wedge reader delivers a whole badge in tens of milliseconds. A gap longer
-        /// than this means the characters did not come from one scan.
-        /// </summary>
-        private static readonly TimeSpan ScanTimeout = TimeSpan.FromSeconds(1);
-
-        /// <summary>Guards against a stray keypress being treated as a badge.</summary>
-        private const int MinimumUidLength = 3;
-
-        private readonly StringBuilder _buffer = new StringBuilder();
-        private DateTime _lastKey = DateTime.MinValue;
+        private readonly CardScan _scan = new CardScan();
 
         public LoginView()
         {
             InitializeComponent();
+
+            CardScan.BlockManualEntry(this);
         }
 
         private void LoginView_Loaded(object sender, RoutedEventArgs e)
@@ -67,21 +60,12 @@ namespace Nova.Wpf.App.Views.Auth
             RemoveHandler(TextCompositionManager.PreviewTextInputEvent,
                 new TextCompositionEventHandler(OnPreviewTextInput));
 
-            _buffer.Clear();
+            _scan.Clear();
         }
 
         private void OnPreviewTextInput(object sender, TextCompositionEventArgs e)
         {
-            ExpireStaleScan();
-
-            foreach (char c in e.Text)
-            {
-                // Badge UIDs are alphanumeric. Anything else is not part of a scan.
-                if (char.IsLetterOrDigit(c))
-                    _buffer.Append(c);
-            }
-
-            _lastKey = DateTime.Now;
+            _scan.Add(e.Text);
         }
 
         private void OnPreviewKeyDown(object sender, KeyEventArgs e)
@@ -89,18 +73,24 @@ namespace Nova.Wpf.App.Views.Auth
             if (e.Key != Key.Enter && e.Key != Key.Return)
                 return;
 
-            ExpireStaleScan();
-
-            string uid = _buffer.ToString();
-            _buffer.Clear();
-            _lastKey = DateTime.MinValue;
-
-            if (uid.Length < MinimumUidLength)
-                return;
+            string refused;
+            string uid = _scan.Finish(out refused);
 
             var vm = DataContext as LoginViewModel;
             if (vm == null)
                 return;
+
+            if (uid == null)
+            {
+                // Nothing scanned (a bare Enter) is ignored; a broken scan says why.
+                if (refused != null && !vm.IsBusy)
+                {
+                    vm.ErrorMessage = refused;
+                    e.Handled = true;
+                }
+
+                return;
+            }
 
             e.Handled = true;
 
@@ -109,12 +99,6 @@ namespace Nova.Wpf.App.Views.Auth
             // here would mean an async void handler, whose exceptions bypass the
             // Dispatcher handler and take the process down.
             var ignored = vm.SubmitCardAsync(uid);
-        }
-
-        private void ExpireStaleScan()
-        {
-            if (_lastKey != DateTime.MinValue && DateTime.Now - _lastKey > ScanTimeout)
-                _buffer.Clear();
         }
     }
 }

@@ -145,5 +145,13 @@ namespace Nova.Abstractions.Services
         /// unreachable MES comes back as a denial carrying the reason.
         /// </summary>
         Task<AccessCheckResult> CheckAccessAsync(string cardUid);
+
+        /// <summary>
+        /// The second step of two-step verification (slide 45; Access Control V5.1
+        /// S1.2.1): may this card approve a Level 3 action on this terminal? Granted only
+        /// for an approver - a record whose software type is "Authorize" (MES:
+        /// <c>ID,Authorize,Project,Station_ID</c>), or a Level 3 CM user.
+        /// </summary>
+        Task<AccessCheckResult> CheckApproverAsync(string cardUid);
     }
 }

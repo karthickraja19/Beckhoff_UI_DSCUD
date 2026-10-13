@@ -21,6 +21,9 @@ namespace Nova.Abstractions.Data.Models
         /// <summary>Glue path number, from 1.</summary>
         public int Path { get; set; }
 
+        /// <summary>Dispensing speed of the weighing, mm/s (the raw data table's Speed column).</summary>
+        public double DispenseSpeed { get; set; }
+
         public double WeightMg { get; set; }
 
         public double NominalMg { get; set; }
@@ -47,12 +50,16 @@ namespace Nova.Abstractions.Data.Models
     }
 
     /// <summary>
-    /// The linear regression from a gantry's last glue calibration - HIVE keys w, b
-    /// and R2 (Audio SW DFM v5.4 slide 18): weight = w * input + b.
+    /// The linear regression from one gantry and glue path's last calibration - HIVE
+    /// keys w, b and R2 (Audio SW DFM v5.4 slide 18). S2.4.4.5 fits it by least squares
+    /// to ten points: glue weight (mg) = a x dispensing speed (mm/s) + b, where a is W.
     /// </summary>
     public sealed class GlueRegression
     {
         public string Gantry { get; set; }
+
+        /// <summary>Glue path number, from 1.</summary>
+        public int Path { get; set; }
 
         public double W { get; set; }
 
@@ -62,7 +69,7 @@ namespace Nova.Abstractions.Data.Models
 
         public DateTime? CalibratedAt { get; set; }
 
-        /// <summary>What the regression's input is, e.g. "Dispense time (ms)".</summary>
+        /// <summary>What the regression's input is, e.g. "Dispensing speed (mm/s)".</summary>
         public string InputName { get; set; }
 
         public IReadOnlyList<GlueCalibrationPoint> Points { get; set; } = new GlueCalibrationPoint[0];
@@ -90,8 +97,8 @@ namespace Nova.Abstractions.Data.Models
         /// <summary>Shots dispensed onto the scale for one weighing.</summary>
         public int ShotsPerWeighing { get; set; }
 
-        /// <summary>Days between glue calibrations (the regression's refresh).</summary>
-        public int CalibrationIntervalDays { get; set; }
+        /// <summary>Hours between glue calibrations (the regression's refresh) - S2.4.4.5's "Calibration frequency".</summary>
+        public int CalibrationIntervalHours { get; set; }
 
         public GlueWeighingSettings Copy()
         {
@@ -159,10 +166,13 @@ namespace Nova.Abstractions.Data.Models
         /// <summary>Remaining pot life at or below this many hours is a warning. Default 0.5 h.</summary>
         public double PotLifeWarningHours { get; set; } = 0.5;
 
-        /// <summary>Nozzle health at or below this is a warning, prompted every 4 hours (PD-12). Default 24.</summary>
+        /// <summary>Nozzle health below this is a warning, prompted every 4 hours (PD-12). Default 24.</summary>
         public double NozzleWarningHours { get; set; } = 24;
 
-        /// <summary>Nozzle health below this is critical, prompted every 2 hours (PD-12). Default 12.</summary>
+        /// <summary>
+        /// Nozzle health at or below this is critical, prompted every 2 hours (PD-12).
+        /// Default 12. At, not below: S2.4.4.4 draws its 12 h rear nozzle red.
+        /// </summary>
         public double NozzleCriticalHours { get; set; } = 12;
 
         public GlueControlSettings Copy()

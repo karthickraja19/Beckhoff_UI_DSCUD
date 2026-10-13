@@ -19,7 +19,7 @@ namespace Nova.ViewModels.Pages.Audio
     /// The slide's three key requirements are Filter time, IO/Tossing and Data Export.
     /// Layout is 4/5 width for the tab's own content and 1/5 for the summary column
     /// (unit SN, Hourly/Daily, I/O Summary, Tossing Summary, Export), which every tab
-    /// keeps.
+    /// but Health keeps - S2.4.4.4 draws Health across the full width.
     /// </para>
     /// <para>
     /// I/O, Tossing and Yield are three projections of one query: switching between
@@ -59,16 +59,17 @@ namespace Nova.ViewModels.Pages.Audio
 
 
         // ==================================================================
-        // Tabs:  I/O | Tossing | Yield | Health | Glue  (S2.4.4 Data page X4)
+        // Tabs:  I/O | Tossing | Yield | Health | Glue | Axis  (S2.4.4 Data page X4,
+        //        S2.4.4.6 Coordinate Data Analysis)
         // ==================================================================
 
         public ObservableCollection<string> Views { get; } =
-            new ObservableCollection<string> { IoTab, TossingTab, YieldTab, HealthTab, GlueTab };
+            new ObservableCollection<string> { IoTab, TossingTab, YieldTab, HealthTab, GlueTab, AxisTab };
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(IsIoView), nameof(IsTossingView), nameof(IsYieldView),
-            nameof(IsHealthView), nameof(IsGlueView), nameof(IsProductionView), nameof(IsTimeFiltered),
-            nameof(QueryButtonText), nameof(StatusText))]
+            nameof(IsHealthView), nameof(IsGlueView), nameof(IsAxisView), nameof(IsProductionView), nameof(IsTimeFiltered),
+            nameof(HasBuckets), nameof(HasSummaryColumn), nameof(QueryButtonText), nameof(StatusText))]
         private string _selectedView = IoTab;
 
         public bool IsIoView => SelectedView == IoTab;
@@ -86,6 +87,16 @@ namespace Nova.ViewModels.Pages.Audio
 
         /// <summary>Health shows the machine as it is now, so it has no From/To.</summary>
         public bool IsTimeFiltered => !IsHealthView;
+
+        /// <summary>Hourly | Daily: the production tabs, and Glue's trend (S2.4.4.5 slides 3 and 4).</summary>
+        public bool HasBuckets => IsProductionView || IsGlueView;
+
+        /// <summary>
+        /// The 1/5 summary column (unit SN, I/O and Tossing Summary, Export). S2.4.4.4
+        /// draws Health across the full width without it, so its Export moves up to the
+        /// filter row.
+        /// </summary>
+        public bool HasSummaryColumn => !IsHealthView && !IsAxisView;
 
         public string QueryButtonText => IsHealthView ? "Refresh" : "Query";
 
@@ -164,14 +175,15 @@ namespace Nova.ViewModels.Pages.Audio
 
         /// <summary>The status line for the tab in front.</summary>
         public string StatusText =>
-            IsHealthView ? HealthStatus : IsGlueView ? GlueStatus : ProductionStatus;
+            IsHealthView ? HealthStatus : IsGlueView ? GlueStatus : IsAxisView ? AxisStatus : ProductionStatus;
 
         /// <summary>
-        /// True when any source behind this page generates its figures (Simulated
-        /// mode). The view labels the page, so a generated yield is never taken for a
-        /// real one.
+        /// True when any source behind this page generates its figures
+        /// (SampleData=true). The view labels the page, so a generated yield is never
+        /// taken for a real one.
         /// </summary>
-        public bool IsSampleData => _production is ISampleDataSource || _dispenser is ISampleDataSource;
+        public bool IsSampleData => _production is ISampleDataSource || _dispenser is ISampleDataSource
+                                    || _coordinates is ISampleDataSource;
 
 
         // ==================================================================
@@ -203,6 +215,7 @@ namespace Nova.ViewModels.Pages.Audio
                 await LoadProductionAsync();
                 await LoadGlueAsync();
                 await LoadHealthAsync();
+                await LoadAxisAsync();
             }
             finally
             {
@@ -220,6 +233,9 @@ namespace Nova.ViewModels.Pages.Audio
 
             if (IsHealthView)
                 return GlueCartridges.Count > 0 || Nozzles.Count > 0;
+
+            if (IsAxisView)
+                return _axisRecords.Count > 0;
 
             return _records.Count > 0;
         }
@@ -239,6 +255,8 @@ namespace Nova.ViewModels.Pages.Audio
                 _csv.Export(GlueExportHeaders(), GlueExportRows(), "GlueWeight_" + stamp + ".csv");
             else if (IsHealthView)
                 _csv.Export(HealthExportHeaders(), HealthExportRows(), "GlueHealth_" + stamp + ".csv");
+            else if (IsAxisView)
+                _csv.Export(AxisExportHeaders(), AxisExportRows(), "Coordinates_" + stamp + ".csv");
             else
                 _csv.Export(UnitExportHeaders(), UnitExportRows(), SelectedView.Replace("/", "") + "_" + stamp + ".csv");
         }
@@ -283,12 +301,14 @@ namespace Nova.ViewModels.Pages.Audio
             ICsvExportService csv = null,
             IDialogService dialog = null,
             IDispenserDataService dispenser = null,
-            IAccessLog accessLog = null)
+            IAccessLog accessLog = null,
+            ICoordinateDataSource coordinates = null)
             : base(session)
         {
             _session = session;
             _production = production;
             _dispenser = dispenser;
+            _coordinates = coordinates;
             _csv = csv;
             _dialog = dialog;
             _accessLog = accessLog;

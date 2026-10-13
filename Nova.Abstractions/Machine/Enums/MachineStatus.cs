@@ -13,8 +13,9 @@ namespace Nova.Abstractions.Machine.Enums
         Pause,
         Alarm,
         Stop,
-        Homing, 
+        Homing,
         Waiting,
+        Manual,
         
     }
 }

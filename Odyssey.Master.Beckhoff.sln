@@ -16,6 +16,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Master.DB.Scripts", "Master.DB.Scripts", "{69BC66BA-97FA-400A-8DED-42DD1A7B8ECA}"
 	ProjectSection(SolutionItems) = preProject
 		Master.DB.Scripts\Master_Teal_db_Schema.sql = Master.DB.Scripts\Master_Teal_db_Schema.sql
+		Master.DB.Scripts\ProductionData_AddTossing.sql = Master.DB.Scripts\ProductionData_AddTossing.sql
 		Master.DB.Scripts\ShiftOEEStatus.sql = Master.DB.Scripts\ShiftOEEStatus.sql
 		Master.DB.Scripts\Shift_default_data.sql = Master.DB.Scripts\Shift_default_data.sql
 		Master.DB.Scripts\UserManagement.sql = Master.DB.Scripts\UserManagement.sql

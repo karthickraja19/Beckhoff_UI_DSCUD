@@ -16,13 +16,15 @@ namespace Nova.Alarm
     /// Every time the PLC sends its alarm list (<see cref="PlcAlarmReader"/> subscribes to it):
     /// <list type="number">
     /// <item>compare it with the alarms we already know (<see cref="AlarmTracker"/>)</item>
+    /// <item>tell the screens and HIVE</item>
     /// <item>save started and ended alarms to the database (<see cref="AlarmDatabase"/>)</item>
-    /// <item>tell the screens</item>
     /// </list>
     /// Registered as <see cref="IActiveAlarmService"/>, so the alarm bell follows it.
     ///
     /// The lists are handled one at a time, in the order they arrived, on a worker thread
-    /// rather than the ADS thread, so a slow database cannot hold up the PLC connection.
+    /// rather than the ADS thread. The database writes are done after that, in the same
+    /// order, on a queue of their own, so a slow or unreachable database holds up neither
+    /// the PLC connection nor the alarm pop-up.
     /// Start and end times are the PLC's time stamp on the list, so they are accurate to
     /// the 100 ms the PLC checks the list at.
     /// </remarks>
@@ -36,6 +38,7 @@ namespace Nova.Alarm
         private bool _started;
         private bool _openAlarmsLoaded;
         private Task _work = Task.CompletedTask;    // the work waiting to be done, in order
+        private Task _saves = Task.CompletedTask;   // the database writes waiting to be done, in order
         private SynchronizationContext _uiThread;
         private IReadOnlyList<ActiveAlarmSnapshot> _activeAlarms = new ActiveAlarmSnapshot[0];
 
@@ -142,25 +145,40 @@ namespace Nova.Alarm
             }
         }
 
+        /// <summary>Runs the database work after every save queued before it, on a worker thread.</summary>
+        private void QueueSave(Action save)
+        {
+            lock (_sync)
+            {
+                _saves = _saves.ContinueWith(_ => Run(save), TaskScheduler.Default);
+            }
+        }
+
         private void CheckAlarms(PlcAlarmList list)
         {
             AlarmChanges changes = _tracker.Compare(list.Alarms, list.Time);
             if (!changes.HasChanges)
                 return;
 
+            // The screens and HIVE first. The database has its own queue: a database that
+            // is slow or cannot be reached takes seconds to give up, and the pop-up and the
+            // alarm bell must not wait for that.
             foreach (AlarmRecord alarm in changes.Started)
-            {
-                SaveStart(alarm);
                 AlarmStarted?.Invoke(this, alarm);
-            }
 
             foreach (AlarmRecord alarm in changes.Ended)
-            {
-                SaveEnd(alarm);
                 AlarmEnded?.Invoke(this, alarm);
-            }
 
             PublishActiveAlarms();
+
+            QueueSave(() =>
+            {
+                foreach (AlarmRecord alarm in changes.Started)
+                    SaveStart(alarm);
+
+                foreach (AlarmRecord alarm in changes.Ended)
+                    SaveEnd(alarm);
+            });
         }
 
         private void LoadOpenAlarms()

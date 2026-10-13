@@ -38,12 +38,19 @@ namespace Nova.ViewModels.Pages.Audio
         public override AppPageNames PageName => AppPageNames.Alarm;
 
         /// <summary>
-        /// True when the alarm log generates its rows (Simulated mode). The view labels
+        /// True when the alarm log generates its rows (SampleData=true). The view labels
         /// the page, so a generated alarm history is never taken for the machine's.
         /// </summary>
         public bool IsSampleData => _alarms is ISampleDataSource;
 
         private readonly IAlarmLogRepository _alarms;
+
+        /// <summary>
+        /// PLC code to DFM code and error type (slide 56: "Follow error code definition",
+        /// "Follow error type definition"). Null for sample data, which is written in DFM
+        /// codes already, and when no error code file is configured.
+        /// </summary>
+        private readonly IErrorCodeCatalog _errorCodes;
         private readonly ICsvExportService _csv;
         private readonly IDialogService _dialog;
 
@@ -180,6 +187,8 @@ namespace Nova.ViewModels.Pages.Audio
             AlarmRows.Clear();
             DowntimeTop10.Clear();
 
+            records = records.Select(Translate).ToList();
+
             foreach (AlarmData record in records.OrderByDescending(r => r.StartTime))
                 AlarmRows.Add(ToRow(record));
 
@@ -196,6 +205,30 @@ namespace Nova.ViewModels.Pages.Audio
         /// repository returns for that case, so it is detected here rather than being
         /// formatted into a misleading "0001-01-01" and a zero duration.
         /// </remarks>
+        /// <summary>
+        /// The alarm as HIVE knows it: DFM code and error type, with the machine's own text
+        /// kept as the detail ("Show original errors reported by machine"). The Top 10,
+        /// the pie and the Save file are then all in DFM terms too.
+        /// </summary>
+        private AlarmData Translate(AlarmData record)
+        {
+            if (_errorCodes == null || record == null)
+                return record;
+
+            DfmError dfm = _errorCodes.Translate(record.AlarmCode, record.AlarmDescription);
+            return new AlarmData
+            {
+                StartTime = record.StartTime,
+                EndTime = record.EndTime,
+                AlarmCode = dfm.Code,
+                AlarmType = dfm.Message,
+                AlarmDescription = string.IsNullOrWhiteSpace(record.AlarmCode)
+                    ? dfm.Detail
+                    : dfm.Detail + " [PLC " + record.AlarmCode + "]",
+                Shift = record.Shift,
+            };
+        }
+
         private static AlarmHistoryRow ToRow(AlarmData record)
         {
             bool ongoing = record.EndTime == default(DateTime) || record.EndTime < record.StartTime;
@@ -388,10 +421,12 @@ namespace Nova.ViewModels.Pages.Audio
             IAppSession session,
             IAlarmLogRepository alarms = null,
             ICsvExportService csv = null,
-            IDialogService dialog = null)
+            IDialogService dialog = null,
+            IErrorCodeCatalog errorCodes = null)
             : base(session)
         {
             _alarms = alarms;
+            _errorCodes = alarms is ISampleDataSource ? null : errorCodes;
             _csv = csv;
             _dialog = dialog;
 

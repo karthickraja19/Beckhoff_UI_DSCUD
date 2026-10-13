@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Controls;
 
 namespace Nova.Hive
 {
@@ -7,7 +8,6 @@ namespace Nova.Hive
     {
         None,
         Running,
-        Idle,
         PlannedDowntime,
         ManualDowntime,
     }
@@ -18,16 +18,30 @@ namespace Nova.Hive
     /// </summary>
     public partial class HiveStateDialog : Window
     {
-        public HiveStateDialog()
+        /// <param name="currentState">One line saying what HIVE is in now.</param>
+        /// <param name="runningBlocked">Why Running cannot be chosen, or null.</param>
+        /// <param name="plannedBlocked">Why no planned downtime reason can be chosen, or null.</param>
+        /// <param name="manualBlocked">Why Manual downtime cannot be chosen, or null.</param>
+        public HiveStateDialog(string currentState, string runningBlocked, string plannedBlocked, string manualBlocked)
         {
             InitializeComponent();
+
+            CurrentStateText.Text = currentState;
+            Configure(RunningButton, RunningNote, runningBlocked);
+            Configure(PlannedButton, PlannedNote, plannedBlocked);
+            Configure(ManualButton, ManualNote, manualBlocked);
         }
 
         public HiveStateChoice Choice { get; private set; }
 
-        private void Running_Click(object sender, RoutedEventArgs e) => Pick(HiveStateChoice.Running);
+        private static void Configure(Button button, TextBlock note, string blockedBecause)
+        {
+            button.IsEnabled = blockedBecause == null;
+            note.Text = blockedBecause;
+            note.Visibility = blockedBecause == null ? Visibility.Collapsed : Visibility.Visible;
+        }
 
-        private void Idle_Click(object sender, RoutedEventArgs e) => Pick(HiveStateChoice.Idle);
+        private void Running_Click(object sender, RoutedEventArgs e) => Pick(HiveStateChoice.Running);
 
         private void PlannedDowntime_Click(object sender, RoutedEventArgs e) => Pick(HiveStateChoice.PlannedDowntime);
 

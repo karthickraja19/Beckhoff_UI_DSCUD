@@ -39,7 +39,8 @@ CREATE TABLE [dbo].[ProductionData](
 	[ProductCode] [varchar](max) NOT NULL,
 	[ProductionStatus] [bit] NOT NULL,
 	[CycleTime] [float] NULL,
-	[Iteration] [int] NOT NULL
+	[Iteration] [int] NOT NULL,
+	[Tossing] [bit] NOT NULL
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
 
@@ -47,6 +48,9 @@ ALTER TABLE [dbo].[ProductionData] ADD  DEFAULT ((0)) FOR [ProductionStatus]
 GO
 
 ALTER TABLE [dbo].[ProductionData] ADD  DEFAULT ((0)) FOR [Iteration]
+GO
+
+ALTER TABLE [dbo].[ProductionData] ADD  DEFAULT ((0)) FOR [Tossing]
 GO
 
 SET QUOTED_IDENTIFIER ON

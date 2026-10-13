@@ -4,24 +4,28 @@ using System.Linq;
 using System.Threading.Tasks;
 using Nova.Abstractions.Hardware;
 using TealCylinder = Teal.Library.Cylinder.Cylinder;
+using Nova.Alarm;
+using Nova.Wpf.App.Services.Twincat.HmiDisplay;
 
 namespace Nova.Wpf.App.Services.Twincat
 {
     /// <summary>
     /// Nova <see cref="ICylinder"/> over one Beckhoff library cylinder bound to its valve
-    /// outputs and reed inputs in the PLC. Extend/Retract go through the library, which
-    /// writes the request bits; status comes from
-    /// <see cref="TealCylinder.UpdateCylinderProperties"/>, so the Manual board shows what
-    /// the sensors report rather than what was last clicked.
+    /// outputs and reed inputs in the PLC. Extend/Retract go through the library. While a
+    /// screen follows the cylinder (<see cref="FollowStatus"/>), the library reads its current
+    /// status first (UpdateCylinderProperties), then the PLC pushes every change of its HMI
+    /// display struct - where the library says it is, read as the struct App.config's
+    /// CylinderHmiDisplayType names - through <see cref="PlcSubscriptions"/>. Reading it never
+    /// waits on the PLC.
     ///
-    /// Two things the library does not expose yet are done here against the card directly,
-    /// each marked below: the per-reed states the sensor chips need, and dropping both
-    /// valves for Stop. Move them into the library when it grows the API.
+    /// The library has no Stop, so dropping both valves is done here (marked below). Move it
+    /// into the library when it grows the API.
     /// </summary>
-    public sealed class TwincatCylinderAdapter : ICylinder
+    public sealed class TwincatCylinderAdapter : ICylinder, ILiveStatus, ITwincatStatusSource, ILibraryStatusSource
     {
         private readonly TealCylinder _cylinder;
         private readonly TwincatPlcConnection _plc;
+        private readonly HmiDisplayStatus _display;
         private readonly string[] _extendSenseSymbols;
         private readonly string[] _retractSenseSymbols;
 
@@ -31,15 +35,19 @@ namespace Nova.Wpf.App.Services.Twincat
         /// </summary>
         private readonly bool _singleValve;
 
+        /// <param name="displayType">The struct App.config's CylinderHmiDisplayType names; null when it names none that fits.</param>
         public TwincatCylinderAdapter(
             string componentId,
             TealCylinder cylinder,
             TwincatPlcConnection plc,
+            PlcSubscriptions subscriptions,
+            Type displayType,
             IEnumerable<string> extendSenseAddresses = null,
             IEnumerable<string> retractSenseAddresses = null)
         {
             _cylinder = cylinder ?? throw new ArgumentNullException(nameof(cylinder));
             _plc = plc ?? throw new ArgumentNullException(nameof(plc));
+            _display = new HmiDisplayStatus(subscriptions, plc, cylinder, displayType, cylinder.UpdateCylinderProperties);
 
             ComponentId = componentId;
             CylinderName = _cylinder.Name ?? componentId;
@@ -62,6 +70,15 @@ namespace Nova.Wpf.App.Services.Twincat
         public string RetractOutputAddress { get; }
         public IReadOnlyList<string> ExtendSenseAddresses { get; }
         public IReadOnlyList<string> RetractSenseAddresses { get; }
+        public IReadOnlyList<string> WatchedSymbols => _display.WatchedSymbols;
+
+        public event EventHandler LibraryStatusRead
+        {
+            add { _display.LibraryRead += value; }
+            remove { _display.LibraryRead -= value; }
+        }
+
+        public IDisposable FollowStatus() => _display.Follow();
 
         /// <summary>
         /// Fires the extend valve through the library. The PLC's own interlocks still apply.
@@ -93,8 +110,10 @@ namespace Nova.Wpf.App.Services.Twincat
         });
 
         /// <summary>
-        /// Called off the IO poll thread. Never throws: a failed read leaves the snapshot
-        /// reporting nothing sensed, which the Manual board draws as an unknown position.
+        /// The HMI display the PLC last pushed - or, until it pushes one, what the library read
+        /// when the cylinder was followed. Never touches the PLC, so it is safe on any thread.
+        /// With neither every reed reads off and neither button is offered, which the Manual
+        /// board draws as an unknown position.
         /// </summary>
         public CylinderStatusSnapshot ReadStatus()
         {
@@ -105,41 +124,38 @@ namespace Nova.Wpf.App.Services.Twincat
                 RetractSenseStates = new bool[_retractSenseSymbols.Length],
             };
 
-            try
+            ICylinderHmiDisplay display;
+            string reason;
+            if (_display.TryRead(out display, out reason))
             {
-                lock (_plc.SyncRoot)
-                {
-                    if (!_plc.IsConnected)
-                        return snapshot;
+                display.Fill(snapshot);
 
-                    // One round of PLC reads into the library's cached properties, which the
-                    // four lines below then copy. Everything in the snapshot therefore comes
-                    // from the same moment.
-                    _cylinder.UpdateCylinderProperties();
-
-                    snapshot.IsExtended = _cylinder.IsExtended;
-                    snapshot.IsRetracted = _cylinder.IsRetracted;
-                    snapshot.SafeToExtend = _cylinder.IsSafeToExtend;
-                    snapshot.SafeToRetract = _cylinder.IsSafeToRetract;
-
-                    // The library reports the position as one flag per side and keeps no
-                    // per-reed state, so the sensor chips are read here.
-                    ReadSenses(_extendSenseSymbols, snapshot.ExtendSenseStates);
-                    ReadSenses(_retractSenseSymbols, snapshot.RetractSenseStates);
-                }
+                // The PLC owns the interlocks and refuses a move that is not safe; the board
+                // only holds back while the position cannot be trusted.
+                snapshot.SafeToExtend = true;
+                snapshot.SafeToRetract = true;
             }
-            catch (Exception ex)
+            else if (_display.HasLibraryStatus)
             {
-                System.Diagnostics.Debug.WriteLine(ComponentId + " read failed: " + ex.Message);
+                // The library reports one flag per side, so each side's reed chips show it.
+                SetAll(snapshot.ExtendSenseStates, _cylinder.IsExtended);
+                SetAll(snapshot.RetractSenseStates, _cylinder.IsRetracted);
+                snapshot.IsExtended = _cylinder.IsExtended;
+                snapshot.IsRetracted = _cylinder.IsRetracted;
+                snapshot.IsBothSensed = _cylinder.IsExtended && _cylinder.IsRetracted;
+                snapshot.SafeToExtend = _cylinder.IsSafeToExtend;
+                snapshot.SafeToRetract = _cylinder.IsSafeToRetract;
+            }
+            else
+            {
                 return snapshot;
             }
 
             // Both sides sensed at once is impossible on a healthy cylinder - a stuck or
             // mis-wired reed. Neither position is trusted while it lasts, and neither
             // button is offered.
-            if (snapshot.IsExtended && snapshot.IsRetracted)
+            if (snapshot.IsBothSensed)
             {
-                snapshot.IsBothSensed = true;
                 snapshot.IsExtended = false;
                 snapshot.IsRetracted = false;
                 snapshot.SafeToExtend = false;
@@ -149,10 +165,10 @@ namespace Nova.Wpf.App.Services.Twincat
             return snapshot;
         }
 
-        private void ReadSenses(string[] symbols, bool[] states)
+        private static void SetAll(bool[] states, bool value)
         {
-            for (int i = 0; i < symbols.Length; i++)
-                states[i] = !string.IsNullOrEmpty(symbols[i]) && _plc.Card.Read<bool>(symbols[i]);
+            for (int i = 0; i < states.Length; i++)
+                states[i] = value;
         }
 
         /// <summary>

@@ -1,79 +1,39 @@
-﻿using Master.Configuration.Model;
-using Newtonsoft.Json;
-using System;
+using Master.Configuration.Model;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Windows.Forms;
-using System.Xml.Linq;
 using Teal.Library.Contracts;
 using Teal.Library.Stepper;
+using Teal.Library.Twincat;
 
 namespace Master.Configuration
 {
+    /// <summary>
+    /// The library stepper for each member of <see cref="Steppers"/> configured in
+    /// Data\Steppers.json. Created by <see cref="DeviceObjects.Create"/>.
+    /// </summary>
     public static class StepperObjects
     {
-        public static Dictionary<Steppers, IStepper> StepperMotorObj = new Dictionary<Steppers, IStepper>();
+        public static readonly Dictionary<Steppers, IStepper> StepperMotorObj = new Dictionary<Steppers, IStepper>();
 
-        public static void LoadSteppers()
+        /// <summary>Every stepper is an I/O stepper (IOStepper, on the Stepper tab).</summary>
+        internal static void Load(TwincatCard card, List<string> problems)
         {
-            var stepperJsonString = File.ReadAllText(Application.StartupPath + "\\Data\\Steppers.json");
+            StepperMotorObj.Clear();
 
-            ConfigGlobalClass.StepperConfigurations = JsonConvert.DeserializeObject<List<StepperConfiguration>>(stepperJsonString);
-
-            foreach (var stepperEnum in Enum.GetValues(typeof(Steppers)).Cast<Steppers>())
+            foreach (var stepper in MachineConfiguration.Configured<Steppers, StepperConfiguration>(ConfigGlobalClass.StepperConfigurations, c => c.EnumName))
             {
-                string stepperName = stepperEnum.ToString();
-
-                var stepperConfig = ConfigGlobalClass.StepperConfigurations.Where(x => x.EnumName == stepperName).FirstOrDefault();
-
-                try
+                StepperConfiguration config = stepper.Value;
+                DeviceObjects.Add(StepperMotorObj, stepper.Key, () =>
                 {
-                    IStepper stepper = null;
-                    if (stepperConfig.IsAxisEnabled)
+                    var properties = new StepperProperties
                     {
-                        StepperProperties stepperProperties = new StepperProperties
-                        {
-                            Name = stepperConfig.Name,
-                            Id = stepperConfig.Id,
-                            Pitch = stepperConfig.Pitch,
-                            Pulse = stepperConfig.Pulse,
-                            PPR = stepperConfig.PPR,
-                            Speed = stepperConfig.Speed,
-                            Acceleration = stepperConfig.Acceleration,
-                            Deacceleration = stepperConfig.Deceleration
-                        };
-                        stepper = new AxisStepper(ConfigGlobalClass.cardManager.Card, stepperProperties);
-                    }
-                    else
-                    {
-                        StepperProperties stepperProperties = new StepperProperties
-                        {
-                            Name = stepperConfig.Name,
-                            ForwardCommand = (int)GetEnumValue<EOutput>(stepperConfig.ForwardCommand),
-                            ReverseCommand = (int)GetEnumValue<EOutput>(stepperConfig.ReverseCommand),
-                            AlarmSignal = (int)GetEnumValue<EInput>(stepperConfig.AlarmSignal),
-                            AlarmResetCommand = (int)GetEnumValue<EOutput>(stepperConfig.AlarmResetCommand),
-                        };
-                        stepper = new IOStepper(ConfigGlobalClass.cardManager.Card, stepperProperties);
-                    }
+                        Name = config.Name,
+                        EnumName = config.EnumName,
+                        Id = config.Id,
+                    };
 
-                    StepperMotorObj[stepperEnum] = stepper;
-                }
-
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error parsing config for {stepperName}: {ex.Message}");
-                    MessageBox.Show($"Error parsing config for {stepperName}: {ex.Message}");
-                }
+                    return new IOStepper(card, properties);
+                }, problems);
             }
-        }
-
-        private static T GetEnumValue<T>(string value) where T : struct, Enum
-        {
-            Enum.TryParse<T>(value, true, out var enumValue);
-
-            return enumValue;
         }
     }
 }

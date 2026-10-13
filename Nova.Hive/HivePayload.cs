@@ -32,8 +32,22 @@ namespace Nova.Hive
                 ["previous_state"] = change.PreviousState,
                 ["sequence"] = settings.Sequence,
                 ["sw_version"] = settings.SoftwareVersion,
-                ["MS_SHA1"] = settings.MainSoftwareHash,
             };
+
+            // Slide 12: every configured hash key, each under its own key. A key that could
+            // not be read goes out empty - the downtime that follows says why (slide 91).
+            if (change.HashKeys != null && change.HashKeys.Count > 0)
+            {
+                foreach (var key in change.HashKeys)
+                {
+                    if (!string.IsNullOrWhiteSpace(key.Key))
+                        data[key.Key] = key.Value ?? "";
+                }
+            }
+            else
+            {
+                data["MS_SHA1"] = settings.MainSoftwareHash;
+            }
 
             // The DFM allows error information on state 5 payloads only.
             if (change.Error != null)

@@ -16,8 +16,6 @@ namespace Nova.ViewModels.Shells
         private readonly INavigationService _navigationService;
         private readonly IStationProfileService _profile;
 
-        public AppTitleBarViewModel TitleBar { get; }
-
         [ObservableProperty]
         private ViewModelBase? _currentView;
 
@@ -34,14 +32,12 @@ namespace Nova.ViewModels.Shells
             IAppSession session,
             AuthShellViewModel authShell,
             AudioShellViewModel audioShell,
-            AppTitleBarViewModel titleBar,
             INavigationService navigationService,
             IStationProfileService profile = null)
         {
             _session = session;
             _authShell = authShell;
             _audioShell = audioShell;
-            TitleBar = titleBar;
             _navigationService = navigationService;
             _profile = profile;
 

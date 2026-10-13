@@ -16,13 +16,10 @@
                      NonClientAreaBackground="{DynamicResource RegionBrush}"
                      NonClientAreaForeground="{DynamicResource PrimaryTextBrush}"
                      xmlns:data="clr-namespace:Nova.Wpf.App.Data"
-                     xmlns:shells="clr-namespace:Nova.Wpf.App.Views.Shells"
                      Closing="Window_Closing" >
 
-    <handyControl:Window.NonClientAreaContent>
-        <shells:AppTitleBarView DataContext="{Binding TitleBar}"/>
-    </handyControl:Window.NonClientAreaContent>
-
+    <!-- The title bar carries only the window buttons (minimise, maximise/restore,
+         close); no NonClientAreaContent, so no logo, version, machine name or clock. -->
     <Grid hc:Dialog.Token="{x:Static data:DialogTokens.MainWindow}">
         <hc:DialogContainer>
             <!-- This top border acts as the Title Bar's underline but spans the ENTIRE width under the close button -->

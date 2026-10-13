@@ -24,6 +24,9 @@ namespace Nova.Alarm
     /// back in Run. That retry is the only timer here, and it only runs while there is no
     /// subscription.
     ///
+    /// Both notifications go over the HMI's one shared ADS connection
+    /// (<see cref="IPlcConnection"/>), which this reader uses but does not own.
+    ///
     /// Each list arrives as raw bytes and is cut into entries using the layout below. The
     /// layout is ST_Alarms as the PLC compiles it (see alarm.tmc in the PLC project). If
     /// ST_Alarms changes in the PLC, update the numbers below to match.
@@ -55,9 +58,7 @@ namespace Nova.Alarm
         // A TwinCAT STRING is one byte per character, Windows-1252.
         private static readonly Encoding PlcText = Encoding.GetEncoding(1252);
 
-        private readonly string _amsNetId;
-        private readonly int _port;
-        private readonly AdsClient _client = new AdsClient();
+        private readonly IPlcConnection _plc;
         private readonly object _sync = new object();
 
         private bool _started;
@@ -72,10 +73,9 @@ namespace Nova.Alarm
         /// </summary>
         public event EventHandler<PlcAlarmList> AlarmsChanged;
 
-        public PlcAlarmReader(string amsNetId, int port)
+        public PlcAlarmReader(IPlcConnection plc)
         {
-            _amsNetId = amsNetId;
-            _port = port;
+            _plc = plc ?? throw new ArgumentNullException(nameof(plc));
         }
 
         public void Start()
@@ -86,8 +86,8 @@ namespace Nova.Alarm
                     return;
 
                 _started = true;
-                _client.AdsNotification += OnAdsNotification;
-                _client.AdsNotificationsInvalidated += OnNotificationsInvalidated;
+                _plc.Client.AdsNotification += OnAdsNotification;
+                _plc.Client.AdsNotificationsInvalidated += OnNotificationsInvalidated;
             }
 
             // Not on the caller's thread: reaching a PLC that is not running can take seconds.
@@ -104,15 +104,15 @@ namespace Nova.Alarm
                 _started = false;
                 StopRetry();
                 Unsubscribe();
-                _client.AdsNotification -= OnAdsNotification;
-                _client.AdsNotificationsInvalidated -= OnNotificationsInvalidated;
+                _plc.Client.AdsNotification -= OnAdsNotification;
+                _plc.Client.AdsNotificationsInvalidated -= OnNotificationsInvalidated;
             }
         }
 
+        /// <summary>The connection is shared and belongs to its creator, so it is left open.</summary>
         public void Dispose()
         {
             Stop();
-            _client.Dispose();
         }
 
         /// <summary>Subscribes on a worker thread. Several requests close together run once.</summary>
@@ -140,26 +140,27 @@ namespace Nova.Alarm
 
                 try
                 {
-                    if (!_client.IsConnected)
-                        _client.Connect(_amsNetId, _port);
+                    // Reconnects if the connection dropped. A PLC that is not running has no
+                    // alarm list to send.
+                    if (!_plc.IsConnected)
+                        throw new InvalidOperationException("the PLC at " + _plc.Address + " is not reachable or not in Run");
 
-                    // A PLC that is not running has no alarm list to send.
-                    AdsState state = _client.ReadState().AdsState;
-                    if (state != AdsState.Run)
-                        throw new InvalidOperationException("the PLC is in " + state + ", not Run");
+                    lock (_plc.SyncRoot)
+                    {
+                        AdsClient client = _plc.Client;
+                        var subscription = new Subscription { EntryCount = ReadEntryCount(client) };
 
-                    var subscription = new Subscription { EntryCount = ReadEntryCount() };
+                        // Set before subscribing: the first notification can arrive before
+                        // AddDeviceNotification returns.
+                        _subscription = subscription;
 
-                    // Set before subscribing: the first notification can arrive before
-                    // AddDeviceNotification returns.
-                    _subscription = subscription;
+                        subscription.StateHandle = client.AddDeviceNotification(
+                            (uint)AdsReservedIndexGroup.DeviceData, (uint)AdsReservedIndexOffset.DeviceDataAdsState,
+                            sizeof(ushort), OnChange, subscription.StateTag);
 
-                    subscription.StateHandle = _client.AddDeviceNotification(
-                        (uint)AdsReservedIndexGroup.DeviceData, (uint)AdsReservedIndexOffset.DeviceDataAdsState,
-                        sizeof(ushort), OnChange, subscription.StateTag);
-
-                    subscription.ListHandle = _client.AddDeviceNotification(
-                        AlarmListSymbol, subscription.EntryCount * EntrySize, OnChange, subscription.ListTag);
+                        subscription.ListHandle = client.AddDeviceNotification(
+                            AlarmListSymbol, subscription.EntryCount * EntrySize, OnChange, subscription.ListTag);
+                    }
 
                     if (_subscribeFailing)
                         Logger.WriteLog(LogType.Info, "Alarm", "PLC", "Subscribed to the alarm list " + AlarmListSymbol + " again", "");
@@ -189,15 +190,22 @@ namespace Nova.Alarm
             Subscription old = _subscription;
             _subscription = null;
 
-            if (old == null || !_client.IsConnected)
+            if (old == null)
                 return;
 
-            // After a new PLC program the handles are already gone, so a failure here is normal.
-            if (old.ListHandle != 0)
-                _client.TryDeleteDeviceNotification(old.ListHandle);
+            lock (_plc.SyncRoot)
+            {
+                AdsClient client = _plc.Client;
+                if (!client.IsConnected)
+                    return;
 
-            if (old.StateHandle != 0)
-                _client.TryDeleteDeviceNotification(old.StateHandle);
+                // After a new PLC program the handles are already gone, so a failure here is normal.
+                if (old.ListHandle != 0)
+                    client.TryDeleteDeviceNotification(old.ListHandle);
+
+                if (old.StateHandle != 0)
+                    client.TryDeleteDeviceNotification(old.StateHandle);
+            }
         }
 
         private void StopRetry()
@@ -226,7 +234,8 @@ namespace Nova.Alarm
                 else if (e.UserData == current.ListTag)
                     OnAlarmList(current, e);
 
-                // Anything else is from a subscription that has since been replaced.
+                // Anything else is from a subscription that has since been replaced, or
+                // belongs to another user of the shared connection.
             }
             catch (Exception ex)
             {
@@ -277,9 +286,9 @@ namespace Nova.Alarm
         /// Number of entries in the PLC array (MAX_ALARMS), worked out from the array's size.
         /// Also catches the common mistake of ST_Alarms being changed in the PLC but not here.
         /// </summary>
-        private int ReadEntryCount()
+        private static int ReadEntryCount(AdsClient client)
         {
-            int arraySize = _client.ReadSymbol(AlarmListSymbol).ByteSize;
+            int arraySize = client.ReadSymbol(AlarmListSymbol).ByteSize;
 
             if (arraySize == 0 || arraySize % EntrySize != 0)
             {

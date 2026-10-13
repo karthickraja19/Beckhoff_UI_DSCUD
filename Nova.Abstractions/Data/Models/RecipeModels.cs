@@ -38,6 +38,12 @@ namespace Nova.Abstractions.Data.Models
         public string ModuleName { get; set; } = string.Empty;
         public IReadOnlyList<string> MovementPriority { get; set; } = Array.Empty<string>();
         public IReadOnlyList<string> SafePositionPriority { get; set; } = Array.Empty<string>();
+
+        /// <summary>
+        /// The PLC gantry (E_Recipe, 1-based) whose recipe this module's table is written to;
+        /// 0 when the module is not mapped to one, and its recipe is not written to the PLC.
+        /// </summary>
+        public int PlcGantry { get; set; }
     }
 
     public enum RecipeSaveStatus

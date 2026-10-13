@@ -15,6 +15,13 @@
     <PackageReference Include="Beckhoff.TwinCAT.Ads" Version="7.0.317" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Nova.Abstractions\Nova.Abstractions.csproj" />
+    <ProjectReference Include="..\Nova.Alarm\Nova.Alarm.csproj" />
+  </ItemGroup>
+  <ItemGroup>
     <!-- Only for Logger.WriteLog, so HIVE errors land in the same log files as the rest of the HMI. -->
     <Reference Include="Teal.Library.Contracts">
       <HintPath>..\References\Beckhoff\Teal.Library.Contracts.dll</HintPath>
@@ -22,12 +29,5 @@
     <Reference Include="Teal.Library.Log">
       <HintPath>..\References\Beckhoff\Teal.Library.Log.dll</HintPath>
     </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="System.Net.Http" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Nova.Abstractions\Nova.Abstractions.csproj" />
-    <ProjectReference Include="..\Nova.Alarm\Nova.Alarm.csproj" />
   </ItemGroup>
 </Project>

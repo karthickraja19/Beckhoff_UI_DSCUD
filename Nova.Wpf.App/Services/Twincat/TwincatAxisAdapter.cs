@@ -1,20 +1,25 @@
 using Nova.Abstractions.Hardware;
-using Nova.ViewModels.TwinCatModels;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Teal.Library.Servo;
+using Nova.Alarm;
+using Nova.Wpf.App.Services.Twincat.HmiDisplay;
 
 namespace Nova.Wpf.App.Services.Twincat
 {
     /// <summary>
     /// Nova <see cref="IAxis"/> over one Beckhoff library servo. Commands go through the
-    /// library, which writes the request bits; status comes from
-    /// <see cref="AxisServo.UpdateAxisProperties"/>, so the Axis tab shows what the PLC
-    /// reports rather than what was last clicked.
+    /// library, which writes the request bits. While a screen follows the axis
+    /// (<see cref="FollowStatus"/>), the library reads its current status first
+    /// (UpdateAxisProperties), then the PLC pushes every change of its HMI display struct -
+    /// where the library says it is, read as the struct App.config's ServoHmiDisplayType
+    /// names - through <see cref="PlcSubscriptions"/>. The Axis tab shows what the PLC
+    /// reports rather than what was last clicked, and reading it never waits on the PLC.
     /// </summary>
-    public sealed class TwincatAxisAdapter : IAxis
+    public sealed class TwincatAxisAdapter : IAxis, ILiveStatus, ITwincatStatusSource, ILibraryStatusSource
     {
         private const int PollMs = 50;
 
@@ -25,18 +30,33 @@ namespace Nova.Wpf.App.Services.Twincat
 
         private readonly AxisServo _servo;
         private readonly TwincatPlcConnection _plc;
+        private readonly HmiDisplayStatus _display;
 
-        public TwincatAxisAdapter(string componentId, AxisServo servo, TwincatPlcConnection plc)
+        /// <param name="displayType">The struct App.config's ServoHmiDisplayType names; null when it names none that fits.</param>
+        public TwincatAxisAdapter(
+            string componentId, AxisServo servo, TwincatPlcConnection plc, PlcSubscriptions subscriptions, Type displayType)
         {
             ComponentId = componentId;
             _servo = servo ?? throw new ArgumentNullException(nameof(servo));
             _plc = plc ?? throw new ArgumentNullException(nameof(plc));
+            _display = new HmiDisplayStatus(subscriptions, plc, servo, displayType, servo.UpdateAxisProperties);
+        }
+
+        public event EventHandler LibraryStatusRead
+        {
+            add { _display.LibraryRead += value; }
+            remove { _display.LibraryRead -= value; }
         }
 
         public string ComponentId { get; }
 
-        /// <summary>As of the last <see cref="ReadStatus"/>.</summary>
-        public bool IsHomed => _servo.Homed;
+        public IReadOnlyList<string> WatchedSymbols => _display.WatchedSymbols;
+
+        public IDisposable FollowStatus() => _display.Follow();
+
+        public bool IsHomed => ReadStatus().IsHomed;
+
+        public bool SupportsPositioning => true;
 
         public Task<bool> EnableAsync() => RunLocked(_servo.On);
 
@@ -74,86 +94,82 @@ namespace Nova.Wpf.App.Services.Twincat
             _servo.JogBackwardStop();
         });
 
-        /// <summary>Called by the axis monitor every 250 ms. Never throws.</summary>
+        /// <summary>
+        /// The status the PLC last pushed - or, until it pushes one, what the library read
+        /// when the axis was followed. Never touches the PLC, so it is safe on the UI thread.
+        /// With neither it says why instead of showing old values as current.
+        /// </summary>
         public AxisStatusSnapshot ReadStatus()
         {
             var snapshot = new AxisStatusSnapshot { ComponentId = ComponentId, SpeedLimit = _servo.Velocity };
 
-            try
-            {
-                lock (_plc.SyncRoot)
-                {
-                    if (!_plc.IsConnected)
-                    {
-                        snapshot.State = "PLC not connected";
-                        return snapshot;
-                    }
-
-                    _servo.UpdateAxisProperties();
-
-                    snapshot.ActualPosition = _servo.CurrentPosition;
-                    snapshot.ActualSpeed = Math.Abs(_servo.CurrentVelocity);
-                    snapshot.IsEnabled = _servo.Enabled;
-                    snapshot.IsInError = _servo.AxisError;
-                    snapshot.IsHomed = _servo.Homed;
-                    snapshot.IsMoving = _servo.AxisRunning;
-                    snapshot.PositiveLimit = _servo.PositiveLimitSense;
-                    snapshot.NegativeLimit = _servo.NegativeLimitSense;
-                    snapshot.AtHomeSensor = _servo.HomeSense;
-                    snapshot.DirectionForward = _servo.CurrentVelocity > 0;
-                    snapshot.DirectionReverse = _servo.CurrentVelocity < 0;
-                    snapshot.State = snapshot.IsInError ? "Error" : (snapshot.IsMoving ? "Running" : "Ready");
-                }
-            }
-            catch (Exception ex)
-            {
-                snapshot.State = "Read failed: " + ex.Message;
-            }
+            IAxisHmiDisplay display;
+            string reason;
+            if (_display.TryRead(out display, out reason))
+                display.Fill(snapshot);
+            else if (_display.HasLibraryStatus)
+                FillFromLibrary(snapshot);
+            else
+                snapshot.State = reason;
 
             return snapshot;
+        }
+
+        /// <summary>The servo's properties, as its UpdateAxisProperties last read them.</summary>
+        private void FillFromLibrary(AxisStatusSnapshot snapshot)
+        {
+            snapshot.ActualPosition = _servo.CurrentPosition;
+            snapshot.ActualSpeed = Math.Abs(_servo.CurrentVelocity);
+            snapshot.IsEnabled = _servo.Enabled;
+            snapshot.IsInError = _servo.AxisError;
+            snapshot.IsHomed = _servo.Homed;
+            snapshot.IsMoving = _servo.AxisRunning;
+            snapshot.PositiveLimit = _servo.PositiveLimitSense;
+            snapshot.NegativeLimit = _servo.NegativeLimitSense;
+            snapshot.AtHomeSensor = _servo.HomeSense;
+            snapshot.DirectionForward = _servo.CurrentVelocity > 0;
+            snapshot.DirectionReverse = _servo.CurrentVelocity < 0;
+            snapshot.State = _servo.AxisError ? "Error" : (_servo.AxisRunning ? "Running" : "Ready");
         }
 
         private double SpeedOrDefault(double speed) => speed > 0 ? speed : _servo.Velocity;
 
         /// <summary>
-        /// Sends the move, then polls until the axis has run and stopped again. The lock is
-        /// taken per poll rather than for the whole move, so the monitor and the other
-        /// devices keep reading while the axis travels.
+        /// Sends the move, then watches the pushed status until the axis has run and stopped
+        /// again. Only the command takes the PLC lock; the wait reads nothing from the PLC.
+        /// The move follows the axis's status itself, so leaving the screen that started it
+        /// does not cut the wait short.
         /// </summary>
         private Task<bool> MoveAndWait(Action move)
         {
             return Task.Run(async () =>
             {
-                if (!await RunLocked(move).ConfigureAwait(false))
-                    return false;
-
-                int timeoutMs = _servo.Timeout > 0 ? _servo.Timeout : DefaultMoveTimeoutMs;
-                var watch = Stopwatch.StartNew();
-                bool started = false;
-
-                while (watch.ElapsedMilliseconds < timeoutMs)
+                using (FollowStatus())
                 {
-                    Thread.Sleep(PollMs);
-
-                    bool running, error;
-                    lock (_plc.SyncRoot)
-                    {
-                        _servo.UpdateAxisProperties();
-                        running = _servo.AxisRunning;
-                        error = _servo.AxisError;
-                    }
-
-                    if (error)
+                    if (!await RunLocked(move).ConfigureAwait(false))
                         return false;
 
-                    if (running)
-                        started = true;
-                    else if (started || watch.ElapsedMilliseconds >= StartWindowMs)
-                        return true;
-                }
+                    int timeoutMs = _servo.Timeout > 0 ? _servo.Timeout : DefaultMoveTimeoutMs;
+                    var watch = Stopwatch.StartNew();
+                    bool started = false;
 
-                Debug.WriteLine(ComponentId + " move did not finish within " + timeoutMs + " ms.");
-                return false;
+                    while (watch.ElapsedMilliseconds < timeoutMs)
+                    {
+                        Thread.Sleep(PollMs);
+
+                        var status = ReadStatus();
+                        if (status.IsInError)
+                            return false;
+
+                        if (status.IsMoving)
+                            started = true;
+                        else if (started || watch.ElapsedMilliseconds >= StartWindowMs)
+                            return true;
+                    }
+
+                    Debug.WriteLine(ComponentId + " move did not finish within " + timeoutMs + " ms.");
+                    return false;
+                }
             });
         }
 
@@ -178,31 +194,6 @@ namespace Nova.Wpf.App.Services.Twincat
                     }
                 }
             });
-        }
-
-        public void UpdateAxisProperties()
-        {
-            try
-            {
-                Task.Run(() => _servo.UpdateAxisProperties());
-            }
-            catch (Exception ex)
-            {
-
-            }
-        }
-
-        public void UpdateAxisStatus(ServoSdHmiDisplay status)
-        {
-            _servo.AxisError = status.AxisError;
-            _servo.AxisRunning = status.AxisRunning;
-            _servo.Homed = status.AxisHomed;
-            _servo.HomeSense = status.AxisHome;
-            _servo.PositiveLimitSense = status.PosLimit; 
-            _servo.NegativeLimitSense = status.NegLimit;
-            _servo.CurrentPosition = status.CurrentPosition;
-            _servo.CurrentVelocity = status.CurrentVelocity;
-            _servo.Enabled = status.AxisEnable;
         }
     }
 }

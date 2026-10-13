@@ -9,8 +9,7 @@ namespace Nova.Core.Services
 {
     /// <summary>
     /// Home screen Connection Status: the configured comm devices with their link state,
-    /// plus the PLC. The PLC entry comes from the host - the ADS connection in TwinCAT
-    /// mode, a fixed "not connected" when simulated.
+    /// plus the PLC. The PLC entry comes from the host - the ADS connection.
     /// </summary>
     public sealed class ConnectionStatusService : IConnectionStatusService, IDisposable
     {
@@ -18,7 +17,7 @@ namespace Nova.Core.Services
 
         private static readonly CommDeviceKind[] Kinds =
         {
-            CommDeviceKind.Ccd, CommDeviceKind.Scanner, CommDeviceKind.Robot, CommDeviceKind.Sfc
+            CommDeviceKind.Ccd, CommDeviceKind.Scanner, CommDeviceKind.Sfc
         };
 
         private readonly ICommDeviceService _commDevices;
@@ -114,7 +113,6 @@ namespace Nova.Core.Services
             {
                 case CommDeviceKind.Ccd: return "CCD";
                 case CommDeviceKind.Scanner: return "Scanner";
-                case CommDeviceKind.Robot: return "Robot";
                 case CommDeviceKind.Sfc: return "SFC";
                 default: return kind.ToString();
             }

@@ -1,5 +1,6 @@
 {
   "PressingModule": {
+    "PlcGantry": 1,
     "MovementPriority": [
       "Servo_X1",
       "Servo_Z1"
@@ -10,6 +11,7 @@
     ]
   },
   "InspectionModule": {
+    "PlcGantry": 2,
     "MovementPriority": [
       "Servo_X1",
       "Servo_Y1"
@@ -20,6 +22,7 @@
     ]
   },
   "BTHGantry": {
+    "PlcGantry": 3,
     "MovementPriority": [
       "Servo_X1"
     ],

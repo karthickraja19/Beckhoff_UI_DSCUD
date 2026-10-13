@@ -1,12 +1,13 @@
-[
-  {
-    "CardId": 0,
-    "Type": "Advantech",
-    "InputChannelCount": 96,
-    "OutputChannelCount": 144,
-    "IsEnabled": true,
-    "InputOffsetPort": 12,
-    "OutputOffsetPort": 18,
-    "SysConfigPath": ""
-  }
-]
+{
+  "ConnectionId": "127.0.0.1.1.1",
+  "PortNo": 851,
+  "DBName": "MAIN",
+  "StepperDUTName": "steppercall",
+  "ServoDUTName": "servocall",
+  "CylinderDUTName": "cylindercall",
+  "VacuumDUTName": "vaccumcall",
+  "InputCount": 98,
+  "OutputCount": 144,
+  "VisionDUTName": "visioncall",
+  "ScannerDUTName": "scannercall"
+}

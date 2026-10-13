@@ -500,12 +500,18 @@ namespace Nova.ViewModels.Pages.Audio
             TossingSummary.Add(new SummaryRow("Tossed units", tossed.ToString("N0")));
             TossingSummary.Add(new SummaryRow("Tossing rate", TossingRate(_records).ToString("0.00") + "%"));
 
-            foreach (var reason in _records
-                         .Where(r => r.TossingCount > 0)
-                         .GroupBy(r => string.IsNullOrWhiteSpace(r.TossingReason) ? "Reason not recorded" : r.TossingReason)
-                         .OrderByDescending(g => g.Sum(r => r.TossingCount)))
+            // The breakdown by reason only when the source records reasons; [ProductionData]
+            // has one cause only, and a single "Reason not recorded" row would just repeat
+            // "Tossed units".
+            if (_records.Any(r => r.TossingCount > 0 && !string.IsNullOrWhiteSpace(r.TossingReason)))
             {
-                TossingSummary.Add(new SummaryRow(reason.Key, reason.Sum(r => r.TossingCount).ToString("N0")));
+                foreach (var reason in _records
+                             .Where(r => r.TossingCount > 0)
+                             .GroupBy(r => string.IsNullOrWhiteSpace(r.TossingReason) ? "Reason not recorded" : r.TossingReason)
+                             .OrderByDescending(g => g.Sum(r => r.TossingCount)))
+                {
+                    TossingSummary.Add(new SummaryRow(reason.Key, reason.Sum(r => r.TossingCount).ToString("N0")));
+                }
             }
 
             foreach (var gantry in _records
