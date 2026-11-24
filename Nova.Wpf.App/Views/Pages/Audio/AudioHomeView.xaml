@@ -227,11 +227,20 @@
             </Grid>
 
             <!-- RIGHT COLUMN -->
-            <Grid Grid.Column="1">
+            <!-- Thirds of the column's height when it is tall enough for every card
+                 (the Grid is as high as the viewport); on a shorter window the Grid
+                 stops at the sum of the MinHeights and the column scrolls, so no card
+                 is ever cut off - the station card's Sensor Connection button is its
+                 last row and was the first thing lost. -->
+            <ScrollViewer Grid.Column="1" x:Name="RightColumnScroll"
+                          VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <Grid Height="{Binding ViewportHeight, ElementName=RightColumnScroll}" MinHeight="720">
+                <!-- Slide 43: a third of the height each. The MinHeights are what each
+                     card needs to show all of its content. -->
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="*"/>  <!-- slide 43: 1/3 height -->
-                    <RowDefinition Height="*"/>  <!-- slide 43: 1/3 height -->
-                    <RowDefinition Height="*"/>  <!-- slide 43: 1/3 height -->
+                    <RowDefinition Height="*" MinHeight="230"/>  <!-- slide 43: 1/3 height -->
+                    <RowDefinition Height="*" MinHeight="200"/>  <!-- slide 43: 1/3 height -->
+                    <RowDefinition Height="*" MinHeight="290"/>  <!-- slide 43: 1/3 height -->
                 </Grid.RowDefinitions>
 
                 <!-- I/O Summary -->
@@ -243,7 +252,7 @@
                         AutomationProperties.Name="I/O summary - open the Data page">
                     <!-- Tight spacing on purpose: the card is a third of the column by
                          spec and has to hold the banner and all five rows at 125 %. -->
-                    <Grid Margin="16,10">
+                    <Grid Margin="16,12">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
@@ -269,7 +278,7 @@
 
                         <!-- Slide 43: the statistics update hourly, so the headline row
                              says when they last did; the window is in the tooltip. -->
-                        <Grid Grid.Row="1" Margin="0,6,0,2" ToolTip="{loc:TrBinding IoSummaryCaption}" Background="Transparent">
+                        <Grid Grid.Row="1" Margin="0,8,0,6" ToolTip="{loc:TrBinding IoSummaryCaption}" Background="Transparent">
                             <TextBlock Style="{StaticResource Audio.Headline}"
                                        Text="{loc:Tr Txt_IOSummary}" HorizontalAlignment="Center"/>
                             <TextBlock Style="{StaticResource Home.Note}" HorizontalAlignment="Right"
@@ -284,7 +293,7 @@
                             <ItemsControl ItemsSource="{Binding IoSummary}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Grid Margin="0,1">
+                                        <Grid Margin="0,2">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*"/>
                                                 <ColumnDefinition Width="Auto"/>
@@ -320,13 +329,30 @@
                              SharedSizeGroup across a virtualised ItemsControl costs
                              more than it saves at a dozen rows. -->
                         <Border Grid.Row="1" Style="{StaticResource Audio.ListHeaderRow}">
-                            <Grid Margin="12,0">
+                            <!-- Same 16 left edge as the card's title and the other cards' text,
+                                 and a spacer the width of the rows' scroll bar while it shows,
+                                 so Value / LSL / USL stay above their columns. -->
+                            <Grid Margin="16,0,12,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="70"/>
                                     <ColumnDefinition Width="56"/>
                                     <ColumnDefinition Width="56"/>
+                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
+                                <Border Grid.Column="4">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Width" Value="0"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding ComputedVerticalScrollBarVisibility, ElementName=ParameterScroll}"
+                                                             Value="Visible">
+                                                    <Setter Property="Width" Value="{x:Static SystemParameters.VerticalScrollBarWidth}"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                </Border>
                                 <TextBlock Grid.Column="0" Style="{StaticResource Audio.TableHeaderText}" Text="{loc:Tr Txt_KeyName}"/>
                                 <TextBlock Grid.Column="1" Style="{StaticResource Audio.TableHeaderText}" Text="{loc:Tr Txt_Value}" TextAlignment="Right"/>
                                 <TextBlock Grid.Column="2" Style="{StaticResource Audio.TableHeaderText}" Text="LSL" TextAlignment="Right"/>
@@ -334,7 +360,7 @@
                             </Grid>
                         </Border>
 
-                        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                        <ScrollViewer x:Name="ParameterScroll" Grid.Row="2" VerticalScrollBarVisibility="Auto">
                             <ItemsControl ItemsSource="{Binding Parameters}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -353,7 +379,7 @@
                                                     </Style.Triggers>
                                                 </Style>
                                             </Border.Style>
-                                            <Grid Margin="12,0">
+                                            <Grid Margin="16,0,12,0">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*"/>
                                                     <ColumnDefinition Width="70"/>
@@ -377,7 +403,7 @@
                             </ItemsControl>
                         </ScrollViewer>
 
-                        <TextBlock Grid.Row="3" Style="{StaticResource Home.Note}" Margin="12,4,12,8"
+                        <TextBlock Grid.Row="3" Style="{StaticResource Home.Note}" Margin="16,6,16,10"
                                    Text="{loc:TrBinding ParameterNote}"/>
                     </Grid>
                 </Border>
@@ -409,60 +435,66 @@
                         <TextBlock Grid.Row="0" Style="{StaticResource Audio.Title3}"
                                    Text="{loc:TrBinding StationTitle}" HorizontalAlignment="Center"/>
 
-                        <StackPanel Grid.Row="1" Margin="0,8,0,0">
-                            <Grid Margin="0,1">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0" Orientation="Horizontal">
-                                    <TextBlock Style="{StaticResource Audio.FieldLabel}" Text="{loc:Tr Txt_Site}"/>
-                                    <TextBlock Style="{StaticResource Audio.Footnote}"
-                                               Foreground="{DynamicResource Audio.Text.PrimaryBrush}"
-                                               Text="{loc:TrBinding Site}" Margin="6,0,0,0"/>
-                                </StackPanel>
-                                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                    <TextBlock Style="{StaticResource Audio.FieldLabel}" Text="{loc:Tr Txt_Vendor}"/>
-                                    <TextBlock Style="{StaticResource Audio.Footnote}"
-                                               Foreground="{DynamicResource Audio.Text.PrimaryBrush}"
-                                               Text="{loc:TrBinding Vendor}" Margin="6,0,0,0"/>
-                                </StackPanel>
-                            </Grid>
+                        <!-- The facts as a table: every label in one column and every value
+                             starting at the same x, instead of each value sitting wherever
+                             its label happened to end. Site and Vendor share the first row. -->
+                        <Grid Grid.Row="1" Margin="0,10,0,0" VerticalAlignment="Top">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto" MinWidth="64"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
 
-                            <StackPanel Orientation="Horizontal" Margin="0,1">
-                                <TextBlock Style="{StaticResource Audio.FieldLabel}" Text="{loc:Tr Txt_SWVersion}"/>
-                                <TextBlock Style="{StaticResource Audio.Caption1Mono}"
-                                           Foreground="{DynamicResource Audio.Text.PrimaryBrush}"
-                                           Text="{loc:TrBinding SoftwareVersion}" Margin="6,0,0,0"/>
-                            </StackPanel>
+                            <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource Audio.FieldLabel}"
+                                       Text="{loc:Tr Txt_Site}" Margin="0,2,10,2"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" Style="{StaticResource Audio.Footnote}"
+                                       Foreground="{DynamicResource Audio.Text.PrimaryBrush}" VerticalAlignment="Center"
+                                       Text="{loc:TrBinding Site}" Margin="0,2,16,2"/>
+                            <TextBlock Grid.Row="0" Grid.Column="2" Style="{StaticResource Audio.FieldLabel}"
+                                       Text="{loc:Tr Txt_Vendor}" Margin="0,2,10,2"/>
+                            <TextBlock Grid.Row="0" Grid.Column="3" Style="{StaticResource Audio.Footnote}"
+                                       Foreground="{DynamicResource Audio.Text.PrimaryBrush}" VerticalAlignment="Center"
+                                       Text="{loc:TrBinding Vendor}" Margin="0,2" TextTrimming="CharacterEllipsis"/>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource Audio.FieldLabel}"
+                                       Text="{loc:Tr Txt_SWVersion}" Margin="0,2,10,2"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" Style="{StaticResource Audio.Caption1Mono}"
+                                       Foreground="{DynamicResource Audio.Text.PrimaryBrush}" VerticalAlignment="Center"
+                                       Text="{loc:TrBinding SoftwareVersion}" Margin="0,2" TextTrimming="CharacterEllipsis"
+                                       ToolTip="{loc:TrBinding SoftwareVersion}"/>
 
                             <!-- Slide 43: "click to open the path". -->
-                            <StackPanel Orientation="Horizontal" Margin="0,1">
-                                <TextBlock Style="{StaticResource Audio.FieldLabel}" Text="{loc:Tr Txt_MainSWPath}"/>
-                                <Button Style="{StaticResource Audio.PlainButton}"
-                                        Height="18" Padding="6,0" Margin="2,0,0,0"
-                                        Command="{Binding OpenMainSoftwarePathCommand}"
-                                        ToolTip="{loc:TrBinding MainSoftwarePath}">
-                                    <TextBlock Style="{StaticResource Audio.Caption1Mono}"
-                                               Foreground="{DynamicResource Audio.System.BlueBrush}"
-                                               Text="{loc:TrBinding MainSoftwarePath}"
-                                               MaxWidth="200" TextTrimming="CharacterEllipsis"/>
-                                </Button>
-                            </StackPanel>
-
-                            <StackPanel Orientation="Horizontal" Margin="0,1">
-                                <TextBlock Style="{StaticResource Audio.FieldLabel}" Text="{loc:Tr Txt_MSHash}"/>
+                            <TextBlock Grid.Row="2" Grid.Column="0" Style="{StaticResource Audio.FieldLabel}"
+                                       Text="{loc:Tr Txt_MainSWPath}" Margin="0,2,10,2"/>
+                            <Button Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" Style="{StaticResource Audio.PlainButton}"
+                                    Height="20" Padding="0" Margin="0,1" HorizontalAlignment="Left"
+                                    HorizontalContentAlignment="Left"
+                                    Command="{Binding OpenMainSoftwarePathCommand}"
+                                    ToolTip="{loc:TrBinding MainSoftwarePath}">
                                 <TextBlock Style="{StaticResource Audio.Caption1Mono}"
-                                           Foreground="{DynamicResource Audio.Text.PrimaryBrush}"
-                                           Text="{loc:TrBinding MainSoftwareHash}" Margin="6,0,0,0"
-                                           MaxWidth="220" TextTrimming="CharacterEllipsis"
-                                           ToolTip="{loc:TrBinding MainSoftwareHash}"/>
-                            </StackPanel>
-                        </StackPanel>
+                                           Foreground="{DynamicResource Audio.System.BlueBrush}"
+                                           Text="{loc:TrBinding MainSoftwarePath}"
+                                           TextTrimming="CharacterEllipsis"/>
+                            </Button>
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Style="{StaticResource Audio.FieldLabel}"
+                                       Text="{loc:Tr Txt_MSHash}" Margin="0,2,10,2"/>
+                            <TextBlock Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="3" Style="{StaticResource Audio.Caption1Mono}"
+                                       Foreground="{DynamicResource Audio.Text.PrimaryBrush}" VerticalAlignment="Center"
+                                       Text="{loc:TrBinding MainSoftwareHash}" Margin="0,2" TextTrimming="CharacterEllipsis"
+                                       ToolTip="{loc:TrBinding MainSoftwareHash}"/>
+                        </Grid>
 
                         <!-- Green when connected, red when not (slide 43); the tooltip
                              says what lies behind it. -->
-                        <ItemsControl Grid.Row="2" ItemsSource="{Binding Links}" Margin="0,8,0,0">
+                        <ItemsControl Grid.Row="2" ItemsSource="{Binding Links}" Margin="0,10,0,0">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <UniformGrid Rows="1"/>
@@ -482,7 +514,7 @@
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
 
-                        <Grid Grid.Row="3" Margin="0,8,0,0">
+                        <Grid Grid.Row="3" Margin="0,10,0,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="8"/>
@@ -496,7 +528,7 @@
 
                         <!-- Slide 54: "Show sensor connection button after login". -->
                         <Button Grid.Row="4" Style="{StaticResource Audio.PlainButton}"
-                                HorizontalAlignment="Left" Margin="0,8,0,0" Height="26"
+                                HorizontalAlignment="Left" Margin="0,10,0,0" Height="26"
                                 Content="{loc:Tr Txt_SensorConnection}"
                                 Command="{Binding OpenSensorDashboardCommand}"
                                 Visibility="{Binding IsLoggedIn, Converter={StaticResource BoolToVisibility}}"
@@ -504,6 +536,7 @@
                     </Grid>
                 </Border>
             </Grid>
+            </ScrollViewer>
         </Grid>
 
         <!-- ============================================================== -->
