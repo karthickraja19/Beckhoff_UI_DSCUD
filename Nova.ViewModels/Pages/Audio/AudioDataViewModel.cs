@@ -49,7 +49,6 @@ namespace Nova.ViewModels.Pages.Audio
         private readonly IAccessLog _accessLog;
         private readonly IAppSession _session;
 
-        private bool _hasQueried;
 
         /// <summary>
         /// The yield target drawn on the Yield tab, in percent. Set by the host from
@@ -177,13 +176,6 @@ namespace Nova.ViewModels.Pages.Audio
         public string StatusText =>
             IsHealthView ? HealthStatus : IsGlueView ? GlueStatus : IsAxisView ? AxisStatus : ProductionStatus;
 
-        /// <summary>
-        /// True when any source behind this page generates its figures
-        /// (SampleData=true). The view labels the page, so a generated yield is never
-        /// taken for a real one.
-        /// </summary>
-        public bool IsSampleData => _production is ISampleDataSource || _dispenser is ISampleDataSource
-                                    || _coordinates is ISampleDataSource;
 
 
         // ==================================================================
@@ -288,6 +280,9 @@ namespace Nova.ViewModels.Pages.Audio
 
             EditWeighingSettingsCommand.NotifyCanExecuteChanged();
             EditGlueControlCommand.NotifyCanExecuteChanged();
+
+            // A sign-in or sign-out starts the page from its defaults too (RPT_PS_05).
+            ResetWindowAndRefresh();
         }
 
 
@@ -327,15 +322,22 @@ namespace Nova.ViewModels.Pages.Audio
             BuildHealth();
         }
 
+        /// <summary>
+        /// FAM 2 RPT_PS_05: the page opens on its default window every time, rather than on
+        /// whatever range the last operator left (the view model lives for the whole HMI).
+        /// </summary>
         public override void OnNavigatedTo()
         {
             base.OnNavigatedTo();
+            ResetWindowAndRefresh();
+        }
 
-            if (!_hasQueried && RefreshCommand.CanExecute(null))
-            {
-                _hasQueried = true;
+        private void ResetWindowAndRefresh()
+        {
+            SetDefaultWindow();
+
+            if (RefreshCommand != null && RefreshCommand.CanExecute(null))
                 RefreshCommand.Execute(null);
-            }
         }
 
         private static IReadOnlyList<T> Empty<T>()

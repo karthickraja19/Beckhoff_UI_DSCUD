@@ -49,7 +49,7 @@ namespace Nova.Wpf.App.Services.Twincat
         {
             if (string.IsNullOrWhiteSpace(typeName))
             {
-                warnings.Add(settingKey + " is not set in App.config, so those devices show no live status. "
+                warnings.Add(settingKey + " is blank in Data\\PlcSymbols.json, so those devices show no live status. "
                     + "Set it to the PLC type of their HMI display struct.");
                 return null;
             }
@@ -61,14 +61,14 @@ namespace Nova.Wpf.App.Services.Twincat
 
             if (type == null)
             {
-                warnings.Add(settingKey + " in App.config is " + name + ", but the HMI has no struct of that name in "
+                warnings.Add(settingKey + " in Data\\PlcSymbols.json is " + name + ", but the HMI has no struct of that name in "
                     + "Services\\Twincat\\HmiDisplay, so those devices show no live status.");
                 return null;
             }
 
             if (!typeof(TDisplay).IsAssignableFrom(type))
             {
-                warnings.Add(settingKey + " in App.config is " + type.Name + ", which is for another kind of device, "
+                warnings.Add(settingKey + " in Data\\PlcSymbols.json is " + type.Name + ", which is for another kind of device, "
                     + "so those devices show no live status.");
                 return null;
             }

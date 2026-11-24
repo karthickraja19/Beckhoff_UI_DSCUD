@@ -16,10 +16,7 @@ namespace Nova.Wpf.App.Services.Twincat
     /// status first (UpdateCylinderProperties), then the PLC pushes every change of its HMI
     /// display struct - where the library says it is, read as the struct App.config's
     /// CylinderHmiDisplayType names - through <see cref="PlcSubscriptions"/>. Reading it never
-    /// waits on the PLC.
-    ///
-    /// The library has no Stop, so dropping both valves is done here (marked below). Move it
-    /// into the library when it grows the API.
+    /// waits on the PLC. Extend, Retract and Stop are all the library's.
     /// </summary>
     public sealed class TwincatCylinderAdapter : ICylinder, ILiveStatus, ITwincatStatusSource, ILibraryStatusSource
     {
@@ -28,12 +25,6 @@ namespace Nova.Wpf.App.Services.Twincat
         private readonly HmiDisplayStatus _display;
         private readonly string[] _extendSenseSymbols;
         private readonly string[] _retractSenseSymbols;
-
-        /// <summary>
-        /// A single-valve cylinder is held extended by one coil and springs back when it is
-        /// dropped, so it has no retract output to clear.
-        /// </summary>
-        private readonly bool _singleValve;
 
         /// <param name="displayType">The struct App.config's CylinderHmiDisplayType names; null when it names none that fits.</param>
         public TwincatCylinderAdapter(
@@ -53,7 +44,6 @@ namespace Nova.Wpf.App.Services.Twincat
             CylinderName = _cylinder.Name ?? componentId;
             ExtendOutputAddress = _cylinder.ExtendName ?? "";
             RetractOutputAddress = _cylinder.RetractName ?? "";
-            _singleValve = string.IsNullOrEmpty(RetractOutputAddress);
 
             _extendSenseSymbols = (_cylinder.ExtendSenses ?? new List<string>()).ToArray();
             _retractSenseSymbols = (_cylinder.RetractSenses ?? new List<string>()).ToArray();
@@ -98,16 +88,10 @@ namespace Nova.Wpf.App.Services.Twincat
         });
 
         /// <summary>
-        /// Drops both valves. On a double-valve cylinder that leaves the piston where the
-        /// air pressure holds it; on a single-valve one it springs home.
-        /// The library has no Stop, so this writes the request bits directly.
+        /// The library's Stop: withdraws any extend or retract request. The PLC has no
+        /// cylinder stop, so a move it has already taken runs on.
         /// </summary>
-        public Task<bool> StopAsync() => RunLocked(() =>
-        {
-            bool extendCleared = ClearValve(_cylinder.ExtendName);
-            bool retractCleared = _singleValve || ClearValve(_cylinder.RetractName);
-            return extendCleared && retractCleared;
-        });
+        public Task<bool> StopAsync() => RunLocked(() => _cylinder.Stop());
 
         /// <summary>
         /// The HMI display the PLC last pushed - or, until it pushes one, what the library read
@@ -128,12 +112,13 @@ namespace Nova.Wpf.App.Services.Twincat
             string reason;
             if (_display.TryRead(out display, out reason))
             {
-                display.Fill(snapshot);
-
-                // The PLC owns the interlocks and refuses a move that is not safe; the board
-                // only holds back while the position cannot be trusted.
+                // A struct that carries the PLC's interlocks (typeCylFBIn: checkWorkSafe /
+                // checkHomeSafe, which FB_CylinderSD copies into status.safeToWork / safeToHome)
+                // sets them in Fill. One that does not leaves both offered: the PLC still
+                // refuses a move that is not safe.
                 snapshot.SafeToExtend = true;
                 snapshot.SafeToRetract = true;
+                display.Fill(snapshot);
             }
             else if (_display.HasLibraryStatus)
             {
@@ -169,19 +154,6 @@ namespace Nova.Wpf.App.Services.Twincat
         {
             for (int i = 0; i < states.Length; i++)
                 states[i] = value;
-        }
-
-        /// <summary>
-        /// Clears one valve request bit. Write reads the bit back, which is what confirms
-        /// the valve took: unlike a stepper command bit, the PLC does not clear a valve
-        /// output by itself.
-        /// </summary>
-        private bool ClearValve(string symbol)
-        {
-            if (string.IsNullOrEmpty(symbol))
-                return true;
-
-            return _plc.IsConnected && _plc.Card.Write<bool>(symbol, false);
         }
 
         private static IReadOnlyList<string> Display(IEnumerable<string> addresses, string[] symbols)

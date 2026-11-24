@@ -25,16 +25,18 @@ namespace Nova.Hive
         {
             InitializeComponent();
 
-            HeaderText.Text = header;
-            MessageText.Text = message ?? string.Empty;
+            HeaderText.Text = HiveText.T(header);
+            MessageText.Text = HiveText.T(message ?? string.Empty);
             MessageText.Visibility = string.IsNullOrWhiteSpace(message) ? Visibility.Collapsed : Visibility.Visible;
 
             int index = 0;
             foreach (Choice choice in choices)
             {
+                // Shown translated; SelectedLabel stays the English the procedures expect.
+                _labels.Add(choice.Label);
                 var button = new RadioButton
                 {
-                    Content = choice.Label,
+                    Content = HiveText.T(choice.Label),
                     GroupName = "Choice",
                     Tag = index++,
                     FontWeight = FontWeights.Bold,
@@ -43,7 +45,7 @@ namespace Nova.Hive
                 button.Checked += (sender, e) =>
                 {
                     SelectedIndex = (int)((RadioButton)sender).Tag;
-                    SelectedLabel = (string)((RadioButton)sender).Content;
+                    SelectedLabel = _labels[SelectedIndex];
                     OkButton.IsEnabled = true;
                 };
                 Options.Children.Add(button);
@@ -51,6 +53,8 @@ namespace Nova.Hive
                     button.IsChecked = true;
             }
         }
+
+        private readonly List<string> _labels = new List<string>();
 
         /// <summary>The chosen option's position, or -1.</summary>
         public int SelectedIndex { get; private set; } = -1;

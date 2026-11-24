@@ -1,7 +1,9 @@
+using System.Collections.ObjectModel;
+
 namespace Nova.ViewModels.Pages.Manual
 {
     /// <summary>
-    /// A selectable entry for a console-style device tab (Scanner / Light Control /
+    /// A selectable entry for a console-style device tab (Scanner /
     /// SFC &amp; PDCA).
     ///
     /// <see cref="Payload"/> is the device's default command as configured. It is NOT
@@ -17,6 +19,12 @@ namespace Nova.ViewModels.Pages.Manual
 
         /// <summary>"Name - Detail" label for the selected-device card.</summary>
         public string DisplayName => string.IsNullOrEmpty(Detail) ? Name : Name + " - " + Detail;
+
+        /// <summary>
+        /// This device's own Received Response history. FAM 2 Bug_Id_038 / MS_11: one shared
+        /// console showed every device's answers together, and kept them when the device changed.
+        /// </summary>
+        public ObservableCollection<CameraConsoleLine> Console { get; } = new ObservableCollection<CameraConsoleLine>();
 
         public ConsoleDeviceItem(string name, string detail = "", string payload = "")
         {

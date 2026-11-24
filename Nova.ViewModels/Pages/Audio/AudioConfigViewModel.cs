@@ -26,8 +26,8 @@ namespace Nova.ViewModels.Pages.Audio
     /// The slide labels the 2/3 area "Machine Configs" and leaves it blank - what a
     /// machine has to be configured with is per-machine. For this machine it is the
     /// machine configuration tree (General, Device, I/O Diagnostics, Axis Configuration,
-    /// Vision, AE limits, Calibration) and the taught recipe (gantry positions, robot
-    /// points, light control). This page only chooses which of the two is in front;
+    /// Vision, AE limits), the taught recipe (gantry positions and robot points) and the
+    /// calibration positions. This page only chooses which of them is in front;
     /// nothing about either changes.
     /// </para>
     /// <para>
@@ -327,7 +327,8 @@ namespace Nova.ViewModels.Pages.Audio
             IMachineSettingsService settings = null,
             IDialogService dialog = null,
             PageViewModel machineConfig = null,
-            PageViewModel recipe = null)
+            PageViewModel recipe = null,
+            PageViewModel calibration = null)
             : base(session, AccessBypass.ConfigAndSettings)
         {
             _settings = settings;
@@ -346,8 +347,18 @@ namespace Nova.ViewModels.Pages.Audio
                 Sections.Add(new ConfigSection("Machine Configs", "Settings2", machineConfig, AccessLevel.Level2));
             if (recipe != null)
                 Sections.Add(new ConfigSection("Recipe", "FileText", recipe, AccessLevel.Level3));
+            // Calibration is taught positions too, and its Start moves the machine.
+            if (calibration != null)
+                Sections.Add(new ConfigSection("Calibration", "Target", calibration, AccessLevel.Level3));
 
             _selectedSection = Sections.FirstOrDefault();
+
+            // Spec limit names follow the selected language and Setting > Config Description.
+            UiLanguage.DescriptionsChanged += (sender, e) =>
+            {
+                if (!IsEditing && SpecLimits.Count > 0)
+                    LoadSpecLimits();
+            };
             ApplySectionAccess();
 
             LoadSpecLimits();

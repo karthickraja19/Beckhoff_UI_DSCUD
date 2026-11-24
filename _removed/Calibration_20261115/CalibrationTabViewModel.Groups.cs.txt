@@ -1,0 +1,487 @@
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Globalization;
+using System.Linq;
+using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Nova.Abstractions.Services;
+
+namespace Nova.ViewModels.Pages.Audio
+{
+    /// <summary>Something the operator confirms by hand before a calibration starts.</summary>
+    public partial class CalibrationCheckItem : ObservableObject
+    {
+        private readonly Action _changed;
+
+        public CalibrationCheckItem(string text, Action changed)
+        {
+            Text = text;
+            _changed = changed;
+        }
+
+        public string Text { get; }
+
+        [ObservableProperty]
+        private bool _isChecked;
+
+        partial void OnIsCheckedChanged(bool value) => _changed?.Invoke();
+    }
+
+    /// <summary>One point of the 3 x 3 calibration grid, where it lies on the plate.</summary>
+    public sealed class CalibrationGridPoint
+    {
+        public CalibrationGridPoint(string label, string state, string detail)
+        {
+            Label = label;
+            State = state;
+            Detail = detail;
+        }
+
+        public string Label { get; }
+
+        /// <summary>"Pending", "Active", "Ok" or "Ng".</summary>
+        public string State { get; }
+
+        /// <summary>Where the camera stood, once the PLC reports it.</summary>
+        public string Detail { get; }
+    }
+
+    /// <summary>One earlier run of the routine on screen.</summary>
+    public sealed class CalibrationHistoryRow
+    {
+        public CalibrationHistoryRow(CalibrationRunRecord run)
+        {
+            When = run.Time.ToString("yyyy/MM/dd HH:mm", CultureInfo.InvariantCulture);
+            User = string.IsNullOrEmpty(run.User) ? "-" : run.User;
+            Verdict = run.Verdict;
+            Detail = run.Detail;
+            IsOk = run.Verdict == "OK";
+        }
+
+        public string When { get; }
+
+        public string User { get; }
+
+        public string Verdict { get; }
+
+        public string Detail { get; }
+
+        public bool IsOk { get; }
+    }
+
+    /// <summary>One read of the scanner read test.</summary>
+    public sealed class ScannerReadRow
+    {
+        public ScannerReadRow(int number, string code, bool isRead)
+        {
+            Number = number;
+            Code = code;
+            IsRead = isRead;
+        }
+
+        public int Number { get; }
+
+        public string Code { get; }
+
+        public bool IsRead { get; }
+    }
+
+    /// <summary>
+    /// The Calibration tab's five calibrations (SOP sheet TE010_CALIBRATION): which one is
+    /// in front, the checks the operator ticks before Start, the 3 x 3 point grid, when the
+    /// routine last ran, and the barcode scanner's read test.
+    /// </summary>
+    public partial class CalibrationTabViewModel
+    {
+        // ==================================================================
+        // The five calibrations
+        // ==================================================================
+
+        public IReadOnlyList<CalibrationGroup> Groups { get; } = CalibrationRoutines.Groups;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(Routines), nameof(IsRoutineGroup), nameof(IsScannerGroup), nameof(IsUnavailableGroup),
+            nameof(GroupNotes), nameof(GroupSteps), nameof(GroupReference), nameof(HasSeveralRoutines))]
+        private CalibrationGroup _selectedGroup;
+
+        partial void OnSelectedGroupChanged(CalibrationGroup value)
+        {
+            // The first routine of the calibration comes up; one without routines shows its own page.
+            SelectedRoutine = value != null ? value.Routines.FirstOrDefault() : null;
+            OnPropertyChanged(nameof(Routines));
+            RefreshStatus();
+        }
+
+        /// <summary>The routines of the calibration in front, in the order they are done.</summary>
+        public IReadOnlyList<CalibrationRoutine> Routines => SelectedGroup != null
+            ? SelectedGroup.Routines
+            : (IReadOnlyList<CalibrationRoutine>)new CalibrationRoutine[0];
+
+        public bool HasSeveralRoutines => Routines.Count > 1;
+
+        public bool IsRoutineGroup => SelectedGroup != null && SelectedGroup.Kind == CalibrationGroupKind.Routines;
+
+        public bool IsScannerGroup => SelectedGroup != null && SelectedGroup.Kind == CalibrationGroupKind.Scanner;
+
+        public bool IsUnavailableGroup => SelectedGroup != null && SelectedGroup.Kind == CalibrationGroupKind.Unavailable;
+
+        public IReadOnlyList<string> GroupNotes => SelectedGroup != null ? SelectedGroup.Notes : new string[0];
+
+        public IReadOnlyList<string> GroupSteps => SelectedGroup != null
+            ? SelectedGroup.Steps.Select((step, i) => (i + 1) + ". " + step).ToList()
+            : (IReadOnlyList<string>)new string[0];
+
+        public string GroupReference => SelectedGroup != null ? SelectedGroup.Reference : string.Empty;
+
+        // ==================================================================
+        // The routine in front: what it needs before Start, what counts as a pass
+        // ==================================================================
+
+        /// <summary>What the operator confirms by hand; all must be ticked before Start.</summary>
+        public ObservableCollection<CalibrationCheckItem> Checks { get; } = new ObservableCollection<CalibrationCheckItem>();
+
+        public bool HasChecks => Checks.Count > 0;
+
+        public string Acceptance => SelectedRoutine != null ? SelectedRoutine.Acceptance : string.Empty;
+
+        public bool HasAcceptance => Acceptance.Length > 0;
+
+        public string Duration => SelectedRoutine != null && SelectedRoutine.Duration.Length > 0
+            ? "Takes " + SelectedRoutine.Duration + "."
+            : string.Empty;
+
+        public string RoutineName => SelectedRoutine != null ? SelectedRoutine.Name : string.Empty;
+
+        public bool HasRoutine => SelectedRoutine != null;
+
+        private void RebuildChecks()
+        {
+            Checks.Clear();
+            if (SelectedRoutine != null)
+            {
+                foreach (string check in SelectedRoutine.Checks)
+                    Checks.Add(new CalibrationCheckItem(check, OnCheckChanged));
+            }
+
+            OnPropertyChanged(nameof(HasChecks));
+            OnPropertyChanged(nameof(Acceptance));
+            OnPropertyChanged(nameof(HasAcceptance));
+            OnPropertyChanged(nameof(Duration));
+            OnPropertyChanged(nameof(RoutineName));
+            OnPropertyChanged(nameof(HasRoutine));
+            OnPropertyChanged(nameof(ShowGrid));
+            OnPropertyChanged(nameof(ShowTable));
+        }
+
+        private void OnCheckChanged()
+        {
+            OnPropertyChanged(nameof(StartBlockedReason));
+            UpdateCommands();
+        }
+
+        /// <summary>The checks are for one run: the next run is confirmed again.</summary>
+        private void ClearChecks()
+        {
+            foreach (CalibrationCheckItem check in Checks)
+                check.IsChecked = false;
+        }
+
+        // ==================================================================
+        // The nine points, drawn where they lie
+        // ==================================================================
+
+        public bool ShowGrid => SelectedRoutine != null && SelectedRoutine.ShowAsGrid;
+
+        public bool ShowTable => SelectedRoutine != null && !SelectedRoutine.ShowAsGrid;
+
+        /// <summary>Nine cells, left to right and top to bottom as the points lie on the plate.</summary>
+        public ObservableCollection<CalibrationGridPoint> GridPoints { get; } = new ObservableCollection<CalibrationGridPoint>();
+
+        [ObservableProperty]
+        private string _gridSummary = string.Empty;
+
+        /// <summary>
+        /// Lays the nine points out as the camera walks them: with the S path the middle row
+        /// runs right to left (1 2 3 / 6 5 4 / 7 8 9), otherwise every row left to right.
+        /// </summary>
+        private void FillGrid(IReadOnlyList<double> results)
+        {
+            GridPoints.Clear();
+            if (!ShowGrid)
+            {
+                GridSummary = string.Empty;
+                return;
+            }
+
+            CalibrationParameterRow snake = Parameters.FirstOrDefault(p => p.Definition.Key == "SnakePath");
+            bool isSnake = snake == null || snake.Value == null || snake.Value.Value != 0;
+            int[] order = isSnake ? new[] { 1, 2, 3, 6, 5, 4, 7, 8, 9 } : new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+            int columns = SelectedRoutine.ResultColumns.Count;
+            int ok = 0, ng = 0;
+
+            foreach (int point in order)
+            {
+                // Per point: commanded X, commanded Y, actual X, actual Y, triggered, vision OK.
+                int at = (point - 1) * columns;
+                Func<int, double> value = c => results != null && at + c < results.Count ? results[at + c] : double.NaN;
+
+                bool reached = !double.IsNaN(value(0));
+                bool triggered = !double.IsNaN(value(4)) && value(4) != 0;
+                bool visionOk = !double.IsNaN(value(5)) && value(5) != 0;
+                string state = visionOk ? "Ok" : triggered ? "Ng" : reached ? "Active" : "Pending";
+                if (state == "Ok") ok++;
+                if (state == "Ng") ng++;
+
+                string detail = !double.IsNaN(value(2))
+                    ? "X " + value(2).ToString("0.000", CultureInfo.InvariantCulture) + "  Y " + value(3).ToString("0.000", CultureInfo.InvariantCulture)
+                    : reached
+                        ? "to X " + value(0).ToString("0.000", CultureInfo.InvariantCulture) + "  Y " + value(1).ToString("0.000", CultureInfo.InvariantCulture)
+                        : string.Empty;
+
+                GridPoints.Add(new CalibrationGridPoint("P" + point, state, detail));
+            }
+
+            GridSummary = results == null
+                ? "No run on this station yet."
+                : ok + " of 9 points OK" + (ng > 0 ? ", " + ng + " NG" : string.Empty) + ".";
+        }
+
+        // ==================================================================
+        // When it last ran
+        // ==================================================================
+
+        public ObservableCollection<CalibrationHistoryRow> History { get; } = new ObservableCollection<CalibrationHistoryRow>();
+
+        [ObservableProperty]
+        private string _lastRunText = string.Empty;
+
+        [ObservableProperty]
+        private bool _lastRunOk;
+
+        [ObservableProperty]
+        private bool _hasLastRun;
+
+        private bool _wasBusy;
+        private bool _startedHere;
+
+        private void LoadHistory()
+        {
+            History.Clear();
+            IReadOnlyList<CalibrationRunRecord> runs = _calibration != null && SelectedStation != null && SelectedRoutine != null
+                ? _calibration.GetHistory(SelectedStation.Number, SelectedRoutine.Key)
+                : new CalibrationRunRecord[0];
+
+            foreach (CalibrationRunRecord run in runs.Take(8))
+                History.Add(new CalibrationHistoryRow(run));
+
+            CalibrationRunRecord last = runs.FirstOrDefault();
+            HasLastRun = last != null;
+            LastRunOk = last != null && last.Verdict == "OK";
+            LastRunText = last == null
+                ? "Never run on " + (SelectedStation != null ? SelectedStation.Name : "this station") + " from this HMI."
+                : "Last run " + last.Time.ToString("yyyy/MM/dd HH:mm", CultureInfo.InvariantCulture) + " by "
+                  + (string.IsNullOrEmpty(last.User) ? "-" : last.User) + ": " + last.Verdict + ".";
+        }
+
+        /// <summary>
+        /// Keeps a run when the PLC finishes it: a routine that was busy and no longer is. A
+        /// run is kept only when it was started from this screen, so a status that was
+        /// already "done" when the tab opened is not counted as a new run.
+        /// </summary>
+        private void TrackRun()
+        {
+            bool busy = _status.IsBusy;
+            if (_wasBusy && !busy && _status.IsLive && _startedHere
+                && _calibration != null && SelectedStation != null && SelectedRoutine != null)
+            {
+                _startedHere = false;
+                string verdict = _status.State == CalibrationState.Done ? (_status.ResultOk ? "OK" : "NG")
+                    : _status.State == CalibrationState.Failed ? "Failed"
+                    : "Stopped";
+
+                _calibration.RecordRun(new CalibrationRunRecord
+                {
+                    Time = DateTime.Now,
+                    Station = SelectedStation.Number,
+                    RoutineKey = SelectedRoutine.Key,
+                    User = UserName,
+                    Verdict = verdict,
+                    Detail = _status.StepText,
+                    Results = _status.Results.Select(v => double.IsNaN(v) ? 0 : v).ToList(),
+                });
+
+                LogAction("Calibration " + SelectedRoutine.Name + " on " + SelectedStation.Name + " ended: " + verdict);
+                ClearChecks();
+                LoadHistory();
+            }
+
+            _wasBusy = busy;
+        }
+
+        // ==================================================================
+        // Barcode scanner: the read test after tuning in the scanner's own tool
+        // ==================================================================
+
+        private readonly IReadOnlyList<CommDevice> _scanners;
+
+        public IReadOnlyList<string> Scanners { get; }
+
+        [ObservableProperty]
+        private int _selectedScannerIndex;
+
+        partial void OnSelectedScannerIndexChanged(int value)
+        {
+            ScannerReads.Clear();
+            RefreshScanner();
+        }
+
+        public bool HasScanners => Scanners.Count > 0;
+
+        /// <summary>How many reads one test takes.</summary>
+        [ObservableProperty]
+        private string _scannerReadCount = "10";
+
+        public ObservableCollection<ScannerReadRow> ScannerReads { get; } = new ObservableCollection<ScannerReadRow>();
+
+        [ObservableProperty]
+        private bool _isScannerConnected;
+
+        [ObservableProperty]
+        private bool _isScannerTesting;
+
+        [ObservableProperty]
+        private string _scannerSummary = string.Empty;
+
+        [ObservableProperty]
+        private bool _scannerAllRead;
+
+        [ObservableProperty]
+        private bool _hasScannerResult;
+
+        public IAsyncRelayCommand ConnectScannerCommand { get; private set; }
+
+        public IAsyncRelayCommand TestScannerCommand { get; private set; }
+
+        public IRelayCommand StopScannerTestCommand { get; private set; }
+
+        private bool _stopScannerTest;
+
+        private CommDevice Scanner => SelectedScannerIndex >= 0 && SelectedScannerIndex < _scanners.Count ? _scanners[SelectedScannerIndex] : null;
+
+        private void InitScanner()
+        {
+            ConnectScannerCommand = new AsyncRelayCommand(ConnectScannerAsync, () => Scanner != null && !IsScannerTesting);
+            TestScannerCommand = new AsyncRelayCommand(TestScannerAsync, () => Scanner != null && !IsScannerTesting && CanEdit);
+            StopScannerTestCommand = new RelayCommand(() => _stopScannerTest = true, () => IsScannerTesting);
+            ScannerSummary = HasScanners
+                ? "Tune the scanner in its own software, then press Test read."
+                : "No barcode scanner is configured (Data\\Scanners.json).";
+            RefreshScanner();
+        }
+
+        private void RefreshScanner()
+        {
+            CommDevice scanner = Scanner;
+            try
+            {
+                IsScannerConnected = scanner != null && scanner.Protocol != null && scanner.Protocol.IsConnected;
+            }
+            catch (Exception)
+            {
+                IsScannerConnected = false;
+            }
+
+            ConnectScannerCommand?.NotifyCanExecuteChanged();
+            TestScannerCommand?.NotifyCanExecuteChanged();
+            StopScannerTestCommand?.NotifyCanExecuteChanged();
+        }
+
+        private async Task ConnectScannerAsync()
+        {
+            CommDevice scanner = Scanner;
+            if (scanner == null || scanner.Protocol == null)
+                return;
+
+            try
+            {
+                if (scanner.Protocol.IsConnected)
+                    scanner.Protocol.Disconnect();
+                else if (!await scanner.Protocol.ConnectAsync())
+                    ScannerSummary = scanner.Name + " did not connect. Check its power, cable and IP address.";
+            }
+            catch (Exception ex)
+            {
+                ScannerSummary = scanner.Name + ": " + ex.Message;
+            }
+
+            // The PLC closes or opens the link in the background; show what it reports shortly after.
+            await Task.Delay(400);
+            RefreshScanner();
+        }
+
+        /// <summary>
+        /// Triggers the scanner the entered number of times, as production does, and lists
+        /// what it read each time. Nothing is assumed: a read is what the scanner answered.
+        /// </summary>
+        private async Task TestScannerAsync()
+        {
+            CommDevice scanner = Scanner;
+            if (scanner == null || scanner.Protocol == null)
+                return;
+
+            int count;
+            if (!int.TryParse(ScannerReadCount, NumberStyles.Integer, CultureInfo.InvariantCulture, out count) || count < 1 || count > 100)
+            {
+                ScannerSummary = "Enter how many reads to take: 1 to 100.";
+                return;
+            }
+
+            ScannerReads.Clear();
+            HasScannerResult = false;
+            _stopScannerTest = false;
+            IsScannerTesting = true;
+            RefreshScanner();
+            int read = 0, taken = 0;
+            try
+            {
+                if (!scanner.Protocol.IsConnected && !await scanner.Protocol.ConnectAsync())
+                {
+                    ScannerSummary = scanner.Name + " is not connected, so nothing was read.";
+                    return;
+                }
+
+                for (int i = 1; i <= count && !_stopScannerTest; i++)
+                {
+                    string answer = (await scanner.Protocol.SendAndReceiveAsync(scanner.DefaultCommand ?? string.Empty) ?? string.Empty).Trim();
+                    bool isRead = answer.Length > 0 && answer.IndexOf("ERROR", StringComparison.OrdinalIgnoreCase) < 0
+                                  && answer.IndexOf("NOREAD", StringComparison.OrdinalIgnoreCase) < 0;
+                    taken++;
+                    if (isRead)
+                        read++;
+
+                    ScannerReads.Insert(0, new ScannerReadRow(i, answer.Length == 0 ? "(no answer)" : answer, isRead));
+                    ScannerSummary = read + " of " + taken + " read.";
+                }
+
+                ScannerAllRead = taken > 0 && read == taken;
+                HasScannerResult = taken > 0;
+                ScannerSummary = taken == 0
+                    ? "Nothing was read."
+                    : read + " of " + taken + " read (" + (100.0 * read / taken).ToString("0", CultureInfo.InvariantCulture) + " %)"
+                      + (ScannerAllRead ? "." : ": tune the scanner again, or check the code and its position.");
+                LogAction("Scanner read test on " + scanner.Name + ": " + read + " of " + taken + " read");
+            }
+            catch (Exception ex)
+            {
+                ScannerSummary = "The read test stopped: " + ex.Message;
+            }
+            finally
+            {
+                IsScannerTesting = false;
+                RefreshScanner();
+            }
+        }
+    }
+}

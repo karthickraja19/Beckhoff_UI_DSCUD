@@ -6,6 +6,8 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using Nova.Abstractions.Data.Models;
+using Nova.Wpf.UI.Behaviors;
+using Nova.Wpf.UI.Localization;
 
 namespace Nova.Wpf.App.Views.Common
 {
@@ -52,6 +54,21 @@ namespace Nova.Wpf.App.Views.Common
             }
         }
 
+        /// <summary>What a value cell may be typed with, from its column's type.</summary>
+        private static NumericInput.NumericMode InputModeFor(DynamicColumnSchema col)
+        {
+            if (col.IsIpAddress)
+                return NumericInput.NumericMode.IpAddress;
+
+            switch (col.DataType)
+            {
+                case ColumnDataType.Numeric: return NumericInput.NumericMode.SignedDecimal;
+                case ColumnDataType.NonNegative: return NumericInput.NumericMode.Decimal;
+                case ColumnDataType.Integer: return NumericInput.NumericMode.Integer;
+                default: return NumericInput.NumericMode.None;
+            }
+        }
+
         public static void GenerateColumns(DataGrid dataGrid, IEnumerable<DynamicColumnSchema> columns)
         {
             if (dataGrid == null) return;
@@ -80,7 +97,8 @@ namespace Nova.Wpf.App.Views.Common
                     {
                         Header = col.Title,
                         HeaderTemplate = WrappingHeader(TextAlignment.Left),
-                        Binding = new Binding("[" + col.Key + "]") { Mode = BindingMode.OneWay },
+                        // Row names (CCD1, Robot, axis names) in the selected language; read-only column.
+                        Binding = LocalizationSource.TranslatedBinding("[" + col.Key + "]"),
                         IsReadOnly = true,
                         ElementStyle = elementStyle,
                         HeaderStyle = headerStyle
@@ -120,6 +138,12 @@ namespace Nova.Wpf.App.Views.Common
                     factory.SetValue(TextBox.TextAlignmentProperty, TextAlignment.Center);
                     factory.SetValue(Control.HorizontalContentAlignmentProperty, HorizontalAlignment.Center);
 
+                    // FAM 2 SET_02 / SET_05: a number or IP address cell refuses letters and
+                    // other characters at the keyboard; the row still validates what it holds.
+                    NumericInput.NumericMode inputMode = InputModeFor(col);
+                    if (inputMode != NumericInput.NumericMode.None)
+                        factory.SetValue(NumericInput.ModeProperty, inputMode);
+
                     // Dynamic grids strictly launch locked in read-only mode until Edit mode is toggled
                     factory.SetBinding(TextBox.IsReadOnlyProperty, new Binding("DataContext.IsReadOnlyMode")
                     {
@@ -151,7 +175,8 @@ namespace Nova.Wpf.App.Views.Common
         private static DataTemplate WrappingHeader(TextAlignment alignment)
         {
             var text = new FrameworkElementFactory(typeof(TextBlock));
-            text.SetBinding(TextBlock.TextProperty, new Binding());
+            // Column titles come from the settings files in English; shown in the selected language.
+            text.SetBinding(TextBlock.TextProperty, LocalizationSource.TranslatedBinding(null));
             text.SetValue(TextBlock.TextWrappingProperty, TextWrapping.Wrap);
             text.SetValue(TextBlock.TextAlignmentProperty, alignment);
             text.SetValue(FrameworkElement.MarginProperty, new Thickness(0, 4, 0, 4));

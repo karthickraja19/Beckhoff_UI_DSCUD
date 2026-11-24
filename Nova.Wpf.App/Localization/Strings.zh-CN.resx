@@ -1,0 +1,3466 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Simplified Chinese (zh-CN). Machine-authored: have a native speaker review it.
+
+  Read at runtime by Teal.Library.Localization (Localization\ beside the exe) and written by
+  Setting > Localization Editor, so a correction made on the machine needs no rebuild.
+  Keys are Txt_ + the English words. XAML uses {loc:Tr Key}; text the view models build is
+  matched by its English value, so keep the English here identical to the code's English.
+-->
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Txt_0Gantry" xml:space="preserve">
+    <value>{0}龙门</value>
+  </data>
+  <data name="Txt_0Jog" xml:space="preserve">
+    <value>{0}点动</value>
+  </data>
+  <data name="Txt_0Motion" xml:space="preserve">
+    <value>{0}运动</value>
+  </data>
+  <data name="Txt_0NotYetImplemented" xml:space="preserve">
+    <value>{0} — 尚未实现</value>
+  </data>
+  <data name="Txt_0Of1KeysShown2Untranslated" xml:space="preserve">
+    <value>显示 {0} / {1} 个键 · {2} 个未翻译</value>
+  </data>
+  <data name="Txt_0SettingsNotYetImplemented" xml:space="preserve">
+    <value>{0}设置 — 尚未实现</value>
+  </data>
+  <data name="Txt_0Software" xml:space="preserve">
+    <value>{0}软件</value>
+  </data>
+  <data name="Txt_0TheSCUDWillNotDispenseA" xml:space="preserve">
+    <value>0 - SCUD 不会点胶：某个产品的图片数量错误。请解决图像问题，然后将其改回 1。</value>
+  </data>
+  <data name="Txt_10xPointsToFormRegressionFormula" xml:space="preserve">
+    <value>- 用 10 个点建立回归公式：</value>
+  </data>
+  <data name="Txt_1Field" xml:space="preserve">
+    <value>1 个字段</value>
+  </data>
+  <data name="Txt_1Parameter" xml:space="preserve">
+    <value>1 个参数</value>
+  </data>
+  <data name="Txt_1TheSCUDCanDispense" xml:space="preserve">
+    <value>1 - SCUD 可以点胶。</value>
+  </data>
+  <data name="Txt_24HourDryRun" xml:space="preserve">
+    <value>24 小时空跑</value>
+  </data>
+  <data name="Txt_24HourDryRunFunctionModule" xml:space="preserve">
+    <value>24 小时空跑（功能模块）</value>
+  </data>
+  <data name="Txt_2StepVerification" xml:space="preserve">
+    <value>两步验证</value>
+  </data>
+  <data name="Txt_9PointCalibrationCCD1CCD2" xml:space="preserve">
+    <value>九点校准（CCD1 / CCD2）</value>
+  </data>
+  <data name="Txt_AAndRTurnToTheBlock" xml:space="preserve">
+    <value>A 和 R 转到校准块的角度，点胶 Z 停在校准块上方的塞尺高度处。</value>
+  </data>
+  <data name="Txt_AAxis" xml:space="preserve">
+    <value>A 轴 (°)</value>
+  </data>
+  <data name="Txt_AAxisAngle" xml:space="preserve">
+    <value>A 轴角度</value>
+  </data>
+  <data name="Txt_ACTION" xml:space="preserve">
+    <value>操作</value>
+  </data>
+  <data name="Txt_ACTUALPOSITION" xml:space="preserve">
+    <value>实际位置</value>
+  </data>
+  <data name="Txt_ACTUALVELOCITY" xml:space="preserve">
+    <value>实际速度</value>
+  </data>
+  <data name="Txt_ACalibrationIsRunning" xml:space="preserve">
+    <value>校准正在运行。</value>
+  </data>
+  <data name="Txt_AELimitsCPK" xml:space="preserve">
+    <value>AE 限值 (CPK)</value>
+  </data>
+  <data name="Txt_AELimitsGRR" xml:space="preserve">
+    <value>AE 限值 (GRR)</value>
+  </data>
+  <data name="Txt_AXISSTATE" xml:space="preserve">
+    <value>轴状态</value>
+  </data>
+  <data name="Txt_Absolute" xml:space="preserve">
+    <value>绝对</value>
+  </data>
+  <data name="Txt_Accept" xml:space="preserve">
+    <value>接受</value>
+  </data>
+  <data name="Txt_AcceptedAAndRAtTheseAngles" xml:space="preserve">
+    <value>已接受：A 和 R 在这些角度处成为零点参考。</value>
+  </data>
+  <data name="Txt_Access" xml:space="preserve">
+    <value>权限</value>
+  </data>
+  <data name="Txt_AccessCheckFailed" xml:space="preserve">
+    <value>权限检查失败。</value>
+  </data>
+  <data name="Txt_AccessControl" xml:space="preserve">
+    <value>权限控制</value>
+  </data>
+  <data name="Txt_AccessControlWithMES" xml:space="preserve">
+    <value>通过 MES 进行权限控制</value>
+  </data>
+  <data name="Txt_AccessDenied" xml:space="preserve">
+    <value>拒绝访问。</value>
+  </data>
+  <data name="Txt_Activated" xml:space="preserve">
+    <value>已激活</value>
+  </data>
+  <data name="Txt_Activity" xml:space="preserve">
+    <value>活动</value>
+  </data>
+  <data name="Txt_Add" xml:space="preserve">
+    <value>添加</value>
+  </data>
+  <data name="Txt_AfterANeedleChangeTheNeedleMoves" xml:space="preserve">
+    <value>更换针头后，针头移动到针头校准模块。</value>
+  </data>
+  <data name="Txt_Alarm" xml:space="preserve">
+    <value>报警</value>
+  </data>
+  <data name="Txt_AlarmDurations" xml:space="preserve">
+    <value>报警时长</value>
+  </data>
+  <data name="Txt_AlarmDurationsMin" xml:space="preserve">
+    <value>报警时长（分钟）</value>
+  </data>
+  <data name="Txt_AlarmHistory" xml:space="preserve">
+    <value>报警历史</value>
+  </data>
+  <data name="Txt_AlarmHistoryIsNotAvailableOnThis" xml:space="preserve">
+    <value>此设备上无可用的报警历史。</value>
+  </data>
+  <data name="Txt_Alarms" xml:space="preserve">
+    <value>报警</value>
+  </data>
+  <data name="Txt_AllColumns" xml:space="preserve">
+    <value>所有列</value>
+  </data>
+  <data name="Txt_AlwaysKeepAnEyeOnTheRemaining" xml:space="preserve">
+    <value>请随时关注设备上的剩余胶量，设备报警时请及时换胶。</value>
+  </data>
+  <data name="Txt_Angle" xml:space="preserve">
+    <value>角度</value>
+  </data>
+  <data name="Txt_Area" xml:space="preserve">
+    <value>面积</value>
+  </data>
+  <data name="Txt_Authorize" xml:space="preserve">
+    <value>授权</value>
+  </data>
+  <data name="Txt_Axis" xml:space="preserve">
+    <value>轴：</value>
+  </data>
+  <data name="Txt_AxisConfiguration" xml:space="preserve">
+    <value>轴配置</value>
+  </data>
+  <data name="Txt_AxisConfigurationSettings" xml:space="preserve">
+    <value>轴配置设置</value>
+  </data>
+  <data name="Txt_AxisEnable" xml:space="preserve">
+    <value>轴使能</value>
+  </data>
+  <data name="Txt_AxisHome" xml:space="preserve">
+    <value>轴回原点</value>
+  </data>
+  <data name="Txt_AxisHomed" xml:space="preserve">
+    <value>轴已回原点</value>
+  </data>
+  <data name="Txt_AxisInError" xml:space="preserve">
+    <value>轴报错</value>
+  </data>
+  <data name="Txt_AxisIsNotSelected" xml:space="preserve">
+    <value>未选择轴。</value>
+  </data>
+  <data name="Txt_AxisParameterTableIsEmpty" xml:space="preserve">
+    <value>轴参数表为空。</value>
+  </data>
+  <data name="Txt_AxisRunning" xml:space="preserve">
+    <value>轴运行中</value>
+  </data>
+  <data name="Txt_Axis_2" xml:space="preserve">
+    <value>轴</value>
+  </data>
+  <data name="Txt_BackToHome" xml:space="preserve">
+    <value>‹ 返回主页</value>
+  </data>
+  <data name="Txt_BadgeReadPressOK" xml:space="preserve">
+    <value>已读取工卡。请按“确定”。</value>
+  </data>
+  <data name="Txt_BadgeReadScanTheSN" xml:space="preserve">
+    <value>已读取工卡。请扫描序列号。</value>
+  </data>
+  <data name="Txt_BasePlateAngleZeroLaser" xml:space="preserve">
+    <value>底板角度归零（激光）</value>
+  </data>
+  <data name="Txt_BasePlateFlatnessLaser" xml:space="preserve">
+    <value>底板平面度（激光）</value>
+  </data>
+  <data name="Txt_BaudRate" xml:space="preserve">
+    <value>波特率</value>
+  </data>
+  <data name="Txt_Blow" xml:space="preserve">
+    <value>吹气</value>
+  </data>
+  <data name="Txt_Browse" xml:space="preserve">
+    <value>浏览</value>
+  </data>
+  <data name="Txt_BuzzerMuted" xml:space="preserve">
+    <value>蜂鸣器已静音。</value>
+  </data>
+  <data name="Txt_BypassSettings" xml:space="preserve">
+    <value>旁路设置</value>
+  </data>
+  <data name="Txt_CCD123" xml:space="preserve">
+    <value>CCD 1、2、3</value>
+  </data>
+  <data name="Txt_CCD3FindsTheNeedleSLeftRight" xml:space="preserve">
+    <value>CCD3 找到针头的左、右和底部边缘、针尖中心和角度 T。</value>
+  </data>
+  <data name="Txt_CCD3MeasuresTheNeedleSXY" xml:space="preserve">
+    <value>CCD3 测量针头的 X、Y、Z 和 T；偏差 = 测量值 - 模板。</value>
+  </data>
+  <data name="Txt_CCDCalibration" xml:space="preserve">
+    <value>CCD 校准</value>
+  </data>
+  <data name="Txt_CCDRepeatabilityTesting" xml:space="preserve">
+    <value>CCD 重复性测试</value>
+  </data>
+  <data name="Txt_CCDTCPSettings" xml:space="preserve">
+    <value>CCD TCP 设置</value>
+  </data>
+  <data name="Txt_CHOOSECAMERA" xml:space="preserve">
+    <value>选择相机</value>
+  </data>
+  <data name="Txt_COMPort" xml:space="preserve">
+    <value>COM 端口</value>
+  </data>
+  <data name="Txt_CONNECTDEVICE" xml:space="preserve">
+    <value>连接设备</value>
+  </data>
+  <data name="Txt_CONTINUOUSMOTION" xml:space="preserve">
+    <value>连续运动</value>
+  </data>
+  <data name="Txt_CSVExportIsNotAvailableOnThis" xml:space="preserve">
+    <value>此设备上无法导出 CSV。</value>
+  </data>
+  <data name="Txt_CSVImport" xml:space="preserve">
+    <value>CSV 导入</value>
+  </data>
+  <data name="Txt_CTS" xml:space="preserve">
+    <value>CT/秒</value>
+  </data>
+  <data name="Txt_CURRENTSTATUS" xml:space="preserve">
+    <value>当前状态</value>
+  </data>
+  <data name="Txt_CYLINDERNAME" xml:space="preserve">
+    <value>气缸名称</value>
+  </data>
+  <data name="Txt_Cable" xml:space="preserve">
+    <value>线缆</value>
+  </data>
+  <data name="Txt_Calibration" xml:space="preserve">
+    <value>校准</value>
+  </data>
+  <data name="Txt_CalibrationFrequency" xml:space="preserve">
+    <value>校准频率</value>
+  </data>
+  <data name="Txt_CalibrationFrequencyMustBeAWholeNumber" xml:space="preserve">
+    <value>校准频率必须是整数小时，且不小于 1。</value>
+  </data>
+  <data name="Txt_CalibrationInProgress" xml:space="preserve">
+    <value>校准进行中…</value>
+  </data>
+  <data name="Txt_CalibrationIsNotAvailableOnThisBuild" xml:space="preserve">
+    <value>此版本不支持校准。</value>
+  </data>
+  <data name="Txt_CalibrationPoints" xml:space="preserve">
+    <value>校准点</value>
+  </data>
+  <data name="Txt_Camera" xml:space="preserve">
+    <value>相机</value>
+  </data>
+  <data name="Txt_CameraExposure" xml:space="preserve">
+    <value>相机曝光</value>
+  </data>
+  <data name="Txt_CameraGain" xml:space="preserve">
+    <value>相机增益</value>
+  </data>
+  <data name="Txt_Cancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="Txt_CardAxis" xml:space="preserve">
+    <value>卡 / 轴</value>
+  </data>
+  <data name="Txt_CartridgeWeightMustBeANumberAbove" xml:space="preserve">
+    <value>胶管重量必须是大于 0 的数字。</value>
+  </data>
+  <data name="Txt_ChangeConfig" xml:space="preserve">
+    <value>修改配置</value>
+  </data>
+  <data name="Txt_ChangeErrorDetail" xml:space="preserve">
+    <value>&lt;修改错误详情&gt;</value>
+  </data>
+  <data name="Txt_ChangeGlueNow" xml:space="preserve">
+    <value>立即换胶</value>
+  </data>
+  <data name="Txt_ChangeGlueThreshold" xml:space="preserve">
+    <value>换胶阈值 (%)</value>
+  </data>
+  <data name="Txt_ChangeGlueThresholdMustBeAPercentage" xml:space="preserve">
+    <value>换胶阈值必须是 0 到 100 之间的百分比。</value>
+  </data>
+  <data name="Txt_ChangeToRunning" xml:space="preserve">
+    <value>切换为运行</value>
+  </data>
+  <data name="Txt_ChangingSpecLimitsRequiresLevel3" xml:space="preserve">
+    <value>修改规格限值需要 3 级权限</value>
+  </data>
+  <data name="Txt_CheckTheGapBetweenNeedleAndBlock" xml:space="preserve">
+    <value>用塞尺检查针头与校准块之间的间隙，然后在屏幕上接受或拒绝。</value>
+  </data>
+  <data name="Txt_Checking" xml:space="preserve">
+    <value>检查中</value>
+  </data>
+  <data name="Txt_CheckingAccess" xml:space="preserve">
+    <value>正在检查权限…</value>
+  </data>
+  <data name="Txt_CheckingTheBadge" xml:space="preserve">
+    <value>正在检查工卡...</value>
+  </data>
+  <data name="Txt_ChooseATimeRangeAndPressQuery" xml:space="preserve">
+    <value>请选择时间范围并按“查询”。</value>
+  </data>
+  <data name="Txt_ChooseAtLeastOneTriggerOrThe" xml:space="preserve">
+    <value>请至少选择一个触发条件，否则电子秤不会称重。</value>
+  </data>
+  <data name="Txt_ChooseOrTypeAMachineNameBefore" xml:space="preserve">
+    <value>保存前请选择或输入设备名称。</value>
+  </data>
+  <data name="Txt_ChooseTheGantryAndScanTheValve" xml:space="preserve">
+    <value>请选择龙门并扫描阀序列号。</value>
+  </data>
+  <data name="Txt_Circularity" xml:space="preserve">
+    <value>圆度</value>
+  </data>
+  <data name="Txt_CircularityMin" xml:space="preserve">
+    <value>最小圆度</value>
+  </data>
+  <data name="Txt_Clear" xml:space="preserve">
+    <value>清除</value>
+  </data>
+  <data name="Txt_ClearAll" xml:space="preserve">
+    <value>全部清除</value>
+  </data>
+  <data name="Txt_ClearError" xml:space="preserve">
+    <value>清除错误</value>
+  </data>
+  <data name="Txt_ClearEverySelectedPDATAField" xml:space="preserve">
+    <value>清除所有选中的 PDATA 字段？</value>
+  </data>
+  <data name="Txt_ClearFilter" xml:space="preserve">
+    <value>清除筛选</value>
+  </data>
+  <data name="Txt_ClickANonCriticalSensorToDisable" xml:space="preserve">
+    <value>点击非关键传感器可禁用或启用它。关键传感器不能禁用。</value>
+  </data>
+  <data name="Txt_ClickEditBeforeTeachingAPosition" xml:space="preserve">
+    <value>示教位置前请先点击“编辑”。</value>
+  </data>
+  <data name="Txt_Close" xml:space="preserve">
+    <value>关闭</value>
+  </data>
+  <data name="Txt_CloseWindow" xml:space="preserve">
+    <value>关闭窗口</value>
+  </data>
+  <data name="Txt_Color" xml:space="preserve">
+    <value>颜色</value>
+  </data>
+  <data name="Txt_ColumnSchemaWarning" xml:space="preserve">
+    <value>列结构警告</value>
+  </data>
+  <data name="Txt_ComponentSN" xml:space="preserve">
+    <value>组件序列号</value>
+  </data>
+  <data name="Txt_Config" xml:space="preserve">
+    <value>配置</value>
+  </data>
+  <data name="Txt_Confirm" xml:space="preserve">
+    <value>确认</value>
+  </data>
+  <data name="Txt_ConfirmModeChange" xml:space="preserve">
+    <value>确认模式切换</value>
+  </data>
+  <data name="Txt_ConfirmToLogOut" xml:space="preserve">
+    <value>确认登出？</value>
+  </data>
+  <data name="Txt_Confirmation" xml:space="preserve">
+    <value>确认</value>
+  </data>
+  <data name="Txt_Connect" xml:space="preserve">
+    <value>连接</value>
+  </data>
+  <data name="Txt_Connected" xml:space="preserve">
+    <value>已连接</value>
+  </data>
+  <data name="Txt_ConsumablePartReplacement" xml:space="preserve">
+    <value>耗材更换</value>
+  </data>
+  <data name="Txt_ContinueTestWithTheSameOperator" xml:space="preserve">
+    <value>由同一操作员继续测试</value>
+  </data>
+  <data name="Txt_ContinuousForward" xml:space="preserve">
+    <value>连续正向</value>
+  </data>
+  <data name="Txt_ContinuousReverse" xml:space="preserve">
+    <value>连续反向</value>
+  </data>
+  <data name="Txt_ConveyorStatus" xml:space="preserve">
+    <value>输送线状态</value>
+  </data>
+  <data name="Txt_CorrectTheDosagesMarkedInRed" xml:space="preserve">
+    <value>请更正标红的胶量。</value>
+  </data>
+  <data name="Txt_CorrectTheseLimitsBeforeSaving" xml:space="preserve">
+    <value>保存前请更正以下限值：</value>
+  </data>
+  <data name="Txt_Count" xml:space="preserve">
+    <value>数量</value>
+  </data>
+  <data name="Txt_CountTotal" xml:space="preserve">
+    <value>总数</value>
+  </data>
+  <data name="Txt_Count_2" xml:space="preserve">
+    <value>数量 </value>
+  </data>
+  <data name="Txt_Critical" xml:space="preserve">
+    <value>关键</value>
+  </data>
+  <data name="Txt_CriticalSensor" xml:space="preserve">
+    <value>关键传感器</value>
+  </data>
+  <data name="Txt_Crosshair" xml:space="preserve">
+    <value>十字线</value>
+  </data>
+  <data name="Txt_Cylinder" xml:space="preserve">
+    <value>气缸</value>
+  </data>
+  <data name="Txt_Cylinders" xml:space="preserve">
+    <value>气缸</value>
+  </data>
+  <data name="Txt_DEVICECONTROL" xml:space="preserve">
+    <value>设备控制</value>
+  </data>
+  <data name="Txt_DEVICESTATUS" xml:space="preserve">
+    <value>设备状态</value>
+  </data>
+  <data name="Txt_DISCONNECT" xml:space="preserve">
+    <value>断开连接</value>
+  </data>
+  <data name="Txt_DOEDetailsNeedsAppleAMEApprovalBefore" xml:space="preserve">
+    <value>DOE 详情（使用前需获得 Apple AME 批准）：</value>
+  </data>
+  <data name="Txt_Daily" xml:space="preserve">
+    <value>每日</value>
+  </data>
+  <data name="Txt_DailyMaintenance" xml:space="preserve">
+    <value>日常保养</value>
+  </data>
+  <data name="Txt_Data" xml:space="preserve">
+    <value>数据</value>
+  </data>
+  <data name="Txt_DataBits" xml:space="preserve">
+    <value>数据位</value>
+  </data>
+  <data name="Txt_Datatype" xml:space="preserve">
+    <value>数据类型</value>
+  </data>
+  <data name="Txt_Date" xml:space="preserve">
+    <value>日期</value>
+  </data>
+  <data name="Txt_Delete" xml:space="preserve">
+    <value>删除</value>
+  </data>
+  <data name="Txt_DetailsOfThePlannedWork" xml:space="preserve">
+    <value>计划工作详情：</value>
+  </data>
+  <data name="Txt_Deviation" xml:space="preserve">
+    <value>偏差</value>
+  </data>
+  <data name="Txt_DeviationTMax" xml:space="preserve">
+    <value>T 最大偏差</value>
+  </data>
+  <data name="Txt_DeviationXMax" xml:space="preserve">
+    <value>X 最大偏差</value>
+  </data>
+  <data name="Txt_DeviationYMax" xml:space="preserve">
+    <value>Y 最大偏差</value>
+  </data>
+  <data name="Txt_DeviationZMax" xml:space="preserve">
+    <value>Z 最大偏差</value>
+  </data>
+  <data name="Txt_DeviceConnections" xml:space="preserve">
+    <value>设备连接</value>
+  </data>
+  <data name="Txt_DeviceSettings" xml:space="preserve">
+    <value>设备设置</value>
+  </data>
+  <data name="Txt_DeviceStatus" xml:space="preserve">
+    <value>设备状态</value>
+  </data>
+  <data name="Txt_DeviceStatus_2" xml:space="preserve">
+    <value>设备状态</value>
+  </data>
+  <data name="Txt_Dialog" xml:space="preserve">
+    <value>对话框</value>
+  </data>
+  <data name="Txt_Disable24HourDryRun" xml:space="preserve">
+    <value>禁用 24 小时空跑</value>
+  </data>
+  <data name="Txt_DisableHIVE" xml:space="preserve">
+    <value>禁用 HIVE</value>
+  </data>
+  <data name="Txt_DisableSensor" xml:space="preserve">
+    <value>禁用传感器</value>
+  </data>
+  <data name="Txt_Disabled" xml:space="preserve">
+    <value>已禁用</value>
+  </data>
+  <data name="Txt_DisabledDefault" xml:space="preserve">
+    <value>已禁用（默认）。</value>
+  </data>
+  <data name="Txt_DiscardTheChangesAndReloadTheSaved" xml:space="preserve">
+    <value>放弃更改并重新加载已保存的限值</value>
+  </data>
+  <data name="Txt_Disconnected" xml:space="preserve">
+    <value>已断开</value>
+  </data>
+  <data name="Txt_DispensingControl" xml:space="preserve">
+    <value>点胶控制</value>
+  </data>
+  <data name="Txt_DispensingPoseCalibration" xml:space="preserve">
+    <value>点胶姿态校准</value>
+  </data>
+  <data name="Txt_DispensingZAtTouch" xml:space="preserve">
+    <value>接触时的点胶 Z</value>
+  </data>
+  <data name="Txt_DispensingZMm" xml:space="preserve">
+    <value>点胶 Z (mm)</value>
+  </data>
+  <data name="Txt_Distance" xml:space="preserve">
+    <value>距离</value>
+  </data>
+  <data name="Txt_DoYouWantToContinue" xml:space="preserve">
+    <value>是否继续？</value>
+  </data>
+  <data name="Txt_DoYouWantToSaveTheData" xml:space="preserve">
+    <value>是否保存数据？</value>
+  </data>
+  <data name="Txt_DoneNG" xml:space="preserve">
+    <value>完成 - NG</value>
+  </data>
+  <data name="Txt_DoneOK" xml:space="preserve">
+    <value>完成 - OK</value>
+  </data>
+  <data name="Txt_Downtime" xml:space="preserve">
+    <value>停机</value>
+  </data>
+  <data name="Txt_DowntimeStatisticTop10" xml:space="preserve">
+    <value>停机统计（前 10）</value>
+  </data>
+  <data name="Txt_DragTheHandlesToChooseTheWindow" xml:space="preserve">
+    <value>拖动手柄选择最近七天内的时间段</value>
+  </data>
+  <data name="Txt_DropsTheChangesAndShowsTheSaved" xml:space="preserve">
+    <value>放弃更改并显示已保存的值</value>
+  </data>
+  <data name="Txt_DynamicRepeatability1CCDIsHeldStatic" xml:space="preserve">
+    <value>动态重复性_1（CCD 保持静止，100 次）</value>
+  </data>
+  <data name="Txt_DynamicRepeatability2UCIsHeldStatic" xml:space="preserve">
+    <value>动态重复性_2（UC 保持静止，100 次）</value>
+  </data>
+  <data name="Txt_EachDotIsCheckedForAreaCircularity" xml:space="preserve">
+    <value>检查每个胶点的面积、圆度及与基准点的距离；仅使用有效胶点。</value>
+  </data>
+  <data name="Txt_EachPathMustBeTheCompletePath" xml:space="preserve">
+    <value>每个路径必须是包含扩展名的完整路径和文件名。若文件不存在或不受监控，请将该键的路径留空。启动后以及每次 HIVE 状态变化时都会读取这些键；缺少文件会使设备进入停机状态。</value>
+  </data>
+  <data name="Txt_Edit" xml:space="preserve">
+    <value>编辑</value>
+  </data>
+  <data name="Txt_EditTheParametersForThisStationAnd" xml:space="preserve">
+    <value>编辑此工站和例程的参数。</value>
+  </data>
+  <data name="Txt_EditingLanguage" xml:space="preserve">
+    <value>编辑语言：</value>
+  </data>
+  <data name="Txt_EmptyImport" xml:space="preserve">
+    <value>导入为空</value>
+  </data>
+  <data name="Txt_Enable" xml:space="preserve">
+    <value>启用</value>
+  </data>
+  <data name="Txt_Enable24HourDryRun" xml:space="preserve">
+    <value>启用 24 小时空跑</value>
+  </data>
+  <data name="Txt_EnableHIVE" xml:space="preserve">
+    <value>启用 HIVE</value>
+  </data>
+  <data name="Txt_EnableSensor" xml:space="preserve">
+    <value>启用传感器</value>
+  </data>
+  <data name="Txt_EnableThe24HourDryRunIt" xml:space="preserve">
+    <value>启用 24 小时空跑？仅用于 FAT 远程验证。</value>
+  </data>
+  <data name="Txt_EnabledEveryStateChangeIsSentTo" xml:space="preserve">
+    <value>已启用 - 每次状态变化都会发送到 HIVE 网关。</value>
+  </data>
+  <data name="Txt_EnabledForFATRemoteQualificationOnlyIt" xml:space="preserve">
+    <value>已启用 - 仅用于 FAT 远程验证。每次软件启动时都会重置为禁用。</value>
+  </data>
+  <data name="Txt_EndPositionMm" xml:space="preserve">
+    <value>结束位置 (mm)</value>
+  </data>
+  <data name="Txt_EndTime" xml:space="preserve">
+    <value>结束时间：</value>
+  </data>
+  <data name="Txt_EndTimeIsBeforeStartTime" xml:space="preserve">
+    <value>结束时间早于开始时间。</value>
+  </data>
+  <data name="Txt_EndTime_2" xml:space="preserve">
+    <value>结束时间</value>
+  </data>
+  <data name="Txt_English" xml:space="preserve">
+    <value>英语</value>
+  </data>
+  <data name="Txt_EnterANumber" xml:space="preserve">
+    <value>请输入数字。</value>
+  </data>
+  <data name="Txt_EnterDifferentValuesInStartAndEnd" xml:space="preserve">
+    <value>起始位置和结束位置请输入不同的值</value>
+  </data>
+  <data name="Txt_EnteredByItsOwnProcedureNotFrom" xml:space="preserve">
+    <value>由其自身流程进入，不能从此列表选择。</value>
+  </data>
+  <data name="Txt_Error" xml:space="preserve">
+    <value>错误</value>
+  </data>
+  <data name="Txt_ErrorCode" xml:space="preserve">
+    <value>错误代码：</value>
+  </data>
+  <data name="Txt_ErrorCode_2" xml:space="preserve">
+    <value>错误代码</value>
+  </data>
+  <data name="Txt_ErrorDetail" xml:space="preserve">
+    <value>错误详情：</value>
+  </data>
+  <data name="Txt_ErrorDetail_2" xml:space="preserve">
+    <value>错误详情</value>
+  </data>
+  <data name="Txt_ErrorMessage" xml:space="preserve">
+    <value>错误信息</value>
+  </data>
+  <data name="Txt_ErrorMsg" xml:space="preserve">
+    <value>错误信息：</value>
+  </data>
+  <data name="Txt_ErrorStatistics" xml:space="preserve">
+    <value>错误统计</value>
+  </data>
+  <data name="Txt_EstimatedRemainingOutput" xml:space="preserve">
+    <value>预计剩余产量</value>
+  </data>
+  <data name="Txt_EverythingIsWithinItsThresholds" xml:space="preserve">
+    <value>所有项目均在阈值范围内。</value>
+  </data>
+  <data name="Txt_ExitDowntimeChangeToRunning" xml:space="preserve">
+    <value>退出停机（切换为运行）</value>
+  </data>
+  <data name="Txt_Expired" xml:space="preserve">
+    <value>已过期</value>
+  </data>
+  <data name="Txt_ExplainAndDetail" xml:space="preserve">
+    <value>说明与详情</value>
+  </data>
+  <data name="Txt_Export" xml:space="preserve">
+    <value>导出</value>
+  </data>
+  <data name="Txt_ExportAccessList" xml:space="preserve">
+    <value>导出权限列表</value>
+  </data>
+  <data name="Txt_ExportAllHashKeys" xml:space="preserve">
+    <value>导出所有哈希键</value>
+  </data>
+  <data name="Txt_ExportCSV" xml:space="preserve">
+    <value>导出 CSV</value>
+  </data>
+  <data name="Txt_ExportIsNotAvailableNoExportService" xml:space="preserve">
+    <value>无法导出：未配置导出服务。</value>
+  </data>
+  <data name="Txt_Exposure" xml:space="preserve">
+    <value>曝光</value>
+  </data>
+  <data name="Txt_Extend" xml:space="preserve">
+    <value>伸出</value>
+  </data>
+  <data name="Txt_Extended" xml:space="preserve">
+    <value>  ·  已伸出</value>
+  </data>
+  <data name="Txt_Extended_2" xml:space="preserve">
+    <value>·  已伸出</value>
+  </data>
+  <data name="Txt_Extended_3" xml:space="preserve">
+    <value>已伸出</value>
+  </data>
+  <data name="Txt_FALSELocalList" xml:space="preserve">
+    <value>FALSE（本地列表）</value>
+  </data>
+  <data name="Txt_Fail" xml:space="preserve">
+    <value>失败</value>
+  </data>
+  <data name="Txt_Failed" xml:space="preserve">
+    <value>失败</value>
+  </data>
+  <data name="Txt_FailureCode" xml:space="preserve">
+    <value>故障代码</value>
+  </data>
+  <data name="Txt_FeelerGauge" xml:space="preserve">
+    <value>塞尺</value>
+  </data>
+  <data name="Txt_FiducialCentre" xml:space="preserve">
+    <value>基准点中心</value>
+  </data>
+  <data name="Txt_FiducialX" xml:space="preserve">
+    <value>基准点 X</value>
+  </data>
+  <data name="Txt_FiducialY" xml:space="preserve">
+    <value>基准点 Y</value>
+  </data>
+  <data name="Txt_File" xml:space="preserve">
+    <value>文件</value>
+  </data>
+  <data name="Txt_FilePath" xml:space="preserve">
+    <value>文件路径</value>
+  </data>
+  <data name="Txt_FilePathSetting" xml:space="preserve">
+    <value>文件路径设置</value>
+  </data>
+  <data name="Txt_Filter" xml:space="preserve">
+    <value>筛选</value>
+  </data>
+  <data name="Txt_FilterValue" xml:space="preserve">
+    <value>筛选值</value>
+  </data>
+  <data name="Txt_FitANewStraightNeedle" xml:space="preserve">
+    <value>安装一根新的直针。</value>
+  </data>
+  <data name="Txt_FlatnessMaxMaxMin" xml:space="preserve">
+    <value>最大平面度（最大 - 最小）</value>
+  </data>
+  <data name="Txt_ForEachOfTheNinePointsThe" xml:space="preserve">
+    <value>对九个点中的每一个，龙门移动到位，在基准点旁点一个胶点并触发相机。</value>
+  </data>
+  <data name="Txt_Forward" xml:space="preserve">
+    <value>正向</value>
+  </data>
+  <data name="Txt_From" xml:space="preserve">
+    <value>从：</value>
+  </data>
+  <data name="Txt_FromTheLastRunOnThisStation" xml:space="preserve">
+    <value>来自此工站的上一次运行。</value>
+  </data>
+  <data name="Txt_Front" xml:space="preserve">
+    <value>前</value>
+  </data>
+  <data name="Txt_Function" xml:space="preserve">
+    <value>功能</value>
+  </data>
+  <data name="Txt_Gain" xml:space="preserve">
+    <value>增益</value>
+  </data>
+  <data name="Txt_Gantry" xml:space="preserve">
+    <value>龙门</value>
+  </data>
+  <data name="Txt_GantryFront" xml:space="preserve">
+    <value>龙门：前</value>
+  </data>
+  <data name="Txt_GantryRear" xml:space="preserve">
+    <value>龙门：后</value>
+  </data>
+  <data name="Txt_Gantry_2" xml:space="preserve">
+    <value>龙门：</value>
+  </data>
+  <data name="Txt_General" xml:space="preserve">
+    <value>常规</value>
+  </data>
+  <data name="Txt_GeneralHashKey" xml:space="preserve">
+    <value>通用哈希键</value>
+  </data>
+  <data name="Txt_Glue" xml:space="preserve">
+    <value>胶水</value>
+  </data>
+  <data name="Txt_GlueAlert" xml:space="preserve">
+    <value>胶水警报</value>
+  </data>
+  <data name="Txt_GlueAreaMax" xml:space="preserve">
+    <value>胶点最大面积</value>
+  </data>
+  <data name="Txt_GlueAreaMin" xml:space="preserve">
+    <value>胶点最小面积</value>
+  </data>
+  <data name="Txt_GlueCentre" xml:space="preserve">
+    <value>胶点中心</value>
+  </data>
+  <data name="Txt_GlueChange" xml:space="preserve">
+    <value>换胶</value>
+  </data>
+  <data name="Txt_GlueControl" xml:space="preserve">
+    <value>胶水控制</value>
+  </data>
+  <data name="Txt_GlueControlEarlyWarning" xml:space="preserve">
+    <value>胶水控制与预警</value>
+  </data>
+  <data name="Txt_GlueControlSettings" xml:space="preserve">
+    <value>胶水控制设置</value>
+  </data>
+  <data name="Txt_GlueControlSettingsAreNotAvailableGlue" xml:space="preserve">
+    <value>胶水控制设置不可用 - 胶水状态尚未连接到此 HMI。</value>
+  </data>
+  <data name="Txt_GlueEmptyChangeTheCartridge" xml:space="preserve">
+    <value>胶水已用完 - 请更换胶管</value>
+  </data>
+  <data name="Txt_GluePerProductIsMoreThanThe" xml:space="preserve">
+    <value>每件产品用胶量超过胶管容量。</value>
+  </data>
+  <data name="Txt_GluePerProductMustBeANumber" xml:space="preserve">
+    <value>每件产品用胶量必须是大于 0 的数字。</value>
+  </data>
+  <data name="Txt_GlueSN" xml:space="preserve">
+    <value>胶水序列号</value>
+  </data>
+  <data name="Txt_GlueSN_2" xml:space="preserve">
+    <value>胶水序列号：</value>
+  </data>
+  <data name="Txt_GlueToFiducialMax" xml:space="preserve">
+    <value>胶点到基准点最大距离</value>
+  </data>
+  <data name="Txt_GlueUsagePerPurge" xml:space="preserve">
+    <value>每次排胶用胶量</value>
+  </data>
+  <data name="Txt_GlueWeighing" xml:space="preserve">
+    <value>胶水称重</value>
+  </data>
+  <data name="Txt_GlueWeighingSetting" xml:space="preserve">
+    <value>胶水称重设置</value>
+  </data>
+  <data name="Txt_GlueWeighingStatistics" xml:space="preserve">
+    <value>胶水称重统计</value>
+  </data>
+  <data name="Txt_GlueWeightMg" xml:space="preserve">
+    <value>胶重 (mg)</value>
+  </data>
+  <data name="Txt_GlueWeightPerProduct" xml:space="preserve">
+    <value>每件产品胶重</value>
+  </data>
+  <data name="Txt_GlueWeightPerProductG" xml:space="preserve">
+    <value>每件产品胶重 (g)</value>
+  </data>
+  <data name="Txt_GlueWeightRawData" xml:space="preserve">
+    <value>胶重原始数据</value>
+  </data>
+  <data name="Txt_GlueWeightSPECInMg" xml:space="preserve">
+    <value>胶重规格 (mg)</value>
+  </data>
+  <data name="Txt_GlueX" xml:space="preserve">
+    <value>胶点 X</value>
+  </data>
+  <data name="Txt_GlueY" xml:space="preserve">
+    <value>胶点 Y</value>
+  </data>
+  <data name="Txt_HIVEControl" xml:space="preserve">
+    <value>HIVE 控制</value>
+  </data>
+  <data name="Txt_HIVEDebugUnits" xml:space="preserve">
+    <value>HIVE - 调试产品</value>
+  </data>
+  <data name="Txt_HIVELog" xml:space="preserve">
+    <value>HIVE 日志</value>
+  </data>
+  <data name="Txt_HIVELog_2" xml:space="preserve">
+    <value>HIVE 日志</value>
+  </data>
+  <data name="Txt_HIVEMachineState" xml:space="preserve">
+    <value>HIVE 设备状态</value>
+  </data>
+  <data name="Txt_HIVEReportingIsNotAvailable" xml:space="preserve">
+    <value>无法使用 HIVE 上报。</value>
+  </data>
+  <data name="Txt_HIVEReportingIsNotAvailableOnThis" xml:space="preserve">
+    <value>此设备上无法使用 HIVE 上报。</value>
+  </data>
+  <data name="Txt_HIVESetupConfigurationRemainsIncomplete" xml:space="preserve">
+    <value>HIVE 设置配置仍不完整</value>
+  </data>
+  <data name="Txt_HIVEState" xml:space="preserve">
+    <value>HIVE 状态</value>
+  </data>
+  <data name="Txt_HIVEStateHistoryIsNotAvailableOn" xml:space="preserve">
+    <value>此设备上无可用的 HIVE 状态历史。</value>
+  </data>
+  <data name="Txt_HOMINGCONTROL" xml:space="preserve">
+    <value>回原点控制</value>
+  </data>
+  <data name="Txt_Hardware" xml:space="preserve">
+    <value>硬件</value>
+  </data>
+  <data name="Txt_HardwareConfigurationRequiresLevel3" xml:space="preserve">
+    <value>硬件配置需要 3 级权限</value>
+  </data>
+  <data name="Txt_HardwareSetting" xml:space="preserve">
+    <value>硬件设置</value>
+  </data>
+  <data name="Txt_HashKey" xml:space="preserve">
+    <value>哈希键</value>
+  </data>
+  <data name="Txt_HashKeyCheckWithMES" xml:space="preserve">
+    <value>与 MES 核对哈希键</value>
+  </data>
+  <data name="Txt_HashKeysAreNotAvailableOnThis" xml:space="preserve">
+    <value>此设备上无可用的哈希键。</value>
+  </data>
+  <data name="Txt_Health" xml:space="preserve">
+    <value>状态</value>
+  </data>
+  <data name="Txt_Height" xml:space="preserve">
+    <value>高度</value>
+  </data>
+  <data name="Txt_HeightDifferenceMax" xml:space="preserve">
+    <value>最大高度差</value>
+  </data>
+  <data name="Txt_Home" xml:space="preserve">
+    <value>主页</value>
+  </data>
+  <data name="Txt_HomeEveryComponentThePLCRunsThe" xml:space="preserve">
+    <value>所有部件回原点（由 PLC 执行回原点流程）</value>
+  </data>
+  <data name="Txt_HomeTheMachineFirst" xml:space="preserve">
+    <value>请先让设备回原点。</value>
+  </data>
+  <data name="Txt_Homing" xml:space="preserve">
+    <value>回原点</value>
+  </data>
+  <data name="Txt_HomingAcc" xml:space="preserve">
+    <value>回原点加速度</value>
+  </data>
+  <data name="Txt_HomingDeAcc" xml:space="preserve">
+    <value>回原点减速度</value>
+  </data>
+  <data name="Txt_HomingDone" xml:space="preserve">
+    <value>回原点完成。</value>
+  </data>
+  <data name="Txt_HomingIsNotReportedByThePLC" xml:space="preserve">
+    <value>PLC 未上报回原点状态（未设置 PlcHomingDoneSymbol），因此无法开始校准。</value>
+  </data>
+  <data name="Txt_HomingStarted" xml:space="preserve">
+    <value>已开始回原点</value>
+  </data>
+  <data name="Txt_HomingStartedCalibrationTab" xml:space="preserve">
+    <value>已开始回原点（校准选项卡）</value>
+  </data>
+  <data name="Txt_HomingVelocity" xml:space="preserve">
+    <value>回原点速度</value>
+  </data>
+  <data name="Txt_Homing_2" xml:space="preserve">
+    <value>正在回原点...</value>
+  </data>
+  <data name="Txt_Hourly" xml:space="preserve">
+    <value>每小时</value>
+  </data>
+  <data name="Txt_HoursOneTime" xml:space="preserve">
+    <value>小时/次</value>
+  </data>
+  <data name="Txt_INPUTADDR" xml:space="preserve">
+    <value>输入地址</value>
+  </data>
+  <data name="Txt_IOStepper" xml:space="preserve">
+    <value>IO 步进电机</value>
+  </data>
+  <data name="Txt_IOSummary" xml:space="preserve">
+    <value>I/O 汇总</value>
+  </data>
+  <data name="Txt_IPAddress" xml:space="preserve">
+    <value>IP 地址</value>
+  </data>
+  <data name="Txt_Idle" xml:space="preserve">
+    <value>空闲</value>
+  </data>
+  <data name="Txt_IgnoreLimits" xml:space="preserve">
+    <value>忽略限值</value>
+  </data>
+  <data name="Txt_Image" xml:space="preserve">
+    <value>图像</value>
+  </data>
+  <data name="Txt_ImageThreshold" xml:space="preserve">
+    <value>图像阈值</value>
+  </data>
+  <data name="Txt_ImportAccessList" xml:space="preserve">
+    <value>导入权限列表</value>
+  </data>
+  <data name="Txt_ImportCSV" xml:space="preserve">
+    <value>导入 CSV</value>
+  </data>
+  <data name="Txt_InAlarm" xml:space="preserve">
+    <value>报警中</value>
+  </data>
+  <data name="Txt_Information" xml:space="preserve">
+    <value>信息</value>
+  </data>
+  <data name="Txt_InitiateThe24HourDryRunProcedure" xml:space="preserve">
+    <value>仅为 FAT 远程验证启动 24 小时空跑流程。空跑期间，unit_sn 和 mac_addr 来自 UUID.DLL，unique_machine_state_id 来自 UMSID.DLL。</value>
+  </data>
+  <data name="Txt_InputName" xml:space="preserve">
+    <value>输入名称</value>
+  </data>
+  <data name="Txt_Inputs" xml:space="preserve">
+    <value>输入</value>
+  </data>
+  <data name="Txt_Item" xml:space="preserve">
+    <value>项目</value>
+  </data>
+  <data name="Txt_JOGCONTROL" xml:space="preserve">
+    <value>点动控制</value>
+  </data>
+  <data name="Txt_Jog" xml:space="preserve">
+    <value>点动</value>
+  </data>
+  <data name="Txt_Jog0Negative" xml:space="preserve">
+    <value>{0} 负向点动</value>
+  </data>
+  <data name="Txt_Jog0Positive" xml:space="preserve">
+    <value>{0} 正向点动</value>
+  </data>
+  <data name="Txt_Key" xml:space="preserve">
+    <value>键</value>
+  </data>
+  <data name="Txt_KeyName" xml:space="preserve">
+    <value>键名</value>
+  </data>
+  <data name="Txt_LIVEVALUES" xml:space="preserve">
+    <value>实时值</value>
+  </data>
+  <data name="Txt_LSLIsGreaterThanUSL" xml:space="preserve">
+    <value>LSL 大于 USL。</value>
+  </data>
+  <data name="Txt_LSLIsNotANumber" xml:space="preserve">
+    <value>LSL 不是数字。</value>
+  </data>
+  <data name="Txt_LSLNominalUSL" xml:space="preserve">
+    <value>LSL / 标称 / USL </value>
+  </data>
+  <data name="Txt_LSLNominalUSL_2" xml:space="preserve">
+    <value>LSL / 标称 / USL</value>
+  </data>
+  <data name="Txt_Language" xml:space="preserve">
+    <value>语言：</value>
+  </data>
+  <data name="Txt_Language_2" xml:space="preserve">
+    <value>语言</value>
+  </data>
+  <data name="Txt_LaserCalibration" xml:space="preserve">
+    <value>激光校准</value>
+  </data>
+  <data name="Txt_LeastSquareMethod" xml:space="preserve">
+    <value>• 最小二乘法：</value>
+  </data>
+  <data name="Txt_LeaveALimitBlankOrTypeN" xml:space="preserve">
+    <value>若该侧无规格限值，请留空（或输入 N/A）。</value>
+  </data>
+  <data name="Txt_Level1NonCriticalEditsAtLevel" xml:space="preserve">
+    <value>1 级，2 级可编辑非关键项，3 级可完全编辑。</value>
+  </data>
+  <data name="Txt_Level1ViewOnly" xml:space="preserve">
+    <value>1 级 - 仅查看</value>
+  </data>
+  <data name="Txt_Level1ViewOnlyLevel2Or" xml:space="preserve">
+    <value>1 级：仅查看。2 级或 3 级可禁用非关键传感器。</value>
+  </data>
+  <data name="Txt_Level2And3AreSignedOut" xml:space="preserve">
+    <value>2 级和 3 级在无操作达到此时长后自动登出（第 39 页：最多 5 分钟）。</value>
+  </data>
+  <data name="Txt_Level2Or3ToChange" xml:space="preserve">
+    <value>需要 2 级或 3 级权限才能修改。</value>
+  </data>
+  <data name="Txt_Level2Or3ToChangeOSS" xml:space="preserve">
+    <value>需要 2 级或 3 级权限才能修改。OSS 根据工站设置胶量和警告阈值。</value>
+  </data>
+  <data name="Txt_Level2OrLevel3IsNeeded" xml:space="preserve">
+    <value>禁用或启用传感器需要 2 级或 3 级权限。</value>
+  </data>
+  <data name="Txt_Level2UniversalChangeAccess" xml:space="preserve">
+    <value>2 级 - 通用修改权限</value>
+  </data>
+  <data name="Txt_Level3CanChangeAllParameters" xml:space="preserve">
+    <value>3 级 - 可修改所有参数</value>
+  </data>
+  <data name="Txt_Level3CanChangeTheWordingSaved" xml:space="preserve">
+    <value>3 级权限可修改文字。保存后立即显示在屏幕上。</value>
+  </data>
+  <data name="Txt_Level3ChooseEachGantrySValve" xml:space="preserve">
+    <value>3 级：选择每个龙门的阀型号，然后保存。</value>
+  </data>
+  <data name="Txt_Level3EverySettingOnThisPage" xml:space="preserve">
+    <value>3 级：此页面上的所有设置均可修改。</value>
+  </data>
+  <data name="Txt_Level3TheListAndTheSettings" xml:space="preserve">
+    <value>3 级：列表和设置均可修改。每次修改都会记录在设备日志中。</value>
+  </data>
+  <data name="Txt_LimitsFromConfigSpecLimitsLiveValues" xml:space="preserve">
+    <value>限值来自 配置 &gt; 规格限值。实时值需要 PLC 参数链接，目前尚未连接。</value>
+  </data>
+  <data name="Txt_Line" xml:space="preserve">
+    <value>线别：</value>
+  </data>
+  <data name="Txt_LiveValues" xml:space="preserve">
+    <value>实时值</value>
+  </data>
+  <data name="Txt_LoadCells" xml:space="preserve">
+    <value>称重传感器</value>
+  </data>
+  <data name="Txt_LoadConfigSaveTheHardwareConfiguration" xml:space="preserve">
+    <value>加载配置 - 保存硬件配置</value>
+  </data>
+  <data name="Txt_LocalAccessList" xml:space="preserve">
+    <value>本地权限列表</value>
+  </data>
+  <data name="Txt_Localization" xml:space="preserve">
+    <value>本地化</value>
+  </data>
+  <data name="Txt_LocalizationEditor" xml:space="preserve">
+    <value>本地化编辑器</value>
+  </data>
+  <data name="Txt_LockedThisSectionNeedsAHigherAccess" xml:space="preserve">
+    <value>已锁定 — 修改此部分需要更高的权限级别。</value>
+  </data>
+  <data name="Txt_LongPurgeCycles" xml:space="preserve">
+    <value>长排胶次数</value>
+  </data>
+  <data name="Txt_LongPurgeDoseMustBeANumber" xml:space="preserve">
+    <value>长排胶量必须是不小于 0 的数字。</value>
+  </data>
+  <data name="Txt_LongPurgeGlueConsumption" xml:space="preserve">
+    <value>长排胶用胶量</value>
+  </data>
+  <data name="Txt_LongPurgeGlueUsagePerPurge" xml:space="preserve">
+    <value>每次长排胶用胶量</value>
+  </data>
+  <data name="Txt_LongPurgePerPurgeG" xml:space="preserve">
+    <value>长排胶，每次 (g)</value>
+  </data>
+  <data name="Txt_LongPurgeStatistics" xml:space="preserve">
+    <value>长排胶统计</value>
+  </data>
+  <data name="Txt_LowGlueStagingRequested" xml:space="preserve">
+    <value>胶量低 - 已请求备料</value>
+  </data>
+  <data name="Txt_LowGlueThreshold" xml:space="preserve">
+    <value>低胶量阈值 (%)</value>
+  </data>
+  <data name="Txt_LowGlueThresholdMustBeAPercentage" xml:space="preserve">
+    <value>低胶量阈值必须是 0 到 100 之间的百分比。</value>
+  </data>
+  <data name="Txt_MANUALRESET" xml:space="preserve">
+    <value>手动复位</value>
+  </data>
+  <data name="Txt_MESIsNotConfiguredOnThisMachine" xml:space="preserve">
+    <value>此设备未配置 MES（App.config 中的 MesUrl），因此工卡将按下方列表进行检查。</value>
+  </data>
+  <data name="Txt_MESIsNotConfiguredOnThisMachine_2" xml:space="preserve">
+    <value>此设备未配置 MES（App.config 中的 MesUrl），因此无法上传这些键。</value>
+  </data>
+  <data name="Txt_MESIsNotConfiguredOnThisMachine_3" xml:space="preserve">
+    <value>此设备未配置 MES：喷嘴将在未经 MES 检查的情况下记录。</value>
+  </data>
+  <data name="Txt_MODE" xml:space="preserve">
+    <value>模式</value>
+  </data>
+  <data name="Txt_MOTIONCONTROL" xml:space="preserve">
+    <value>运动控制</value>
+  </data>
+  <data name="Txt_MSHash" xml:space="preserve">
+    <value>MS_Hash：</value>
+  </data>
+  <data name="Txt_Machine" xml:space="preserve">
+    <value>设备编号：</value>
+  </data>
+  <data name="Txt_MachineConfigs" xml:space="preserve">
+    <value>设备配置</value>
+  </data>
+  <data name="Txt_MachineHomed" xml:space="preserve">
+    <value>设备已回原点。</value>
+  </data>
+  <data name="Txt_MachineLog" xml:space="preserve">
+    <value>设备日志</value>
+  </data>
+  <data name="Txt_MachineLog_2" xml:space="preserve">
+    <value>设备日志</value>
+  </data>
+  <data name="Txt_Machine_2" xml:space="preserve">
+    <value>设备：</value>
+  </data>
+  <data name="Txt_Machine_3" xml:space="preserve">
+    <value>设备</value>
+  </data>
+  <data name="Txt_MainSW" xml:space="preserve">
+    <value>主软件</value>
+  </data>
+  <data name="Txt_MainSWPath" xml:space="preserve">
+    <value>主软件路径：</value>
+  </data>
+  <data name="Txt_MaintenanceMode" xml:space="preserve">
+    <value>维护模式</value>
+  </data>
+  <data name="Txt_MaintenanceStations" xml:space="preserve">
+    <value>维护工站</value>
+  </data>
+  <data name="Txt_Manual" xml:space="preserve">
+    <value>手动</value>
+  </data>
+  <data name="Txt_ManualDowntime" xml:space="preserve">
+    <value>手动停机</value>
+  </data>
+  <data name="Txt_ManualScreen" xml:space="preserve">
+    <value>手动界面</value>
+  </data>
+  <data name="Txt_ManuallyDisabled" xml:space="preserve">
+    <value>已手动禁用</value>
+  </data>
+  <data name="Txt_MaterialReplacement" xml:space="preserve">
+    <value>物料更换</value>
+  </data>
+  <data name="Txt_Max" xml:space="preserve">
+    <value>最大</value>
+  </data>
+  <data name="Txt_MaxLimit" xml:space="preserve">
+    <value>最大限值</value>
+  </data>
+  <data name="Txt_MaxMin" xml:space="preserve">
+    <value>最大 - 最小</value>
+  </data>
+  <data name="Txt_MaxMinOfTheHeightsMustBe" xml:space="preserve">
+    <value>高度的最大值与最小值之差必须在限值内；否则用 A / R 补偿后重复，或进行机械调整。</value>
+  </data>
+  <data name="Txt_MaxMinOfTheTwoHeightsMust" xml:space="preserve">
+    <value>两个高度的最大值与最小值之差必须在限值内；否则进行机械调整。</value>
+  </data>
+  <data name="Txt_MaxWeightPerCartridgeG" xml:space="preserve">
+    <value>每支胶管最大重量 (g)</value>
+  </data>
+  <data name="Txt_MaxWeightPerGlueCartridge" xml:space="preserve">
+    <value>每支胶管最大重量</value>
+  </data>
+  <data name="Txt_Maximum" xml:space="preserve">
+    <value>最大值</value>
+  </data>
+  <data name="Txt_Mean" xml:space="preserve">
+    <value>平均值 </value>
+  </data>
+  <data name="Txt_Mean_2" xml:space="preserve">
+    <value>平均值</value>
+  </data>
+  <data name="Txt_Measured" xml:space="preserve">
+    <value>测量值</value>
+  </data>
+  <data name="Txt_MeasuringValuesFillInAsThePLC" xml:space="preserve">
+    <value>测量中 - 数值将随 PLC 上报逐步填入。</value>
+  </data>
+  <data name="Txt_Message" xml:space="preserve">
+    <value>消息</value>
+  </data>
+  <data name="Txt_Min" xml:space="preserve">
+    <value>最小</value>
+  </data>
+  <data name="Txt_MinLimit" xml:space="preserve">
+    <value>最小限值</value>
+  </data>
+  <data name="Txt_MinToMax" xml:space="preserve">
+    <value>最小到最大 </value>
+  </data>
+  <data name="Txt_MinToMax_2" xml:space="preserve">
+    <value>最小到最大</value>
+  </data>
+  <data name="Txt_Minimum" xml:space="preserve">
+    <value>最小值</value>
+  </data>
+  <data name="Txt_ModeChanged" xml:space="preserve">
+    <value>模式已切换</value>
+  </data>
+  <data name="Txt_MotionControl" xml:space="preserve">
+    <value>运动控制</value>
+  </data>
+  <data name="Txt_Move" xml:space="preserve">
+    <value>移动</value>
+  </data>
+  <data name="Txt_MustBeAValidInteger" xml:space="preserve">
+    <value>必须是有效的整数。</value>
+  </data>
+  <data name="Txt_MustBeAValidNumericValue" xml:space="preserve">
+    <value>必须是有效的数值。</value>
+  </data>
+  <data name="Txt_MustBeGreaterThanOrEqualTo" xml:space="preserve">
+    <value>必须大于或等于 0。</value>
+  </data>
+  <data name="Txt_Mute" xml:space="preserve">
+    <value>静音</value>
+  </data>
+  <data name="Txt_Name" xml:space="preserve">
+    <value>名称</value>
+  </data>
+  <data name="Txt_NeedleChange" xml:space="preserve">
+    <value>更换针头</value>
+  </data>
+  <data name="Txt_NeedleDeviationCheckCCD3" xml:space="preserve">
+    <value>针头偏差检查（CCD3）</value>
+  </data>
+  <data name="Txt_NeedleHeightFeelerGauge" xml:space="preserve">
+    <value>针头高度（塞尺）</value>
+  </data>
+  <data name="Txt_NeedleOffsetCCD1CCD2" xml:space="preserve">
+    <value>针头偏移（CCD1 / CCD2）</value>
+  </data>
+  <data name="Txt_NeedleTemplateTeachCCD3" xml:space="preserve">
+    <value>针头模板示教（CCD3）</value>
+  </data>
+  <data name="Txt_NeedleZZeroTouchSensor" xml:space="preserve">
+    <value>针头 Z 归零（接触传感器）</value>
+  </data>
+  <data name="Txt_NeedsALevel2OrLevel3" xml:space="preserve">
+    <value>需要 2 级或 3 级工卡</value>
+  </data>
+  <data name="Txt_NeedsTwoStepVerification" xml:space="preserve">
+    <value>需要两步验证</value>
+  </data>
+  <data name="Txt_NegativeLimit" xml:space="preserve">
+    <value>负限位</value>
+  </data>
+  <data name="Txt_Network" xml:space="preserve">
+    <value>网络</value>
+  </data>
+  <data name="Txt_NetworkAnomaliesOccur" xml:space="preserve">
+    <value>出现网络异常</value>
+  </data>
+  <data name="Txt_New0" xml:space="preserve">
+    <value>新{0}：</value>
+  </data>
+  <data name="Txt_No" xml:space="preserve">
+    <value>否</value>
+  </data>
+  <data name="Txt_NoAccess" xml:space="preserve">
+    <value>无权限</value>
+  </data>
+  <data name="Txt_NoAlarmLogIsConfiguredOnThis" xml:space="preserve">
+    <value>此设备未配置报警日志。</value>
+  </data>
+  <data name="Txt_NoAlarmsInThisWindow" xml:space="preserve">
+    <value>此时间段内无报警。</value>
+  </data>
+  <data name="Txt_NoAnswerFromMES" xml:space="preserve">
+    <value>MES 无响应</value>
+  </data>
+  <data name="Txt_NoCalibrationHasBeenRecordedForThis" xml:space="preserve">
+    <value>此龙门和路径尚无校准记录。</value>
+  </data>
+  <data name="Txt_NoCalibrationStatusFromThePLC" xml:space="preserve">
+    <value>PLC 未提供校准状态。</value>
+  </data>
+  <data name="Txt_NoCoordinatesWereMeasuredInThisWindow" xml:space="preserve">
+    <value>此时间段内未测量任何坐标。</value>
+  </data>
+  <data name="Txt_NoFields" xml:space="preserve">
+    <value>无字段</value>
+  </data>
+  <data name="Txt_NoFieldsSelectedPleaseTickPDATAItems" xml:space="preserve">
+    <value>未选择字段。请先从列表中勾选 PDATA 项目。</value>
+  </data>
+  <data name="Txt_NoFrameCaptured" xml:space="preserve">
+    <value>未捕获图像</value>
+  </data>
+  <data name="Txt_NoFrontGantryWeighingsForThisPath" xml:space="preserve">
+    <value>此时间段内该路径无前龙门称重记录。</value>
+  </data>
+  <data name="Txt_NoGlueCartridgeData" xml:space="preserve">
+    <value>无胶管数据。</value>
+  </data>
+  <data name="Txt_NoHIVEStateChangesRecordedInThe" xml:space="preserve">
+    <value>最近七天内没有记录 HIVE 状态变化。</value>
+  </data>
+  <data name="Txt_NoHardwareSubsystemsAreListedAddThem" xml:space="preserve">
+    <value>未列出硬件子系统。请在 Data\Settings\StationOptions.json 的 "Hardware" 下添加。</value>
+  </data>
+  <data name="Txt_NoImageSourceIsConfiguredAppConfig" xml:space="preserve">
+    <value>未配置图像来源（App.config 中的 VisionImageFolder）：请将其设置为视觉软件保存图像的文件夹。</value>
+  </data>
+  <data name="Txt_NoLimitsWereChanged" xml:space="preserve">
+    <value>没有修改任何限值。</value>
+  </data>
+  <data name="Txt_NoNozzleHealthFromMES" xml:space="preserve">
+    <value>MES 未提供喷嘴状态。</value>
+  </data>
+  <data name="Txt_NoPDATANamesFoundInTheCSV" xml:space="preserve">
+    <value>CSV 文件中未找到 PDATA 名称。</value>
+  </data>
+  <data name="Txt_NoPLCStatus" xml:space="preserve">
+    <value>无 PLC 状态</value>
+  </data>
+  <data name="Txt_NoPlannedDowntimeReasonCanBeChosen" xml:space="preserve">
+    <value>目前无法选择计划停机原因。</value>
+  </data>
+  <data name="Txt_NoProductionRecordIsConfiguredOnThis" xml:space="preserve">
+    <value>此设备未配置生产记录。</value>
+  </data>
+  <data name="Txt_NoProductionRecordOnThisMachine" xml:space="preserve">
+    <value>此设备上无生产记录。</value>
+  </data>
+  <data name="Txt_NoProductionSpecLimitsAreSetConfig" xml:space="preserve">
+    <value>未设置生产规格限值（配置 &gt; 规格限值）。</value>
+  </data>
+  <data name="Txt_NoProfileToSave" xml:space="preserve">
+    <value>没有可保存的配置文件。</value>
+  </data>
+  <data name="Txt_NoRearGantryWeighingsForThisPath" xml:space="preserve">
+    <value>此时间段内该路径无后龙门称重记录。</value>
+  </data>
+  <data name="Txt_NoRecord" xml:space="preserve">
+    <value>无记录</value>
+  </data>
+  <data name="Txt_NoResponse" xml:space="preserve">
+    <value>（无响应）</value>
+  </data>
+  <data name="Txt_NoResultFromThePLCForThis" xml:space="preserve">
+    <value>PLC 尚未返回此工站该例程的结果。</value>
+  </data>
+  <data name="Txt_NoSFCServerIsAvailableThereIs" xml:space="preserve">
+    <value>没有可用的 SFC 服务器：此版本尚无 SFC 客户端。</value>
+  </data>
+  <data name="Txt_NoSpecLimitsAreConfiguredOnThis" xml:space="preserve">
+    <value>此设备未配置规格限值。</value>
+  </data>
+  <data name="Txt_NoStationProfileIsConfiguredOnThis" xml:space="preserve">
+    <value>此设备未配置工站配置文件。</value>
+  </data>
+  <data name="Txt_NoTextInThisLanguageEnglishIs" xml:space="preserve">
+    <value>此语言无文本 - 将显示英文</value>
+  </data>
+  <data name="Txt_NoUnitHasBeenRecordedToday" xml:space="preserve">
+    <value>今天尚未记录任何产品。</value>
+  </data>
+  <data name="Txt_NoValveModelIsSetForThis" xml:space="preserve">
+    <value>此龙门未设置阀型号。请先在 设置 &gt; 阀型号 中选择。</value>
+  </data>
+  <data name="Txt_NoValveSNIsRecordedForThis" xml:space="preserve">
+    <value>此龙门没有记录阀序列号。请先执行更换阀（PD-04）。</value>
+  </data>
+  <data name="Txt_Nominal" xml:space="preserve">
+    <value>标称</value>
+  </data>
+  <data name="Txt_NominalMg" xml:space="preserve">
+    <value>标称 (mg)</value>
+  </data>
+  <data name="Txt_NoneRecorded" xml:space="preserve">
+    <value>（无记录）</value>
+  </data>
+  <data name="Txt_Normal" xml:space="preserve">
+    <value>正常</value>
+  </data>
+  <data name="Txt_NormalProduction" xml:space="preserve">
+    <value>正常生产</value>
+  </data>
+  <data name="Txt_NotANumber" xml:space="preserve">
+    <value>不是数字</value>
+  </data>
+  <data name="Txt_NotAStandardValveSNXXXYYY" xml:space="preserve">
+    <value>不是标准的阀序列号（XXX-YYY-001_YYMMDD）。请重新扫描。</value>
+  </data>
+  <data name="Txt_NotAvailable" xml:space="preserve">
+    <value>不可用</value>
+  </data>
+  <data name="Txt_NotBuiltYet" xml:space="preserve">
+    <value>尚未构建</value>
+  </data>
+  <data name="Txt_NotHomedHomeTheMachineBeforeCalibrating" xml:space="preserve">
+    <value>未回原点：校准前请先让设备回原点。</value>
+  </data>
+  <data name="Txt_NotMonitored" xml:space="preserve">
+    <value>未监控</value>
+  </data>
+  <data name="Txt_NotReadYet" xml:space="preserve">
+    <value>尚未读取</value>
+  </data>
+  <data name="Txt_NotSignedInClickToSignIn" xml:space="preserve">
+    <value>未登录 - 点击登录</value>
+  </data>
+  <data name="Txt_NothingHasRunSinceThePLCStarted" xml:space="preserve">
+    <value>PLC 启动后尚未运行任何内容。</value>
+  </data>
+  <data name="Txt_NothingLoggedYet" xml:space="preserve">
+    <value>尚无日志。</value>
+  </data>
+  <data name="Txt_NozzleChange" xml:space="preserve">
+    <value>更换喷嘴</value>
+  </data>
+  <data name="Txt_NozzleCriticalH" xml:space="preserve">
+    <value>喷嘴严重 (h)</value>
+  </data>
+  <data name="Txt_NozzleCriticalLevelMustBeANumber" xml:space="preserve">
+    <value>喷嘴严重级别必须是大于 0 的小时数。</value>
+  </data>
+  <data name="Txt_NozzleHealth" xml:space="preserve">
+    <value>喷嘴状态</value>
+  </data>
+  <data name="Txt_NozzleID" xml:space="preserve">
+    <value>喷嘴 ID</value>
+  </data>
+  <data name="Txt_NozzleSN" xml:space="preserve">
+    <value>喷嘴序列号：</value>
+  </data>
+  <data name="Txt_NozzleWarningH" xml:space="preserve">
+    <value>喷嘴警告 (h)</value>
+  </data>
+  <data name="Txt_NozzleWarningMustBeANumberOf" xml:space="preserve">
+    <value>喷嘴警告必须是大于 0 的小时数。</value>
+  </data>
+  <data name="Txt_OFFDefault" xml:space="preserve">
+    <value>关（默认）</value>
+  </data>
+  <data name="Txt_OK" xml:space="preserve">
+    <value>确定</value>
+  </data>
+  <data name="Txt_ON" xml:space="preserve">
+    <value>开</value>
+  </data>
+  <data name="Txt_ONLINE" xml:space="preserve">
+    <value>在线</value>
+  </data>
+  <data name="Txt_ONOFF" xml:space="preserve">
+    <value>开/关</value>
+  </data>
+  <data name="Txt_ONTurnsTheHomePageStationCard" xml:space="preserve">
+    <value>打开后，主页工站卡片变为橙色，并将每条 machine_state 数据写入远程验证日志（HIVE log \ RemoteQualification，每行一个 JSON，S2.4）。</value>
+  </data>
+  <data name="Txt_OUTPUTADDR" xml:space="preserve">
+    <value>输出地址</value>
+  </data>
+  <data name="Txt_Off" xml:space="preserve">
+    <value>关</value>
+  </data>
+  <data name="Txt_OfflineProcessing" xml:space="preserve">
+    <value>离线处理</value>
+  </data>
+  <data name="Txt_Offset" xml:space="preserve">
+    <value>偏移</value>
+  </data>
+  <data name="Txt_OffsetXMax" xml:space="preserve">
+    <value>X 最大偏移</value>
+  </data>
+  <data name="Txt_OffsetYMax" xml:space="preserve">
+    <value>Y 最大偏移</value>
+  </data>
+  <data name="Txt_Old0" xml:space="preserve">
+    <value>旧{0}：</value>
+  </data>
+  <data name="Txt_Ongoing" xml:space="preserve">
+    <value>进行中</value>
+  </data>
+  <data name="Txt_OnlyALevel3UserCanChange" xml:space="preserve">
+    <value>只有 3 级用户才能修改屏幕上显示的文字。</value>
+  </data>
+  <data name="Txt_OnlyEnabledWhenAnAdminLevel3" xml:space="preserve">
+    <value>仅在管理员（3 级）用户登录时启用。</value>
+  </data>
+  <data name="Txt_OpenAlarmPage" xml:space="preserve">
+    <value>打开报警页面 ›</value>
+  </data>
+  <data name="Txt_OpenTheAlarmPage" xml:space="preserve">
+    <value>打开报警页面</value>
+  </data>
+  <data name="Txt_OpenTheDataPage" xml:space="preserve">
+    <value>打开数据页面</value>
+  </data>
+  <data name="Txt_Operator" xml:space="preserve">
+    <value>操作员：</value>
+  </data>
+  <data name="Txt_OperatorCheck" xml:space="preserve">
+    <value>操作员检查</value>
+  </data>
+  <data name="Txt_Operator_2" xml:space="preserve">
+    <value>操作员</value>
+  </data>
+  <data name="Txt_Options" xml:space="preserve">
+    <value>选项</value>
+  </data>
+  <data name="Txt_Organization" xml:space="preserve">
+    <value>组织</value>
+  </data>
+  <data name="Txt_Other" xml:space="preserve">
+    <value>其他</value>
+  </data>
+  <data name="Txt_OutOfSpec" xml:space="preserve">
+    <value>超出规格</value>
+  </data>
+  <data name="Txt_OutputCT" xml:space="preserve">
+    <value>产出 CT</value>
+  </data>
+  <data name="Txt_OutputCTSByShift" xml:space="preserve">
+    <value>各班次产出 CT（秒）</value>
+  </data>
+  <data name="Txt_OutputName" xml:space="preserve">
+    <value>输出名称</value>
+  </data>
+  <data name="Txt_OutputUnitsByShift" xml:space="preserve">
+    <value>各班次产量</value>
+  </data>
+  <data name="Txt_Outputs" xml:space="preserve">
+    <value>输出</value>
+  </data>
+  <data name="Txt_PD15UploadedHashKeysToMES" xml:space="preserve">
+    <value>PD-15 已上传哈希键到 MES</value>
+  </data>
+  <data name="Txt_PDATAList" xml:space="preserve">
+    <value>PDATA 列表</value>
+  </data>
+  <data name="Txt_PDATAMapping" xml:space="preserve">
+    <value>PDATA 映射</value>
+  </data>
+  <data name="Txt_POINTTOPOINTCONTROL" xml:space="preserve">
+    <value>点对点控制</value>
+  </data>
+  <data name="Txt_POSITIONMM" xml:space="preserve">
+    <value>位置 (MM)</value>
+  </data>
+  <data name="Txt_Parameter" xml:space="preserve">
+    <value>参数</value>
+  </data>
+  <data name="Txt_ParameterDashboard" xml:space="preserve">
+    <value>参数看板</value>
+  </data>
+  <data name="Txt_Parameters0" xml:space="preserve">
+    <value>参数 - {0}</value>
+  </data>
+  <data name="Txt_Pass" xml:space="preserve">
+    <value>通过</value>
+  </data>
+  <data name="Txt_PassFailUnits" xml:space="preserve">
+    <value>合格/不合格产品</value>
+  </data>
+  <data name="Txt_Path" xml:space="preserve">
+    <value>路径</value>
+  </data>
+  <data name="Txt_Pause" xml:space="preserve">
+    <value>暂停</value>
+  </data>
+  <data name="Txt_PauseTheMachine" xml:space="preserve">
+    <value>暂停设备</value>
+  </data>
+  <data name="Txt_Paused" xml:space="preserve">
+    <value>已暂停</value>
+  </data>
+  <data name="Txt_PictureQtyCheck" xml:space="preserve">
+    <value>图片数量检查</value>
+  </data>
+  <data name="Txt_PictureQtyCheckEdit" xml:space="preserve">
+    <value>图片数量检查 - 编辑</value>
+  </data>
+  <data name="Txt_PitchMm" xml:space="preserve">
+    <value>间距 (mm)</value>
+  </data>
+  <data name="Txt_PlaceTheCalibrationPlateOnTheFixture" xml:space="preserve">
+    <value>将校准板放在治具上；在位传感器会检测到它。</value>
+  </data>
+  <data name="Txt_PlaceTheCalibrationPlateWithTheAngled" xml:space="preserve">
+    <value>将带斜面块的校准板放在治具上；在位传感器会检测到它。</value>
+  </data>
+  <data name="Txt_PlaceTheCameraCheckerSheetUnderThe" xml:space="preserve">
+    <value>将相机检查片放在工站相机下方；PLC 将检查光照和对焦。</value>
+  </data>
+  <data name="Txt_PlaceTheFiveAxisCalibrationPlateOn" xml:space="preserve">
+    <value>将五轴校准板放在治具上；在位传感器会检测到它。</value>
+  </data>
+  <data name="Txt_PlaceTheNeedleCalibrationPlateWithThe" xml:space="preserve">
+    <value>将带参考基准点的针头校准板放在工站相机下方。</value>
+  </data>
+  <data name="Txt_Placeholder" xml:space="preserve">
+    <value>占位</value>
+  </data>
+  <data name="Txt_PlannedDowntime" xml:space="preserve">
+    <value>计划停机</value>
+  </data>
+  <data name="Txt_PlannedDowntime0" xml:space="preserve">
+    <value>计划停机 - {0}</value>
+  </data>
+  <data name="Txt_Play" xml:space="preserve">
+    <value>播放</value>
+  </data>
+  <data name="Txt_PleaseCorrectInvalidValuesBeforeSaving" xml:space="preserve">
+    <value>保存前请更正无效值。</value>
+  </data>
+  <data name="Txt_PleaseEnterASpeedGreaterThan0" xml:space="preserve">
+    <value>请输入大于 0 的速度，或留空以使用配置的速度。</value>
+  </data>
+  <data name="Txt_PleaseEnterAValidPosition" xml:space="preserve">
+    <value>请输入有效的位置。</value>
+  </data>
+  <data name="Txt_PleaseEnterAValidSpeed" xml:space="preserve">
+    <value>请输入有效的速度。</value>
+  </data>
+  <data name="Txt_PleaseEnterSpeedGreaterThan0And" xml:space="preserve">
+    <value>请输入大于 0 且小于轴参数速度的速度</value>
+  </data>
+  <data name="Txt_PleaseEnterTheVelocityForHoming" xml:space="preserve">
+    <value>请输入回原点速度</value>
+  </data>
+  <data name="Txt_PleaseSwipeAgain" xml:space="preserve">
+    <value>请重新刷卡。</value>
+  </data>
+  <data name="Txt_Point" xml:space="preserve">
+    <value>点位</value>
+  </data>
+  <data name="Txt_Point1" xml:space="preserve">
+    <value>点 1</value>
+  </data>
+  <data name="Txt_Point2" xml:space="preserve">
+    <value>点 2</value>
+  </data>
+  <data name="Txt_Point3" xml:space="preserve">
+    <value>点 3</value>
+  </data>
+  <data name="Txt_Point4" xml:space="preserve">
+    <value>点 4</value>
+  </data>
+  <data name="Txt_PointName" xml:space="preserve">
+    <value>点位名称：</value>
+  </data>
+  <data name="Txt_PointPitchX" xml:space="preserve">
+    <value>点间距 X</value>
+  </data>
+  <data name="Txt_PointPitchY" xml:space="preserve">
+    <value>点间距 Y</value>
+  </data>
+  <data name="Txt_Port" xml:space="preserve">
+    <value>端口</value>
+  </data>
+  <data name="Txt_Position" xml:space="preserve">
+    <value>位置</value>
+  </data>
+  <data name="Txt_PositionMm" xml:space="preserve">
+    <value>位置 (mm)</value>
+  </data>
+  <data name="Txt_PositiveLimit" xml:space="preserve">
+    <value>正限位</value>
+  </data>
+  <data name="Txt_PotLife" xml:space="preserve">
+    <value>适用期</value>
+  </data>
+  <data name="Txt_PotLifeThreshold" xml:space="preserve">
+    <value>适用期阈值</value>
+  </data>
+  <data name="Txt_PotLifeThresholdH" xml:space="preserve">
+    <value>适用期阈值 (h)</value>
+  </data>
+  <data name="Txt_PotLifeWarningMustBeANumber" xml:space="preserve">
+    <value>适用期警告必须是大于 0 的小时数。</value>
+  </data>
+  <data name="Txt_Prefix" xml:space="preserve">
+    <value>前缀</value>
+  </data>
+  <data name="Txt_PressAndHold" xml:space="preserve">
+    <value>按住</value>
+  </data>
+  <data name="Txt_PressEditToChangeTheMapping" xml:space="preserve">
+    <value>按“编辑”修改映射。</value>
+  </data>
+  <data name="Txt_Preview" xml:space="preserve">
+    <value>预览</value>
+  </data>
+  <data name="Txt_PriorApprovalMustBeObtainedFromCM" xml:space="preserve">
+    <value>执行前必须获得 CM/BUD 的事先批准。仅在出现网络异常或 HIVE 设置配置仍不完整时才可禁用 HIVE。</value>
+  </data>
+  <data name="Txt_Priority" xml:space="preserve">
+    <value>优先级</value>
+  </data>
+  <data name="Txt_Procedure" xml:space="preserve">
+    <value>流程</value>
+  </data>
+  <data name="Txt_ProcessingDowntime" xml:space="preserve">
+    <value>处理停机</value>
+  </data>
+  <data name="Txt_ProdType" xml:space="preserve">
+    <value>产品类型：</value>
+  </data>
+  <data name="Txt_ProductionGlueConsumption" xml:space="preserve">
+    <value>生产用胶量</value>
+  </data>
+  <data name="Txt_Project" xml:space="preserve">
+    <value>项目</value>
+  </data>
+  <data name="Txt_ProjectCode" xml:space="preserve">
+    <value>项目代码：</value>
+  </data>
+  <data name="Txt_PulsesMm" xml:space="preserve">
+    <value>脉冲/mm</value>
+  </data>
+  <data name="Txt_PurgeCycles" xml:space="preserve">
+    <value>排胶次数</value>
+  </data>
+  <data name="Txt_QtyProduced" xml:space="preserve">
+    <value>生产数量</value>
+  </data>
+  <data name="Txt_Query" xml:space="preserve">
+    <value>查询</value>
+  </data>
+  <data name="Txt_QueryPreview" xml:space="preserve">
+    <value>查询预览</value>
+  </data>
+  <data name="Txt_Question" xml:space="preserve">
+    <value>问题</value>
+  </data>
+  <data name="Txt_RAxis" xml:space="preserve">
+    <value>R 轴 (°)</value>
+  </data>
+  <data name="Txt_RAxisAngle" xml:space="preserve">
+    <value>R 轴角度</value>
+  </data>
+  <data name="Txt_RECEIVEDDATASTREAM" xml:space="preserve">
+    <value>接收的数据流</value>
+  </data>
+  <data name="Txt_RECEIVEDRESPONSE" xml:space="preserve">
+    <value>接收的响应</value>
+  </data>
+  <data name="Txt_RPOS" xml:space="preserve">
+    <value>R 位置</value>
+  </data>
+  <data name="Txt_ReadOnlyChangingThePDATAMappingNeeds" xml:space="preserve">
+    <value>只读。修改 PDATA 映射需要 3 级权限。</value>
+  </data>
+  <data name="Txt_ReadOnlyChangingTheValveModelNeeds" xml:space="preserve">
+    <value>只读。修改阀型号需要 3 级权限。</value>
+  </data>
+  <data name="Txt_Ready" xml:space="preserve">
+    <value>就绪</value>
+  </data>
+  <data name="Txt_ReadyForProcedure" xml:space="preserve">
+    <value>准备执行流程</value>
+  </data>
+  <data name="Txt_Rear" xml:space="preserve">
+    <value>后</value>
+  </data>
+  <data name="Txt_Reason" xml:space="preserve">
+    <value>原因：</value>
+  </data>
+  <data name="Txt_ReasonNotRecorded" xml:space="preserve">
+    <value>未记录原因</value>
+  </data>
+  <data name="Txt_RecentUnits" xml:space="preserve">
+    <value>最近产品</value>
+  </data>
+  <data name="Txt_Recipe" xml:space="preserve">
+    <value>配方</value>
+  </data>
+  <data name="Txt_Refresh" xml:space="preserve">
+    <value>刷新</value>
+  </data>
+  <data name="Txt_RefreshAllHashKeys" xml:space="preserve">
+    <value>刷新所有哈希键</value>
+  </data>
+  <data name="Txt_Regression" xml:space="preserve">
+    <value>回归</value>
+  </data>
+  <data name="Txt_RegressionCalibration" xml:space="preserve">
+    <value>回归校准：</value>
+  </data>
+  <data name="Txt_Reject" xml:space="preserve">
+    <value>拒绝</value>
+  </data>
+  <data name="Txt_Relative" xml:space="preserve">
+    <value>相对</value>
+  </data>
+  <data name="Txt_Remaining" xml:space="preserve">
+    <value>剩余 %</value>
+  </data>
+  <data name="Txt_RemainingGlueWeight" xml:space="preserve">
+    <value>剩余胶重</value>
+  </data>
+  <data name="Txt_RemainingPotLifeHours" xml:space="preserve">
+    <value>剩余适用期（小时）</value>
+  </data>
+  <data name="Txt_RemainingPotLifeOfGlueHours" xml:space="preserve">
+    <value>胶水剩余适用期（小时）</value>
+  </data>
+  <data name="Txt_RemoteQualification" xml:space="preserve">
+    <value>远程验证</value>
+  </data>
+  <data name="Txt_ReplaceItWithTheGlueCalibrationBlock" xml:space="preserve">
+    <value>换上胶水校准块；确保九个基准点都干净且可见。</value>
+  </data>
+  <data name="Txt_Required" xml:space="preserve">
+    <value>必填</value>
+  </data>
+  <data name="Txt_Result" xml:space="preserve">
+    <value>结果</value>
+  </data>
+  <data name="Txt_Results" xml:space="preserve">
+    <value>结果</value>
+  </data>
+  <data name="Txt_Resume" xml:space="preserve">
+    <value>恢复</value>
+  </data>
+  <data name="Txt_Retract" xml:space="preserve">
+    <value>缩回</value>
+  </data>
+  <data name="Txt_Retracted" xml:space="preserve">
+    <value>  ·  已缩回</value>
+  </data>
+  <data name="Txt_Retracted_2" xml:space="preserve">
+    <value>·  已缩回</value>
+  </data>
+  <data name="Txt_Retracted_3" xml:space="preserve">
+    <value>已缩回</value>
+  </data>
+  <data name="Txt_Reverse" xml:space="preserve">
+    <value>反向</value>
+  </data>
+  <data name="Txt_Revert" xml:space="preserve">
+    <value>还原</value>
+  </data>
+  <data name="Txt_Robot" xml:space="preserve">
+    <value>机器人</value>
+  </data>
+  <data name="Txt_RobotRecipe" xml:space="preserve">
+    <value>机器人配方</value>
+  </data>
+  <data name="Txt_RobotTCPSettings" xml:space="preserve">
+    <value>机器人 TCP 设置</value>
+  </data>
+  <data name="Txt_Rotate0Clockwise" xml:space="preserve">
+    <value>{0} 顺时针旋转</value>
+  </data>
+  <data name="Txt_Rotate0CounterClockwise" xml:space="preserve">
+    <value>{0} 逆时针旋转</value>
+  </data>
+  <data name="Txt_Routine" xml:space="preserve">
+    <value>例程</value>
+  </data>
+  <data name="Txt_Running" xml:space="preserve">
+    <value>运行中</value>
+  </data>
+  <data name="Txt_RunningLog" xml:space="preserve">
+    <value>运行日志</value>
+  </data>
+  <data name="Txt_SAFE" xml:space="preserve">
+    <value>安全</value>
+  </data>
+  <data name="Txt_SELECTAXIS" xml:space="preserve">
+    <value>选择轴</value>
+  </data>
+  <data name="Txt_SELECTEDDEVICE" xml:space="preserve">
+    <value>已选设备</value>
+  </data>
+  <data name="Txt_SELECTGANTRYMODULE" xml:space="preserve">
+    <value>选择龙门模块</value>
+  </data>
+  <data name="Txt_SELECTTRIGGERCOMMAND" xml:space="preserve">
+    <value>选择触发命令</value>
+  </data>
+  <data name="Txt_SENDCOMMAND" xml:space="preserve">
+    <value>发送命令</value>
+  </data>
+  <data name="Txt_SFCPDCA" xml:space="preserve">
+    <value>SFC 和 PDCA</value>
+  </data>
+  <data name="Txt_SFCPDCASettings" xml:space="preserve">
+    <value>SFC 和 PDCA 设置</value>
+  </data>
+  <data name="Txt_SFCPDCATCPSettings" xml:space="preserve">
+    <value>SFC PDCA TCP 设置</value>
+  </data>
+  <data name="Txt_SNO" xml:space="preserve">
+    <value>序号</value>
+  </data>
+  <data name="Txt_SPEEDMMS" xml:space="preserve">
+    <value>速度 (MM/S)</value>
+  </data>
+  <data name="Txt_STATUS" xml:space="preserve">
+    <value>状态</value>
+  </data>
+  <data name="Txt_SWFileBeingControlled" xml:space="preserve">
+    <value>受控软件/文件</value>
+  </data>
+  <data name="Txt_SWVersion" xml:space="preserve">
+    <value>软件版本：</value>
+  </data>
+  <data name="Txt_SampleData" xml:space="preserve">
+    <value>示例数据</value>
+  </data>
+  <data name="Txt_Save" xml:space="preserve">
+    <value>保存</value>
+  </data>
+  <data name="Txt_SaveOrCancelTheParameterEditFirst" xml:space="preserve">
+    <value>请先保存或取消参数编辑。</value>
+  </data>
+  <data name="Txt_SaveOrRevertTheGeneralChangesFirst" xml:space="preserve">
+    <value>请先保存或还原“常规”中的更改，然后再打开“修改配置”。</value>
+  </data>
+  <data name="Txt_SaveTheSpecLimits" xml:space="preserve">
+    <value>保存规格限值？</value>
+  </data>
+  <data name="Txt_SavesTheParametersForThisStationAnd" xml:space="preserve">
+    <value>保存此工站和例程的参数</value>
+  </data>
+  <data name="Txt_SavesThenSignsTheAuthorizedUserOut" xml:space="preserve">
+    <value>保存后登出已授权用户</value>
+  </data>
+  <data name="Txt_ScanThe0" xml:space="preserve">
+    <value>请扫描{0}。</value>
+  </data>
+  <data name="Txt_ScanTheNewCartridgeSNOfEach" xml:space="preserve">
+    <value>请扫描每个已换胶龙门的新胶管序列号。其 purge_idx 将归零。</value>
+  </data>
+  <data name="Txt_ScanTheNozzleSNFirst" xml:space="preserve">
+    <value>请先扫描喷嘴序列号。</value>
+  </data>
+  <data name="Txt_Scanner" xml:space="preserve">
+    <value>扫码枪</value>
+  </data>
+  <data name="Txt_ScannerTCPSettings" xml:space="preserve">
+    <value>扫码枪 TCP 设置</value>
+  </data>
+  <data name="Txt_SearchFields" xml:space="preserve">
+    <value>搜索字段</value>
+  </data>
+  <data name="Txt_SearchKeyOrText" xml:space="preserve">
+    <value>搜索键或文本</value>
+  </data>
+  <data name="Txt_SearchParameters" xml:space="preserve">
+    <value>搜索参数...</value>
+  </data>
+  <data name="Txt_SearchSpeed" xml:space="preserve">
+    <value>搜索速度</value>
+  </data>
+  <data name="Txt_SearchTravelMax" xml:space="preserve">
+    <value>最大搜索行程</value>
+  </data>
+  <data name="Txt_Section" xml:space="preserve">
+    <value>部分</value>
+  </data>
+  <data name="Txt_SelectARowToMove" xml:space="preserve">
+    <value>请选择要移动的行。</value>
+  </data>
+  <data name="Txt_SelectARowToTeach" xml:space="preserve">
+    <value>请选择要示教的行。</value>
+  </data>
+  <data name="Txt_SelectAStationAndARoutine" xml:space="preserve">
+    <value>请选择工站和例程。</value>
+  </data>
+  <data name="Txt_SelectCCD" xml:space="preserve">
+    <value>选择 CCD</value>
+  </data>
+  <data name="Txt_SelectDevice" xml:space="preserve">
+    <value>选择设备</value>
+  </data>
+  <data name="Txt_SelectRobotUnit" xml:space="preserve">
+    <value>选择机器人单元</value>
+  </data>
+  <data name="Txt_SelectSFCServer" xml:space="preserve">
+    <value>选择 SFC 服务器</value>
+  </data>
+  <data name="Txt_SelectScanner" xml:space="preserve">
+    <value>选择扫码枪</value>
+  </data>
+  <data name="Txt_SelectStation1Station2OrBoth" xml:space="preserve">
+    <value>请为维护模式选择工站 1、工站 2 或两者。</value>
+  </data>
+  <data name="Txt_SelectTheAnalysisType" xml:space="preserve">
+    <value>请选择分析类型。</value>
+  </data>
+  <data name="Txt_SelectTheRepeatabilityType" xml:space="preserve">
+    <value>请选择重复性类型。</value>
+  </data>
+  <data name="Txt_SelectVacuumUnit" xml:space="preserve">
+    <value>选择真空单元</value>
+  </data>
+  <data name="Txt_Send" xml:space="preserve">
+    <value>发送</value>
+  </data>
+  <data name="Txt_SendingToThePLC" xml:space="preserve">
+    <value>正在发送到 PLC...</value>
+  </data>
+  <data name="Txt_SensorConnection" xml:space="preserve">
+    <value>传感器连接 ›</value>
+  </data>
+  <data name="Txt_SensorConnectionDashboard" xml:space="preserve">
+    <value>传感器连接看板</value>
+  </data>
+  <data name="Txt_SensorStatesAreNotLinkedToThis" xml:space="preserve">
+    <value>传感器状态尚未链接到此看板 - 它们来自 PLC 的输入。右侧的设备连接为实时状态。</value>
+  </data>
+  <data name="Txt_SensorStatesComeFromThePLCWhich" xml:space="preserve">
+    <value>传感器状态来自 PLC，PLC 尚未链接到此看板。下方设备为实时状态。</value>
+  </data>
+  <data name="Txt_SentToMESWithEveryBadgeCheck" xml:space="preserve">
+    <value>每次工卡检查时发送给 MES。可选代码列在 Data\Settings\AccessControl.json 的 ProjectCodes 下。</value>
+  </data>
+  <data name="Txt_SequenceStopped" xml:space="preserve">
+    <value>流程已停止。</value>
+  </data>
+  <data name="Txt_SerialComm" xml:space="preserve">
+    <value>串口通信</value>
+  </data>
+  <data name="Txt_SerialCommSettings" xml:space="preserve">
+    <value>串口通信设置</value>
+  </data>
+  <data name="Txt_SetAsPicUploadQuantityInConfig" xml:space="preserve">
+    <value>在 配置 &gt; 规格限值（生产）中设置为 Pic_Upload_quantity。超出范围的产品会停止点胶并使设备停机。</value>
+  </data>
+  <data name="Txt_SetTheGlueDosageForThisGantry" xml:space="preserve">
+    <value>设置此龙门的胶量</value>
+  </data>
+  <data name="Txt_Setting" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="Txt_Settings" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="Txt_ShareOfEachDayInEachHIVE" xml:space="preserve">
+    <value>每天各 HIVE 状态所占比例</value>
+  </data>
+  <data name="Txt_Shift" xml:space="preserve">
+    <value>班次</value>
+  </data>
+  <data name="Txt_ShiftEnd" xml:space="preserve">
+    <value>班次结束</value>
+  </data>
+  <data name="Txt_ShiftStart" xml:space="preserve">
+    <value>班次开始</value>
+  </data>
+  <data name="Txt_ShiftStartAndEnd" xml:space="preserve">
+    <value>班次开始和结束</value>
+  </data>
+  <data name="Txt_ShortPurgeCycles" xml:space="preserve">
+    <value>短排胶次数</value>
+  </data>
+  <data name="Txt_ShortPurgeDoseMustBeANumber" xml:space="preserve">
+    <value>短排胶量必须是不小于 0 的数字。</value>
+  </data>
+  <data name="Txt_ShortPurgeGlueConsumption" xml:space="preserve">
+    <value>短排胶用胶量</value>
+  </data>
+  <data name="Txt_ShortPurgeGlueUsagePerPurge" xml:space="preserve">
+    <value>每次短排胶用胶量</value>
+  </data>
+  <data name="Txt_ShortPurgePerPurgeG" xml:space="preserve">
+    <value>短排胶，每次 (g)</value>
+  </data>
+  <data name="Txt_ShortPurgeStatistics" xml:space="preserve">
+    <value>短排胶统计</value>
+  </data>
+  <data name="Txt_ShowEveryKey" xml:space="preserve">
+    <value>显示所有键</value>
+  </data>
+  <data name="Txt_SignIn" xml:space="preserve">
+    <value>登录</value>
+  </data>
+  <data name="Txt_SignInToChangeAnyOfThese" xml:space="preserve">
+    <value>登录后才能修改这些设置。</value>
+  </data>
+  <data name="Txt_SignInToSeeTheAccessList" xml:space="preserve">
+    <value>登录后才能查看权限列表。</value>
+  </data>
+  <data name="Txt_SignOutAfterMin" xml:space="preserve">
+    <value>自动登出时间（分钟）：</value>
+  </data>
+  <data name="Txt_SignOutAndSwitchUser" xml:space="preserve">
+    <value>登出并切换用户？</value>
+  </data>
+  <data name="Txt_SignalLost" xml:space="preserve">
+    <value>信号丢失</value>
+  </data>
+  <data name="Txt_Site" xml:space="preserve">
+    <value>厂区：</value>
+  </data>
+  <data name="Txt_Site_2" xml:space="preserve">
+    <value>厂区</value>
+  </data>
+  <data name="Txt_Spare" xml:space="preserve">
+    <value>备用</value>
+  </data>
+  <data name="Txt_SpecLimits" xml:space="preserve">
+    <value>规格限值</value>
+  </data>
+  <data name="Txt_SpecLimitsSaved" xml:space="preserve">
+    <value>规格限值已保存。</value>
+  </data>
+  <data name="Txt_Speed" xml:space="preserve">
+    <value>速度</value>
+  </data>
+  <data name="Txt_Velocity" xml:space="preserve">
+    <value>速度</value>
+  </data>
+  <data name="Txt_Start" xml:space="preserve">
+    <value>开始</value>
+  </data>
+  <data name="Txt_StartPositionMm" xml:space="preserve">
+    <value>起始位置 (mm)</value>
+  </data>
+  <data name="Txt_StartResumeTheMachine" xml:space="preserve">
+    <value>启动/恢复设备</value>
+  </data>
+  <data name="Txt_StartTime" xml:space="preserve">
+    <value>开始时间：</value>
+  </data>
+  <data name="Txt_StartTime_2" xml:space="preserve">
+    <value>开始时间</value>
+  </data>
+  <data name="Txt_Startup" xml:space="preserve">
+    <value>启动</value>
+  </data>
+  <data name="Txt_StateChanges" xml:space="preserve">
+    <value>状态变化</value>
+  </data>
+  <data name="Txt_StaticRepeatabilityPartUCAndCCDAre" xml:space="preserve">
+    <value>静态重复性（零件/UC 和 CCD 保持静止，100 次）</value>
+  </data>
+  <data name="Txt_Station" xml:space="preserve">
+    <value>工站：</value>
+  </data>
+  <data name="Txt_Station1" xml:space="preserve">
+    <value>工站 1</value>
+  </data>
+  <data name="Txt_Station1CCD1" xml:space="preserve">
+    <value>工站 1（CCD1）</value>
+  </data>
+  <data name="Txt_Station2" xml:space="preserve">
+    <value>工站 2</value>
+  </data>
+  <data name="Txt_Station2CCD2" xml:space="preserve">
+    <value>工站 2（CCD2）</value>
+  </data>
+  <data name="Txt_Station_2" xml:space="preserve">
+    <value>工站</value>
+  </data>
+  <data name="Txt_Status" xml:space="preserve">
+    <value>状态</value>
+  </data>
+  <data name="Txt_Stepper" xml:space="preserve">
+    <value>步进电机：</value>
+  </data>
+  <data name="Txt_Stop" xml:space="preserve">
+    <value>停止</value>
+  </data>
+  <data name="Txt_StopContinuousMotion" xml:space="preserve">
+    <value>停止连续运动</value>
+  </data>
+  <data name="Txt_StopTheMachine" xml:space="preserve">
+    <value>停止设备</value>
+  </data>
+  <data name="Txt_Stopped" xml:space="preserve">
+    <value>已停止</value>
+  </data>
+  <data name="Txt_StressTest" xml:space="preserve">
+    <value>压力测试</value>
+  </data>
+  <data name="Txt_Suffix" xml:space="preserve">
+    <value>后缀</value>
+  </data>
+  <data name="Txt_SwipeALevel0OrHigherID" xml:space="preserve">
+    <value>请刷 {0} 级或更高级别的工卡。</value>
+  </data>
+  <data name="Txt_SwipeALevel0OrHigherID_2" xml:space="preserve">
+    <value>请刷 {0} 级或更高级别的工卡，然后扫描序列号。</value>
+  </data>
+  <data name="Txt_SwipeALevel3CMBadgeTo" xml:space="preserve">
+    <value>请刷 3 级 CM 工卡以继续。</value>
+  </data>
+  <data name="Txt_SwipeOrScanYourIDCardTo" xml:space="preserve">
+    <value>请刷或扫描工卡登录。</value>
+  </data>
+  <data name="Txt_SwipeYourIDCard" xml:space="preserve">
+    <value>请刷工卡。</value>
+  </data>
+  <data name="Txt_SwipeYourIDCardThenScanThe" xml:space="preserve">
+    <value>请刷工卡，然后扫描序列号。</value>
+  </data>
+  <data name="Txt_SwitchUser" xml:space="preserve">
+    <value>切换用户</value>
+  </data>
+  <data name="Txt_SystemSettings" xml:space="preserve">
+    <value>系统设置</value>
+  </data>
+  <data name="Txt_TRIGGERCAPTURE" xml:space="preserve">
+    <value>触发拍照</value>
+  </data>
+  <data name="Txt_Target" xml:space="preserve">
+    <value>目标</value>
+  </data>
+  <data name="Txt_TargetYield" xml:space="preserve">
+    <value>目标良率</value>
+  </data>
+  <data name="Txt_CncHmi" xml:space="preserve">
+    <value>CNC HMI</value>
+  </data>
+  <data name="Txt_Teach" xml:space="preserve">
+    <value>示教</value>
+  </data>
+  <data name="Txt_Team" xml:space="preserve">
+    <value>团队</value>
+  </data>
+  <data name="Txt_Template" xml:space="preserve">
+    <value>模板</value>
+  </data>
+  <data name="Txt_TerminalNotConfigured" xml:space="preserve">
+    <value>（未配置终端）</value>
+  </data>
+  <data name="Txt_ThatPositionBecomesZ0ForThe" xml:space="preserve">
+    <value>该位置成为点胶 Z 的 Z = 0。</value>
+  </data>
+  <data name="Txt_TheAccessListIsNotAvailableOn" xml:space="preserve">
+    <value>此设备上无可用的权限列表。</value>
+  </data>
+  <data name="Txt_TheCameraFindsTheFiducialCentreAnd" xml:space="preserve">
+    <value>相机找到基准点中心，龙门在其上点一个胶点。</value>
+  </data>
+  <data name="Txt_TheCameraFindsTheGlueCentreGlue" xml:space="preserve">
+    <value>相机找到胶点中心；胶点中心减去基准点中心即为针头偏移。</value>
+  </data>
+  <data name="Txt_TheChangeGlueThresholdMustBeBelow" xml:space="preserve">
+    <value>换胶阈值必须低于低胶量阈值。</value>
+  </data>
+  <data name="Txt_TheChipShowsTheMachineSOwn" xml:space="preserve">
+    <value>此标签仅显示设备自身的状态。</value>
+  </data>
+  <data name="Txt_TheDispensingXAndZMoveTo" xml:space="preserve">
+    <value>点胶 X 和 Z 移动到针头校准模块的示教位置。</value>
+  </data>
+  <data name="Txt_TheDispensingZMovesDownOntoThe" xml:space="preserve">
+    <value>点胶 Z 向下移动到接触传感器（对刀仪）上，直到检测到针头。</value>
+  </data>
+  <data name="Txt_TheLaserMountedHorizontalAndParallelTo" xml:space="preserve">
+    <value>水平安装并与治具平行的激光先测量点 1，再沿 Y 测量点 2。</value>
+  </data>
+  <data name="Txt_TheLaserOnTheVerticalZMeasures" xml:space="preserve">
+    <value>垂直 Z 上的激光依次测量点 1、2 (Y)、4 (X)、3 (Y)，再回到 1 (X)。</value>
+  </data>
+  <data name="Txt_TheMachineIgnoresItUntilItIs" xml:space="preserve">
+    <value>在重新启用之前设备将忽略它。</value>
+  </data>
+  <data name="Txt_TheMachineIsInPD15A" xml:space="preserve">
+    <value>设备处于 PD-15。3 级用户现在可在设置页面找到“哈希键”选项卡。</value>
+  </data>
+  <data name="Txt_TheMachinePromptsOnceEvery2Hours" xml:space="preserve">
+    <value>设备每 2 小时提示一次（弹出窗口 + 警笛）；设备继续运行，不会停机。</value>
+  </data>
+  <data name="Txt_TheMachinePromptsOnceEvery4Hours" xml:space="preserve">
+    <value>设备每 4 小时提示一次（弹出窗口 + 警笛）；设备继续运行，不会停机。</value>
+  </data>
+  <data name="Txt_TheMachineRemainsInNormalProductionMode" xml:space="preserve">
+    <value>设备保持正常生产模式。无需担心。</value>
+  </data>
+  <data name="Txt_TheNineGantryPositionsArePairedWith" xml:space="preserve">
+    <value>九个龙门位置与相机的胶点中心配对，并保存相机到龙门的变换关系。</value>
+  </data>
+  <data name="Txt_TheNozzleCriticalLevelMustBeBelow" xml:space="preserve">
+    <value>喷嘴严重级别必须低于警告级别。</value>
+  </data>
+  <data name="Txt_ThePDATAMappingStoreIsNotAvailable" xml:space="preserve">
+    <value>PDATA 映射存储不可用。</value>
+  </data>
+  <data name="Txt_ThePLCDoesNotReportHomingPlcHomingDoneSymbol" xml:space="preserve">
+    <value>PLC 未上报回原点状态（未设置 PlcHomingDoneSymbol）。</value>
+  </data>
+  <data name="Txt_ThePictureCheckIsNotAvailableOn" xml:space="preserve">
+    <value>此设备上无法使用图片检查。</value>
+  </data>
+  <data name="Txt_TheRemainingGlueWeightIsAboveThe" xml:space="preserve">
+    <value>剩余胶重高于安全线。</value>
+  </data>
+  <data name="Txt_TheSecondApprovalMustComeFromA" xml:space="preserve">
+    <value>第二次批准必须来自不同的工卡。</value>
+  </data>
+  <data name="Txt_TheSecondApprovalMustComeFromA_2" xml:space="preserve">
+    <value>第二次批准必须来自不同的工卡。请刷另一张工卡。</value>
+  </data>
+  <data name="Txt_TheTranslationFilesCouldNotBeRead" xml:space="preserve">
+    <value>无法读取翻译文件：{0}</value>
+  </data>
+  <data name="Txt_TheTranslationsCouldNotBeSaved0" xml:space="preserve">
+    <value>无法保存翻译：{0}</value>
+  </data>
+  <data name="Txt_TheVisionZMovesItsLaserTo" xml:space="preserve">
+    <value>视觉 Z 将其激光移动到相同的 0 点。</value>
+  </data>
+  <data name="Txt_TheWeighingScaleIsNotConnectedTo" xml:space="preserve">
+    <value>电子秤尚未连接到此 HMI，因此没有可显示的胶水称重数据。</value>
+  </data>
+  <data name="Txt_TheoreticalOutputPerCartridge" xml:space="preserve">
+    <value>每支胶管理论产量</value>
+  </data>
+  <data name="Txt_ThereIsNothingToExport" xml:space="preserve">
+    <value>没有可导出的内容。</value>
+  </data>
+  <data name="Txt_TheseAlarmsAreGeneratedSampleDataTrueNot" xml:space="preserve">
+    <value>这些报警为生成数据（SampleData=true），并非设备记录。</value>
+  </data>
+  <data name="Txt_TheseFiguresAreGeneratedSampleDataTrueNot" xml:space="preserve">
+    <value>这些数据为生成数据（SampleData=true），并非设备记录。</value>
+  </data>
+  <data name="Txt_ThisBuildHasNoManualOperationScreens" xml:space="preserve">
+    <value>此版本没有手动操作界面。</value>
+  </data>
+  <data name="Txt_ThisCameraHasNoCaptureYet" xml:space="preserve">
+    <value>此相机尚未拍照。</value>
+  </data>
+  <data name="Txt_ThisRoutineTakesNoParameters" xml:space="preserve">
+    <value>此例程无需参数。</value>
+  </data>
+  <data name="Txt_Threshold" xml:space="preserve">
+    <value>阈值</value>
+  </data>
+  <data name="Txt_ThresholdForActivatingTheNotificationOfStock" xml:space="preserve">
+    <value>触发向 KT 仓库发出备料和预热通知的阈值（剩余胶重）。</value>
+  </data>
+  <data name="Txt_ThresholdHours" xml:space="preserve">
+    <value>阈值（小时）</value>
+  </data>
+  <data name="Txt_TickTheFieldsToReportSetTheir" xml:space="preserve">
+    <value>勾选要上报的字段，设置其限值，然后保存。</value>
+  </data>
+  <data name="Txt_Time" xml:space="preserve">
+    <value>时间</value>
+  </data>
+  <data name="Txt_TimeInStateMin" xml:space="preserve">
+    <value>状态持续时间（分钟）</value>
+  </data>
+  <data name="Txt_To" xml:space="preserve">
+    <value>至：</value>
+  </data>
+  <data name="Txt_ToMESCheck" xml:space="preserve">
+    <value>提交 MES 检查</value>
+  </data>
+  <data name="Txt_TossedUnits" xml:space="preserve">
+    <value>抛料产品</value>
+  </data>
+  <data name="Txt_TossedUnitsByShift" xml:space="preserve">
+    <value>各班次抛料产品</value>
+  </data>
+  <data name="Txt_Tossing" xml:space="preserve">
+    <value>抛料</value>
+  </data>
+  <data name="Txt_TossingRate" xml:space="preserve">
+    <value>抛料率</value>
+  </data>
+  <data name="Txt_TossingRateByShift" xml:space="preserve">
+    <value>各班次抛料率 (%)</value>
+  </data>
+  <data name="Txt_TossingReason" xml:space="preserve">
+    <value>抛料原因</value>
+  </data>
+  <data name="Txt_TossingSummary" xml:space="preserve">
+    <value>抛料汇总</value>
+  </data>
+  <data name="Txt_Total" xml:space="preserve">
+    <value>合计</value>
+  </data>
+  <data name="Txt_TotalGlueConsumption" xml:space="preserve">
+    <value>总用胶量</value>
+  </data>
+  <data name="Txt_TotalTimeMin" xml:space="preserve">
+    <value>总时间（分钟）</value>
+  </data>
+  <data name="Txt_Translation" xml:space="preserve">
+    <value>译文</value>
+  </data>
+  <data name="Txt_TranslationsSaved" xml:space="preserve">
+    <value>翻译已保存。</value>
+  </data>
+  <data name="Txt_Trigger" xml:space="preserve">
+    <value>触发</value>
+  </data>
+  <data name="Txt_TuningDebugMaterialRun" xml:space="preserve">
+    <value>调试/试料运行</value>
+  </data>
+  <data name="Txt_TwoStepVerificationAnApproverSwipesTheir" xml:space="preserve">
+    <value>两步验证：由审批人刷其工卡。</value>
+  </data>
+  <data name="Txt_USLIsNotANumber" xml:space="preserve">
+    <value>USL 不是数字。</value>
+  </data>
+  <data name="Txt_Unassigned" xml:space="preserve">
+    <value>未分配</value>
+  </data>
+  <data name="Txt_Unclassified" xml:space="preserve">
+    <value>未分类</value>
+  </data>
+  <data name="Txt_Unit" xml:space="preserve">
+    <value>单位</value>
+  </data>
+  <data name="Txt_UnitIntervalMustBeAWholeNumber" xml:space="preserve">
+    <value>产品间隔必须是不小于 1 的整数。</value>
+  </data>
+  <data name="Txt_UnitSN" xml:space="preserve">
+    <value>产品序列号</value>
+  </data>
+  <data name="Txt_UnitsOnTheMachine" xml:space="preserve">
+    <value>设备上的产品</value>
+  </data>
+  <data name="Txt_UnitsOneTime" xml:space="preserve">
+    <value>件/次</value>
+  </data>
+  <data name="Txt_Unnamed" xml:space="preserve">
+    <value>（未命名）</value>
+  </data>
+  <data name="Txt_UnplannedDowntime0" xml:space="preserve">
+    <value>非计划停机 - {0}</value>
+  </data>
+  <data name="Txt_UntranslatedOnly" xml:space="preserve">
+    <value>仅显示未翻译</value>
+  </data>
+  <data name="Txt_UploadToMES" xml:space="preserve">
+    <value>上传到 MES</value>
+  </data>
+  <data name="Txt_UploadedHashKeysToMES" xml:space="preserve">
+    <value>已上传哈希键到 MES</value>
+  </data>
+  <data name="Txt_UploadingToMES" xml:space="preserve">
+    <value>正在上传到 MES...</value>
+  </data>
+  <data name="Txt_VALUE" xml:space="preserve">
+    <value>值</value>
+  </data>
+  <data name="Txt_VALUES" xml:space="preserve">
+    <value>值</value>
+  </data>
+  <data name="Txt_Vacuum" xml:space="preserve">
+    <value>真空</value>
+  </data>
+  <data name="Txt_Value" xml:space="preserve">
+    <value>值</value>
+  </data>
+  <data name="Txt_ValueMg" xml:space="preserve">
+    <value>值 (mg)</value>
+  </data>
+  <data name="Txt_ValveChange" xml:space="preserve">
+    <value>更换阀</value>
+  </data>
+  <data name="Txt_ValveModel" xml:space="preserve">
+    <value>阀型号：</value>
+  </data>
+  <data name="Txt_ValveModelSelectionErrorPlsSelectThe" xml:space="preserve">
+    <value>阀型号选择错误，请在设置页面选择正确的阀型号。</value>
+  </data>
+  <data name="Txt_ValveModelSetting" xml:space="preserve">
+    <value>阀型号设置</value>
+  </data>
+  <data name="Txt_ValveModel_2" xml:space="preserve">
+    <value>阀型号</value>
+  </data>
+  <data name="Txt_ValveSN" xml:space="preserve">
+    <value>阀序列号</value>
+  </data>
+  <data name="Txt_ValveSN_2" xml:space="preserve">
+    <value>阀序列号：</value>
+  </data>
+  <data name="Txt_ValveUsage" xml:space="preserve">
+    <value>阀使用量：</value>
+  </data>
+  <data name="Txt_Vendor" xml:space="preserve">
+    <value>供应商：</value>
+  </data>
+  <data name="Txt_Vendor_2" xml:space="preserve">
+    <value>供应商</value>
+  </data>
+  <data name="Txt_Vision" xml:space="preserve">
+    <value>视觉</value>
+  </data>
+  <data name="Txt_VisionZAtLaserZero" xml:space="preserve">
+    <value>激光零点处的视觉 Z</value>
+  </data>
+  <data name="Txt_WaitForHomingToFinish" xml:space="preserve">
+    <value>请等待回原点完成。</value>
+  </data>
+  <data name="Txt_WaitSec" xml:space="preserve">
+    <value>等待（秒）</value>
+  </data>
+  <data name="Txt_WaitingForOperator" xml:space="preserve">
+    <value>等待操作员</value>
+  </data>
+  <data name="Txt_Warning" xml:space="preserve">
+    <value>警告</value>
+  </data>
+  <data name="Txt_WeeklyMaintenance" xml:space="preserve">
+    <value>每周保养</value>
+  </data>
+  <data name="Txt_WeighingAtShiftChange" xml:space="preserve">
+    <value>换班时称重</value>
+  </data>
+  <data name="Txt_WeighingByUnitCount" xml:space="preserve">
+    <value>按产品数量称重</value>
+  </data>
+  <data name="Txt_WeighingCycles" xml:space="preserve">
+    <value>称重次数</value>
+  </data>
+  <data name="Txt_WeighingFrequency" xml:space="preserve">
+    <value>称重频率</value>
+  </data>
+  <data name="Txt_WeighingFrequencyMustBeANumberOf" xml:space="preserve">
+    <value>称重频率必须是小时数，且至少为一分钟。</value>
+  </data>
+  <data name="Txt_WeighingGlueConsumption" xml:space="preserve">
+    <value>称重用胶量</value>
+  </data>
+  <data name="Txt_WeighingSettingsAreNotAvailableTheWeighing" xml:space="preserve">
+    <value>称重设置不可用 - 电子秤尚未连接到此 HMI。</value>
+  </data>
+  <data name="Txt_WeighingTimes" xml:space="preserve">
+    <value>称重次数</value>
+  </data>
+  <data name="Txt_WeighingTimesMustBeAWholeNumber" xml:space="preserve">
+    <value>称重次数必须是不小于 1 的整数。</value>
+  </data>
+  <data name="Txt_Work" xml:space="preserve">
+    <value>工作</value>
+  </data>
+  <data name="Txt_WritesTheStationRoutineAndParametersTo" xml:space="preserve">
+    <value>将工站、例程和参数写入 PLC 并开始校准；暂停时则恢复</value>
+  </data>
+  <data name="Txt_XDispensingSpeed" xml:space="preserve">
+    <value>- x = 点胶速度</value>
+  </data>
+  <data name="Txt_XPOS" xml:space="preserve">
+    <value>X 位置</value>
+  </data>
+  <data name="Txt_YGlueWeight" xml:space="preserve">
+    <value>- y = 胶重</value>
+  </data>
+  <data name="Txt_YPOS" xml:space="preserve">
+    <value>Y 位置</value>
+  </data>
+  <data name="Txt_Yes" xml:space="preserve">
+    <value>是</value>
+  </data>
+  <data name="Txt_Yield" xml:space="preserve">
+    <value>良率</value>
+  </data>
+  <data name="Txt_YieldByShift" xml:space="preserve">
+    <value>各班次良率 (%)</value>
+  </data>
+  <data name="Txt_ZPOS" xml:space="preserve">
+    <value>Z 位置</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_000" xml:space="preserve">
+    <value>无效的错误代码</value>
+  </data>
+  <data name="AlarmDesc_Invalid_ECode" xml:space="preserve">
+    <value>无效的错误代码</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_001" xml:space="preserve">
+    <value>气缸伸出失败</value>
+  </data>
+  <data name="AlarmDesc_Cyl_Extend_Fail" xml:space="preserve">
+    <value>气缸伸出失败</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_002" xml:space="preserve">
+    <value>气缸缩回失败</value>
+  </data>
+  <data name="AlarmDesc_Cyl_Retract_Fail" xml:space="preserve">
+    <value>气缸缩回失败</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_003" xml:space="preserve">
+    <value>气缸伸出超时</value>
+  </data>
+  <data name="AlarmDesc_Cyl_Extend_Timeout" xml:space="preserve">
+    <value>气缸伸出超时</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_004" xml:space="preserve">
+    <value>气缸缩回超时</value>
+  </data>
+  <data name="AlarmDesc_Cyl_Retract_Timeout" xml:space="preserve">
+    <value>气缸缩回超时</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_005" xml:space="preserve">
+    <value>气缸伸出不安全</value>
+  </data>
+  <data name="AlarmDesc_Cyl_UnSafe_Extend" xml:space="preserve">
+    <value>气缸伸出不安全</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_006" xml:space="preserve">
+    <value>气缸缩回不安全</value>
+  </data>
+  <data name="AlarmDesc_Cyl_UnSafe_Retract" xml:space="preserve">
+    <value>气缸缩回不安全</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_007" xml:space="preserve">
+    <value>气缸两个传感器同时触发</value>
+  </data>
+  <data name="AlarmDesc_Cyl_Both_Sensor" xml:space="preserve">
+    <value>气缸两个传感器同时触发</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_008" xml:space="preserve">
+    <value>互锁失败</value>
+  </data>
+  <data name="AlarmDesc_Interlock_Fail" xml:space="preserve">
+    <value>互锁失败</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_009" xml:space="preserve">
+    <value>触发正限位</value>
+  </data>
+  <data name="AlarmDesc_PosLimit_Error" xml:space="preserve">
+    <value>触发正限位</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_010" xml:space="preserve">
+    <value>触发负限位</value>
+  </data>
+  <data name="AlarmDesc_NegLimit_Error" xml:space="preserve">
+    <value>触发负限位</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_011" xml:space="preserve">
+    <value>轴未使能</value>
+  </data>
+  <data name="AlarmDesc_Disable_Error" xml:space="preserve">
+    <value>轴未使能</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_012" xml:space="preserve">
+    <value>移动超时</value>
+  </data>
+  <data name="AlarmDesc_MoveTimeout_Error" xml:space="preserve">
+    <value>移动超时</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_013" xml:space="preserve">
+    <value>驱动器错误</value>
+  </data>
+  <data name="AlarmDesc_DriveError_Error" xml:space="preserve">
+    <value>驱动器错误</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_014" xml:space="preserve">
+    <value>急停按钮被按下</value>
+  </data>
+  <data name="AlarmDesc_Emg_Pressed_Error" xml:space="preserve">
+    <value>急停按钮被按下</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_015" xml:space="preserve">
+    <value>安全门已打开</value>
+  </data>
+  <data name="AlarmDesc_SafetyDoor_open_Error" xml:space="preserve">
+    <value>安全门已打开</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_016" xml:space="preserve">
+    <value>主气源反馈错误</value>
+  </data>
+  <data name="AlarmDesc_MainAir_FB_Error" xml:space="preserve">
+    <value>主气源反馈错误</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_017" xml:space="preserve">
+    <value>回原点超时</value>
+  </data>
+  <data name="AlarmDesc_Homing_TimeOut_Error" xml:space="preserve">
+    <value>回原点超时</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_018" xml:space="preserve">
+    <value>程序异常</value>
+  </data>
+  <data name="AlarmDesc_ProgramException_Error" xml:space="preserve">
+    <value>程序异常</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_019" xml:space="preserve">
+    <value>运动超时</value>
+  </data>
+  <data name="AlarmDesc_Motion_Time_out_Error" xml:space="preserve">
+    <value>运动超时</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_020" xml:space="preserve">
+    <value>运动控制卡未打开</value>
+  </data>
+  <data name="AlarmDesc_Motion_Card_not_open" xml:space="preserve">
+    <value>运动控制卡未打开</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_021" xml:space="preserve">
+    <value>机器人报警</value>
+  </data>
+  <data name="AlarmDesc_Robot_Alarm_Error" xml:space="preserve">
+    <value>机器人报警</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_022" xml:space="preserve">
+    <value>机器人接收超时</value>
+  </data>
+  <data name="AlarmDesc_Robot_Receive_TimeOut_Error" xml:space="preserve">
+    <value>机器人接收超时</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_023" xml:space="preserve">
+    <value>真空开/关失败</value>
+  </data>
+  <data name="AlarmDesc_Vac_VacuumOnOffFail" xml:space="preserve">
+    <value>真空开/关失败</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_024" xml:space="preserve">
+    <value>吹气开/关失败</value>
+  </data>
+  <data name="AlarmDesc_Vac_BlowOnOffFail" xml:space="preserve">
+    <value>吹气开/关失败</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_025" xml:space="preserve">
+    <value>真空超时</value>
+  </data>
+  <data name="AlarmDesc_Vac_TimeoutEcode" xml:space="preserve">
+    <value>真空超时</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_026" xml:space="preserve">
+    <value>IO 步进电机正转失败</value>
+  </data>
+  <data name="AlarmDesc_IO_Stepper_ForwardFail" xml:space="preserve">
+    <value>IO 步进电机正转失败</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_027" xml:space="preserve">
+    <value>IO 步进电机反转失败</value>
+  </data>
+  <data name="AlarmDesc_IO_Stepper_ReverseFail" xml:space="preserve">
+    <value>IO 步进电机反转失败</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_028" xml:space="preserve">
+    <value>IO 步进电机停止失败</value>
+  </data>
+  <data name="AlarmDesc_IO_Stepper_StopFail" xml:space="preserve">
+    <value>IO 步进电机停止失败</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_029" xml:space="preserve">
+    <value>IO 步进电机报警复位失败</value>
+  </data>
+  <data name="AlarmDesc_IO_Stepper_AlarmResetFail" xml:space="preserve">
+    <value>IO 步进电机报警复位失败</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_030" xml:space="preserve">
+    <value>机器人模式错误</value>
+  </data>
+  <data name="AlarmDesc_Robot_Mode_Error" xml:space="preserve">
+    <value>机器人模式错误</value>
+  </data>
+  <data name="AlarmType_Motion_Error" xml:space="preserve">
+    <value>运动错误</value>
+  </data>
+  <data name="AlarmType_Vision_Error" xml:space="preserve">
+    <value>视觉错误</value>
+  </data>
+  <data name="AlarmType_Glue_Error" xml:space="preserve">
+    <value>胶水错误</value>
+  </data>
+  <data name="AlarmType_Sensor_Error" xml:space="preserve">
+    <value>传感器错误</value>
+  </data>
+  <data name="AlarmType_Software_Error" xml:space="preserve">
+    <value>软件错误</value>
+  </data>
+  <data name="AlarmType_Hardware_Error" xml:space="preserve">
+    <value>硬件错误</value>
+  </data>
+  <data name="AlarmType_Material_Error" xml:space="preserve">
+    <value>物料错误</value>
+  </data>
+  <data name="AlarmType_Safety_Error" xml:space="preserve">
+    <value>安全错误</value>
+  </data>
+  <data name="AlarmType_Communication_Error" xml:space="preserve">
+    <value>通信错误</value>
+  </data>
+  <data name="AlarmType_Pneumatic_Error" xml:space="preserve">
+    <value>气动错误</value>
+  </data>
+  <data name="AlarmType_Electrical_Error" xml:space="preserve">
+    <value>电气错误</value>
+  </data>
+  <data name="AlarmType_Mechanical_Error" xml:space="preserve">
+    <value>机械错误</value>
+  </data>
+  <data name="AlarmType_Process_Error" xml:space="preserve">
+    <value>工艺错误</value>
+  </data>
+  <data name="AlarmType_Others" xml:space="preserve">
+    <value>其他</value>
+  </data>
+  <data name="AlarmType_Unclassified" xml:space="preserve">
+    <value>未分类</value>
+  </data>
+  <data name="Txt_AddRepairAction" xml:space="preserve">
+    <value>&lt;添加维修措施&gt;</value>
+  </data>
+  <data name="Txt_Adjusted" xml:space="preserve">
+    <value>已调整</value>
+  </data>
+  <data name="Txt_Calibrated" xml:space="preserve">
+    <value>已校准</value>
+  </data>
+  <data name="Txt_Checked" xml:space="preserve">
+    <value>已检查</value>
+  </data>
+  <data name="Txt_Cleaned" xml:space="preserve">
+    <value>已清洁</value>
+  </data>
+  <data name="Txt_Erased" xml:space="preserve">
+    <value>已擦除</value>
+  </data>
+  <data name="Txt_Filled" xml:space="preserve">
+    <value>已加注</value>
+  </data>
+  <data name="Txt_Fixed" xml:space="preserve">
+    <value>已修复</value>
+  </data>
+  <data name="Txt_Lubricated" xml:space="preserve">
+    <value>已润滑</value>
+  </data>
+  <data name="Txt_Replaced" xml:space="preserve">
+    <value>已更换</value>
+  </data>
+  <data name="Txt_Restored" xml:space="preserve">
+    <value>已恢复</value>
+  </data>
+  <data name="Txt_Stretched" xml:space="preserve">
+    <value>已拉伸</value>
+  </data>
+  <data name="Txt_Tightened" xml:space="preserve">
+    <value>已紧固</value>
+  </data>
+  <data name="Txt_Trained" xml:space="preserve">
+    <value>已培训</value>
+  </data>
+  <data name="Txt_Tuned" xml:space="preserve">
+    <value>已调校</value>
+  </data>
+  <data name="Txt_0AlarmS1MinOfDowntime" xml:space="preserve">
+    <value>{0} 次报警，停机 {1} 分钟</value>
+  </data>
+  <data name="Txt_0DebugUnitsHaveBeenRunIn" xml:space="preserve">
+    <value>已在调试/试料运行（PD-17）中运行 {0} 个调试产品。请在下一个产品前将 HIVE 状态切换为运行。</value>
+  </data>
+  <data name="Txt_0DebugUnitsHaveBeenRunUnder" xml:space="preserve">
+    <value>已在 {1} 下运行 {0} 个调试产品。此错误代码下不能再使用调试产品。</value>
+  </data>
+  <data name="Txt_0RoundComplete" xml:space="preserve">
+    <value>{0} - 本轮完成</value>
+  </data>
+  <data name="Txt_0ContinueTest" xml:space="preserve">
+    <value>{0}。是否继续测试？</value>
+  </data>
+  <data name="Txt_NextOperatorOperatorID0" xml:space="preserve">
+    <value>下一位操作员（Operator_ID {0}）</value>
+  </data>
+  <data name="Txt_TheHIVEStateWasNotChanged0" xml:space="preserve">
+    <value>HIVE 状态未更改。{0}</value>
+  </data>
+  <data name="Txt_PlannedDowntime01" xml:space="preserve">
+    <value>计划停机 - {0}（{1}）</value>
+  </data>
+  <data name="Txt_UnplannedDowntime01" xml:space="preserve">
+    <value>非计划停机 - {0}（{1}）</value>
+  </data>
+  <data name="Txt_TheBadgeCouldNotBeChecked0" xml:space="preserve">
+    <value>无法检查工卡：{0}</value>
+  </data>
+  <data name="Txt_0IsLevel1ThisNeedsLevel" xml:space="preserve">
+    <value>{0} 为 {1} 级。此操作需要 {2} 级或更高级别 - 请刷另一张工卡。</value>
+  </data>
+  <data name="Txt_0IsLevel1ThisNeedsLevel_2" xml:space="preserve">
+    <value>{0} 为 {1} 级。此操作需要 {2} 级或更高级别。</value>
+  </data>
+  <data name="Txt_0Level1PressOK" xml:space="preserve">
+    <value>{0}（{1} 级）。请按“确定”。</value>
+  </data>
+  <data name="Txt_0Level1ScanTheSN" xml:space="preserve">
+    <value>{0}（{1} 级）。请扫描序列号。</value>
+  </data>
+  <data name="Txt_ValveSN_3" xml:space="preserve">
+    <value>阀序列号</value>
+  </data>
+  <data name="Txt_NozzleSN_2" xml:space="preserve">
+    <value>喷嘴序列号</value>
+  </data>
+  <data name="Txt_0GlueSN" xml:space="preserve">
+    <value>{0}胶水序列号</value>
+  </data>
+  <data name="Txt_GlueChange0" xml:space="preserve">
+    <value>换胶：{0}</value>
+  </data>
+  <data name="Txt_MaterialReplacement0" xml:space="preserve">
+    <value>物料更换：{0}</value>
+  </data>
+  <data name="Txt_MESCouldNotGiveTheStandardValve" xml:space="preserve">
+    <value>MES 无法提供标准阀序列号：{0}</value>
+  </data>
+  <data name="Txt_MESCouldNotGiveTheValveS" xml:space="preserve">
+    <value>MES 无法提供阀的使用量：{0}</value>
+  </data>
+  <data name="Txt_MESCheckNGTheNozzleWasNot" xml:space="preserve">
+    <value>MES 检查 NG - 喷嘴未与阀关联：{0}</value>
+  </data>
+  <data name="Txt_MESCheckNG0" xml:space="preserve">
+    <value>MES 检查 NG：{0}</value>
+  </data>
+  <data name="Txt_MESCheckOK0" xml:space="preserve">
+    <value>MES 检查 OK：{0}</value>
+  </data>
+  <data name="Txt_01MachineWillSwitchToAudit" xml:space="preserve">
+    <value>{0}：{1} - 设备将切换到审核模式</value>
+  </data>
+  <data name="Txt_NoValveModelIsSetForThe" xml:space="preserve">
+    <value>{0}龙门未设置阀型号。请先在 设置 &gt; 阀型号（3 级）中选择。</value>
+  </data>
+  <data name="Txt_ValveModel0ScanTheValveS" xml:space="preserve">
+    <value>阀型号：{0} - 请扫描阀的内部序列号；MES 将返回其标准序列号。</value>
+  </data>
+  <data name="Txt_NoValveSNIsRecordedForThe" xml:space="preserve">
+    <value>{0}龙门没有记录阀序列号，因此无法关联喷嘴。请先执行更换阀（PD-04）。</value>
+  </data>
+  <data name="Txt_ValveSNToLinkTheNozzleTo" xml:space="preserve">
+    <value>喷嘴要关联的阀序列号：{0}</value>
+  </data>
+  <data name="Txt_0NeedsTheConsumablesFileWhichIs" xml:space="preserve">
+    <value>{0}需要耗材文件，但该文件不可用。</value>
+  </data>
+  <data name="Txt_24hrDryRun" xml:space="preserve">
+    <value>24 小时空跑</value>
+  </data>
+  <data name="Txt_HIVE" xml:space="preserve">
+    <value>HIVE</value>
+  </data>
+  <data name="Txt_HIVEIsLineCriticalDisableHIVEBecause" xml:space="preserve">
+    <value>HIVE 对产线至关重要。因“{0}”而禁用 HIVE？
+
+必须事先获得 CM/BUD 的批准。接下来由第二位审批人刷工卡。</value>
+  </data>
+  <data name="Txt_SignedInAs01ClickTo" xml:space="preserve">
+    <value>已登录：{0}（{1}）- 点击切换用户，右键单击登出</value>
+  </data>
+  <data name="Txt_HIVEIsNotRunningOnThisMachine" xml:space="preserve">
+    <value>此设备未运行 HIVE，因此无法更改状态。此标签仅显示设备自身的状态。</value>
+  </data>
+  <data name="Txt_Search" xml:space="preserve">
+    <value>搜索：</value>
+  </data>
+  <data name="Txt_DescriptionOf" xml:space="preserve">
+    <value>描述对象：</value>
+  </data>
+  <data name="Txt_Type" xml:space="preserve">
+    <value>类型：</value>
+  </data>
+  <data name="Txt_Type_2" xml:space="preserve">
+    <value>类型</value>
+  </data>
+  <data name="Txt_SearchByNameIOAddressOr" xml:space="preserve">
+    <value>按名称、I/O 地址或描述搜索</value>
+  </data>
+  <data name="Txt_OnlyRowsWithoutADescription" xml:space="preserve">
+    <value>仅显示无描述的行</value>
+  </data>
+  <data name="Txt_IOAddress" xml:space="preserve">
+    <value>I/O 地址</value>
+  </data>
+  <data name="Txt_ARowWithoutADescriptionInThe" xml:space="preserve">
+    <value>所选语言下无描述的行将显示其英文描述；两者都没有时显示其名称。3 级权限可修改；保存后立即显示在屏幕上。</value>
+  </data>
+  <data name="Txt_ConfigDescription" xml:space="preserve">
+    <value>配置描述</value>
+  </data>
+  <data name="Txt_IOPoints" xml:space="preserve">
+    <value>I/O 点</value>
+  </data>
+  <data name="Txt_DescriptionsSaved" xml:space="preserve">
+    <value>描述已保存。</value>
+  </data>
+  <data name="Txt_TheDescriptionsCouldNotBeSaved0" xml:space="preserve">
+    <value>无法保存描述：{0}</value>
+  </data>
+  <data name="Txt_TheDescriptionsCouldNotBeRead0" xml:space="preserve">
+    <value>无法读取描述：{0}</value>
+  </data>
+  <data name="Txt_0Of1RowsShown2Without" xml:space="preserve">
+    <value>显示 {0} / {1} 行 · {2} 行无描述</value>
+  </data>
+  <data name="Txt_OnlyALevel3UserCanChange_2" xml:space="preserve">
+    <value>只有 3 级用户才能修改这些描述。</value>
+  </data>
+  <data name="Txt_Input" xml:space="preserve">
+    <value>输入</value>
+  </data>
+  <data name="Txt_Output" xml:space="preserve">
+    <value>输出</value>
+  </data>
+  <data name="Txt_All" xml:space="preserve">
+    <value>全部</value>
+  </data>
+  <data name="Txt_Production" xml:space="preserve">
+    <value>生产</value>
+  </data>
+  <data name="Txt_CPK" xml:space="preserve">
+    <value>CPK</value>
+  </data>
+  <data name="Txt_GRR" xml:space="preserve">
+    <value>GRR</value>
+  </data>
+  <data name="Txt_Main" xml:space="preserve">
+    <value>主界面</value>
+  </data>
+  <data name="Txt_IODiagnostics" xml:space="preserve">
+    <value>I/O 诊断</value>
+  </data>
+  <data name="Txt_DigitalIO" xml:space="preserve">
+    <value>数字 I/O</value>
+  </data>
+  <data name="Txt_AxisParameters" xml:space="preserve">
+    <value>轴参数</value>
+  </data>
+  <data name="Txt_TCPIPSettings" xml:space="preserve">
+    <value>TCP/IP 设置</value>
+  </data>
+  <data name="Txt_VisionSettings" xml:space="preserve">
+    <value>视觉设置</value>
+  </data>
+  <data name="Txt_AELimitsCPK_2" xml:space="preserve">
+    <value>AE 限值 (CPK)</value>
+  </data>
+  <data name="Txt_AELimitsGRR_2" xml:space="preserve">
+    <value>AE 限值 (GRR)</value>
+  </data>
+  <data name="Txt_AELimitsProduction" xml:space="preserve">
+    <value>AE 限值（生产）</value>
+  </data>
+  <data name="Txt_PARAMETER" xml:space="preserve">
+    <value>参数</value>
+  </data>
+  <data name="Txt_MINIMUMLIMIT" xml:space="preserve">
+    <value>最小限值</value>
+  </data>
+  <data name="Txt_MAXIMUMLIMIT" xml:space="preserve">
+    <value>最大限值</value>
+  </data>
+  <data name="Txt_UNIT" xml:space="preserve">
+    <value>单位</value>
+  </data>
+  <data name="Txt_CARDID" xml:space="preserve">
+    <value>卡 ID</value>
+  </data>
+  <data name="Txt_AXISID" xml:space="preserve">
+    <value>轴 ID</value>
+  </data>
+  <data name="Txt_AXISNAME" xml:space="preserve">
+    <value>轴名称</value>
+  </data>
+  <data name="Txt_PITCH" xml:space="preserve">
+    <value>螺距</value>
+  </data>
+  <data name="Txt_PULSESMM" xml:space="preserve">
+    <value>脉冲/MM</value>
+  </data>
+  <data name="Txt_PPR" xml:space="preserve">
+    <value>每转脉冲数</value>
+  </data>
+  <data name="Txt_HOMINGACC" xml:space="preserve">
+    <value>回原点加速度</value>
+  </data>
+  <data name="Txt_HOMINGDEACC" xml:space="preserve">
+    <value>回原点减速度</value>
+  </data>
+  <data name="Txt_HOMINGSPEED" xml:space="preserve">
+    <value>回原点速度</value>
+  </data>
+  <data name="Txt_Parity" xml:space="preserve">
+    <value>校验位</value>
+  </data>
+  <data name="Txt_StopBits" xml:space="preserve">
+    <value>停止位</value>
+  </data>
+  <data name="Txt_Handshake" xml:space="preserve">
+    <value>握手协议</value>
+  </data>
+  <data name="Txt_Colour" xml:space="preserve">
+    <value>颜色</value>
+  </data>
+  <data name="Txt_OptID" xml:space="preserve">
+    <value>光源 ID</value>
+  </data>
+  <data name="Txt_CameraID" xml:space="preserve">
+    <value>相机 ID</value>
+  </data>
+  <data name="Txt_RobotAuto" xml:space="preserve">
+    <value>机器人自动</value>
+  </data>
+  <data name="Txt_RobotError" xml:space="preserve">
+    <value>机器人错误</value>
+  </data>
+  <data name="Txt_BarcodeScanner" xml:space="preserve">
+    <value>条码扫描器</value>
+  </data>
+  <data name="Txt_SFCPDCA_2" xml:space="preserve">
+    <value>SFC_PDCA</value>
+  </data>
+  <data name="Txt_Point01" xml:space="preserve">
+    <value>点 {0} {1}</value>
+  </data>
+  <data name="Txt_0Tossed" xml:space="preserve">
+    <value>{0} 抛料</value>
+  </data>
+  <data name="Txt_0Output" xml:space="preserve">
+    <value>{0} 产量</value>
+  </data>
+  <data name="Txt_QueryFailed" xml:space="preserve">
+    <value>查询失败：</value>
+  </data>
+  <data name="Txt_CouldNotSave" xml:space="preserve">
+    <value>无法保存：</value>
+  </data>
+  <data name="Txt_StateHistoryCouldNotBeRead" xml:space="preserve">
+    <value>无法读取状态历史：</value>
+  </data>
+  <data name="Txt_AlarmHistoryCouldNotBeRead" xml:space="preserve">
+    <value>无法读取报警历史：</value>
+  </data>
+  <data name="Txt_ProductionRecordCouldNotBeRead" xml:space="preserve">
+    <value>无法读取生产记录：</value>
+  </data>
+  <data name="Txt_SpecLimitsCouldNotBeRead" xml:space="preserve">
+    <value>无法读取规格限值：</value>
+  </data>
+  <data name="Txt_ParameterValuesCouldNotBeRead" xml:space="preserve">
+    <value>无法读取参数值：</value>
+  </data>
+  <data name="Txt_TheSpecLimitsCouldNotBeSaved" xml:space="preserve">
+    <value>无法保存规格限值：</value>
+  </data>
+  <data name="Txt_TheSettingsCouldNotBeSaved" xml:space="preserve">
+    <value>无法保存设置：</value>
+  </data>
+  <data name="Txt_TheHardwareConfigurationCouldNotBeSaved" xml:space="preserve">
+    <value>无法保存硬件配置：</value>
+  </data>
+  <data name="Txt_TheParametersCouldNotBeSaved" xml:space="preserve">
+    <value>无法保存参数：</value>
+  </data>
+  <data name="Txt_TheAccessListCouldNotBeExported" xml:space="preserve">
+    <value>无法导出权限列表：</value>
+  </data>
+  <data name="Txt_TheHashKeysCouldNotBeExported" xml:space="preserve">
+    <value>无法导出哈希键：</value>
+  </data>
+  <data name="Txt_HomingCouldNotBeStarted" xml:space="preserve">
+    <value>无法开始回原点：</value>
+  </data>
+  <data name="Txt_CoordinateDataCouldNotBeRead" xml:space="preserve">
+    <value>无法读取坐标数据：</value>
+  </data>
+  <data name="Txt_GlueWeighingSettingsChanged" xml:space="preserve">
+    <value>胶水称重设置已更改：</value>
+  </data>
+  <data name="Txt_GlueControlSettingsChanged" xml:space="preserve">
+    <value>胶水控制设置已更改：</value>
+  </data>
+  <data name="Txt_TheRequestCouldNotBeSent" xml:space="preserve">
+    <value>无法发送请求：</value>
+  </data>
+  <data name="Txt_SensorDisabled" xml:space="preserve">
+    <value>传感器已禁用：</value>
+  </data>
+  <data name="Txt_SensorEnabled" xml:space="preserve">
+    <value>传感器已启用：</value>
+  </data>
+  <data name="Txt_ModeChangedTo" xml:space="preserve">
+    <value>模式已切换为</value>
+  </data>
+  <data name="Txt_YouNeedToStartAgainForSelected" xml:space="preserve">
+    <value>所选模式需要重新启动：</value>
+  </data>
+  <data name="Txt_SWVersion_2" xml:space="preserve">
+    <value>软件版本：</value>
+  </data>
+  <data name="Txt_MCVersion" xml:space="preserve">
+    <value>设备版本：</value>
+  </data>
+  <data name="Txt_RemoteQualification_2" xml:space="preserve">
+    <value>远程验证：</value>
+  </data>
+  <data name="Txt_ModeChangedTo0" xml:space="preserve">
+    <value>模式已切换为 {0}</value>
+  </data>
+  <data name="Txt_LogInAtLevel2Or3" xml:space="preserve">
+    <value>请以 2 级或 3 级登录以编辑参数并运行校准。</value>
+  </data>
+  <data name="Txt_LogInAtLevel2Or3_2" xml:space="preserve">
+    <value>请以 2 级或 3 级登录以编辑参数。</value>
+  </data>
+  <data name="Txt_LogInAtLevel2Or3_3" xml:space="preserve">
+    <value>请以 2 级或 3 级登录以运行校准。</value>
+  </data>
+  <data name="Txt_WithinTheLimitsTheOffsetIsStored" xml:space="preserve">
+    <value>在限值内时，偏移量将被保存并应用于之后的每次点胶。</value>
+  </data>
+  <data name="Txt_XYZAndTAreStored" xml:space="preserve">
+    <value>X、Y、Z 和 T 将保存为模板，之后的每根针头都与之比较。</value>
+  </data>
+  <data name="Txt_WithinTheLimitsTheDeviationIsStored" xml:space="preserve">
+    <value>在限值内时，偏差将保存为针头偏移；否则请调整或更换针头。</value>
+  </data>
+  <data name="Txt_NotMapped" xml:space="preserve">
+    <value>未映射</value>
+  </data>
+  <data name="AlarmType_Cylinder_Error" xml:space="preserve">
+    <value>气缸错误</value>
+  </data>
+  <data name="AlarmType_Scanning_Error" xml:space="preserve">
+    <value>扫码错误</value>
+  </data>
+  <data name="AlarmType_Traceability_Error" xml:space="preserve">
+    <value>追溯错误</value>
+  </data>
+  <data name="AlarmDesc_Station_1_Y_axis_move_timeout" xml:space="preserve">
+    <value>工站 1 Y 轴移动超时</value>
+  </data>
+  <data name="AlarmDesc_Station_2_dispensing_Z_axis_not_in_position" xml:space="preserve">
+    <value>工站 2 点胶 Z 轴未到位</value>
+  </data>
+  <data name="AlarmDesc_UC_loading_lifter_did_not_reach_the_down_position" xml:space="preserve">
+    <value>UC 上料升降机未到达下位</value>
+  </data>
+  <data name="AlarmDesc_Transfer_conveyor_stopper_did_not_reach_the_up_position" xml:space="preserve">
+    <value>转运输送线挡停未到达上位</value>
+  </data>
+  <data name="AlarmDesc_UC_in_place_sensor_not_detected_at_the_scanning_position" xml:space="preserve">
+    <value>扫码位置未检测到 UC 到位传感器</value>
+  </data>
+  <data name="AlarmDesc_CCD1_pre_check_unable_to_find_pattern" xml:space="preserve">
+    <value>CCD1 预检无法找到图案</value>
+  </data>
+  <data name="AlarmDesc_CCD2_post_check_unable_to_find_pattern" xml:space="preserve">
+    <value>CCD2 后检无法找到图案</value>
+  </data>
+  <data name="AlarmDesc_Transfer_conveyor_barcode_scan_failed" xml:space="preserve">
+    <value>转运输送线条码扫描失败</value>
+  </data>
+  <data name="AlarmDesc_Automatic_glue_weight_out_of_spec" xml:space="preserve">
+    <value>自动胶重超出规格</value>
+  </data>
+  <data name="AlarmDesc_Front_door_opened_during_auto_run" xml:space="preserve">
+    <value>自动运行时前门被打开</value>
+  </data>
+  <data name="AlarmDesc_No_answer_from_MES_for_the_carrier_SN" xml:space="preserve">
+    <value>MES 未响应载具序列号</value>
+  </data>
+  <data name="Txt_SELECTCHANNEL" xml:space="preserve">
+    <value>选择通道</value>
+  </data>
+  <data name="Txt_AxisJog" xml:space="preserve">
+    <value>轴点动</value>
+  </data>
+  <data name="Txt_LINEAR" xml:space="preserve">
+    <value>直线轴</value>
+  </data>
+  <data name="Txt_ROTATIONAL" xml:space="preserve">
+    <value>旋转轴</value>
+  </data>
+  <data name="Txt_JOGSPEED" xml:space="preserve">
+    <value>点动速度</value>
+  </data>
+  <data name="Txt_LivePosition" xml:space="preserve">
+    <value>实时位置</value>
+  </data>
+  <data name="Txt_ActiveAlarms" xml:space="preserve">
+    <value>当前报警</value>
+  </data>
+  <data name="Txt_NoActiveAlarms" xml:space="preserve">
+    <value>当前无报警。</value>
+  </data>
+  <data name="Txt_Log" xml:space="preserve">
+    <value>日志</value>
+  </data>
+  <data name="Txt_EnablePictureQuantityCheck" xml:space="preserve">
+    <value>Enable Picture Quantity Check</value>
+  </data>
+  <data name="Txt_EarlyWarningTest" xml:space="preserve">
+    <value>Early warning for common defect factors - test</value>
+  </data>
+  <data name="Txt_TerminalNameLabel" xml:space="preserve">
+    <value>Terminal Name:</value>
+  </data>
+  <data name="Txt_SerialNumberLabel" xml:space="preserve">
+    <value>Serial Number:</value>
+  </data>
+  <data name="Txt_ResetFields" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="Txt_RunTest" xml:space="preserve">
+    <value>Test</value>
+  </data>
+  <data name="Txt_RequestBody" xml:space="preserve">
+    <value>Request body</value>
+  </data>
+  <data name="Txt_ResponseBody" xml:space="preserve">
+    <value>Response body</value>
+  </data>
+  <data name="Txt_DisableEarlyWarning" xml:space="preserve">
+    <value>!!! Disable the early warning for common defect factors</value>
+  </data>
+  <data name="Txt_BackToFixtures" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="Txt_Maintenance" xml:space="preserve">
+    <value>Maintenance</value>
+  </data>
+  <data name="Txt_AddNewItem" xml:space="preserve">
+    <value>Add New Item</value>
+  </data>
+  <data name="Txt_Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="Txt_MaintAdd" xml:space="preserve">
+    <value>Maint. / Add</value>
+  </data>
+  <data name="Txt_Active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Txt_LineType" xml:space="preserve">
+    <value>Line type</value>
+  </data>
+  <data name="Txt_HeadId" xml:space="preserve">
+    <value>Head ID</value>
+  </data>
+  <data name="Txt_MaintItem" xml:space="preserve">
+    <value>Maint. Item</value>
+  </data>
+  <data name="Txt_MaintPeriod" xml:space="preserve">
+    <value>Maint. Period (h)</value>
+  </data>
+  <data name="Txt_MaintCountdown" xml:space="preserve">
+    <value>Maint. Countdown (h)</value>
+  </data>
+  <data name="Txt_AlarmThreshold" xml:space="preserve">
+    <value>Alarm-triggering Threshold (h)</value>
+  </data>
+  <data name="Txt_LatestMaintRecord" xml:space="preserve">
+    <value>Latest maintenance record</value>
+  </data>
+  <data name="Txt_ScheduledMaintTime" xml:space="preserve">
+    <value>Scheduled Maint. Time</value>
+  </data>
+  <data name="Txt_HealthStatus" xml:space="preserve">
+    <value>Health Status</value>
+  </data>
+</root>

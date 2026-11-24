@@ -22,6 +22,12 @@ namespace Nova.Hive
         /// <see cref="HiveService"/>; null sends only MS_SHA1 from the settings.
         /// </summary>
         public System.Collections.Generic.IReadOnlyList<Nova.Abstractions.Services.HashKeyReading> HashKeys { get; set; }
+
+        /// <summary>
+        /// unique_machine_state_id from UMSID.dll, only while the 24-hour dry run is on (S4.1).
+        /// Null leaves the key out of the payload.
+        /// </summary>
+        public string UniqueMachineStateId { get; set; }
     }
 
     /// <summary>
@@ -83,6 +89,12 @@ namespace Nova.Hive
         /// </summary>
         public bool FollowsUnits { get; set; }
 
+        /// <summary>
+        /// Whether the last glue weighing was done by hand: true, false, or null when the PLC
+        /// does not say. PD-17 may follow PD-10 only after a manual weighing (slide 31).
+        /// </summary>
+        public Func<bool?> LastGlueWeighingManual { get; set; }
+
         /// <summary>The alarm that put the machine into downtime, or null.</summary>
         public HiveError RootError { get; private set; }
 
@@ -120,6 +132,19 @@ namespace Nova.Hive
 
             // Idle, pause, homing and manual are all "not processing units": HIVE stays
             // as it is until the 90 seconds in CheckIdle are up.
+        }
+
+        /// <summary>
+        /// HIVE is on again after being off (manual). The time spent off counts for nothing:
+        /// the 90 seconds to idle and the 3 seconds to wait for an alarm start afresh, so
+        /// leaving manual never changes the state by itself. The PLC's current state is then
+        /// taken in as usual.
+        /// </summary>
+        public void Resume(PlcMachineState state, DateTime time)
+        {
+            _lastUnitTime = time;
+            _stoppedWithoutAlarmSince = null;
+            MachineStateChanged(state, time);
         }
 
         /// <summary>An alarm appeared in the PLC's alarm list.</summary>
@@ -247,6 +272,16 @@ namespace Nova.Hive
                 {
                     return "A debug run can only follow a planned downtime marked * (such as Glue Change), not "
                         + (current != null ? current.Name : currentCode) + ".";
+                }
+
+                // Slide 31: after Glue Weighing, PD-17 only once the weighing was done by hand.
+                if (string.Equals(currentCode, "PD-10", StringComparison.OrdinalIgnoreCase)
+                    && LastGlueWeighingManual?.Invoke() != true)
+                {
+                    return "A debug run can follow Glue Weighing only after a manual weighing. "
+                        + (LastGlueWeighingManual?.Invoke() == false
+                            ? "The last weighing was automatic."
+                            : "The PLC does not report whether the last weighing was manual.");
                 }
             }
 

@@ -39,5 +39,11 @@ namespace Nova.Abstractions.Services
 
         /// <summary>Sets the PLC's home command bit TRUE. Throws when the PLC cannot be written.</summary>
         void StartHoming();
+
+        /// <summary>
+        /// The PLC gave the homing up without reporting done (it left HOMING, or went to ALARM
+        /// or STOP): <see cref="IsHoming"/> goes false, and no <see cref="HomingCompleted"/> is raised.
+        /// </summary>
+        void EndHoming();
     }
 }

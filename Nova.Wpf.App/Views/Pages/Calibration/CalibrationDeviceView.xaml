@@ -1,0 +1,63 @@
+<UserControl x:Class="Nova.Wpf.App.Views.Pages.Calibration.CalibrationDeviceView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
+
+    <!-- Camera / Robot tab of the Calibration section: the devices and whether each is
+         connected. Same card shape as the other calibration tabs. -->
+    <Border Style="{StaticResource Nova.Card}" Margin="{DynamicResource Nova.Card.Gap}">
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Top" Margin="2,0,2,12">
+                <TextBlock Text="{Binding Title}" Style="{StaticResource Nova.SectionTitle}"/>
+                <TextBlock Text="{Binding Hint}" Margin="0,4,0,0" TextWrapping="Wrap"
+                           Foreground="{DynamicResource SecondaryTextBrush}"
+                           FontSize="{DynamicResource Nova.FontSize.Caption}"/>
+                <TextBlock Text="{Binding SummaryText}" Margin="0,8,0,0"
+                           FontWeight="SemiBold" Foreground="{DynamicResource PrimaryTextBrush}"/>
+            </StackPanel>
+
+            <ItemsControl ItemsSource="{Binding Devices}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Margin="2,0,2,8" Padding="16,12" CornerRadius="8"
+                                Background="{DynamicResource SecondaryRegionBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                            <Grid>
+                                <TextBlock Text="{Binding Name}" VerticalAlignment="Center" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource PrimaryTextBrush}"/>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <Ellipse Width="8" Height="8" Margin="0,0,6,0" VerticalAlignment="Center">
+                                        <Ellipse.Style>
+                                            <Style TargetType="Ellipse">
+                                                <Setter Property="Fill" Value="{DynamicResource DangerBrush}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                                        <Setter Property="Fill" Value="{DynamicResource SuccessBrush}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Ellipse.Style>
+                                    </Ellipse>
+                                    <TextBlock FontWeight="SemiBold" FontSize="{DynamicResource Nova.FontSize.Caption}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Text" Value="OFFLINE"/>
+                                                <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                                        <Setter Property="Text" Value="ONLINE"/>
+                                                        <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </DockPanel>
+    </Border>
+</UserControl>

@@ -1,0 +1,27 @@
+{
+  "Gantry": [
+    {
+      "Name": "UCLoadingGantry",
+      "PlcGantry": 1,
+      "Axes": [
+        { "Name": "UC_Loading_X_Axis_Gantry", "Type": "X", "MovementPriority": 1, "SafePositionPriority": 1 },
+        { "Name": "UC_Loading_Z_Axis_Gantry_Servo", "Type": "Z", "MovementPriority": 2, "SafePositionPriority": 2 }
+      ]
+    },
+    {
+      "Name": "UCUnloadingGantry",
+      "PlcGantry": 2,
+      "Axes": [
+        { "Name": "UC_Unloading_X_Axis_Gantry", "Type": "X", "MovementPriority": 1, "SafePositionPriority": 1 },
+        { "Name": "UC_Unloading_Z_Axis_Gantry", "Type": "Z", "MovementPriority": 2, "SafePositionPriority": 2 }
+      ]
+    },
+    {
+      "Name": "WeighingModule",
+      "PlcGantry": 3,
+      "Axes": [
+        { "Name": "Automatic_Weighing_Module", "Type": "X", "MovementPriority": 1, "SafePositionPriority": 1 }
+      ]
+    }
+  ]
+}

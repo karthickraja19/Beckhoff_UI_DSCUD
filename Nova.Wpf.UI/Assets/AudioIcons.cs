@@ -98,8 +98,6 @@ namespace Nova.Wpf.UI.Assets
                 case HiveState.Running:         return "HIVE_Running";
                 case HiveState.Idle:            return "HIVE_Idle";
                 case HiveState.Downtime:        return "HIVE_DT";
-                case HiveState.PlannedDowntime: return "HIVE_Plan_DT";
-                case HiveState.Engineering:     return "HIVE_Engineering";
                 default:                        return "HIVE_Disabled";
             }
         }

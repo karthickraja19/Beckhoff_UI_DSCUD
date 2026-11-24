@@ -68,14 +68,14 @@ namespace Nova.ViewModels.Pages.Audio
 
             if (_stateHistory == null)
             {
-                StateChangeNote = "HIVE state history is not available on this machine.";
+                StateChangeNote = "There is no database, so no run, idle or downtime history.";
             }
             else
             {
                 try
                 {
                     changes = await _stateHistory.GetStateChangesAsync(first, now) ?? new HiveStateChangeRecord[0];
-                    StateChangeNote = changes.Count == 0 ? "No HIVE state changes recorded in the last seven days." : string.Empty;
+                    StateChangeNote = changes.Count == 0 ? "No run, idle or downtime recorded in the last seven days." : string.Empty;
                 }
                 catch (Exception ex)
                 {
@@ -429,6 +429,9 @@ namespace Nova.ViewModels.Pages.Audio
 
         public ObservableCollection<ParameterRow> Parameters { get; } = new ObservableCollection<ParameterRow>();
 
+        /// <summary>The Spec Limits row a unit's picture count is checked against (T5).</summary>
+        private const string PictureQuantityParameter = "Pic_Upload_quantity";
+
         [ObservableProperty]
         private string _parameterNote = string.Empty;
 
@@ -466,13 +469,62 @@ namespace Nova.ViewModels.Pages.Audio
                 }
             }
 
+            // T5: the picture count of the last unit is the first row, against the
+            // Pic_Upload_quantity limits it was checked with.
+            PictureUploadRecord lastPictures = null;
+            if (_pictures != null)
+            {
+                try
+                {
+                    lastPictures = _pictures.Recent(1).FirstOrDefault();
+                }
+                catch (Exception)
+                {
+                    // The dashboard still shows the parameters.
+                }
+            }
+
             var rows = new List<ParameterRow>();
+            ParameterRow pictureRow = null;
             foreach (AeLimitRecord limit in limits.Where(l => !string.IsNullOrWhiteSpace(l.Parameter)))
             {
                 double value;
                 string text = values.TryGetValue(limit.Parameter, out value) ? value.ToString("0.###") : NoValue;
-                string key = limit.Parameter.Trim() + (string.IsNullOrWhiteSpace(limit.Unit) ? string.Empty : " (" + limit.Unit.Trim() + ")");
+                string key = UiLanguage.SpecLimit(limit.Parameter.Trim()) + (string.IsNullOrWhiteSpace(limit.Unit) ? string.Empty : " (" + limit.Unit.Trim() + ")");
+
+                if (_pictures != null && string.Equals(limit.Parameter.Trim(), PictureQuantityParameter, StringComparison.OrdinalIgnoreCase))
+                {
+                    pictureRow = new ParameterRow(key, lastPictures != null ? lastPictures.Quantity.ToString(CultureInfo.InvariantCulture) : NoValue,
+                        ParseLimit(limit.Min), ParseLimit(limit.Max));
+                    continue;
+                }
+
                 rows.Add(new ParameterRow(key, text, ParseLimit(limit.Min), ParseLimit(limit.Max)));
+            }
+
+            if (pictureRow == null && lastPictures != null)
+                pictureRow = new ParameterRow(PictureQuantityParameter, lastPictures.Quantity.ToString(CultureInfo.InvariantCulture), lastPictures.Lsl, lastPictures.Usl);
+
+            // S3.3: MES's nozzle health of each gantry (REMAINING_TIME against MAINTAIN_TIME,
+            // hours). Shown here only - never sent to MES or HIVE.
+            var healthRows = new List<ParameterRow>();
+            if (_consumables != null)
+            {
+                try
+                {
+                    foreach (GantryConsumables gantry in _consumables.Gantries)
+                    {
+                        if (!gantry.NozzleRemainingHours.HasValue)
+                            continue;
+
+                        healthRows.Add(new ParameterRow(gantry.Gantry + "_Health_Status",
+                            gantry.NozzleRemainingHours.Value.ToString("0.###"), 0, gantry.NozzleMaintainHours));
+                    }
+                }
+                catch (Exception)
+                {
+                    // The dashboard still shows the parameters.
+                }
             }
 
             var glueRows = new List<ParameterRow>();
@@ -490,7 +542,9 @@ namespace Nova.ViewModels.Pages.Audio
             }
 
             Parameters.Clear();
-            foreach (ParameterRow row in rows.OrderByDescending(r => r.IsOutOfSpec).Concat(glueRows))
+            if (pictureRow != null)
+                Parameters.Add(pictureRow);
+            foreach (ParameterRow row in rows.Concat(healthRows).OrderByDescending(r => r.IsOutOfSpec).Concat(glueRows))
                 Parameters.Add(row);
 
             ParameterNote = error

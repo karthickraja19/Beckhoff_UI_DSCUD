@@ -33,6 +33,9 @@ namespace Nova.Hive
             _link = link;
             _stateFile = stateFile;
 
+            // HiveService asks this while it builds each payload.
+            _hive.Settings.DryRun = () => _dryRun;
+
             Stored stored = Read();
             if (stored != null && stored.HiveEnabled.HasValue)
             {
@@ -140,10 +143,24 @@ namespace Nova.Hive
             return true;
         }
 
+        public string DryRunUnavailableReason
+        {
+            get { return DryRunIds.UnavailableReason(_hive.Settings.DryRunSiCode); }
+        }
+
         public void SetDryRun(bool enabled, string operatorName)
         {
             if (_dryRun == enabled)
                 return;
+
+            // Without the SI code and both DLLs the payloads could not carry what the dry run is for.
+            string unavailable = enabled ? DryRunUnavailableReason : null;
+            if (unavailable != null)
+            {
+                Logger.WriteLog(LogType.Error, "Hive", "Control", "The 24-hour dry run was not enabled: " + unavailable, "");
+                Changed?.Invoke(this, EventArgs.Empty);
+                return;
+            }
 
             _dryRun = enabled;
             Logger.WriteLog(LogType.Info, "Hive", "Control",

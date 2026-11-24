@@ -91,9 +91,9 @@ namespace Nova.ViewModels.Pages.Audio
         }
 
         /// <summary>The four panels and the station card.</summary>
-        public bool IsDashboardVisible => IsMainTab && !IsSensorDashboardOpen;
+        public bool IsDashboardVisible => !IsSensorDashboardOpen;
 
-        public bool IsSensorDashboardVisible => IsMainTab && IsSensorDashboardOpen;
+        public bool IsSensorDashboardVisible => IsSensorDashboardOpen;
 
         /// <summary>Sensors grouped by the location they watch.</summary>
         public ObservableCollection<SensorGroupRow> SensorGroups { get; } = new ObservableCollection<SensorGroupRow>();

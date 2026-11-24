@@ -70,7 +70,11 @@ namespace Nova.ViewModels.Pages.Audio
 
         public string DryRunStatus => IsDryRunEnabled
             ? "Enabled - for FAT remote qualification only. It is reset to Disabled every time the software starts."
-            : "Disabled (default).";
+            : DryRunUnavailable == null ? "Disabled (default)."
+            : "Disabled (default). It cannot be enabled on this machine: " + DryRunUnavailable;
+
+        /// <summary>Why the dry run cannot be enabled (no SI code, the DLLs are not there); null when it can.</summary>
+        private string DryRunUnavailable => _hive != null ? _hive.DryRunUnavailableReason : null;
 
         public string DryRunButtonText => IsDryRunEnabled ? "Disable 24-hour dry run" : "Enable 24-hour dry run";
 
@@ -159,6 +163,12 @@ namespace Nova.ViewModels.Pages.Audio
                 return;
 
             bool enable = !_hive.IsDryRunEnabled;
+            if (enable && DryRunUnavailable != null)
+            {
+                _dialog?.ShowWarning("The 24-hour dry run cannot be enabled: " + DryRunUnavailable, "24-Hour Dry Run");
+                return;
+            }
+
             if (enable && _dialog != null && !_dialog.Confirm(
                     "Enable the 24-hour dry run? It is for FAT remote qualification only.", "24-Hour Dry Run"))
             {

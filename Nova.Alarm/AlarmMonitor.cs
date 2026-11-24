@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Nova.Abstractions.Data.Repositories;
 using Nova.Abstractions.Services;
 using Teal.Library.Contracts.Models;
 using Teal.Library.Log;
@@ -17,7 +18,7 @@ namespace Nova.Alarm
     /// <list type="number">
     /// <item>compare it with the alarms we already know (<see cref="AlarmTracker"/>)</item>
     /// <item>tell the screens and HIVE</item>
-    /// <item>save started and ended alarms to the database (<see cref="AlarmDatabase"/>)</item>
+    /// <item>save started and ended alarms to the [Alarms] table (<see cref="IAlarmHistoryRepository"/>, Master.Repository)</item>
     /// </list>
     /// Registered as <see cref="IActiveAlarmService"/>, so the alarm bell follows it.
     ///
@@ -31,7 +32,7 @@ namespace Nova.Alarm
     public sealed class AlarmMonitor : IActiveAlarmService, IDisposable
     {
         private readonly PlcAlarmReader _plc;
-        private readonly AlarmDatabase _database;   // null = alarms are shown but not saved
+        private readonly IAlarmHistoryRepository _database;   // null = alarms are shown but not saved
         private readonly AlarmTracker _tracker = new AlarmTracker();
         private readonly object _sync = new object();
 
@@ -52,8 +53,8 @@ namespace Nova.Alarm
         public event EventHandler<AlarmRecord> AlarmEnded;
 
         /// <param name="plc">Subscribes to the alarm list in the PLC.</param>
-        /// <param name="database">Saves the alarms. Null to only show them.</param>
-        public AlarmMonitor(PlcAlarmReader plc, AlarmDatabase database)
+        /// <param name="database">Saves the alarms to [Alarms]. Null to only show them.</param>
+        public AlarmMonitor(PlcAlarmReader plc, IAlarmHistoryRepository database)
         {
             _plc = plc;
             _database = database;
@@ -188,7 +189,14 @@ namespace Nova.Alarm
 
             try
             {
-                _tracker.AddOpenAlarms(_database.LoadOpenAlarms());
+                _tracker.AddOpenAlarms(_database.GetOpenAlarms().Select(row => new AlarmRecord
+                {
+                    DatabaseId = row.Id,
+                    ErrorCode = row.AlarmCode,
+                    ErrorType = row.AlarmType,
+                    ErrorDetail = row.AlarmDescription,
+                    StartTime = row.StartTime,
+                }));
                 PublishActiveAlarms();
             }
             catch (Exception ex)
@@ -204,7 +212,10 @@ namespace Nova.Alarm
 
             try
             {
-                _database.SaveStart(alarm);
+                // Always without an end time, even if the alarm has ended by now: the end is
+                // saved by SaveEnd, which is queued after this. The row is there while the
+                // alarm is active, so it is not lost if the HMI closes before it ends.
+                alarm.DatabaseId = _database.Insert(alarm.ErrorType, alarm.ErrorCode, alarm.ErrorDetail, alarm.StartTime, null);
             }
             catch (Exception ex)
             {
@@ -219,7 +230,11 @@ namespace Nova.Alarm
 
             try
             {
-                _database.SaveEnd(alarm);
+                // The start was never saved (e.g. the database was down then): save the whole alarm now.
+                if (alarm.DatabaseId == 0)
+                    alarm.DatabaseId = _database.Insert(alarm.ErrorType, alarm.ErrorCode, alarm.ErrorDetail, alarm.StartTime, alarm.EndTime);
+                else
+                    _database.SetEndTime(alarm.DatabaseId, alarm.EndTime.Value);
             }
             catch (Exception ex)
             {

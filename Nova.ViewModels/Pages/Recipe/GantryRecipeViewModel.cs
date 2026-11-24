@@ -14,12 +14,15 @@ using Nova.Abstractions.Services;
 namespace Nova.ViewModels.Pages.Recipe
 {
     /// <summary>
-    /// "Gantry" tab of the Recipe screen (V3 RecipieForm gantry side).
-    /// A gantry module is selected (GantryStructure.xml), its taught positions load
-    /// into the table (*Receipe_Param.csv) and can be edited/saved; Save also writes it into
-    /// the module's gantry recipe in the PLC (IPlcRecipeService). Below the table:
-    /// single-axis servo motion, a module jog pad with live positions, and loadcells.
-    /// Rows are seeded from the reference data; in production they load from configuration.
+    /// "Gantry" tab of the Recipe screen, working as V3's gantry recipe does. A gantry module
+    /// (Data\Gantry.json) is a set of servos, each with a type (X, Y, Z, R) and the order it
+    /// moves in. The table has a row per position taught on the module's servos (their
+    /// ConfiguredPositions in Data\Servos.json) and a column group per servo - Position,
+    /// Speed, Acc, Dec. Move drives each servo to its own value, in MovementPriority order
+    /// (SafePositionPriority for a "safe" position); Teach takes each servo's live position;
+    /// Save writes the groups back to the servos and then the module's recipe to the PLC
+    /// (IPlcRecipeService). Below the table: single-axis servo motion, a jog pad driving
+    /// the module's X, Y, Z and R servos, and loadcells.
     /// </summary>
     public partial class GantryRecipeViewModel : ObservableObject, Nova.ViewModels.Common.IEditableTab, Nova.ViewModels.Common.IActivatableTab
     {
@@ -204,6 +207,10 @@ namespace Nova.ViewModels.Pages.Recipe
         partial void OnSelectedAxisChanged(string value)
         {
             FollowAxes();
+
+            // FAM 2 Bug_Id_043: what was typed for one axis is not left in the boxes for the next.
+            TargetPosition = string.Empty;
+            Speed = string.Empty;
         }
 
         /// <summary>
@@ -306,6 +313,15 @@ namespace Nova.ViewModels.Pages.Recipe
         [RelayCommand]
         private async Task Save()
         {
+            // FAM 2 RC_09: an empty page has nothing to save, and Save must not leave the
+            // page stuck in edit mode either.
+            if (Rows.Count == 0)
+            {
+                _dialogService.ShowError("The recipe table is empty: there is nothing to save.", "Recipe");
+                IsEditing = false;
+                return;
+            }
+
             if (Rows.Any(r => r.HasErrors))
             {
                 _dialogService.ShowError("Please correct invalid values before saving.", "Recipe");
@@ -325,7 +341,16 @@ namespace Nova.ViewModels.Pages.Recipe
             };
 
             string module = SelectedGantryModule;
-            var result = _recipeService.SaveGantryRecipeDynamic(module, doc);
+            RecipeSaveResult result;
+            try
+            {
+                result = _recipeService.SaveGantryRecipeDynamic(module, doc);
+            }
+            catch (Exception ex)
+            {
+                _dialogService.ShowError("The recipe was not saved: " + ex.Message, "Recipe");
+                return;
+            }
 
             // "No data modified !" ends the edit too — the operator pressed Save and
             // there was nothing to write. Leaving IsEditing set is what kept the grid
@@ -379,6 +404,13 @@ namespace Nova.ViewModels.Pages.Recipe
             // Requiring a positive number here meant a taught negative position could
             // not be moved to at all, and a relative move could only ever run one way,
             // whatever the operator typed.
+            // FAM 2 RC_07: an empty box asks for the position.
+            if (string.IsNullOrWhiteSpace(TargetPosition))
+            {
+                _dialogService.ShowError("Please enter a position.", "Recipe");
+                return;
+            }
+
             if (!TryReadNumber(TargetPosition, "Please enter a valid position.", out double target))
             {
                 return;
@@ -427,44 +459,51 @@ namespace Nova.ViewModels.Pages.Recipe
                 return;
             }
 
+            // As V3: a position whose name contains "safe" moves its axes in
+            // SafePositionPriority order, any other in MovementPriority order, one axis
+            // after the other (each move waits for the one before to finish).
             GantryModuleDefinition definition = GetCurrentModuleDefinition();
-            IReadOnlyList<string> priority = definition.MovementPriority;
-            string posName = targetRow["Position"];
-            if (posName != null
-                && posName.IndexOf("safe", StringComparison.OrdinalIgnoreCase) >= 0
-                && definition.SafePositionPriority.Count > 0)
-            {
-                priority = definition.SafePositionPriority;
-            }
+            string posName = targetRow[GantryRecipeColumns.Position] ?? string.Empty;
+            IReadOnlyList<string> order = posName.IndexOf("safe", StringComparison.OrdinalIgnoreCase) >= 0
+                ? definition.SafePositionPriority
+                : definition.MovementPriority;
 
-            if (priority.Count == 0)
+            if (order.Count == 0)
             {
-                _dialogService.ShowError("No movement priority is defined for module " + SelectedGantryModule + ".", "Recipe");
+                _dialogService.ShowError("Module " + SelectedGantryModule + " has no axes in Gantry.json.", "Recipe");
                 return;
             }
 
-            foreach (string axisToken in priority)
+            foreach (string axisId in order)
             {
-                AxisRole role = GetAxisRole(axisToken);
-                if (role == AxisRole.Unknown)
+                if (GetAxis(axisId) == null)
                 {
-                    continue;
-                }
-
-                string axisId = ResolveAxisId(axisToken, role);
-                if (string.IsNullOrWhiteSpace(axisId))
-                {
-                    _dialogService.ShowError("Axis '" + axisToken + "' is not available.", "Recipe");
+                    _dialogService.ShowError("Axis '" + axisId + "' is not available.", "Recipe");
                     return;
                 }
 
-                if (!TryReadRowPosition(targetRow, role, out double position))
+                if (!TryParseCell(targetRow[GantryRecipeColumns.Value(axisId)], out double position))
                 {
-                    _dialogService.ShowError("Selected row has an invalid " + role + " position.", "Recipe");
+                    _dialogService.ShowError("'" + posName + "' has an invalid position for axis " + axisId + ".", "Recipe");
                     return;
                 }
 
-                if (!TryReadSpeed(axisId, out double speed))
+                // The position's own speed, as V3 moves it; a position taught without one
+                // (0) moves at the speed in the motion card, as a single-axis move does.
+                double speed;
+                if (TryParseCell(targetRow[GantryRecipeColumns.Speed(axisId)], out double rowSpeed) && rowSpeed > 0d)
+                {
+                    double limit = GetAxisSpeedLimit(axisId);
+                    if (limit > 0d && rowSpeed > limit)
+                    {
+                        _dialogService.ShowError("'" + posName + "' moves " + axisId + " at " + rowSpeed.ToString("0.##", CultureInfo.InvariantCulture)
+                            + ", above the axis parameter speed (" + limit.ToString("0.##", CultureInfo.InvariantCulture) + ").", "Recipe");
+                        return;
+                    }
+
+                    speed = rowSpeed;
+                }
+                else if (!TryReadSpeed(axisId, out speed))
                 {
                     return;
                 }
@@ -475,6 +514,12 @@ namespace Nova.ViewModels.Pages.Recipe
                     return;
                 }
             }
+        }
+
+        private static bool TryParseCell(string raw, out double value)
+        {
+            return double.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out value)
+                || double.TryParse(raw, NumberStyles.Float, CultureInfo.CurrentCulture, out value);
         }
 
         [RelayCommand]
@@ -493,9 +538,31 @@ namespace Nova.ViewModels.Pages.Recipe
                 return;
             }
 
-            targetRow["X"] = FormatPosition(XPos);
-            targetRow["Y"] = FormatPosition(YPos);
-            targetRow["Z"] = FormatPosition(ZPos);
+            // As V3: every axis of the module takes its live position.
+            GantryModuleDefinition definition = GetCurrentModuleDefinition();
+            if (definition.Axes.Count == 0)
+            {
+                _dialogService.ShowInfo("Module " + SelectedGantryModule + " has no axes in Gantry.json.", "Recipe");
+                return;
+            }
+
+            var missing = new List<string>();
+            foreach (GantryAxisDefinition axis in definition.Axes)
+            {
+                AxisStatusSnapshot status = GetAxis(axis.Name)?.ReadStatus();
+                if (status == null)
+                {
+                    missing.Add(axis.Name);
+                    continue;
+                }
+
+                targetRow[GantryRecipeColumns.Value(axis.Name)] = FormatPosition(status.ActualPosition);
+            }
+
+            if (missing.Count > 0)
+            {
+                _dialogService.ShowError("No live position for " + string.Join(", ", missing) + "; those values were not taught.", "Recipe");
+            }
         }
 
         [RelayCommand]
@@ -632,20 +699,18 @@ namespace Nova.ViewModels.Pages.Recipe
                 return;
             }
 
+            // Each jog button drives the module's servo of that type (Gantry.json), and only
+            // a servo the machine has: a module without one leaves the button disabled.
             GantryModuleDefinition definition = GetCurrentModuleDefinition();
-            foreach (string axisToken in definition.MovementPriority)
+            foreach (GantryAxisDefinition axis in definition.Axes)
             {
-                AxisRole role = GetAxisRole(axisToken);
-                if (role == AxisRole.Unknown)
+                AxisRole role = RoleOf(axis.Type);
+                if (role == AxisRole.Unknown || GetAxis(axis.Name) == null)
                 {
                     continue;
                 }
 
-                string resolved = ResolveAxisId(axisToken, role);
-                if (string.IsNullOrWhiteSpace(resolved))
-                {
-                    continue;
-                }
+                string resolved = axis.Name;
 
                 if (role == AxisRole.X && string.IsNullOrWhiteSpace(_mappedXAxisId))
                 {
@@ -706,137 +771,6 @@ namespace Nova.ViewModels.Pages.Recipe
             }
         }
 
-        /// <summary>
-        /// Finds the axis of <paramref name="role"/> that belongs to
-        /// <paramref name="moduleName"/>, and nothing else.
-        ///
-        /// GantryStructure.xml names its axes generically (Servo_X1, Servo_Z1) while the
-        /// machine's real axes are module-scoped (PressingModule_XAxis, BTH_XAxis), so
-        /// the direct name match always misses and every mapping lands here. This used
-        /// to end with "return candidates[0]" — if no axis of that role carried the
-        /// module's name, it silently handed back the first axis of that role on the
-        /// whole machine. Selecting BTHGantry and pressing jog then drove
-        /// PressingModule_XAxis, which is exactly the wrong-axis movement QA saw.
-        ///
-        /// Matching is on the axis's own module prefix (everything before the role
-        /// token) against the module name, in either direction, so BTH_XAxis pairs with
-        /// BTHGantry and PressingModule_XAxis with PressingModule, while
-        /// InspectionModule_XAxis matches neither. The longest matching prefix wins, so
-        /// a more specific axis beats a shorter one. A module whose axis still cannot be
-        /// identified maps to nothing and its jog buttons stay disabled, rather than the
-        /// screen guessing at which hardware to move.
-        /// </summary>
-        private string ResolveAxisFallback(AxisRole role, string moduleName)
-        {
-            string moduleToken = NormalizeIdentifier(moduleName);
-            if (string.IsNullOrWhiteSpace(moduleToken))
-            {
-                return string.Empty;
-            }
-
-            string best = string.Empty;
-            int bestPrefixLength = -1;
-
-            foreach (string axisName in _axesById.Keys)
-            {
-                if (GetAxisRole(axisName) != role)
-                {
-                    continue;
-                }
-
-                string prefix = GetModulePrefix(axisName);
-                // An axis with no module prefix at all (a bare "XAxis") belongs to no
-                // module in particular; claiming it for whichever module is selected is
-                // the guess this method exists to avoid.
-                if (prefix.Length == 0)
-                {
-                    continue;
-                }
-
-                bool matches = moduleToken.StartsWith(prefix, StringComparison.Ordinal)
-                    || prefix.StartsWith(moduleToken, StringComparison.Ordinal);
-
-                if (matches && prefix.Length > bestPrefixLength)
-                {
-                    best = axisName;
-                    bestPrefixLength = prefix.Length;
-                }
-            }
-
-            return best;
-        }
-
-        /// <summary>
-        /// The module part of an axis name — everything except the role token.
-        /// "PressingModule_XAxis" -> "pressingmodule", "BTH_XAxis" -> "bth".
-        /// </summary>
-        private static string GetModulePrefix(string axisName)
-        {
-            if (string.IsNullOrWhiteSpace(axisName))
-            {
-                return string.Empty;
-            }
-
-            string[] tokens = axisName
-                .ToLowerInvariant()
-                .Split(new[] { '_', '-', ' ', '.' }, StringSplitOptions.RemoveEmptyEntries);
-
-            var kept = tokens.Where(t => !IsRoleToken(t)).ToArray();
-            return NormalizeIdentifier(string.Concat(kept));
-        }
-
-        /// <summary>The tokens <see cref="GetAxisRole"/> recognises as naming an axis role.</summary>
-        private static bool IsRoleToken(string token)
-        {
-            switch (token)
-            {
-                case "xaxis":
-                case "x":
-                case "x1":
-                case "yaxis":
-                case "y":
-                case "y1":
-                case "zaxis":
-                case "z":
-                case "z1":
-                case "raxis":
-                case "r":
-                case "r1":
-                case "rotation":
-                    return true;
-                default:
-                    return false;
-            }
-        }
-
-        private string ResolveAxisId(string axisToken, AxisRole role)
-        {
-            if (string.IsNullOrWhiteSpace(axisToken))
-            {
-                return string.Empty;
-            }
-
-            string directMatch = _axesById.Keys
-                .FirstOrDefault(name => name.Equals(axisToken, StringComparison.OrdinalIgnoreCase));
-            if (!string.IsNullOrWhiteSpace(directMatch))
-            {
-                return directMatch;
-            }
-
-            string normalizedToken = NormalizeIdentifier(axisToken);
-            if (!string.IsNullOrWhiteSpace(normalizedToken))
-            {
-                string normalizedMatch = _axesById.Keys
-                    .FirstOrDefault(name => NormalizeIdentifier(name).Equals(normalizedToken, StringComparison.OrdinalIgnoreCase));
-                if (!string.IsNullOrWhiteSpace(normalizedMatch))
-                {
-                    return normalizedMatch;
-                }
-            }
-
-            return ResolveAxisFallback(role, SelectedGantryModule ?? string.Empty);
-        }
-
         private static string NormalizeIdentifier(string value)
         {
             if (string.IsNullOrWhiteSpace(value))
@@ -885,12 +819,21 @@ namespace Nova.ViewModels.Pages.Recipe
         private bool TryReadSpeed(string axisId, out double speed)
         {
             speed = 0d;
-            if (!TryReadPositiveNumber(Speed, "Please enter a valid speed.", out double requestedSpeed))
+            double limit = GetAxisSpeedLimit(axisId);
+            string max = limit > 0d ? " (max " + limit.ToString("0.##", CultureInfo.InvariantCulture) + ")." : ".";
+
+            // FAM 2 RC_06: an empty box asks for the speed.
+            if (string.IsNullOrWhiteSpace(Speed))
+            {
+                _dialogService.ShowError("Please enter a speed" + max, "Recipe");
+                return false;
+            }
+
+            if (!TryReadPositiveNumber(Speed, "Please enter a valid speed greater than 0" + max, out double requestedSpeed))
             {
                 return false;
             }
 
-            double limit = GetAxisSpeedLimit(axisId);
             if (limit > 0d && requestedSpeed > limit)
             {
                 _dialogService.ShowError("Please enter speed greater than 0 and less than axis parameter speed (" + limit.ToString("0.##", CultureInfo.InvariantCulture) + ").", "Recipe");
@@ -959,32 +902,6 @@ namespace Nova.ViewModels.Pages.Recipe
             }
 
             return 0d;
-        }
-
-        private static bool TryReadRowPosition(DynamicGridRow row, AxisRole role, out double position)
-        {
-            position = 0d;
-            string raw = string.Empty;
-            switch (role)
-            {
-                case AxisRole.X:
-                    raw = row["X"];
-                    break;
-                case AxisRole.Y:
-                    raw = row["Y"];
-                    break;
-                case AxisRole.Z:
-                    raw = row["Z"];
-                    break;
-                case AxisRole.R:
-                    raw = "0";
-                    break;
-                default:
-                    return false;
-            }
-
-            return double.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out position)
-                || double.TryParse(raw, NumberStyles.Float, CultureInfo.CurrentCulture, out position);
         }
 
         private string GetMappedAxisId(AxisRole role)
@@ -1096,58 +1013,17 @@ namespace Nova.ViewModels.Pages.Recipe
         private static string FormatPosition(double value)
             => value.ToString("0.00", CultureInfo.InvariantCulture);
 
-        private static AxisRole GetAxisRole(string axisName)
+        /// <summary>The jog button an axis of Gantry.json drives, from its Type.</summary>
+        private static AxisRole RoleOf(string type)
         {
-            if (string.IsNullOrWhiteSpace(axisName))
+            switch ((type ?? string.Empty).Trim().ToUpperInvariant())
             {
-                return AxisRole.Unknown;
+                case "X": return AxisRole.X;
+                case "Y": return AxisRole.Y;
+                case "Z": return AxisRole.Z;
+                case "R": return AxisRole.R;
+                default: return AxisRole.Unknown;
             }
-
-            string[] tokens = axisName
-                .ToLowerInvariant()
-                .Split(new[] { '_', '-', ' ', '.' }, StringSplitOptions.RemoveEmptyEntries);
-
-            if (tokens.Any(t => t == "raxis" || t == "r" || t == "r1" || t == "rotation"))
-            {
-                return AxisRole.R;
-            }
-
-            if (tokens.Any(t => t == "xaxis" || t == "x" || t == "x1"))
-            {
-                return AxisRole.X;
-            }
-
-            if (tokens.Any(t => t == "yaxis" || t == "y" || t == "y1"))
-            {
-                return AxisRole.Y;
-            }
-
-            if (tokens.Any(t => t == "zaxis" || t == "z" || t == "z1"))
-            {
-                return AxisRole.Z;
-            }
-
-            if (axisName.IndexOf("XAxis", StringComparison.OrdinalIgnoreCase) >= 0)
-            {
-                return AxisRole.X;
-            }
-
-            if (axisName.IndexOf("YAxis", StringComparison.OrdinalIgnoreCase) >= 0)
-            {
-                return AxisRole.Y;
-            }
-
-            if (axisName.IndexOf("ZAxis", StringComparison.OrdinalIgnoreCase) >= 0)
-            {
-                return AxisRole.Z;
-            }
-
-            if (axisName.IndexOf("RAxis", StringComparison.OrdinalIgnoreCase) >= 0)
-            {
-                return AxisRole.R;
-            }
-
-            return AxisRole.Unknown;
         }
 
         private enum AxisRole
@@ -1157,44 +1033,6 @@ namespace Nova.ViewModels.Pages.Recipe
             Y = 2,
             Z = 3,
             R = 4,
-        }
-
-        private static GantryPositionRow MapToRow(GantryPositionRecord record)
-        {
-            var row = new GantryPositionRow(record.Position, record.X, record.Y, record.Z)
-            {
-                XVel = record.XVel,
-                XAcc = record.XAcc,
-                XDeAcc = record.XDeAcc,
-                YVel = record.YVel,
-                YAcc = record.YAcc,
-                YDeAcc = record.YDeAcc,
-                ZVel = record.ZVel,
-                ZAcc = record.ZAcc,
-                ZDeAcc = record.ZDeAcc,
-            };
-
-            return row;
-        }
-
-        private static GantryPositionRecord MapToRecord(GantryPositionRow row)
-        {
-            return new GantryPositionRecord
-            {
-                Position = row.Position,
-                X = row.X,
-                XVel = row.XVel,
-                XAcc = row.XAcc,
-                XDeAcc = row.XDeAcc,
-                Y = row.Y,
-                YVel = row.YVel,
-                YAcc = row.YAcc,
-                YDeAcc = row.YDeAcc,
-                Z = row.Z,
-                ZVel = row.ZVel,
-                ZAcc = row.ZAcc,
-                ZDeAcc = row.ZDeAcc,
-            };
         }
     }
 }

@@ -15,10 +15,12 @@ namespace Master.Configuration
         public static readonly Dictionary<Cylinders, ICylinder> CylinderObjs = new Dictionary<Cylinders, ICylinder>();
 
         /// <summary>
-        /// The valve and reed names in the file are the PLC's variable names; the library takes
-        /// them as full symbols, {ioGvl}.{name}. A single-valve cylinder has no retract valve.
+        /// The valve and reed names in the file are Data\Config.csv points (the PLC's E_Outputs /
+        /// E_Input names), kept for the board's labels; the library commands and reads the
+        /// cylinder through CylinderData[Id], never through them. A single-valve cylinder has
+        /// no retract valve.
         /// </summary>
-        internal static void Load(TwincatCard card, string ioGvl, List<string> problems)
+        internal static void Load(TwincatCard card, List<string> problems)
         {
             CylinderObjs.Clear();
 
@@ -32,10 +34,10 @@ namespace Master.Configuration
                         Name = config.Name,
                         EnumName = config.EnumName,
                         Id = config.Id,
-                        ExtendOutput = DeviceObjects.Symbol(ioGvl, config.ExtendOutput),
-                        RetractOutput = DeviceObjects.Symbol(ioGvl, config.RetractOutput),
-                        ExtendSenses = DeviceObjects.Symbols(ioGvl, config.ExtendSenses),
-                        RetractSenses = DeviceObjects.Symbols(ioGvl, config.RetractSenses),
+                        ExtendOutput = DeviceObjects.IoName(config.ExtendOutput),
+                        RetractOutput = DeviceObjects.IoName(config.RetractOutput),
+                        ExtendSenses = DeviceObjects.IoNames(config.ExtendSenses),
+                        RetractSenses = DeviceObjects.IoNames(config.RetractSenses),
                     };
 
                     return new Cylinder(card, properties);

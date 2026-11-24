@@ -1,6 +1,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Nova.Abstractions.Data.Models;
@@ -12,11 +13,13 @@ namespace Nova.ViewModels.Pages.Recipe
     /// "Robot" tab of the Recipe screen (V3 RecipieForm robot side, dgv_Robot).
     /// Dynamic point-parameter table driven directly from JSON schema and keys.
     /// Supports arbitrary columns, inline editing, numeric validation, and dynamic audit logging.
+    /// Save also writes the rows mapped to a PLC member (Speed, ...) to the PLC's robots (IPlcRecipeService).
     /// </summary>
     public partial class RobotRecipeViewModel : ObservableObject, Nova.ViewModels.Common.IEditableTab
     {
         private readonly IRecipeService _recipeService;
         private readonly IDialogService _dialogService;
+        private readonly IPlcRecipeService _plcRecipeService;
 
         public string Title { get; private set; } = "Robot";
 
@@ -34,10 +37,11 @@ namespace Nova.ViewModels.Pages.Recipe
         public bool CanEdit => !IsEditing;
         public bool IsReadOnlyMode => !IsEditing;
 
-        public RobotRecipeViewModel(IRecipeService recipeService, IDialogService dialogService)
+        public RobotRecipeViewModel(IRecipeService recipeService, IDialogService dialogService, IPlcRecipeService plcRecipeService)
         {
             _recipeService = recipeService ?? throw new ArgumentNullException(nameof(recipeService));
             _dialogService = dialogService ?? throw new ArgumentNullException(nameof(dialogService));
+            _plcRecipeService = plcRecipeService ?? throw new ArgumentNullException(nameof(plcRecipeService));
 
             LoadData();
         }
@@ -83,7 +87,7 @@ namespace Nova.ViewModels.Pages.Recipe
         private void Edit() => IsEditing = true;
 
         [RelayCommand]
-        private void Save()
+        private async Task Save()
         {
             if (Rows.Any(r => r.HasErrors))
             {
@@ -104,8 +108,25 @@ namespace Nova.ViewModels.Pages.Recipe
             };
 
             var result = _recipeService.SaveRobotRecipeDynamic(doc);
-            _dialogService.ShowInfo(result.Message, "Recipe");
+            if (!result.IsSaved && !result.IsNoChanges)
+            {
+                _dialogService.ShowInfo(result.Message, "Recipe");
+                return;
+            }
+
             IsEditing = false;
+
+            // The PLC does not keep the robot values, so they are written on every Save - also
+            // when nothing changed, which resends values the PLC lost.
+            try
+            {
+                await _plcRecipeService.WriteRobotRecipeAsync();
+                _dialogService.ShowInfo(result.Message + "\nRobot recipe written to the PLC.", "Recipe");
+            }
+            catch (Exception ex)
+            {
+                _dialogService.ShowError(result.Message + "\nNot written to the PLC: " + ex.Message, "Recipe");
+            }
         }
 
         /// <summary>Leaving the tab abandons the edit: relock and reload from the store.</summary>

@@ -7,9 +7,9 @@ namespace Nova.Abstractions.Services
     {
         event System.EventHandler SettingsChanged;
 
+        // The Axis Configuration tab and the Manual axis panel: Data\Servos.json, the servos' own file.
         IReadOnlyList<AxisParameterRecord> LoadAxisParameters();
         DynamicTableDocument LoadAxisParametersDynamic();
-        RecipeSaveResult SaveAxisParameters(IReadOnlyList<AxisParameterRecord> rows);
         RecipeSaveResult SaveAxisParametersDynamic(DynamicTableDocument document);
 
         IReadOnlyList<TcpConnectionRecord> LoadTcpConnections();

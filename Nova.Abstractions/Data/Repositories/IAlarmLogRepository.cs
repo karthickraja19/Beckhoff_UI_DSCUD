@@ -7,7 +7,7 @@ namespace Nova.Abstractions.Data.Repositories
 {
     /// <summary>
     /// Read side of the persisted alarm log. Rows are written by Nova.Alarm's
-    /// AlarmDatabase as PLC alarms start and end, so implementations leave
+    /// AlarmMonitor (through IAlarmHistoryRepository) as PLC alarms start and end, so implementations leave
     /// <see cref="AppendAsync"/> as a no-op rather than double-writing the same row.
     /// </summary>
     public interface IAlarmLogRepository

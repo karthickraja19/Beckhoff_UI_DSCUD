@@ -7,17 +7,21 @@ namespace Nova.Abstractions.Data.Models
         Grr = 2,
     }
 
+    /// <summary>One servo's parameters, as Data\Servos.json holds them (the component's own file).</summary>
     public sealed class AxisParameterRecord
     {
-        public string CardId { get; set; } = "0";
-        public string AxisId { get; set; } = "0";
+        /// <summary>The servo's EnumName.</summary>
         public string AxisName { get; set; } = string.Empty;
-        public string Pitch { get; set; } = "0";
-        public string Pulses { get; set; } = "0";
-        public string Ppr { get; set; } = "0";
-        public string HomingAcc { get; set; } = "0";
-        public string HomingDeAcc { get; set; } = "0";
-        public string HomingSpeed { get; set; } = "0";
+        /// <summary>The axis's index in the PLC's servo arrays.</summary>
+        public string AxisId { get; set; } = "0";
+        public string Type { get; set; } = string.Empty;
+        public string Pulse { get; set; } = "0";
+        public string Velocity { get; set; } = "0";
+        public string Acceleration { get; set; } = "0";
+        public string Deceleration { get; set; } = "0";
+        public string PositiveLimit { get; set; } = "0";
+        public string NegativeLimit { get; set; } = "0";
+        public string Timeout { get; set; } = "0";
     }
 
     public sealed class TcpConnectionRecord

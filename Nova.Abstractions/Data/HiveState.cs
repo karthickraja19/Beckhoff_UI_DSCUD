@@ -13,9 +13,8 @@ namespace Nova.Abstractions.Data
     /// <para>
     /// <see cref="Disconnected"/> is not a machine state - it is the absence of one,
     /// and the DFM gives it its own chip ("HIVE is disabled or disconnected", slide
-    /// 39). <see cref="PlannedDowntime"/> and <see cref="Engineering"/> are both
-    /// state 5 on the wire and differ only by error code (slide 9); they are separate
-    /// members here because the DFM ships a distinct chip for each.
+    /// 39). Planned downtime is state 5 with a "PD-" code (slide 9); it has no chip of
+    /// its own - the 3 state standard (v5.0) shows it as Downtime.
     /// </para>
     /// <para>
     /// This enum is display state only. Nothing in this build reports it to HIVE or
@@ -33,13 +32,7 @@ namespace Nova.Abstractions.Data
         /// <summary>State 2. Machine can process POR units but currently is not.</summary>
         Idle = 2,
 
-        /// <summary>State 5, unplanned. Machine is unable to process POR units.</summary>
-        Downtime = 5,
-
-        /// <summary>State 5 with a "PD-" error code (slide 9, planned downtime).</summary>
-        PlannedDowntime = 105,
-
-        /// <summary>State 5 with error code "PD-100" (slide 9, engineering time).</summary>
-        Engineering = 100
+        /// <summary>State 5, planned or unplanned. Machine is unable to process POR units.</summary>
+        Downtime = 5
     }
 }

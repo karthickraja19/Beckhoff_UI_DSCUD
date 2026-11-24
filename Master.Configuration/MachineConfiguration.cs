@@ -77,7 +77,72 @@ namespace Master.Configuration
             CheckNames<CCDs, VisionConfiguration>(CcdsFile, ConfigGlobalClass.CCDConfigurations, c => c.EnumName, problems);
             CheckNames<Scanners, NetworkDeviceConfiguration>(ScannersFile, ConfigGlobalClass.ScannerConfigurations, c => c.EnumName, problems);
             CheckNames<Robots, RobotConfiguration>(RobotsFile, ConfigGlobalClass.RobotConfigurations, c => c.EnumName, problems);
+            CheckGantry(ConfigGlobalClass.ServoConfigurations, problems);
             return problems;
+        }
+
+        /// <summary>The axis types a gantry module's axes can have, in E_Servo order (X_AXIS = 1 ... R_AXIS = 4).</summary>
+        public static readonly string[] GantryAxisTypes = { "X", "Y", "Z", "R" };
+
+        /// <summary>
+        /// Reports where Gantry.json does not describe the machine: an axis that is not a servo
+        /// in Servos.json, an axis type other than X, Y, Z or R, or two axes of the same type in
+        /// one module (the PLC's recipe has one column per type). A machine without gantries
+        /// has no Gantry.json, so a missing file is not a problem.
+        /// </summary>
+        private static void CheckGantry(List<ServoConfiguration> servos, List<string> problems)
+        {
+            if (!File.Exists(Path.Combine(DataDirectory, GantryFile)))
+                return;
+
+            GantryRoot root = LoadGantry(DataDirectory);
+            if (root == null)
+            {
+                problems.Add("Data\\" + GantryFile + " could not be read, so the Recipe page has no gantry.");
+                return;
+            }
+
+            foreach (GantryConfiguration module in root.Gantry ?? new List<GantryConfiguration>())
+            {
+                string name = string.IsNullOrWhiteSpace(module?.Name) ? "(a module with no Name)" : module.Name;
+                if (module?.Axes == null || module.Axes.Count == 0)
+                {
+                    problems.Add("Data\\" + GantryFile + ": " + name + " has no axes.");
+                    continue;
+                }
+
+                List<string> unknown = module.Axes
+                    .Where(a => a == null || !servos.Any(s => s != null && string.Equals(s.EnumName, a.Name, StringComparison.OrdinalIgnoreCase)))
+                    .Select(a => string.IsNullOrWhiteSpace(a?.Name) ? "(no Name)" : a.Name)
+                    .ToList();
+                if (unknown.Count > 0)
+                {
+                    problems.Add("Data\\" + GantryFile + ": " + name + " names axes that are not servos in Data\\" + ServosFile
+                        + ", so they are left out: " + string.Join(", ", unknown) + ".");
+                }
+
+                List<string> badType = module.Axes
+                    .Where(a => a != null && !GantryAxisTypes.Contains((a.Type ?? string.Empty).Trim().ToUpperInvariant()))
+                    .Select(a => a.Name + " (\"" + a.Type + "\")")
+                    .ToList();
+                if (badType.Count > 0)
+                {
+                    problems.Add("Data\\" + GantryFile + ": " + name + " has axes whose Type is not X, Y, Z or R, so they are left out: "
+                        + string.Join(", ", badType) + ".");
+                }
+
+                List<string> repeated = module.Axes
+                    .Where(a => a != null)
+                    .GroupBy(a => (a.Type ?? string.Empty).Trim().ToUpperInvariant())
+                    .Where(g => g.Key.Length > 0 && g.Count() > 1)
+                    .Select(g => g.Key)
+                    .ToList();
+                if (repeated.Count > 0)
+                {
+                    problems.Add("Data\\" + GantryFile + ": " + name + " has more than one axis of type " + string.Join(", ", repeated)
+                        + ", so only the first usable one of each is used.");
+                }
+            }
         }
 
         /// <summary>
@@ -101,7 +166,10 @@ namespace Master.Configuration
             return configured;
         }
 
-        /// <summary>The gantry modules and their axes (Gantry.json), or null when there is no such file or it cannot be read.</summary>
+        /// <summary>
+        /// The gantry modules and the servos each is made of (Gantry.json), or null when there
+        /// is no such file or it cannot be read. A module's recipe is its servos' ConfiguredPositions.
+        /// </summary>
         public static GantryRoot LoadGantry(string dataDirectory)
         {
             string path = Path.Combine(dataDirectory, GantryFile);

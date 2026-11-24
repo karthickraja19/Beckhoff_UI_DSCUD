@@ -37,8 +37,24 @@ namespace Nova.Hive
         /// <summary>Checks a scanned value; returns why it is refused, or null to accept it.</summary>
         public Func<string, string> Validate { get; set; }
 
+        /// <summary>
+        /// True for the one SN that may be typed: a nozzle / runner with no physical QR label
+        /// (S3.3 "Use keyboard to manually key-in new SN"). The dialog then offers a
+        /// "no QR label" tick box; unticked, the SN still has to come from the scanner.
+        /// </summary>
+        public bool AllowTyping { get; set; }
+
+        /// <summary>The caption of the box; null gives "New " + <see cref="Label"/>.</summary>
+        public string NewLabel { get; set; }
+
+        /// <summary>What is shown as the old SN when none is recorded; null shows "(none recorded)".</summary>
+        public string OldValueWhenNone { get; set; }
+
         /// <summary>The scanned value; null until one is accepted.</summary>
         public string Value { get; internal set; }
+
+        /// <summary>True when <see cref="Value"/> was typed, not scanned. For the machine log.</summary>
+        public bool WasTyped { get; internal set; }
     }
 
     /// <summary>
@@ -57,6 +73,7 @@ namespace Nova.Hive
         private readonly CardScan _badgeScan = new CardScan();
         private readonly Dictionary<ProcedureField, CardScan> _scans = new Dictionary<ProcedureField, CardScan>();
         private readonly Dictionary<ProcedureField, TextBox> _boxes = new Dictionary<ProcedureField, TextBox>();
+        private readonly HashSet<ProcedureField> _typing = new HashSet<ProcedureField>();
 
         private IList<ProcedureField> _fields = new List<ProcedureField>();
         private ComboBox _gantryBox;
@@ -78,7 +95,7 @@ namespace Nova.Hive
         {
             InitializeComponent();
 
-            HeaderText.Text = header;
+            HeaderText.Text = HiveText.T(header);
             _access = access;
             _minimumLevel = minimumLevel;
             _fieldsFor = fieldsFor;
@@ -87,13 +104,16 @@ namespace Nova.Hive
             Loaded += (sender, e) => (_operatorBox ?? (UIElement)this).Focus();
         }
 
+        private string _checkLabel;
+
         /// <summary>Label of the check button; set to show it (e.g. "To MES Check").</summary>
         public string CheckLabel
         {
-            get { return CheckButton.Content as string; }
+            get { return _checkLabel; }
             set
             {
-                CheckButton.Content = value;
+                _checkLabel = value;
+                CheckButton.Content = HiveText.T(value);
                 CheckButton.Visibility = string.IsNullOrWhiteSpace(value) ? Visibility.Collapsed : Visibility.Visible;
             }
         }
@@ -104,13 +124,16 @@ namespace Nova.Hive
         /// <summary>Runs on OK; returns why it failed (the dialog stays open), or null to close.</summary>
         public Func<ProcedureDialog, Task<string>> OkAction { get; set; }
 
+        private string _info;
+
         /// <summary>An extra line under the SNs, e.g. the valve SN the nozzle will be linked to.</summary>
         public string Info
         {
-            get { return InfoText.Text; }
+            get { return _info; }
             set
             {
-                InfoText.Text = value;
+                _info = value;
+                InfoText.Text = HiveText.T(value);
                 InfoText.Visibility = string.IsNullOrWhiteSpace(value) ? Visibility.Collapsed : Visibility.Visible;
             }
         }
@@ -142,7 +165,7 @@ namespace Nova.Hive
         /// <summary>Shows a message under the SNs, e.g. what MES answered.</summary>
         public void ShowMessage(string text, bool error)
         {
-            MessageText.Text = text;
+            MessageText.Text = HiveText.T(text);
             MessageText.Foreground = error ? System.Windows.Media.Brushes.Firebrick : new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x8A, 0x8A, 0x8A));
         }
 
@@ -189,6 +212,7 @@ namespace Nova.Hive
 
             _scans.Clear();
             _boxes.Clear();
+            _typing.Clear();
             _checkPassed = false;
 
             _fields = _fieldsFor != null ? _fieldsFor(SelectedGantry) ?? new List<ProcedureField>() : new List<ProcedureField>();
@@ -196,18 +220,56 @@ namespace Nova.Hive
             {
                 field.Value = null;
 
+                field.WasTyped = false;
+
                 if (field.OldValue != null)
-                    AddRow("Old " + field.Label + ":", new TextBlock { Text = string.IsNullOrWhiteSpace(field.OldValue) ? "(none recorded)" : field.OldValue, VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap });
+                    AddRow("Old " + field.Label + ":", new TextBlock { Text = string.IsNullOrWhiteSpace(field.OldValue) ? (field.OldValueWhenNone ?? "(none recorded)") : field.OldValue, VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap });
 
                 var box = new TextBox { IsReadOnly = true, Padding = new Thickness(6, 4, 6, 4) };
                 CardScan scan = CardScan.ForSerialNumber(field.MinimumLength, field.MaximumLength);
                 ProcedureField current = field;
-                box.PreviewTextInput += (sender, e) => { e.Handled = true; scan.Add(e.Text); };
+
+                // Typing is let through to the box only while "no QR label" is ticked.
+                box.PreviewTextInput += (sender, e) =>
+                {
+                    if (_typing.Contains(current))
+                        return;
+
+                    e.Handled = true;
+                    scan.Add(e.Text);
+                };
                 box.PreviewKeyDown += (sender, e) => SnBox_PreviewKeyDown(current, e);
                 CardScan.BlockManualEntry(box);
                 _scans[field] = scan;
                 _boxes[field] = box;
-                AddRow("New " + field.Label + ":", box);
+                AddRow((field.NewLabel ?? "New " + field.Label) + ":", box);
+
+                if (field.AllowTyping)
+                {
+                    var noLabel = new CheckBox
+                    {
+                        Content = HiveText.T("No QR label on it: type the SN, then press Enter"),
+                        VerticalAlignment = VerticalAlignment.Center,
+                    };
+                    noLabel.Click += (sender, e) =>
+                    {
+                        bool typing = noLabel.IsChecked == true;
+                        if (typing)
+                            _typing.Add(current);
+                        else
+                            _typing.Remove(current);
+
+                        current.Value = null;
+                        current.WasTyped = false;
+                        box.Text = string.Empty;
+                        box.IsReadOnly = !typing;
+                        _checkPassed = false;
+                        scan.Clear();
+                        box.Focus();
+                        UpdateOk();
+                    };
+                    AddRow(string.Empty, noLabel);
+                }
             }
 
             UpdateOk();
@@ -218,7 +280,7 @@ namespace Nova.Hive
             int row = Body.RowDefinitions.Count;
             Body.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
-            var text = new TextBlock { Text = label, FontWeight = FontWeights.Bold, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 4, 8, 4), TextWrapping = TextWrapping.Wrap };
+            var text = new TextBlock { Text = HiveText.T(label), FontWeight = FontWeights.Bold, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 4, 8, 4), TextWrapping = TextWrapping.Wrap };
             Grid.SetRow(text, row);
             Body.Children.Add(text);
 
@@ -310,12 +372,31 @@ namespace Nova.Hive
 
             e.Handled = true;
             TextBox box = _boxes[field];
+            bool typed = _typing.Contains(field);
+            string typedText = typed ? (box.Text ?? string.Empty).Trim() : null;
             field.Value = null;
+            field.WasTyped = false;
             box.Text = string.Empty;
             _checkPassed = false;
 
-            string refused;
-            string value = _scans[field].Finish(out refused);
+            string refused = null;
+            string value;
+            if (typed)
+            {
+                // Keyed in (S3.3, a nozzle without a QR label): the length rule still holds.
+                value = typedText.Length == 0 ? null : typedText;
+                if (value != null && (value.Length < field.MinimumLength || value.Length > field.MaximumLength))
+                {
+                    refused = "That is not a valid SN (" + value.Length + " characters, expected "
+                        + field.MinimumLength + " to " + field.MaximumLength + "). Please type it again.";
+                    value = null;
+                }
+            }
+            else
+            {
+                value = _scans[field].Finish(out refused);
+            }
+
             if (value == null)
             {
                 ShowMessage(refused ?? "Scan the " + field.Label + ".", refused != null);
@@ -333,8 +414,9 @@ namespace Nova.Hive
             }
 
             field.Value = value;
+            field.WasTyped = typed;
             box.Text = value;
-            ShowMessage(field.Label + " read.", false);
+            ShowMessage(field.Label + (typed ? " entered." : " read."), false);
 
             TextBox next = _boxes.Where(p => p.Key.Value == null).Select(p => p.Value).FirstOrDefault();
             if (next != null)

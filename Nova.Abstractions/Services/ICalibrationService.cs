@@ -4,24 +4,97 @@ using System.Threading.Tasks;
 
 namespace Nova.Abstractions.Services
 {
-    /// <summary>Where the PLC's calibration sequence is (its E_CalibState).</summary>
-    public enum CalibrationState
+    /// <summary>
+    /// The machine's calibrations. The number is the PLC's E_Calibration, which is what
+    /// the calibration manager is told to run.
+    /// </summary>
+    public enum CalibrationKind
     {
-        Idle = 0,
-        Running = 1,
-        Paused = 2,
-
-        /// <summary>The sequence waits for the operator to accept or reject a check (<see cref="CalibrationStatus.Prompt"/>).</summary>
-        WaitingOperator = 3,
-
-        Done = 4,
-        Failed = 5,
-
-        /// <summary>Stopped by the Stop button before it finished.</summary>
-        Stopped = 6
+        NinePoint = 1,
+        FiveAxis = 2,
+        NeedleModule = 3,
+        CameraNeedle = 4
     }
 
-    /// <summary>The PLC's calibration status as it stands now.</summary>
+    /// <summary>9 point calibration: the taught start position of one station (Data\Calibration\NinePoint.json).</summary>
+    public sealed class NinePointTeach
+    {
+        public int Station { get; set; }
+
+        /// <summary>The PLC's bTaught: this station's position is real and may be used.</summary>
+        public bool Taught { get; set; }
+
+        public double X { get; set; }
+
+        public double Y { get; set; }
+    }
+
+    /// <summary>Needle module calibration: the taught position of one station (Data\Calibration\NeedleModule.json).</summary>
+    public sealed class NeedleModuleTeach
+    {
+        public int Station { get; set; }
+
+        public bool Taught { get; set; }
+
+        public double X { get; set; }
+
+        public double Y { get; set; }
+
+        public double Z { get; set; }
+    }
+
+    /// <summary>One row of the 5 axis table, e.g. "A-5": A 5, C 0 and the taught X / Y / Z.</summary>
+    public sealed class FiveAxisTeachPoint
+    {
+        public string Name { get; set; } = string.Empty;
+
+        public double A { get; set; }
+
+        public double C { get; set; }
+
+        public double X { get; set; }
+
+        public double Y { get; set; }
+
+        public double Z { get; set; }
+    }
+
+    /// <summary>5 axis calibration: the taught table of one station (Data\Calibration\FiveAxis.json).</summary>
+    public sealed class FiveAxisTeach
+    {
+        public int Station { get; set; }
+
+        public bool Taught { get; set; }
+
+        /// <summary>Row n is the PLC's aPoint[n]. Rows the PLC holds beyond these are written as zeros.</summary>
+        public List<FiveAxisTeachPoint> Points { get; set; } = new List<FiveAxisTeachPoint>();
+    }
+
+    /// <summary>One named XY position: a glue point or a vision point.</summary>
+    public sealed class TeachPoint
+    {
+        public string Name { get; set; } = string.Empty;
+
+        public double X { get; set; }
+
+        public double Y { get; set; }
+    }
+
+    /// <summary>Camera needle calibration: the glue and vision points of one station (Data\Calibration\CameraNeedle.json).</summary>
+    public sealed class CameraNeedleTeach
+    {
+        public int Station { get; set; }
+
+        public bool Taught { get; set; }
+
+        /// <summary>Where the needle dispenses the dots: the PLC's aGlue[1..9].</summary>
+        public List<TeachPoint> Glue { get; set; } = new List<TeachPoint>();
+
+        /// <summary>Where the camera looks at the dots: the PLC's aVision[1..9].</summary>
+        public List<TeachPoint> Vision { get; set; } = new List<TeachPoint>();
+    }
+
+    /// <summary>What the PLC's calibration manager reports.</summary>
     public sealed class CalibrationStatus
     {
         public static readonly CalibrationStatus NotLive = new CalibrationStatus();
@@ -32,93 +105,86 @@ namespace Nova.Abstractions.Services
         /// <summary>Why <see cref="IsLive"/> is false; empty while live.</summary>
         public string NotLiveReason { get; set; } = string.Empty;
 
-        public CalibrationState State { get; set; }
+        /// <summary>A calibration is running.</summary>
+        public bool IsBusy { get; set; }
 
-        /// <summary>The station the PLC is calibrating, or last calibrated (1 or 2).</summary>
+        /// <summary>The last one finished without a fault (until Reset or the next start).</summary>
+        public bool IsDone { get; set; }
+
+        /// <summary>The last one failed, was aborted or was not allowed (until Reset or the next start).</summary>
+        public bool IsError { get; set; }
+
+        /// <summary>The calibration that is running or ran last (E_Calibration); 0 = none.</summary>
+        public int Calibration { get; set; }
+
+        /// <summary>Its station.</summary>
         public int Station { get; set; }
-
-        /// <summary>The routine the PLC is running, or last ran (its E_CalibRoutine number).</summary>
-        public int Routine { get; set; }
 
         public int Step { get; set; }
 
-        /// <summary>The sequence's own text for its current step.</summary>
-        public string StepText { get; set; } = string.Empty;
-
-        /// <summary>What the operator must check while <see cref="CalibrationState.WaitingOperator"/>.</summary>
-        public string Prompt { get; set; } = string.Empty;
-
-        /// <summary>The PLC's verdict once Done: TRUE when every check passed.</summary>
-        public bool ResultOk { get; set; }
-
-        /// <summary>The measured values, laid out as the routine says (row by row).</summary>
-        public IReadOnlyList<double> Results { get; set; } = new double[0];
-
-        /// <summary>A calibration is under way: running, paused or waiting for the operator.</summary>
-        public bool IsBusy => IsLive
-            && (State == CalibrationState.Running || State == CalibrationState.Paused || State == CalibrationState.WaitingOperator);
-    }
-
-    /// <summary>A routine's parameters as the HMI last saved them for one station.</summary>
-    public sealed class CalibrationParameterSet
-    {
-        public IDictionary<string, double> Values { get; set; } = new Dictionary<string, double>();
-
-        public string SavedBy { get; set; } = string.Empty;
-
-        public DateTime SavedAt { get; set; }
+        /// <summary>The PLC's own text for where the calibration is, or why it stopped.</summary>
+        public string Message { get; set; } = string.Empty;
     }
 
     /// <summary>
-    /// The Setting page's Calibration tab. The PLC owns every calibration sequence; the HMI
-    /// picks the station and the routine, writes the routine's parameters (which it keeps,
-    /// per station), and presses Start / Pause / Stop. The PLC reports where the sequence is
-    /// and what it measured.
+    /// The Config page's Calibration section. The HMI keeps the taught positions of every
+    /// calibration, one JSON file per calibration in Data\Calibration, and writes them into
+    /// the PLC's teach tables; the PLC keeps them (persistent data) and runs every
+    /// calibration sequence itself. The HMI only selects the calibration and the station
+    /// and presses Start / Abort / Reset.
     /// </summary>
     public interface ICalibrationService
     {
-        /// <summary>False when the PLC calibration symbols are not configured.</summary>
-        bool IsAvailable { get; }
+        /// <summary>The stations of each file, in station order. A missing file gives the stations with zeros.</summary>
+        IReadOnlyList<NinePointTeach> LoadNinePoint();
 
-        /// <summary>Why <see cref="IsAvailable"/> is false; empty otherwise.</summary>
-        string UnavailableReason { get; }
+        IReadOnlyList<FiveAxisTeach> LoadFiveAxis();
 
-        /// <summary>How many parameters the PLC takes (its aParam array).</summary>
-        int MaxParameters { get; }
+        IReadOnlyList<CameraNeedleTeach> LoadCameraNeedle();
 
-        /// <summary>How many result values the PLC reports (its aResult array).</summary>
-        int MaxResults { get; }
+        IReadOnlyList<NeedleModuleTeach> LoadNeedleModule();
 
-        /// <summary>The status the PLC last pushed; <see cref="CalibrationStatus.IsLive"/> is false while not followed or not live.</summary>
+        /// <summary>Saves the file. Throws when it cannot be written.</summary>
+        void SaveNinePoint(IReadOnlyList<NinePointTeach> stations);
+
+        void SaveFiveAxis(IReadOnlyList<FiveAxisTeach> stations);
+
+        void SaveCameraNeedle(IReadOnlyList<CameraNeedleTeach> stations);
+
+        void SaveNeedleModule(IReadOnlyList<NeedleModuleTeach> stations);
+
+        /// <summary>False when the symbol map has no teach table for the calibration.</summary>
+        bool CanWrite(CalibrationKind kind);
+
+        /// <summary>
+        /// Writes the calibration's saved file into its teach table in the PLC, every station,
+        /// then has the PLC store its persistent data. The task faults, with the reason as its
+        /// message, when the table is not mapped, does not have the size the file needs, or
+        /// the PLC cannot be written or does not confirm the store.
+        /// </summary>
+        Task WriteToPlcAsync(CalibrationKind kind);
+
+        /// <summary>False when the symbol map has no calibration manager.</summary>
+        bool CanRun { get; }
+
+        /// <summary>Why <see cref="CanRun"/> is false; empty otherwise.</summary>
+        string CannotRunReason { get; }
+
+        /// <summary>What the manager last reported; not live while not followed.</summary>
         CalibrationStatus Status { get; }
 
         /// <summary><see cref="Status"/> changed. Raised on any thread.</summary>
         event EventHandler StatusChanged;
 
-        /// <summary>Follows the PLC's calibration status until the handle is disposed - while the tab is on screen.</summary>
+        /// <summary>Follows the manager's status until the handle is disposed - while the section is on screen.</summary>
         IDisposable FollowStatus();
 
-        /// <summary>The parameters last saved for the routine on the station, or null when none were.</summary>
-        CalibrationParameterSet LoadParameters(int station, string routineKey);
+        /// <summary>Selects the calibration and the station and pulses Start. Whether it then runs is the PLC's decision, reported in <see cref="Status"/>.</summary>
+        Task StartAsync(CalibrationKind kind, int station);
 
-        /// <summary>Saves the routine's parameters for the station. Throws when they cannot be written.</summary>
-        void SaveParameters(int station, string routineKey, IDictionary<string, double> values, string savedBy);
+        Task AbortAsync();
 
-        /// <summary>
-        /// Writes the station, the routine and its parameters (in the routine's order) to the
-        /// PLC, then presses Start. Completes when the PLC has been written; faults when it
-        /// could not be.
-        /// </summary>
-        Task StartAsync(int station, int routine, IReadOnlyList<double> parameters);
-
-        /// <summary>Presses Start again: the PLC resumes a paused calibration.</summary>
-        Task ResumeAsync();
-
-        Task PauseAsync();
-
-        Task StopAsync();
-
-        /// <summary>Answers the PLC's operator check: accepted, or rejected.</summary>
-        Task AnswerPromptAsync(bool accepted);
+        /// <summary>Clears the manager's Done / Error and its message.</summary>
+        Task ResetAsync();
     }
 }

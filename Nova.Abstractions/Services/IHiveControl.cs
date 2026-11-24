@@ -34,6 +34,12 @@ namespace Nova.Abstractions.Services
 
         void SetDryRun(bool enabled, string operatorName);
 
+        /// <summary>
+        /// Why the dry run cannot be enabled on this machine - no SI code, or the remote
+        /// qualification DLLs (UUID.dll, UMSID.dll) are not beside the software. Null when it can.
+        /// </summary>
+        string DryRunUnavailableReason { get; }
+
         /// <summary>1, 2 or 5; 0 when HIVE is not available.</summary>
         int CurrentState { get; }
 

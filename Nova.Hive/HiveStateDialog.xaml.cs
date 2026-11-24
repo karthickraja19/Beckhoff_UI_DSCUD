@@ -26,7 +26,7 @@ namespace Nova.Hive
         {
             InitializeComponent();
 
-            CurrentStateText.Text = currentState;
+            CurrentStateText.Text = HiveText.T(currentState);
             Configure(RunningButton, RunningNote, runningBlocked);
             Configure(PlannedButton, PlannedNote, plannedBlocked);
             Configure(ManualButton, ManualNote, manualBlocked);
@@ -37,7 +37,7 @@ namespace Nova.Hive
         private static void Configure(Button button, TextBlock note, string blockedBecause)
         {
             button.IsEnabled = blockedBecause == null;
-            note.Text = blockedBecause;
+            note.Text = HiveText.T(blockedBecause);
             note.Visibility = blockedBecause == null ? Visibility.Collapsed : Visibility.Visible;
         }
 

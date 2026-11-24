@@ -1,0 +1,372 @@
+﻿<UserControl x:Class="Nova.Wpf.App.Views.Pages.Recipe.CNCRecipeView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:loc="clr-namespace:Nova.Wpf.UI.Localization;assembly=Nova.Wpf.UI"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             xmlns:behaviors="clr-namespace:Nova.Wpf.UI.Behaviors;assembly=Nova.Wpf.UI"
+             xmlns:common="clr-namespace:Nova.Wpf.App.Views.Common"
+             Background="Transparent">
+
+    <UserControl.Resources>
+        <Style x:Key="RecipeCard" TargetType="Border" BasedOn="{StaticResource Nova.Card}">
+            <Setter Property="Margin" Value="{DynamicResource Nova.Card.Gap}"/>
+        </Style>
+
+        <Style x:Key="CardHeaderText" TargetType="TextBlock" BasedOn="{StaticResource Nova.SectionTitle}"/>
+
+        <Style x:Key="CardHeaderIcon" TargetType="iconPacks:PackIconLucide">
+            <Setter Property="Width" Value="16"/>
+            <Setter Property="Height" Value="16"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
+        </Style>
+
+        <Style x:Key="FieldLabel" TargetType="TextBlock" BasedOn="{StaticResource Nova.FieldLabel}">
+            <Setter Property="Margin" Value="0,10,0,4"/>
+        </Style>
+
+        <!-- Jog speed: unsigned; the view model refuses anything above the axis parameter speed. -->
+        <Style x:Key="InputField" TargetType="TextBox">
+            <Setter Property="Height" Value="{DynamicResource Nova.Field.Height}"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="8,0"/>
+            <Setter Property="behaviors:NumericInput.Mode" Value="Decimal"/>
+        </Style>
+
+        <!-- Recipe table cell, as the Robot tab's: plain text until Edit or Teach unlocks it.
+             DynamicGridHelper looks this key up for every axis column. Signed - axes on
+             this machine sit below zero too. -->
+        <Style x:Key="ValueCell" TargetType="TextBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Height" Value="22"/>
+            <Setter Property="Margin" Value="4,0,4,0"/>
+            <Setter Property="Padding" Value="3,0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+            <Setter Property="FontSize" Value="{DynamicResource Nova.FontSize.Body}"/>
+            <Setter Property="FontFamily" Value="Consolas, Cascadia Mono, monospace"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+            <Setter Property="behaviors:NumericInput.Mode" Value="SignedDecimal"/>
+            <Style.Triggers>
+                <Trigger Property="IsReadOnly" Value="False">
+                    <Setter Property="Background" Value="{DynamicResource RegionBrush}"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Jog key: the Nova button already lifts on hover and sinks on press; the colour
+             is the axis's (X red, Y green, Z blue on the 3D triad). -->
+        <Style x:Key="JogKey" TargetType="Button" BasedOn="{StaticResource Nova.ButtonPrimary}">
+            <Setter Property="Width" Value="56"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="MinWidth" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+
+        <Style x:Key="AxisLine" TargetType="Line">
+            <Setter Property="StrokeThickness" Value="3"/>
+            <Setter Property="StrokeStartLineCap" Value="Round"/>
+            <Setter Property="StrokeEndLineCap" Value="Round"/>
+        </Style>
+
+        <!-- The negative half of an axis: same colour, dashed and fainter. -->
+        <Style x:Key="AxisLineNegative" TargetType="Line" BasedOn="{StaticResource AxisLine}">
+            <Setter Property="StrokeDashArray" Value="2 2"/>
+            <Setter Property="Opacity" Value="0.55"/>
+        </Style>
+
+        <Style x:Key="ReadoutValue" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="{DynamicResource Nova.FontSize.Readout}"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontFamily" Value="Consolas, Cascadia Mono, monospace"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+        </Style>
+    </UserControl.Resources>
+
+    <!-- The page is the viewport's height, so the jog pad and recipe table fill it; on a
+         screen shorter than MinHeight the tab scrolls rather than shrinking the jog triad
+         below about three quarters of its size. -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <Grid Margin="4" MinHeight="500"
+          Height="{Binding ViewportHeight, RelativeSource={RelativeSource AncestorType=ScrollViewer}}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Channel selector -->
+            <RowDefinition Height="*"/>
+            <!-- Jog pad | live values + recipe -->
+            <RowDefinition Height="Auto"/>
+            <!-- Teach / Edit / Save -->
+        </Grid.RowDefinitions>
+
+        <!-- ============ Channel ============ -->
+        <Border Grid.Row="0" Style="{StaticResource RecipeCard}">
+            <StackPanel Orientation="Horizontal">
+                <iconPacks:PackIconLucide Kind="Drill" Style="{StaticResource CardHeaderIcon}"/>
+                <TextBlock Text="{loc:Tr Txt_SELECTCHANNEL}" Style="{StaticResource Nova.FieldLabel}"
+                           VerticalAlignment="Center" Margin="0,0,12,0"/>
+                <ComboBox Width="280" Height="{DynamicResource Nova.Field.Height}" VerticalContentAlignment="Center"
+                          ItemsSource="{Binding Channels}"
+                          SelectedItem="{Binding SelectedChannel, Mode=TwoWay}"
+                          IsEnabled="{Binding CanEdit}"/>
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- ============ Left: jog pad ============ -->
+            <!-- The keys under the triad and the speed in the header always show; the triad
+                 takes the height left and shrinks (never grows) to fit it, so a short screen
+                 no longer cuts the rotational keys off the bottom of the card. -->
+            <Border Grid.Column="0" Style="{StaticResource RecipeCard}">
+                <DockPanel>
+                    <Grid DockPanel.Dock="Top" Margin="0,0,0,6">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <iconPacks:PackIconLucide Kind="Move3d" Style="{StaticResource CardHeaderIcon}"/>
+                            <TextBlock Style="{StaticResource CardHeaderText}" Text="{loc:Tr Txt_AxisJog}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <TextBlock Text="{loc:Tr Txt_JOGSPEED}" Style="{StaticResource Nova.FieldLabel}"
+                                       VerticalAlignment="Center" Margin="12,0,8,0"/>
+                            <TextBox Width="80" Style="{StaticResource InputField}"
+                                     Text="{Binding JogSpeed, UpdateSourceTrigger=PropertyChanged}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Linear: X, Y, Z drawn as an oblique triad around a cube, as the operator
+                         stands at the machine - X coming out of the screen toward the operator
+                         (drawn down-left), Y across to the right, Z up - with each + / - key at
+                         the end of its half of the axis. Hold to jog, release to stop. -->
+                    <TextBlock DockPanel.Dock="Top" Text="{loc:Tr Txt_LINEAR}" Style="{StaticResource FieldLabel}" Margin="0,4,0,0"/>
+
+                    <!-- X2 / Z2 (- then +) and the rotational A / R (counter-clockwise, clockwise),
+                         one pair per row. -->
+                    <Grid DockPanel.Dock="Bottom" HorizontalAlignment="Center" Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="24"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="6"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="X2" Style="{StaticResource CardHeaderText}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <Button Grid.Row="0" Grid.Column="1" Style="{StaticResource JogKey}" Margin="0,0,6,0" Content="X2-"
+                                Background="{DynamicResource DangerBrush}" Tag="{Binding X2}" IsEnabled="{Binding X2.IsMapped}"
+                                ToolTip="{loc:TrBinding X2.ServoText, StringFormat='Jog X2 - ({0})'}"
+                                PreviewMouseDown="JogNegative_PreviewMouseDown" PreviewMouseUp="Jog_PreviewMouseUp" MouseLeave="Jog_MouseLeave"/>
+                        <Button Grid.Row="0" Grid.Column="2" Style="{StaticResource JogKey}" Content="X2+"
+                                Background="{DynamicResource DangerBrush}" Tag="{Binding X2}" IsEnabled="{Binding X2.IsMapped}"
+                                ToolTip="{loc:TrBinding X2.ServoText, StringFormat='Jog X2 + ({0})'}"
+                                PreviewMouseDown="JogPositive_PreviewMouseDown" PreviewMouseUp="Jog_PreviewMouseUp" MouseLeave="Jog_MouseLeave"/>
+
+                        <TextBlock Grid.Row="0" Grid.Column="4" Text="Z2" Style="{StaticResource CardHeaderText}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <Button Grid.Row="0" Grid.Column="5" Style="{StaticResource JogKey}" Margin="0,0,6,0" Content="Z2-"
+                                Background="{DynamicResource InfoBrush}" Tag="{Binding Z2}" IsEnabled="{Binding Z2.IsMapped}"
+                                ToolTip="{loc:TrBinding Z2.ServoText, StringFormat='Jog Z2 - ({0})'}"
+                                PreviewMouseDown="JogNegative_PreviewMouseDown" PreviewMouseUp="Jog_PreviewMouseUp" MouseLeave="Jog_MouseLeave"/>
+                        <Button Grid.Row="0" Grid.Column="6" Style="{StaticResource JogKey}" Content="Z2+"
+                                Background="{DynamicResource InfoBrush}" Tag="{Binding Z2}" IsEnabled="{Binding Z2.IsMapped}"
+                                ToolTip="{loc:TrBinding Z2.ServoText, StringFormat='Jog Z2 + ({0})'}"
+                                PreviewMouseDown="JogPositive_PreviewMouseDown" PreviewMouseUp="Jog_PreviewMouseUp" MouseLeave="Jog_MouseLeave"/>
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="A" Style="{StaticResource CardHeaderText}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <Button Grid.Row="2" Grid.Column="1" Style="{StaticResource JogKey}" Margin="0,0,6,0"
+                                Background="{DynamicResource WarningBrush}" Tag="{Binding A}" IsEnabled="{Binding A.IsMapped}"
+                                ToolTip="{loc:TrBinding A.ServoText, StringFormat='Rotate A counter-clockwise ({0})'}"
+                                PreviewMouseDown="JogNegative_PreviewMouseDown" PreviewMouseUp="Jog_PreviewMouseUp" MouseLeave="Jog_MouseLeave">
+                            <iconPacks:PackIconLucide Kind="RotateCcw" Width="16" Height="16"/>
+                        </Button>
+                        <Button Grid.Row="2" Grid.Column="2" Style="{StaticResource JogKey}"
+                                Background="{DynamicResource WarningBrush}" Tag="{Binding A}" IsEnabled="{Binding A.IsMapped}"
+                                ToolTip="{loc:TrBinding A.ServoText, StringFormat='Rotate A clockwise ({0})'}"
+                                PreviewMouseDown="JogPositive_PreviewMouseDown" PreviewMouseUp="Jog_PreviewMouseUp" MouseLeave="Jog_MouseLeave">
+                            <iconPacks:PackIconLucide Kind="RotateCw" Width="16" Height="16"/>
+                        </Button>
+
+                        <TextBlock Grid.Row="2" Grid.Column="4" Text="R" Style="{StaticResource CardHeaderText}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <Button Grid.Row="2" Grid.Column="5" Style="{StaticResource JogKey}" Margin="0,0,6,0"
+                                Tag="{Binding R}" IsEnabled="{Binding R.IsMapped}"
+                                ToolTip="{loc:TrBinding R.ServoText, StringFormat='Rotate R counter-clockwise ({0})'}"
+                                PreviewMouseDown="JogNegative_PreviewMouseDown" PreviewMouseUp="Jog_PreviewMouseUp" MouseLeave="Jog_MouseLeave">
+                            <iconPacks:PackIconLucide Kind="RotateCcw" Width="16" Height="16"/>
+                        </Button>
+                        <Button Grid.Row="2" Grid.Column="6" Style="{StaticResource JogKey}"
+                                Tag="{Binding R}" IsEnabled="{Binding R.IsMapped}"
+                                ToolTip="{loc:TrBinding R.ServoText, StringFormat='Rotate R clockwise ({0})'}"
+                                PreviewMouseDown="JogPositive_PreviewMouseDown" PreviewMouseUp="Jog_PreviewMouseUp" MouseLeave="Jog_MouseLeave">
+                            <iconPacks:PackIconLucide Kind="RotateCw" Width="16" Height="16"/>
+                        </Button>
+                    </Grid>
+
+                    <Viewbox Stretch="Uniform" StretchDirection="DownOnly" VerticalAlignment="Top">
+                    <Canvas Width="300" Height="262" HorizontalAlignment="Center">
+                        <!-- Axes from the cube's centre (150,140); + solid, - dashed -->
+                        <Line X1="150" Y1="140" X2="80" Y2="210" Stroke="{DynamicResource DangerBrush}" Style="{StaticResource AxisLine}"/>
+                        <Line X1="150" Y1="140" X2="220" Y2="70" Stroke="{DynamicResource DangerBrush}" Style="{StaticResource AxisLineNegative}"/>
+                        <Line X1="150" Y1="140" X2="262" Y2="140" Stroke="{DynamicResource SuccessBrush}" Style="{StaticResource AxisLine}"/>
+                        <Line X1="150" Y1="140" X2="38" Y2="140" Stroke="{DynamicResource SuccessBrush}" Style="{StaticResource AxisLineNegative}"/>
+                        <Line X1="150" Y1="140" X2="150" Y2="45" Stroke="{DynamicResource InfoBrush}" Style="{StaticResource AxisLine}"/>
+                        <Line X1="150" Y1="140" X2="150" Y2="235" Stroke="{DynamicResource InfoBrush}" Style="{StaticResource AxisLineNegative}"/>
+
+                        <!-- Cube: front (+X, facing the operator), top (+Z) and right (+Y) faces,
+                             the back face set up and to the right by half the depth -->
+                        <Polygon Points="120.2,125.8 164.2,125.8 179.8,110.2 135.8,110.2" Fill="{DynamicResource PrimaryBrush}" Opacity="0.6"
+                                 Stroke="{DynamicResource BorderBrush}" StrokeThickness="1"/>
+                        <Polygon Points="164.2,125.8 179.8,110.2 179.8,154.2 164.2,169.8" Fill="{DynamicResource PrimaryBrush}" Opacity="0.25"
+                                 Stroke="{DynamicResource BorderBrush}" StrokeThickness="1"/>
+                        <Polygon Points="120.2,125.8 164.2,125.8 164.2,169.8 120.2,169.8" Fill="{DynamicResource PrimaryBrush}" Opacity="0.45"
+                                 Stroke="{DynamicResource BorderBrush}" StrokeThickness="1"/>
+
+                        <Button Canvas.Left="122" Canvas.Top="27" Style="{StaticResource JogKey}" Content="Z1+"
+                                Background="{DynamicResource InfoBrush}" Tag="{Binding Z1}" IsEnabled="{Binding Z1.IsMapped}"
+                                ToolTip="{loc:TrBinding Z1.ServoText, StringFormat='Jog Z1 + ({0})'}"
+                                PreviewMouseDown="JogPositive_PreviewMouseDown" PreviewMouseUp="Jog_PreviewMouseUp" MouseLeave="Jog_MouseLeave"/>
+                        <Button Canvas.Left="122" Canvas.Top="217" Style="{StaticResource JogKey}" Content="Z1-"
+                                Background="{DynamicResource InfoBrush}" Tag="{Binding Z1}" IsEnabled="{Binding Z1.IsMapped}"
+                                ToolTip="{loc:TrBinding Z1.ServoText, StringFormat='Jog Z1 - ({0})'}"
+                                PreviewMouseDown="JogNegative_PreviewMouseDown" PreviewMouseUp="Jog_PreviewMouseUp" MouseLeave="Jog_MouseLeave"/>
+                        <Button Canvas.Left="52" Canvas.Top="192" Style="{StaticResource JogKey}" Content="X1+"
+                                Background="{DynamicResource DangerBrush}" Tag="{Binding X1}" IsEnabled="{Binding X1.IsMapped}"
+                                ToolTip="{loc:TrBinding X1.ServoText, StringFormat='Jog X1 + ({0})'}"
+                                PreviewMouseDown="JogPositive_PreviewMouseDown" PreviewMouseUp="Jog_PreviewMouseUp" MouseLeave="Jog_MouseLeave"/>
+                        <Button Canvas.Left="192" Canvas.Top="52" Style="{StaticResource JogKey}" Content="X1-"
+                                Background="{DynamicResource DangerBrush}" Tag="{Binding X1}" IsEnabled="{Binding X1.IsMapped}"
+                                ToolTip="{loc:TrBinding X1.ServoText, StringFormat='Jog X1 - ({0})'}"
+                                PreviewMouseDown="JogNegative_PreviewMouseDown" PreviewMouseUp="Jog_PreviewMouseUp" MouseLeave="Jog_MouseLeave"/>
+                        <Button Canvas.Left="234" Canvas.Top="122" Style="{StaticResource JogKey}" Content="Y1+"
+                                Background="{DynamicResource SuccessBrush}" Tag="{Binding Y1}" IsEnabled="{Binding Y1.IsMapped}"
+                                ToolTip="{loc:TrBinding Y1.ServoText, StringFormat='Jog Y1 + ({0})'}"
+                                PreviewMouseDown="JogPositive_PreviewMouseDown" PreviewMouseUp="Jog_PreviewMouseUp" MouseLeave="Jog_MouseLeave"/>
+                        <Button Canvas.Left="10" Canvas.Top="122" Style="{StaticResource JogKey}" Content="Y1-"
+                                Background="{DynamicResource SuccessBrush}" Tag="{Binding Y1}" IsEnabled="{Binding Y1.IsMapped}"
+                                ToolTip="{loc:TrBinding Y1.ServoText, StringFormat='Jog Y1 - ({0})'}"
+                                PreviewMouseDown="JogNegative_PreviewMouseDown" PreviewMouseUp="Jog_PreviewMouseUp" MouseLeave="Jog_MouseLeave"/>
+                    </Canvas>
+                    </Viewbox>
+                </DockPanel>
+            </Border>
+
+            <!-- ============ Right: live values over recipe values ============ -->
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Live axis positions, one tile per axis -->
+                <Border Grid.Row="0" Style="{StaticResource RecipeCard}">
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                            <iconPacks:PackIconLucide Kind="Activity" Style="{StaticResource CardHeaderIcon}"/>
+                            <TextBlock Style="{StaticResource CardHeaderText}" Text="{loc:Tr Txt_LivePosition}"/>
+                        </StackPanel>
+
+                        <ItemsControl ItemsSource="{Binding Axes}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Rows="1"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                                            CornerRadius="6" Padding="12,8" Margin="0,0,8,0">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Name}" FontWeight="Bold"
+                                                       FontSize="{DynamicResource Nova.FontSize.Heading}"
+                                                       Foreground="{DynamicResource PrimaryBrush}"/>
+                                            <TextBlock Text="{loc:TrBinding ServoText}" Style="{StaticResource Nova.FieldLabel}" Margin="0,0,0,4"
+                                                       TextTrimming="CharacterEllipsis" ToolTip="{loc:TrBinding ServoText}"/>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                                <TextBlock Text="{Binding LivePosition, StringFormat={}{0:0.00}}" Style="{StaticResource ReadoutValue}"/>
+                                                <TextBlock Text="{Binding Unit}" FontSize="{DynamicResource Nova.FontSize.Caption}" FontWeight="SemiBold"
+                                                           Margin="4,0,0,2" VerticalAlignment="Bottom"
+                                                           Foreground="{DynamicResource SecondaryTextBrush}"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- Recipe: one row per named position, editable after Edit or Teach -->
+                <Border Grid.Row="1" Style="{StaticResource RecipeCard}">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,0,0,10">
+                            <iconPacks:PackIconLucide Kind="ClipboardList" Style="{StaticResource CardHeaderIcon}"/>
+                            <TextBlock Style="{StaticResource CardHeaderText}"
+                                       Text="{loc:TrBinding SelectedChannel, StringFormat='{}{0} Recipe'}"/>
+                        </StackPanel>
+
+                        <!-- Rows are the positions named in CncRecipe.json; the columns X1 ... Z2
+                             come from the view model (DynamicGridHelper builds them). Teach fills
+                             the selected row from the live positions. -->
+                        <DataGrid Style="{StaticResource Nova.DataGrid}"
+                                  CanUserSortColumns="False"
+                                  AutoGenerateColumns="False"
+                                  ItemsSource="{Binding Rows}"
+                                  SelectedItem="{Binding SelectedRow, Mode=TwoWay}"
+                                  common:DynamicGridHelper.ColumnsSource="{Binding Columns}"/>
+                    </DockPanel>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- ============ CNC HMI | Teach / Edit / Save ============ -->
+        <Grid Grid.Row="2" Margin="0,4,4,4">
+            <!-- Beckhoff's CNC HMI is a program of its own: this starts it (or brings it forward). -->
+            <Button Style="{StaticResource Nova.ButtonOutline}" HorizontalAlignment="Left" Margin="4,0,0,0"
+                    Command="{Binding OpenCncHmiCommand}" IsEnabled="{Binding CanOpenCncHmi}"
+                    ToolTip="{Binding CncHmiToolTip}">
+                <StackPanel Orientation="Horizontal">
+                    <iconPacks:PackIconLucide Kind="ExternalLink" Width="13" Height="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="{loc:Tr Txt_CncHmi}" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Style="{StaticResource Nova.ButtonInfo}"
+                        Command="{Binding TeachCommand}"
+                        ToolTip="Copy the live positions of the mapped axes into the recipe - Save keeps them">
+                    <StackPanel Orientation="Horizontal">
+                        <iconPacks:PackIconLucide Kind="Crosshair" Width="13" Height="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="{loc:Tr Txt_Teach}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource Nova.ButtonOutline}" Margin="8,0,0,0"
+                        Command="{Binding EditCommand}" IsEnabled="{Binding CanEdit}">
+                    <StackPanel Orientation="Horizontal">
+                        <iconPacks:PackIconLucide Kind="Pencil" Width="13" Height="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="{loc:Tr Txt_Edit}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <Button Style="{StaticResource Nova.ButtonPrimary}" Margin="8,0,0,0"
+                        Command="{Binding SaveCommand}" IsEnabled="{Binding IsEditing}">
+                    <StackPanel Orientation="Horizontal">
+                        <iconPacks:PackIconLucide Kind="Save" Width="13" Height="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="{loc:Tr Txt_Save}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+    </Grid>
+    </ScrollViewer>
+</UserControl>

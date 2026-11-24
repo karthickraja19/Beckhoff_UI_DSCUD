@@ -8,7 +8,7 @@ using Nova.ViewModels.Common;
 namespace Nova.ViewModels.Pages.Recipe
 {
     /// <summary>
-    /// Taught gantry positions, robot points and light settings, hosted in the Config
+    /// Taught gantry positions, robot values and CNC positions, hosted in the Config
     /// page's "Machine Configs" area.
     /// </summary>
     /// <remarks>
@@ -16,7 +16,7 @@ namespace Nova.ViewModels.Pages.Recipe
     /// machine has and the spec does not model. It sits under Config rather than
     /// anywhere else because taught positions are commissioned per machine, which is
     /// what slide 58's "Machine Configs" region is for. Every tab here edits a taught
-    /// position or a light output, so all of it is critical: the host page gates this
+    /// position or a value written to the PLC, so all of it is critical: the host page gates this
     /// section at Level 3, not Level 2.
     /// </remarks>
     public partial class RecipeViewModel : PageViewModel, ITabHost
@@ -37,6 +37,28 @@ namespace Nova.ViewModels.Pages.Recipe
         /// </summary>
         partial void OnSelectedTabChanged(TabItemViewModel oldValue, TabItemViewModel newValue)
         {
+            // A refused tab was put back: nothing changed.
+            if (_revertingTab)
+                return;
+
+            // The Gantry and CNC tabs hold manual mode, which the PLC does not allow while
+            // the auto sequence is running.
+            if (HoldsManual(newValue) && IsAutoRunning)
+            {
+                _revertingTab = true;
+                try
+                {
+                    SelectedTab = oldValue ?? FirstTabWithoutManual();
+                }
+                finally
+                {
+                    _revertingTab = false;
+                }
+
+                _dialogService.ShowWarning(ManualBlockedMessage, "Recipe");
+                return;
+            }
+
             oldValue?.CancelEdits();
 
             if (_isShown)
@@ -54,8 +76,49 @@ namespace Nova.ViewModels.Pages.Recipe
             if (_isShown)
                 return;
 
+            // The machine started while the operator was elsewhere: do not go back into a
+            // tab that needs manual mode.
+            if (HoldsManual(SelectedTab) && IsAutoRunning)
+            {
+                SelectedTab = FirstTabWithoutManual();
+                _dialogService.ShowWarning(ManualBlockedMessage, "Recipe");
+            }
+
             _isShown = true;
             SelectedTab?.Activate();
+        }
+
+        private const string ManualBlockedMessage =
+            "The Gantry and CNC tabs cannot be opened while the auto sequence is running. Stop the machine first.";
+
+        private readonly IDialogService _dialogService;
+        private readonly IMachineOrchestrator _orchestrator;
+        private bool _revertingTab;
+
+        private bool IsAutoRunning => _orchestrator != null && _orchestrator.IsAutoRunning;
+
+        /// <summary>The Gantry and CNC tabs take manual mode while on screen; the Robot tab does not.</summary>
+        private static bool HoldsManual(TabItemViewModel tab)
+        {
+            return tab != null && (tab.ViewModel is GantryRecipeViewModel || tab.ViewModel is CNCRecipeViewModel);
+        }
+
+        private TabItemViewModel FirstTabWithoutManual()
+        {
+            foreach (TabItemViewModel tab in Tabs)
+            {
+                if (!HoldsManual(tab))
+                    return tab;
+            }
+
+            return Tabs[0];
+        }
+
+        /// <summary>The auto sequence started while a manual-mode tab was open: leave it, which releases manual mode.</summary>
+        private void OnMachineStatusChanged(Nova.Abstractions.Machine.Enums.MachineStatus status)
+        {
+            if (_isShown && HoldsManual(SelectedTab) && IsAutoRunning)
+                SelectedTab = FirstTabWithoutManual();
         }
 
         /// <summary>
@@ -86,7 +149,11 @@ namespace Nova.ViewModels.Pages.Recipe
             IAxisMonitorService axisMonitor,
             ILoadCellMonitorService loadCellMonitor,
             IPlcRecipeService plcRecipeService,
-            IMachineOrchestrator orchestrator)
+            IMachineOrchestrator orchestrator,
+            // The CNC tab: the axes of the CNC channels, jogged through their channel.
+            ICncAxisProvider cncAxes = null,
+            // The CNC tab's button that starts Beckhoff's CNC HMI.
+            ICncHmiLauncher cncHmi = null)
         {
             if (recipeService == null) throw new System.ArgumentNullException(nameof(recipeService));
             if (dialogService == null) throw new System.ArgumentNullException(nameof(dialogService));
@@ -96,12 +163,16 @@ namespace Nova.ViewModels.Pages.Recipe
             if (plcRecipeService == null) throw new System.ArgumentNullException(nameof(plcRecipeService));
             if (orchestrator == null) throw new System.ArgumentNullException(nameof(orchestrator));
 
+            _dialogService = dialogService;
+            _orchestrator = orchestrator;
+            _orchestrator.OnMachineStatusChanged += OnMachineStatusChanged;
+
             // Icons are Lucide kinds, matching the Manual screen's tab strip.
             Tabs = new ObservableCollection<TabItemViewModel>
             {
                 new TabItemViewModel("Gantry", "LayoutGrid", new GantryRecipeViewModel(recipeService, dialogService, axisService, axisMonitor, loadCellMonitor, plcRecipeService, orchestrator)),
-                new TabItemViewModel("Robot", "Bot", new RobotRecipeViewModel(recipeService, dialogService)),
-                new TabItemViewModel("Light Control", "Lightbulb", new LightRecipeViewModel(recipeService, dialogService)),
+                new TabItemViewModel("Robot", "Bot", new RobotRecipeViewModel(recipeService, dialogService, plcRecipeService)),
+                new TabItemViewModel("CNC", "Drill", new CNCRecipeViewModel(recipeService, dialogService, axisService, axisMonitor, plcRecipeService, orchestrator, cncAxes, cncHmi)),
             };
 
             SelectedTab = Tabs[0];

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Xml.Linq;
+using NLog;
 using Nova.Abstractions.Services;
 
 namespace Nova.Core.Services
@@ -39,7 +40,7 @@ namespace Nova.Core.Services
             }
         }
 
-        public ConfigFileMachineIdentityService()
+        public ConfigFileMachineIdentityService(string dataDirectory)
         {
             MachineName = Unknown;
             SoftwareVersion = Unknown;
@@ -49,7 +50,7 @@ namespace Nova.Core.Services
             // machine still runs, the title bar just cannot name it.
             try
             {
-                string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data", "config.txt");
+                string path = Path.Combine(dataDirectory ?? string.Empty, "config.txt");
                 if (!File.Exists(path))
                     return;
 
@@ -65,6 +66,9 @@ namespace Nova.Core.Services
             {
                 System.Diagnostics.Debug.WriteLine("Machine identity load failed: " + ex.Message);
             }
+
+            // The log rows' MachineName column (Teal.Library.Log reads it from NLog's global context).
+            GlobalDiagnosticsContext.Set("MachineName", MachineName);
         }
 
         private static string Read(XElement root, string name, string fallback)

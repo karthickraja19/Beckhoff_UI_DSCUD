@@ -1,5 +1,6 @@
 <UserControl x:Class="Nova.Wpf.App.Views.Pages.Audio.AudioAlarmView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:loc="clr-namespace:Nova.Wpf.UI.Localization;assembly=Nova.Wpf.UI"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:hc="https://handyorg.github.io/handycontrol"
              xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
@@ -40,38 +41,30 @@
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Column="0" Style="{StaticResource Audio.FieldLabel}"
-                           Text="Start Time:" Margin="0,0,8,0"/>
+                           Text="{loc:Tr Txt_StartTime}" Margin="0,0,8,0"/>
                 <hc:DateTimePicker Grid.Column="1" Width="180" Height="28"
                                    SelectedDateTime="{Binding StartTime, Mode=TwoWay}"/>
 
                 <TextBlock Grid.Column="2" Style="{StaticResource Audio.FieldLabel}"
-                           Text="End Time:" Margin="16,0,8,0"/>
+                           Text="{loc:Tr Txt_EndTime}" Margin="16,0,8,0"/>
                 <hc:DateTimePicker Grid.Column="3" Width="180" Height="28"
                                    SelectedDateTime="{Binding EndTime, Mode=TwoWay}"/>
 
                 <Button Grid.Column="4" Style="{StaticResource Audio.FilledButton}"
-                        Content="Query" Margin="16,0,0,0"
+                        Content="{loc:Tr Txt_Query}" Margin="16,0,0,0"
                         Command="{Binding QueryCommand}"/>
 
                 <StackPanel Grid.Column="5" Orientation="Horizontal">
                     <Button Style="{StaticResource Audio.Button}"
-                            Content="Save" Margin="8,0,0,0"
+                            Content="{loc:Tr Txt_Save}" Margin="8,0,0,0"
                             Command="{Binding SaveCommand}"/>
 
-                    <!-- Generated alarms (SampleData=true) are labelled on screen. -->
-                    <Border Background="{DynamicResource Audio.System.Gray5Brush}"
-                            CornerRadius="{DynamicResource Audio.Radius.Small}"
-                            Padding="10,3" Margin="12,0,0,0" VerticalAlignment="Center"
-                            Visibility="{Binding IsSampleData, Converter={StaticResource BoolToVisibility}}"
-                            ToolTip="These alarms are generated (SampleData=true), not recorded by the machine.">
-                        <TextBlock Style="{StaticResource Audio.Footnote}" Text="Sample data"/>
-                    </Border>
                 </StackPanel>
 
                 <!-- Why the panels show what they show. An empty page always says so
                      here rather than only in a dialog the operator may have dismissed. -->
                 <TextBlock Grid.Column="6" Style="{StaticResource Audio.Footnote}"
-                           Text="{Binding StatusText}"
+                           Text="{loc:TrBinding StatusText}"
                            Margin="16,0,0,0"
                            TextTrimming="CharacterEllipsis"
                            VerticalAlignment="Center"/>
@@ -94,7 +87,7 @@
                     </Grid.RowDefinitions>
 
                     <TextBlock Grid.Row="0" Style="{StaticResource Audio.Title3}"
-                               Text="Downtime Statistic (Top10)" Margin="16,12,16,8"/>
+                               Text="{loc:Tr Txt_DowntimeStatisticTop10}" Margin="16,12,16,8"/>
 
                     <Grid Grid.Row="1" Margin="16,0,16,12">
                         <Grid.ColumnDefinitions>
@@ -116,11 +109,11 @@
                                         <ColumnDefinition Width="70"/>
                                         <ColumnDefinition Width="52"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="1" Style="{StaticResource Audio.TableHeaderText}" Text="Error"/>
+                                    <TextBlock Grid.Column="1" Style="{StaticResource Audio.TableHeaderText}" Text="{loc:Tr Txt_Error}"/>
                                     <TextBlock Grid.Column="2" Style="{StaticResource Audio.TableHeaderText}"
-                                               Text="Min" TextAlignment="Right" ToolTip="Total Time (Min)"/>
+                                               Text="{loc:Tr Txt_Min}" TextAlignment="Right" ToolTip="{loc:Tr Txt_TotalTimeMin}"/>
                                     <TextBlock Grid.Column="3" Style="{StaticResource Audio.TableHeaderText}"
-                                               Text="Count" TextAlignment="Right" ToolTip="Count Total"/>
+                                               Text="{loc:Tr Txt_Count}" TextAlignment="Right" ToolTip="{loc:Tr Txt_CountTotal}"/>
                                 </Grid>
                             </Border>
 
@@ -146,12 +139,12 @@
                                                                Fill="{Binding Rank, Converter={StaticResource RankToBrush}}"/>
 
                                                     <TextBlock Grid.Column="1" Style="{StaticResource Audio.Callout}"
-                                                               Text="{Binding ErrorName}" Margin="8,0,0,0"
-                                                               TextTrimming="CharacterEllipsis" ToolTip="{Binding ErrorName}"/>
+                                                               Text="{loc:TrBinding ErrorName, Alarm=True}" Margin="8,0,0,0"
+                                                               TextTrimming="CharacterEllipsis" ToolTip="{loc:TrBinding ErrorName, Alarm=True}"/>
                                                     <TextBlock Grid.Column="2" Style="{StaticResource Audio.CalloutMono}"
-                                                               Text="{Binding TotalMinutesText}" TextAlignment="Right"/>
+                                                               Text="{loc:TrBinding TotalMinutesText}" TextAlignment="Right"/>
                                                     <TextBlock Grid.Column="3" Style="{StaticResource Audio.CalloutMono}"
-                                                               Text="{Binding OccurrencesText}" TextAlignment="Right"/>
+                                                               Text="{loc:TrBinding OccurrencesText}" TextAlignment="Right"/>
                                                 </Grid>
                                             </Border>
                                         </DataTemplate>
@@ -161,7 +154,7 @@
                         </Grid>
 
                         <lvc:PieChart Grid.Column="1" Width="190"
-                                      Series="{Binding DowntimePieSeries}"
+                                      Series="{loc:TrBinding DowntimePieSeries, Chart=True}"
                                       LegendPosition="Hidden"
                                       Margin="12,0,0,0"/>
                     </Grid>
@@ -177,12 +170,12 @@
                     </Grid.RowDefinitions>
 
                     <TextBlock Grid.Row="0" Style="{StaticResource Audio.Title3}"
-                               Text="Alarm Durations" Margin="16,12,16,8"/>
+                               Text="{loc:Tr Txt_AlarmDurations}" Margin="16,12,16,8"/>
 
                     <lvc:CartesianChart Grid.Row="1" Margin="12,0,16,12"
-                                        Series="{Binding DurationSeries}"
-                                        XAxes="{Binding DurationXAxes}"
-                                        YAxes="{Binding DurationYAxes}"
+                                        Series="{loc:TrBinding DurationSeries, Chart=True}"
+                                        XAxes="{loc:TrBinding DurationXAxes, Chart=True}"
+                                        YAxes="{loc:TrBinding DurationYAxes, Chart=True}"
                                         TooltipPosition="Top"
                                         LegendPosition="Hidden"/>
                 </Grid>
@@ -198,19 +191,31 @@
                 </Grid.RowDefinitions>
 
                 <TextBlock Grid.Row="0" Style="{StaticResource Audio.Title3}"
-                           Text="Alarm History" Margin="16,12,16,8"/>
+                           Text="{loc:Tr Txt_AlarmHistory}" Margin="16,12,16,8"/>
 
                 <DataGrid Grid.Row="1" Style="{StaticResource Audio.DataGrid}"
                           ItemsSource="{Binding AlarmRows}"
                           Margin="8,0,8,8">
+                    <DataGrid.Resources>
+                        <!-- FAM 2 Bug_Id_020: a code, message or detail cut short by its
+                             column shows in full on hover. -->
+                        <Style x:Key="FullTextOnHover" TargetType="TextBlock"
+                               BasedOn="{x:Static DataGridTextColumn.DefaultElementStyle}">
+                            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                            <Setter Property="ToolTip" Value="{Binding Text, RelativeSource={RelativeSource Self}}"/>
+                        </Style>
+                    </DataGrid.Resources>
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Date" Binding="{Binding Date}" Width="110"/>
-                        <DataGridTextColumn Header="Start Time" Binding="{Binding StartTime}" Width="190"/>
-                        <DataGridTextColumn Header="End Time" Binding="{Binding EndTime}" Width="190"/>
-                        <DataGridTextColumn Header="Time in State (Min)" Binding="{Binding TimeInStateText}" Width="140"/>
-                        <DataGridTextColumn Header="Error Code" Binding="{Binding ErrorCode}" Width="140"/>
-                        <DataGridTextColumn Header="Error Message" Binding="{Binding ErrorMessage}" Width="180"/>
-                        <DataGridTextColumn Header="Error Detail" Binding="{Binding ErrorDetail}" Width="*"/>
+                        <DataGridTextColumn Header="{loc:Tr Txt_Date}" Binding="{Binding Date}" Width="110"/>
+                        <DataGridTextColumn Header="{loc:Tr Txt_StartTime_2}" Binding="{Binding StartTime}" Width="190"/>
+                        <DataGridTextColumn Header="{loc:Tr Txt_EndTime_2}" Binding="{Binding EndTime}" Width="190"/>
+                        <DataGridTextColumn Header="{loc:Tr Txt_TimeInStateMin}" Binding="{loc:TrBinding TimeInStateText}" Width="140"/>
+                        <DataGridTextColumn Header="{loc:Tr Txt_ErrorCode_2}" Binding="{Binding ErrorCode}" Width="140"
+                                            ElementStyle="{StaticResource FullTextOnHover}"/>
+                        <DataGridTextColumn Header="{loc:Tr Txt_ErrorMessage}" Binding="{loc:TrBinding ErrorMessage, Alarm=True}" Width="220"
+                                            ElementStyle="{StaticResource FullTextOnHover}"/>
+                        <DataGridTextColumn Header="{loc:Tr Txt_ErrorDetail_2}" Binding="{loc:TrBinding ErrorDetail, Alarm=True}" Width="*"
+                                            ElementStyle="{StaticResource FullTextOnHover}"/>
                     </DataGrid.Columns>
                 </DataGrid>
             </Grid>

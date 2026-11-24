@@ -44,6 +44,13 @@ namespace Nova.Abstractions.Services
         /// <param name="testData">testData, e.g. "site=ITKS$project=H38$approver_id=1234".</param>
         /// <param name="results">results, e.g. "key=MS_SHA1$value=...".</param>
         /// <param name="empNo">empNo, e.g. "AUTOH59" for the glue warnings; usually empty.</param>
-        Task<MesResult> GetCmdResultAsync(string command, string serialNumber, string testData = "", string results = "", string empNo = "");
+        /// <param name="terminalName">terminalName for this one request; null or blank sends <see cref="TerminalName"/>.</param>
+        Task<MesResult> GetCmdResultAsync(string command, string serialNumber, string testData = "", string results = "", string empNo = "", string terminalName = null);
+
+        /// <summary>
+        /// Posts one machine-state report to <c>/api/machine/collmachinestatefromcard</c>
+        /// (S1.1.2 Machine State Reporting to MES V5.0). The body is built by the caller.
+        /// </summary>
+        Task<MesResult> PostMachineStateAsync(string json);
     }
 }

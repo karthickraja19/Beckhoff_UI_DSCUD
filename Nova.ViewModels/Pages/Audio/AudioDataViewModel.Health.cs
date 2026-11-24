@@ -251,8 +251,8 @@ namespace Nova.ViewModels.Pages.Audio
                 _cartridges = Empty<GlueCartridgeStatus>();
                 _nozzles = Empty<NozzleHealthRecord>();
                 HasGlueControl = false;
-                HealthStatus = "Glue and nozzle health are not connected to this HMI yet. They need the machine's "
-                               + "glue counters and the MES pot-life and nozzle queries.";
+                HealthStatus = "The machine does not report glue and nozzle figures yet, so there is no health "
+                               + "to show. They appear once the PLC provides its glue counters.";
                 BuildHealth();
                 return;
             }

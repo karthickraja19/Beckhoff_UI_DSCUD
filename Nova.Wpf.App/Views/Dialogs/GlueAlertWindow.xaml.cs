@@ -22,9 +22,11 @@ namespace Nova.Wpf.App.Views.Dialogs
             InitializeComponent();
 
             _badges = badges;
-            TitleText.Text = title;
-            MessageText.Text = message;
-            DetailText.Text = detail ?? string.Empty;
+            // Dual language: the glue monitor writes its alerts in English.
+            var localization = Nova.Wpf.UI.Localization.LocalizationSource.Instance;
+            TitleText.Text = localization.Translate(title);
+            MessageText.Text = localization.Translate(message);
+            DetailText.Text = localization.Translate(detail ?? string.Empty);
             HeaderBand.Background = new SolidColorBrush(critical ? Color.FromRgb(0xEB, 0x73, 0x73) : Color.FromRgb(0xF3, 0xC9, 0x69));
         }
 
@@ -37,7 +39,7 @@ namespace Nova.Wpf.App.Views.Dialogs
         private void MuteButton_Click(object sender, RoutedEventArgs e)
         {
             MuteButton.IsEnabled = false;
-            StatusText.Text = "Buzzer muted.";
+            StatusText.Text = Nova.Wpf.UI.Localization.LocalizationSource.Instance.Translate("Buzzer muted.");
             Muted?.Invoke(this, EventArgs.Empty);
         }
 

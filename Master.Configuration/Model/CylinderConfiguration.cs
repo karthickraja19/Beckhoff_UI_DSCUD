@@ -8,8 +8,9 @@ namespace Master.Configuration.Model
 {
     /// <summary>
     /// One entry of Cylinders.json: the library's CylinderProperties, property for property.
-    /// The valve and sensor names are the PLC's variable names; <see cref="CylinderObjects"/>
-    /// puts App.config's PlcIoGvl in front of them.
+    /// Id is the cylinder's E_Cylinders value, its index in the PLC's CylinderData. The valve
+    /// and sensor names are Data\Config.csv points (the PLC's E_Outputs / E_Input names), used
+    /// only for the board's labels.
     /// </summary>
     public class CylinderConfiguration
     {

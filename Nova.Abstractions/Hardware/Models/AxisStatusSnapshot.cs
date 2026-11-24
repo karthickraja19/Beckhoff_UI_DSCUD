@@ -16,7 +16,7 @@ namespace Nova.Abstractions.Hardware
         public double ActualSpeed { get; set; }
 
         /// <summary>
-        /// The axis parameter speed from Axis_Parameters.xml (Teal IAxis.Velocity) — the
+        /// The axis parameter speed from Servos.json (Teal IAxis.Velocity) — the
         /// ceiling a manual move, jog or home may be commanded at. Zero when unknown,
         /// which callers treat as "no limit configured" rather than "no motion allowed".
         /// Surfaced on the snapshot because it is the value V3's Manual and Recipe

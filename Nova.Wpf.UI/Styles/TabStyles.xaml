@@ -1,7 +1,8 @@
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks">
+    xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+    xmlns:loc="clr-namespace:Nova.Wpf.UI.Localization">
 
     <!-- =============================================================== -->
     <!-- SEGMENTED TABS                                                   -->
@@ -26,7 +27,7 @@
             <iconPacks:PackIconLucide x:Name="HdrIcon" Kind="{Binding Icon, FallbackValue=SlidersHorizontal, TargetNullValue=SlidersHorizontal}"
                                       Width="15" Height="15" Margin="0,0,8,0"
                                       VerticalAlignment="Center"/>
-            <TextBlock x:Name="HdrText" Text="{Binding Title}" VerticalAlignment="Center"/>
+            <TextBlock x:Name="HdrText" Text="{loc:TrBinding Title}" VerticalAlignment="Center"/>
         </StackPanel>
         <DataTemplate.Triggers>
             <DataTrigger Binding="{Binding Icon}" Value="">

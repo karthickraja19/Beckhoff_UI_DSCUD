@@ -26,6 +26,15 @@ namespace Master.Configuration.Model
         public int OutputCount { get; set; }
 
         /// <summary>
+        /// The PLC's ARRAY OF BOOL of every digital input / output (GVL_Inputs.Inputs,
+        /// GVL_Outputs.Outputs); empty leaves the library's default. A point's Id in
+        /// Data\Config.csv is its place in the array, counted from <see cref="IOFirstIndex"/>.
+        /// </summary>
+        public string InputArray { get; set; }
+        public string OutputArray { get; set; }
+        public int IOFirstIndex { get; set; } = 1;
+
+        /// <summary>
         /// The CCD and scanner arrays under DBName. The library takes them as each device's
         /// InstancePath ({DBName}.{VisionDUTName}); empty leaves the library's own, such as
         /// VisionGVL.Visions.

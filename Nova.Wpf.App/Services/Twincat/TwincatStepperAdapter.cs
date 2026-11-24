@@ -10,8 +10,9 @@ namespace Nova.Wpf.App.Services.Twincat
 {
     /// <summary>
     /// Nova <see cref="IStepper"/> over one Beckhoff library I/O stepper, driven from the Stepper
-    /// tab. The library gives an I/O stepper Forward, Reverse, Stop and Reset; it runs at its
-    /// own speed and has no on or off, so the tab's speed is ignored and enabling it does nothing.
+    /// tab. The library gives an I/O stepper Forward, Reverse, Stop and Reset, and its manual
+    /// velocity (stepperdata[Id].par.fMvelocity, % of the EL7047's speed range) - the tab's
+    /// velocity box. It has no on or off, so enabling it does nothing.
     /// </summary>
     /// <remarks>
     /// Status - running and error - is read as an axis's is: while the Stepper tab follows the
@@ -53,11 +54,42 @@ namespace Nova.Wpf.App.Services.Twincat
         /// <summary>An I/O stepper has no on or off; the Stepper tab calls this before each move.</summary>
         public Task<bool> EnableAsync() => Task.FromResult(true);
 
-        /// <summary>Runs forward at the stepper's own speed; <paramref name="speed"/> is ignored.</summary>
-        public Task<bool> ForwardAsync(double speed) => RunLocked(_stepper.Forward);
+        /// <summary>The PLC's manual velocity is % of the EL7047's speed range.</summary>
+        public double MaxSpeed => IOStepper.MaxVelocity;
 
-        /// <summary>Runs in reverse at the stepper's own speed; <paramref name="speed"/> is ignored.</summary>
-        public Task<bool> ReverseAsync(double speed) => RunLocked(_stepper.Reverse);
+        /// <summary>Reads the PLC's manual velocity (par.fMvelocity) once, through the library.</summary>
+        public Task<double?> ReadSpeedAsync()
+        {
+            return Task.Run(() =>
+            {
+                lock (_plc.SyncRoot)
+                {
+                    try
+                    {
+                        if (!_plc.IsConnected)
+                            return (double?)null;
+
+                        _stepper.UpdateIOStepperProperties();
+                        double velocity = _stepper.ManualVelocity;
+                        return double.IsNaN(velocity) ? (double?)null : velocity;
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine(ComponentId + " velocity read failed: " + ex.Message);
+                        return null;
+                    }
+                }
+            });
+        }
+
+        /// <summary>
+        /// Runs forward; a <paramref name="speed"/> &gt; 0 is first written as the PLC's manual
+        /// velocity (% of the drive's range), which the PLC jogs with in MANUAL.
+        /// </summary>
+        public Task<bool> ForwardAsync(double speed) => RunWithSpeed(speed, _stepper.Forward);
+
+        /// <summary>Runs in reverse; <paramref name="speed"/> as for <see cref="ForwardAsync"/>.</summary>
+        public Task<bool> ReverseAsync(double speed) => RunWithSpeed(speed, _stepper.Reverse);
 
         public Task<bool> StopAsync() => RunLocked(_stepper.Stop);
 
@@ -107,6 +139,33 @@ namespace Nova.Wpf.App.Services.Twincat
             }
 
             return snapshot;
+        }
+
+        /// <summary>Sets the velocity (when one is given) and starts the run, under one PLC lock; a velocity not taken does not start it.</summary>
+        private Task<bool> RunWithSpeed(double speed, Action run)
+        {
+            return Task.Run(() =>
+            {
+                lock (_plc.SyncRoot)
+                {
+                    try
+                    {
+                        if (!_plc.IsConnected)
+                            return false;
+
+                        if (speed > 0 && !_stepper.SetManualVelocity(speed))
+                            return false;
+
+                        run();
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine(ComponentId + " command failed: " + ex.Message);
+                        return false;
+                    }
+                }
+            });
         }
 
         /// <summary>The library's commands are void and log their own failures, so a command that did not take shows in the log.</summary>

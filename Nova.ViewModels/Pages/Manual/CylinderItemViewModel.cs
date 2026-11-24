@@ -50,8 +50,8 @@ namespace Nova.ViewModels.Pages.Manual
         // deliberately not one — both Work and Home stay live so an operator can
         // re-fire the valve at either end (a cylinder that has drifted, or one
         // whose reed never made, still needs to be commandable).
-        public bool CanExtendNow => SafeToExtend;
-        public bool CanRetractNow => SafeToRetract;
+        public bool CanExtendNow => SafeToExtend && !IsExtended;
+        public bool CanRetractNow => SafeToRetract && IsExtended;
 
         public CylinderItemViewModel(ICylinder cylinder)
         {

@@ -30,6 +30,31 @@ namespace Nova.Abstractions.Services
 
         public DateTime? NozzleChanged { get; set; }
 
+        /// <summary>
+        /// The SN the valve controller itself reports, for a valve model with an internal SN
+        /// (S3.1.2). <see cref="ValveSn"/> is then the standard SN MES gave for it; this is
+        /// what the 5 minute check compares the controller's answer with.
+        /// </summary>
+        public string ValveInternalSn { get; set; } = string.Empty;
+
+        /// <summary>MAINTAIN_TIME of MES's last nozzle health answer, hours (S3.3): the maintenance period.</summary>
+        public double? NozzleMaintainHours { get; set; }
+
+        /// <summary>
+        /// REMAINING_TIME of that answer, hours: the nozzle's health status. Shown on Home's
+        /// Parameter Dashboard as Front_Health_Status / Rear_Health_Status; never sent to HIVE.
+        /// </summary>
+        public double? NozzleRemainingHours { get; set; }
+
+        /// <summary>When MES last gave the two values above.</summary>
+        public DateTime? NozzleHealthChecked { get; set; }
+
+        /// <summary>
+        /// Set by a nozzle change: MES is asked for the nozzle's health again before the first
+        /// unit runs (S3.3 "Input of the first product"), and this is cleared when it passes.
+        /// </summary>
+        public bool NozzleCheckPending { get; set; }
+
         public string GlueSn { get; set; } = string.Empty;
 
         public DateTime? GlueChanged { get; set; }

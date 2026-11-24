@@ -32,6 +32,16 @@
   <ItemGroup>
     <!-- The MES WebAPI client (Core\Comm\MesClient.cs). -->
     <Reference Include="System.Net.Http" />
+    <!-- The unit image zip for Insight (Services\UnitImagePackager.cs). -->
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- 24-hour dry run (S4.1): UUID.dll, UMSID.dll and the C++ runtime DLLs of the RQ DLL
+         package ("DLL_2.0.0.1 for C#&Winform_X86-64\Release"). They are not in this
+         repository; when they are put in References\RemoteQualification they go beside the
+         exe. Without them the dry run cannot be enabled and the HIVE Control tab says why. -->
+    <None Include="..\References\RemoteQualification\*.dll" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Nova.Abstractions\Nova.Abstractions.csproj" />
@@ -42,6 +52,9 @@
     <ProjectReference Include="..\Master.Configuration\Master.Configuration.csproj" />
     <ProjectReference Include="..\Nova.Alarm\Nova.Alarm.csproj" />
     <ProjectReference Include="..\Nova.Hive\Nova.Hive.csproj" />
+    <!-- Scheduled housekeeping (Quartz): CSV clean-up, shift status / OEE, database purge. -->
+    <ProjectReference Include="..\Master.Scheduler\Master.Scheduler.csproj" />
+    <ProjectReference Include="..\Master.SharedUtilities\Master.SharedUtilities.csproj" />
   </ItemGroup>
   <ItemGroup>
     <!-- Beckhoff library, built from D:\BeckhOffLibrary\BeckhOffLibrary into References\Beckhoff.
@@ -73,6 +86,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <!-- Dual language (English / Chinese / Vietnamese): the same Teal.Library.Localization
+         Odyssey.Master_V3 uses, copied from its References folder. -->
+    <Reference Include="Teal.Library.Localization">
+      <HintPath>..\References\Localization\Teal.Library.Localization.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
     <Resource Include="Assets\app.ico" />
   </ItemGroup>
   <ItemGroup>
@@ -80,12 +100,25 @@
     <None Update="NLog.config" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
-    <!-- Machine profile, recipes and settings, deployed next to the exe. -->
+    <!-- Language files, deployed loose to Localization\ beside the exe: Teal.Library.Localization
+         reads them at runtime and Setting > Localization Editor writes them back, so a
+         corrected translation needs no rebuild. Not embedded for that reason.
+         PreserveNewest, so a rebuild does not overwrite corrections made on the machine. -->
+    <EmbeddedResource Remove="Localization\**\*.resx" />
+    <None Include="Localization\Strings.resx" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Localization\Strings.zh-CN.resx" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Localization\Strings.vi.resx" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Machine profile, recipes and settings, deployed next to the exe as the shipped defaults:
+         the app copies each one App.config TealDataDirectory (C:\TEAL\Data) lacks into it at
+         startup, and reads and saves only there. -->
     <None Update="Data\**\*.json;Data\**\*.xml;Data\**\*.csv;Data\**\*.txt" CopyToOutputDirectory="PreserveNewest" />
     <!-- Same as V3: the recipe and settings JSON the screens edit are re-copied on every build. -->
-    <None Update="Data\Settings\*.json;Data\Gantry*.json;Data\RobotRecipe.json;Data\LightRecipe.json" CopyToOutputDirectory="Always" />
-    <!-- Except the station profile: the Settings page saves it next to the exe only, so
-         re-copying it on every build would throw away what the operator chose. -->
+    <None Update="Data\Settings\*.json;Data\Gantry*.json;Data\RobotRecipe.json;Data\CncRecipe.json" CopyToOutputDirectory="Always" />
+    <!-- Except the station profile and the files below: the app only copies a default into
+         the data folder when it has none, but keeping the copy next to the exe stable avoids
+         surprises when TealDataDirectory is pointed back at the exe's Data folder. -->
     <None Update="Data\Settings\StationProfile.json" CopyToOutputDirectory="PreserveNewest" />
     <!-- Likewise the files the Setting page's tabs and the planned-downtime procedures
          write (access control, HIVE control, hash key paths, consumables, picture check). -->

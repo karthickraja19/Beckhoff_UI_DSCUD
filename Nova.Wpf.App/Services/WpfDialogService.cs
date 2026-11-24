@@ -91,7 +91,9 @@ namespace Nova.Wpf.App.Services
 
         private static bool ShowDialog(string message, string title, AppDialogKind kind)
         {
-            var view = new AppDialogView(message, title, kind);
+            // Dual language: the view models write their messages in English.
+            var localization = Nova.Wpf.UI.Localization.LocalizationSource.Instance;
+            var view = new AppDialogView(localization.Translate(message), localization.Translate(title), kind);
             var dialog = Dialog.Show(view, DialogTokens.MainWindow);
             var resultTask = dialog.GetResultAsync<bool>();
             return WaitForResult(resultTask);

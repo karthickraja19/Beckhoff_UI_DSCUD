@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Nova.Abstractions.Machine.Enums;
@@ -6,6 +7,7 @@ using Nova.Abstractions.Machine.Interfaces;
 using Nova.Abstractions.Services;
 using Nova.Alarm;
 using Nova.Hive;
+using Nova.Wpf.App.Services.Twincat.Mapping;
 using Teal.Library.Log;
 
 namespace Nova.Wpf.App.Services.Twincat
@@ -17,8 +19,8 @@ namespace Nova.Wpf.App.Services.Twincat
     /// buttons follow is the PLC's own E_MachineState, pushed through the shared subscriptions.
     /// </summary>
     /// <remarks>
-    /// The PLC reacts to a button's rising edge, so a press writes TRUE and, 200 ms (20 PLC
-    /// cycles) later, FALSE. The writes are made one at a time, in order, on a worker thread,
+    /// The PLC reacts to a button's rising edge, so a press writes TRUE and, a pulse length
+    /// (symbol map: Commands.PulseMilliseconds) later, FALSE. The writes are made one at a time, in order, on a worker thread,
     /// so a PLC that does not answer never holds up the screen.
     ///
     /// Manual mode is a level, not a pulse: TRUE while the Manual tab is on screen. It is
@@ -27,7 +29,7 @@ namespace Nova.Wpf.App.Services.Twincat
     /// </remarks>
     public sealed class TwincatMachineOrchestrator : IMachineOrchestrator
     {
-        private static readonly TimeSpan PulseLength = TimeSpan.FromMilliseconds(200);
+        private readonly TimeSpan _pulseLength;
 
         private readonly TwincatPlcConnection _plc;
         private readonly PlcSubscriptions _subscriptions;
@@ -38,6 +40,7 @@ namespace Nova.Wpf.App.Services.Twincat
         private readonly string _pauseSymbol;
         private readonly string _stopSymbol;
         private readonly string _manualSymbol;
+        private readonly string[] _resetSymbols;
         private readonly SynchronizationContext _uiContext;
         private readonly object _sync = new object();
 
@@ -49,24 +52,38 @@ namespace Nova.Wpf.App.Services.Twincat
 
         public event Action<MachineStatus> OnMachineStatusChanged;
 
-        /// <param name="stateSymbol">The PLC's E_MachineState (App.config PlcMachineStateSymbol).</param>
-        /// <param name="startSymbol">BOOL pulsed by Start, and by resume from pause.</param>
-        /// <param name="pauseSymbol">BOOL pulsed by Pause.</param>
-        /// <param name="stopSymbol">BOOL pulsed by Stop.</param>
-        /// <param name="manualSymbol">BOOL held TRUE while the Setting page's Manual tab is on screen.</param>
+        /// <summary>
+        /// Raised, on a worker thread and in order with the manual-mode writes, when the first
+        /// screen takes manual mode (TRUE, before the PLC is told) or the last one lets it go
+        /// (FALSE, after the PLC is told). HIVE goes quiet for as long as a screen holds it.
+        /// </summary>
+        public event Action<bool> ManualModeHeldChanged;
+
+        /// <param name="stateSymbol">The PLC's E_MachineState (symbol map: Status.MachineState).</param>
+        /// <param name="commands">
+        /// The symbol map's Commands: the BOOLs pulsed by Start (also resume), Pause, Stop and
+        /// Reset (pulsed together, in the order listed), and the BOOL held TRUE while a manual
+        /// screen is in front.
+        /// </param>
         public TwincatMachineOrchestrator(
             TwincatPlcConnection plc, PlcSubscriptions subscriptions, IDialogService dialogs, IHomingService homing,
-            string stateSymbol, string startSymbol, string pauseSymbol, string stopSymbol, string manualSymbol)
+            string stateSymbol, CommandSymbols commands)
         {
             _plc = plc ?? throw new ArgumentNullException(nameof(plc));
             _subscriptions = subscriptions ?? throw new ArgumentNullException(nameof(subscriptions));
             _dialogs = dialogs ?? throw new ArgumentNullException(nameof(dialogs));
             _homing = homing ?? throw new ArgumentNullException(nameof(homing));
-            _stateSymbol = stateSymbol ?? string.Empty;
-            _startSymbol = startSymbol ?? string.Empty;
-            _pauseSymbol = pauseSymbol ?? string.Empty;
-            _stopSymbol = stopSymbol ?? string.Empty;
-            _manualSymbol = manualSymbol ?? string.Empty;
+            commands = commands ?? new CommandSymbols();
+            _stateSymbol = PlcSymbolMap.Of(stateSymbol);
+            _startSymbol = PlcSymbolMap.Of(commands.Start);
+            _pauseSymbol = PlcSymbolMap.Of(commands.Pause);
+            _stopSymbol = PlcSymbolMap.Of(commands.Stop);
+            _manualSymbol = PlcSymbolMap.Of(commands.ManualMode);
+            _resetSymbols = (commands.Reset ?? new System.Collections.Generic.List<string>())
+                .Select(PlcSymbolMap.Of)
+                .Where(s => s.Length > 0)
+                .ToArray();
+            _pulseLength = TimeSpan.FromMilliseconds(commands.PulseMilliseconds > 0 ? commands.PulseMilliseconds : 200);
 
             // Resolved on the UI thread at shell construction, so status events and dialogs
             // raised from another thread are marshalled back through this context.
@@ -79,7 +96,7 @@ namespace Nova.Wpf.App.Services.Twincat
             get { lock (_sync) return _status; }
         }
 
-        /// <summary>The PLC's homing-done bit; false while it is not wired (PlcHomingDoneSymbol).</summary>
+        /// <summary>The PLC's homing-done bit; false while it is not wired (symbol map: Status.HomingDone).</summary>
         public bool IsHomingDone => _homing.ReportsHomed && _homing.IsHomed;
 
         public bool IsAutoRunning
@@ -113,23 +130,23 @@ namespace Nova.Wpf.App.Services.Twincat
         /// <summary>Start, or resume when paused: the PLC's START button.</summary>
         public Task StartAutoAsync()
         {
-            Pulse(_startSymbol, "Start", "PlcStartSymbol");
+            Pulse(_startSymbol, "Start", "Commands.Start");
             return Task.CompletedTask;
         }
 
         public void Pause()
         {
-            Pulse(_pauseSymbol, "Pause", "PlcPauseSymbol");
+            Pulse(_pauseSymbol, "Pause", "Commands.Pause");
         }
 
         public void Resume()
         {
-            Pulse(_startSymbol, "Start", "PlcStartSymbol");
+            Pulse(_startSymbol, "Start", "Commands.Start");
         }
 
         public void Stop()
         {
-            Pulse(_stopSymbol, "Stop", "PlcStopSymbol");
+            Pulse(_stopSymbol, "Stop", "Commands.Stop");
         }
 
         /// <summary>Raises the PLC's home command bit, as the Manual tab's Homing button does.</summary>
@@ -149,11 +166,13 @@ namespace Nova.Wpf.App.Services.Twincat
         }
 
         /// <summary>
-        /// Nothing to clear in the HMI: the alarms and the machine state are the PLC's,
-        /// cleared by its RESET.
+        /// The PLC's RESET button: MAIN.bResetPb acknowledges every alarm (the PLC leaves
+        /// ALARM once the fault is gone) and the mode block's bResetPb takes it out of STOP.
+        /// Nothing is cleared in the HMI - an alarm ends when it leaves the PLC's alarm list.
         /// </summary>
         public void ResetAlarms()
         {
+            Pulse(_resetSymbols, "Reset", "Commands.Reset");
         }
 
         /// <summary>
@@ -181,9 +200,22 @@ namespace Nova.Wpf.App.Services.Twincat
                 on = _manualMode;
             }
 
+            // HIVE is told first when manual starts and last when it ends, so it is never
+            // live while the PLC is in manual.
+            if (on)
+                QueueWrite(() => NotifyManualHeld(true), "Manual mode notice");
+
             // Not live: written as soon as the PLC is back (OnLiveChanged).
             if (_subscriptions.IsLive)
                 QueueWrite(() => WriteManualMode(on), "Manual mode");
+
+            if (!on)
+                QueueWrite(() => NotifyManualHeld(false), "Manual mode notice");
+        }
+
+        private void NotifyManualHeld(bool held)
+        {
+            ManualModeHeldChanged?.Invoke(held);
         }
 
         /// <summary>
@@ -221,17 +253,27 @@ namespace Nova.Wpf.App.Services.Twincat
         /// <summary>Sets the button's BOOL TRUE, then FALSE: the PLC acts on the rising edge.</summary>
         private void Pulse(string symbol, string button, string settingKey)
         {
-            if (symbol.Length == 0)
+            Pulse(symbol.Length == 0 ? new string[0] : new[] { symbol }, button, settingKey);
+        }
+
+        /// <summary>Sets every BOOL TRUE, in order, then every one FALSE.</summary>
+        private void Pulse(string[] symbols, string button, string settingKey)
+        {
+            if (symbols.Length == 0)
             {
-                Warn(button + " is not wired to the PLC: " + settingKey + " is not set in App.config.", button);
+                Warn(button + " is not wired to the PLC: " + settingKey + " is blank in Data\\" + PlcSymbolMap.FileName + ".", button);
                 return;
             }
 
             QueueWrite(() =>
             {
-                Write(symbol, true);
-                Thread.Sleep(PulseLength);
-                Write(symbol, false);
+                foreach (string symbol in symbols)
+                    Write(symbol, true);
+
+                Thread.Sleep(_pulseLength);
+
+                foreach (string symbol in symbols)
+                    Write(symbol, false);
             }, button);
         }
 
@@ -292,12 +334,22 @@ namespace Nova.Wpf.App.Services.Twincat
         private void UpdateStatus()
         {
             MachineStatus status = ReadStatus();
+            MachineStatus before;
             lock (_sync)
             {
                 if (status == _status)
                     return;
 
+                before = _status;
                 _status = status;
+            }
+
+            // A homing the PLC gave up on (E-stop, an alarm, Stop) never raises the done bit,
+            // so without this the Homing button stayed on "Homing..." for good.
+            if (_homing != null && _homing.IsHoming && !_homing.IsHomed
+                && (before == MachineStatus.Homing || status == MachineStatus.Alarm || status == MachineStatus.Stop))
+            {
+                _homing.EndHoming();
             }
 
             Action<MachineStatus> handler = OnMachineStatusChanged;

@@ -1,0 +1,60 @@
+using System.Runtime.InteropServices;
+
+namespace Nova.Wpf.App.Services.Twincat
+{
+    /// <summary>
+    /// The PLC's ST_NinePointStatus (symbol map: Calibration.NinePoint.Stations.n.Status):
+    /// <code>
+    /// nStepNo : INT; nCurrentPoint : INT; nPointsOk : INT;
+    /// bFirstPointTaught : BOOL; bBusy : BOOL; bDone : BOOL; bFailed : BOOL;
+    /// sState : STRING(40); sFailReason : STRING(50);
+    /// </code>
+    /// 102 bytes. If the PLC struct changes, change this to match - the subscription
+    /// compares the sizes and reports a mismatch.
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential, Pack = 8, CharSet = CharSet.Ansi)]
+    public struct ST_NinePointStatus
+    {
+        public short nStepNo;
+        public short nCurrentPoint;
+        public short nPointsOk;
+        [MarshalAs(UnmanagedType.I1)] public bool bFirstPointTaught;
+        [MarshalAs(UnmanagedType.I1)] public bool bBusy;
+        [MarshalAs(UnmanagedType.I1)] public bool bDone;
+        [MarshalAs(UnmanagedType.I1)] public bool bFailed;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 41)] public string sState;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 51)] public string sFailReason;
+    }
+
+    /// <summary>
+    /// The PLC's ST_NinePointPoint:
+    /// <code>
+    /// nRow : INT; nColumn : INT;
+    /// rCommandedX, rCommandedY, rActualX, rActualY : LREAL;
+    /// bTriggerSent : BOOL; bVisionOk : BOOL; sVisionReply : STRING(120);
+    /// </code>
+    /// 168 bytes (the LREALs sit on an 8 byte boundary).
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential, Pack = 8, CharSet = CharSet.Ansi)]
+    public struct ST_NinePointPoint
+    {
+        public short nRow;
+        public short nColumn;
+        public double rCommandedX;
+        public double rCommandedY;
+        public double rActualX;
+        public double rActualY;
+        [MarshalAs(UnmanagedType.I1)] public bool bTriggerSent;
+        [MarshalAs(UnmanagedType.I1)] public bool bVisionOk;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 121)] public string sVisionReply;
+    }
+
+    /// <summary>The PLC's points : ARRAY[1..9] OF ST_NinePointPoint, read as one value.</summary>
+    [StructLayout(LayoutKind.Sequential, Pack = 8)]
+    public struct ST_NinePointPoints
+    {
+        public const int Count = 9;
+
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = Count)] public ST_NinePointPoint[] Points;
+    }
+}

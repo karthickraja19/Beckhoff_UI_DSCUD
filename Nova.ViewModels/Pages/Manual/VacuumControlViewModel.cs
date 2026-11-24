@@ -8,7 +8,7 @@ namespace Nova.ViewModels.Pages.Manual
 {
     /// <summary>
     /// ViewModel backing the "Vacuum" tab of the Manual screen. Hydrates its units
-    /// from <see cref="IVacuumService"/> (the machine's Vacuums.xml catalogue) and
+    /// from <see cref="IVacuumService"/> (Data\Vacuums.json) and
     /// refreshes feedback each time the IO service reports a change. Only the unit
     /// selected in the dropdown follows live status, and only while the tab is on screen.
     /// </summary>

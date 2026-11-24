@@ -70,10 +70,12 @@ namespace Nova.Wpf.App.Services.Twincat
         }
 
         /// <summary>
-        /// One adapter per cylinder. The valve and reed symbols the library commands are the
-        /// PLC names from Cylinders.json under App.config's PlcIoGvl - for example
-        /// GVL_IO.Light_Mask_ZAxis_Cyl_FW.
+        /// One adapter per cylinder. The library commands and reads it through the PLC's
+        /// CylinderData[Id]; the valve and reed names in Cylinders.json are Data\Config.csv
+        /// points (the PLC's E_Outputs / E_Input names, which FB_CylinderMapping wires into
+        /// that block), used only to label the board.
         /// </summary>
+        /// <param name="isIoPoint">True when a name is a Data\Config.csv output (second argument true) or input.</param>
         /// <param name="displayType">The struct App.config's CylinderHmiDisplayType names; null when it names none that fits.</param>
         /// <param name="resolveAddress">
         /// Maps a PLC name to its wiring address from Data\Config.csv, for display on the
@@ -86,6 +88,7 @@ namespace Nova.Wpf.App.Services.Twincat
             IReadOnlyDictionary<Cylinders, TealCylinder> created,
             Type displayType,
             Func<string, bool, string> resolveAddress,
+            Func<string, bool, bool> isIoPoint,
             ICollection<string> warnings)
         {
             var cylinders = new List<NovaCylinder>();
@@ -97,22 +100,11 @@ namespace Nova.Wpf.App.Services.Twincat
                 if (cylinder == null)
                     continue;
 
-                if (displays.Connected)
-                {
-                    var missing = new[] { cylinder.ExtendName, cylinder.RetractName }
-                        .Concat(cylinder.ExtendSenses ?? new List<string>())
-                        .Concat(cylinder.RetractSenses ?? new List<string>())
-                        .Where(s => !string.IsNullOrEmpty(s) && !plc.SymbolExists(s))
-                        .ToList();
-
-                    if (missing.Count > 0)
-                    {
-                        warnings.Add(name + ": " + string.Join(", ", missing)
-                            + " " + (missing.Count == 1 ? "does" : "do")
-                            + " not exist in the PLC. Check the names in Data\\Cylinders.json "
-                            + "and the PlcIoGvl setting in App.config.");
-                    }
-                }
+                var missing = NotIoPoints(isIoPoint, true, cylinder.ExtendName, cylinder.RetractName)
+                    .Concat(NotIoPoints(isIoPoint, false, (cylinder.ExtendSenses ?? new List<string>()).ToArray()))
+                    .Concat(NotIoPoints(isIoPoint, false, (cylinder.RetractSenses ?? new List<string>()).ToArray()))
+                    .ToList();
+                ReportNotIoPoints(name.ToString(), missing, "Cylinders.json", warnings);
 
                 displays.Check(name.ToString(), cylinder);
                 cylinders.Add(new TwincatCylinderAdapter(
@@ -130,10 +122,12 @@ namespace Nova.Wpf.App.Services.Twincat
         }
 
         /// <summary>
-        /// One adapter per vacuum. As with the cylinders, the sensor and output names in
-        /// Vacuums.json are PLC variable names under PlcIoGvl.
+        /// One adapter per vacuum. As with the cylinders, the library goes through the PLC's
+        /// vacuumdata[Id], and the sensor and output names in Vacuums.json are Data\Config.csv
+        /// points, used only for the labels.
         /// </summary>
         /// <param name="displayType">The struct App.config's VacuumHmiDisplayType names; null when it names none that fits.</param>
+        /// <param name="isIoPoint">True when a name is a Data\Config.csv output (second argument true) or input.</param>
         public static List<NovaVacuum> CreateVacuums(
             TwincatPlcConnection plc,
             PlcSubscriptions subscriptions,
@@ -141,6 +135,7 @@ namespace Nova.Wpf.App.Services.Twincat
             IReadOnlyDictionary<Vacuums, TealVacuum> created,
             Type displayType,
             Func<string, bool, string> resolveAddress,
+            Func<string, bool, bool> isIoPoint,
             ICollection<string> warnings)
         {
             var vacuums = new List<NovaVacuum>();
@@ -152,20 +147,10 @@ namespace Nova.Wpf.App.Services.Twincat
                 if (vacuum == null)
                     continue;
 
-                if (displays.Connected)
-                {
-                    var missing = new[] { vacuum.VacuumSense, vacuum.VacuumOutput, vacuum.BlowOutput }
-                        .Where(s => !string.IsNullOrEmpty(s) && !plc.SymbolExists(s))
-                        .ToList();
-
-                    if (missing.Count > 0)
-                    {
-                        warnings.Add(name + ": " + string.Join(", ", missing)
-                            + " " + (missing.Count == 1 ? "does" : "do")
-                            + " not exist in the PLC. Check the names in Data\\Vacuums.json "
-                            + "and the PlcIoGvl setting in App.config.");
-                    }
-                }
+                var missing = NotIoPoints(isIoPoint, false, vacuum.VacuumSense)
+                    .Concat(NotIoPoints(isIoPoint, true, vacuum.VacuumOutput, vacuum.BlowOutput))
+                    .ToList();
+                ReportNotIoPoints(name.ToString(), missing, "Vacuums.json", warnings);
 
                 string feedback = string.IsNullOrWhiteSpace(cfg.VacuumSense) || resolveAddress == null
                     ? vacuum.VacuumSense
@@ -317,6 +302,28 @@ namespace Nova.Wpf.App.Services.Twincat
             return resolveAddress == null
                 ? names
                 : names.Select(n => resolveAddress(n, false)).ToList();
+        }
+
+        /// <summary>The names, blank ones left out, that are not a Data\Config.csv output (<paramref name="isOutput"/>) or input.</summary>
+        private static IEnumerable<string> NotIoPoints(Func<string, bool, bool> isIoPoint, bool isOutput, params string[] names)
+        {
+            if (isIoPoint == null)
+                return Enumerable.Empty<string>();
+
+            return names
+                .Where(n => !string.IsNullOrWhiteSpace(n) && !isIoPoint(n, isOutput))
+                .Select(n => n + (isOutput ? " (output)" : " (input)"));
+        }
+
+        private static void ReportNotIoPoints(string device, List<string> missing, string file, ICollection<string> warnings)
+        {
+            if (missing.Count == 0)
+                return;
+
+            warnings.Add(device + ": " + string.Join(", ", missing)
+                + " " + (missing.Count == 1 ? "is" : "are")
+                + " not in Data\\Config.csv, so the board shows the name instead of a wiring address. "
+                + "Check the names in Data\\" + file + " against the PLC's E_Input / E_Outputs.");
         }
 
         /// <summary>

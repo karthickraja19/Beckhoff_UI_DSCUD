@@ -32,12 +32,7 @@ namespace Master.Configuration
         /// Creates every device on the card from CardsConfiguration.json, replacing any created
         /// before. Returns the problems found; an empty list means every device was created.
         /// </summary>
-        /// <param name="ioGvl">
-        /// The GVL the cylinder and vacuum I/O names in Cylinders.json and Vacuums.json are
-        /// declared in, e.g. GVL_IO for GVL_IO.Light_Mask_ZAxis_Cyl_FW. Empty when the PLC
-        /// declares them at the top level.
-        /// </param>
-        public static List<string> Create(string ioGvl)
+        public static List<string> Create()
         {
             var problems = new List<string>();
 
@@ -58,8 +53,8 @@ namespace Master.Configuration
 
             StepperObjects.Load(card, problems);
             ServoObjects.Load(card, problems);
-            CylinderObjects.Load(card, ioGvl, problems);
-            VacuumObjects.Load(card, ioGvl, problems);
+            CylinderObjects.Load(card, problems);
+            VacuumObjects.Load(card, problems);
             CCDObjects.Load(card, problems);
             ScannerObjects.Load(card, problems);
             RobotObjects.Load(card, problems);
@@ -82,21 +77,22 @@ namespace Master.Configuration
             }
         }
 
-        /// <summary>The PLC symbol of an I/O name: {ioGvl}.{name}, or the name alone when there is no GVL. Empty for a blank name.</summary>
-        internal static string Symbol(string ioGvl, string name)
+        /// <summary>
+        /// An I/O point name from a device file, trimmed; empty for a blank one. It is a point of
+        /// Data\Config.csv (the PLC's E_Input / E_Outputs name), not a PLC variable: the PLC maps
+        /// it into the device's block itself (FB_CylinderMapping, FB_VacuumMapping).
+        /// </summary>
+        internal static string IoName(string name)
         {
-            if (string.IsNullOrWhiteSpace(name))
-                return "";
-
-            return string.IsNullOrWhiteSpace(ioGvl) ? name : ioGvl + "." + name;
+            return string.IsNullOrWhiteSpace(name) ? "" : name.Trim();
         }
 
-        /// <summary>The PLC symbols of a list of I/O names, blank names left out.</summary>
-        internal static List<string> Symbols(string ioGvl, List<string> names)
+        /// <summary>A list of I/O point names, blank names left out.</summary>
+        internal static List<string> IoNames(List<string> names)
         {
             return names == null
                 ? new List<string>()
-                : names.Where(n => !string.IsNullOrWhiteSpace(n)).Select(n => Symbol(ioGvl, n)).ToList();
+                : names.Where(n => !string.IsNullOrWhiteSpace(n)).Select(IoName).ToList();
         }
 
         /// <summary>

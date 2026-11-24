@@ -110,8 +110,8 @@ namespace Nova.ViewModels.Pages.Audio
             if (_coordinates == null)
             {
                 _axisRecords = new CoordinateRecord[0];
-                AxisStatus = "Coordinate data is not connected to this HMI yet. It needs the machine's measured "
-                             + "positions for each unit.";
+                AxisStatus = "The machine does not report measured coordinates yet, so there are none to show. "
+                             + "They are recorded for each finished unit once the PLC provides them.";
                 FillAxisFilters();
                 return;
             }

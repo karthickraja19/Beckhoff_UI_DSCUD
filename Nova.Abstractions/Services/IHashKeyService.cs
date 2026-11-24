@@ -73,6 +73,13 @@ namespace Nova.Abstractions.Services
         /// <param name="approverId">The badge of the second approver, sent as approver_id.</param>
         Task<MesResult> UploadToMesAsync(string approverId);
 
+        /// <summary>
+        /// "CHECK_AUDIO_INFO": asks MES whether this station's keys still match the ones it
+        /// holds (S3.6). Sent every time HIVE switches to Running. A false answer means a
+        /// file was changed (or the count differs, or the terminal is unknown).
+        /// </summary>
+        Task<MesResult> CheckWithMesAsync();
+
         /// <summary>Raised after the paths were saved.</summary>
         event EventHandler PathsChanged;
     }

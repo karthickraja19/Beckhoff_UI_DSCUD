@@ -1,5 +1,6 @@
 <UserControl x:Class="Nova.Wpf.App.Views.Pages.Manual.ManualView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:loc="clr-namespace:Nova.Wpf.UI.Localization;assembly=Nova.Wpf.UI"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:manualVm="clr-namespace:Nova.ViewModels.Pages.Manual;assembly=Nova.ViewModels"
              xmlns:local="clr-namespace:Nova.Wpf.App.Views.Pages.Manual"
@@ -36,28 +37,24 @@
                     <local:CameraControlView/>
                 </DataTemplate>
 
-                <!-- Scanner / Light Control / SFC &amp; PDCA share the console-style view -->
+                <!-- Scanner / SFC &amp; PDCA share the console-style view -->
                 <DataTemplate DataType="{x:Type manualVm:ScannerControlViewModel}">
-                    <local:ConsoleDeviceView/>
-                </DataTemplate>
-                <DataTemplate DataType="{x:Type manualVm:LightControlViewModel}">
                     <local:ConsoleDeviceView/>
                 </DataTemplate>
                 <DataTemplate DataType="{x:Type manualVm:SfcPdcaControlViewModel}">
                     <local:ConsoleDeviceView/>
                 </DataTemplate>
 
+                <!-- Dispenser, weighing scale and vibration sensors share one layout. -->
+                <DataTemplate DataType="{x:Type manualVm:PlcDevicePanelViewModel}">
+                    <local:PlcDevicePanelView/>
+                </DataTemplate>
                 <DataTemplate DataType="{x:Type manualVm:RobotControlViewModel}">
                     <local:RobotControlView/>
                 </DataTemplate>
 
-                <DataTemplate DataType="{x:Type manualVm:ManualPlaceholderViewModel}">
-                    <Border Background="{DynamicResource RegionBrush}" CornerRadius="6"
-                            Padding="20" Margin="0,8,0,0" Effect="{StaticResource EffectShadow1}">
-                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center"
-                                   FontSize="{DynamicResource Nova.FontSize.Heading}" Foreground="{DynamicResource SecondaryTextBrush}"
-                                   Text="{Binding Title, StringFormat='{}{0} — not yet implemented'}"/>
-                    </Border>
+                <DataTemplate DataType="{x:Type manualVm:ManualLogViewModel}">
+                    <local:ManualLogView/>
                 </DataTemplate>
             </TabControl.Resources>
         </TabControl>

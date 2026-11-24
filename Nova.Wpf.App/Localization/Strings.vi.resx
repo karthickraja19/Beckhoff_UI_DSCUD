@@ -1,0 +1,3466 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Vietnamese (vi). Machine-authored: have a native speaker review it.
+
+  Read at runtime by Teal.Library.Localization (Localization\ beside the exe) and written by
+  Setting > Localization Editor, so a correction made on the machine needs no rebuild.
+  Keys are Txt_ + the English words. XAML uses {loc:Tr Key}; text the view models build is
+  matched by its English value, so keep the English here identical to the code's English.
+-->
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Txt_0Gantry" xml:space="preserve">
+    <value>Giàn {0}</value>
+  </data>
+  <data name="Txt_0Jog" xml:space="preserve">
+    <value>Jog {0}</value>
+  </data>
+  <data name="Txt_0Motion" xml:space="preserve">
+    <value>Chuyển động {0}</value>
+  </data>
+  <data name="Txt_0NotYetImplemented" xml:space="preserve">
+    <value>{0} — chưa được triển khai</value>
+  </data>
+  <data name="Txt_0Of1KeysShown2Untranslated" xml:space="preserve">
+    <value>Hiển thị {0} / {1} khóa · {2} chưa dịch</value>
+  </data>
+  <data name="Txt_0SettingsNotYetImplemented" xml:space="preserve">
+    <value>Cài đặt {0} — chưa được triển khai</value>
+  </data>
+  <data name="Txt_0Software" xml:space="preserve">
+    <value>Phần mềm {0}</value>
+  </data>
+  <data name="Txt_0TheSCUDWillNotDispenseA" xml:space="preserve">
+    <value>0 - SCUD sẽ không phun keo: một sản phẩm có số lượng ảnh sai. Hãy xử lý sự cố hình ảnh, sau đó đặt lại thành 1.</value>
+  </data>
+  <data name="Txt_10xPointsToFormRegressionFormula" xml:space="preserve">
+    <value>- 10 điểm để lập công thức hồi quy:</value>
+  </data>
+  <data name="Txt_1Field" xml:space="preserve">
+    <value>1 trường</value>
+  </data>
+  <data name="Txt_1Parameter" xml:space="preserve">
+    <value>1 thông số</value>
+  </data>
+  <data name="Txt_1TheSCUDCanDispense" xml:space="preserve">
+    <value>1 - SCUD có thể phun keo.</value>
+  </data>
+  <data name="Txt_24HourDryRun" xml:space="preserve">
+    <value>Chạy khô 24 giờ</value>
+  </data>
+  <data name="Txt_24HourDryRunFunctionModule" xml:space="preserve">
+    <value>Chạy khô 24 giờ (mô-đun chức năng)</value>
+  </data>
+  <data name="Txt_2StepVerification" xml:space="preserve">
+    <value>Xác minh hai bước</value>
+  </data>
+  <data name="Txt_9PointCalibrationCCD1CCD2" xml:space="preserve">
+    <value>Hiệu chuẩn 9 điểm (CCD1 / CCD2)</value>
+  </data>
+  <data name="Txt_AAndRTurnToTheBlock" xml:space="preserve">
+    <value>A và R xoay theo góc của khối, Z phun keo dừng phía trên khối ở độ cao thước đo.</value>
+  </data>
+  <data name="Txt_AAxis" xml:space="preserve">
+    <value>Trục A (°)</value>
+  </data>
+  <data name="Txt_AAxisAngle" xml:space="preserve">
+    <value>Góc trục A</value>
+  </data>
+  <data name="Txt_ACTION" xml:space="preserve">
+    <value>THAO TÁC</value>
+  </data>
+  <data name="Txt_ACTUALPOSITION" xml:space="preserve">
+    <value>VỊ TRÍ THỰC TẾ</value>
+  </data>
+  <data name="Txt_ACTUALVELOCITY" xml:space="preserve">
+    <value>VẬN TỐC THỰC TẾ</value>
+  </data>
+  <data name="Txt_ACalibrationIsRunning" xml:space="preserve">
+    <value>Đang chạy hiệu chuẩn.</value>
+  </data>
+  <data name="Txt_AELimitsCPK" xml:space="preserve">
+    <value>Giới hạn AE (CPK)</value>
+  </data>
+  <data name="Txt_AELimitsGRR" xml:space="preserve">
+    <value>Giới hạn AE (GRR)</value>
+  </data>
+  <data name="Txt_AXISSTATE" xml:space="preserve">
+    <value>TRẠNG THÁI TRỤC</value>
+  </data>
+  <data name="Txt_Absolute" xml:space="preserve">
+    <value>Tuyệt đối</value>
+  </data>
+  <data name="Txt_Accept" xml:space="preserve">
+    <value>Chấp nhận</value>
+  </data>
+  <data name="Txt_AcceptedAAndRAtTheseAngles" xml:space="preserve">
+    <value>Đã chấp nhận: A và R tại các góc này trở thành tham chiếu không.</value>
+  </data>
+  <data name="Txt_Access" xml:space="preserve">
+    <value>Quyền truy cập</value>
+  </data>
+  <data name="Txt_AccessCheckFailed" xml:space="preserve">
+    <value>Kiểm tra quyền truy cập thất bại.</value>
+  </data>
+  <data name="Txt_AccessControl" xml:space="preserve">
+    <value>Kiểm soát truy cập</value>
+  </data>
+  <data name="Txt_AccessControlWithMES" xml:space="preserve">
+    <value>Kiểm soát truy cập qua MES</value>
+  </data>
+  <data name="Txt_AccessDenied" xml:space="preserve">
+    <value>Truy cập bị từ chối.</value>
+  </data>
+  <data name="Txt_Activated" xml:space="preserve">
+    <value>Đã kích hoạt</value>
+  </data>
+  <data name="Txt_Activity" xml:space="preserve">
+    <value>Hoạt động</value>
+  </data>
+  <data name="Txt_Add" xml:space="preserve">
+    <value>Thêm</value>
+  </data>
+  <data name="Txt_AfterANeedleChangeTheNeedleMoves" xml:space="preserve">
+    <value>Sau khi thay kim, kim di chuyển tới mô-đun hiệu chuẩn kim.</value>
+  </data>
+  <data name="Txt_Alarm" xml:space="preserve">
+    <value>Báo động</value>
+  </data>
+  <data name="Txt_AlarmDurations" xml:space="preserve">
+    <value>Thời lượng báo động</value>
+  </data>
+  <data name="Txt_AlarmDurationsMin" xml:space="preserve">
+    <value>Thời lượng báo động (phút)</value>
+  </data>
+  <data name="Txt_AlarmHistory" xml:space="preserve">
+    <value>Lịch sử báo động</value>
+  </data>
+  <data name="Txt_AlarmHistoryIsNotAvailableOnThis" xml:space="preserve">
+    <value>Lịch sử báo động không khả dụng trên máy này.</value>
+  </data>
+  <data name="Txt_Alarms" xml:space="preserve">
+    <value>Báo động</value>
+  </data>
+  <data name="Txt_AllColumns" xml:space="preserve">
+    <value>Tất cả các cột</value>
+  </data>
+  <data name="Txt_AlwaysKeepAnEyeOnTheRemaining" xml:space="preserve">
+    <value>Luôn theo dõi lượng keo còn lại trên máy và thay keo kịp thời khi máy phát báo động.</value>
+  </data>
+  <data name="Txt_Angle" xml:space="preserve">
+    <value>Góc</value>
+  </data>
+  <data name="Txt_Area" xml:space="preserve">
+    <value>Diện tích</value>
+  </data>
+  <data name="Txt_Authorize" xml:space="preserve">
+    <value>Ủy quyền</value>
+  </data>
+  <data name="Txt_Axis" xml:space="preserve">
+    <value>Trục:</value>
+  </data>
+  <data name="Txt_AxisConfiguration" xml:space="preserve">
+    <value>Cấu hình trục</value>
+  </data>
+  <data name="Txt_AxisConfigurationSettings" xml:space="preserve">
+    <value>Cài đặt cấu hình trục</value>
+  </data>
+  <data name="Txt_AxisEnable" xml:space="preserve">
+    <value>Bật trục</value>
+  </data>
+  <data name="Txt_AxisHome" xml:space="preserve">
+    <value>Trục về gốc</value>
+  </data>
+  <data name="Txt_AxisHomed" xml:space="preserve">
+    <value>Trục đã về gốc</value>
+  </data>
+  <data name="Txt_AxisInError" xml:space="preserve">
+    <value>Trục bị lỗi</value>
+  </data>
+  <data name="Txt_AxisIsNotSelected" xml:space="preserve">
+    <value>Chưa chọn trục.</value>
+  </data>
+  <data name="Txt_AxisParameterTableIsEmpty" xml:space="preserve">
+    <value>Bảng thông số trục trống.</value>
+  </data>
+  <data name="Txt_AxisRunning" xml:space="preserve">
+    <value>Trục đang chạy</value>
+  </data>
+  <data name="Txt_Axis_2" xml:space="preserve">
+    <value>Trục</value>
+  </data>
+  <data name="Txt_BackToHome" xml:space="preserve">
+    <value>‹ Quay lại trang chủ</value>
+  </data>
+  <data name="Txt_BadgeReadPressOK" xml:space="preserve">
+    <value>Đã đọc thẻ. Nhấn OK.</value>
+  </data>
+  <data name="Txt_BadgeReadScanTheSN" xml:space="preserve">
+    <value>Đã đọc thẻ. Hãy quét SN.</value>
+  </data>
+  <data name="Txt_BasePlateAngleZeroLaser" xml:space="preserve">
+    <value>Đặt góc không cho tấm đế (laser)</value>
+  </data>
+  <data name="Txt_BasePlateFlatnessLaser" xml:space="preserve">
+    <value>Độ phẳng tấm đế (laser)</value>
+  </data>
+  <data name="Txt_BaudRate" xml:space="preserve">
+    <value>Tốc độ baud</value>
+  </data>
+  <data name="Txt_Blow" xml:space="preserve">
+    <value>Thổi khí</value>
+  </data>
+  <data name="Txt_Browse" xml:space="preserve">
+    <value>Duyệt</value>
+  </data>
+  <data name="Txt_BuzzerMuted" xml:space="preserve">
+    <value>Đã tắt còi.</value>
+  </data>
+  <data name="Txt_BypassSettings" xml:space="preserve">
+    <value>Cài đặt bỏ qua</value>
+  </data>
+  <data name="Txt_CCD123" xml:space="preserve">
+    <value>CCD 1, 2, 3</value>
+  </data>
+  <data name="Txt_CCD3FindsTheNeedleSLeftRight" xml:space="preserve">
+    <value>CCD3 tìm mép trái, phải và dưới của kim, tâm đầu kim và góc T.</value>
+  </data>
+  <data name="Txt_CCD3MeasuresTheNeedleSXY" xml:space="preserve">
+    <value>CCD3 đo X, Y, Z và T của kim; độ lệch = giá trị đo - mẫu.</value>
+  </data>
+  <data name="Txt_CCDCalibration" xml:space="preserve">
+    <value>Hiệu chuẩn CCD</value>
+  </data>
+  <data name="Txt_CCDRepeatabilityTesting" xml:space="preserve">
+    <value>Kiểm tra độ lặp lại CCD</value>
+  </data>
+  <data name="Txt_CCDTCPSettings" xml:space="preserve">
+    <value>Cài đặt TCP CCD</value>
+  </data>
+  <data name="Txt_CHOOSECAMERA" xml:space="preserve">
+    <value>CHỌN CAMERA</value>
+  </data>
+  <data name="Txt_COMPort" xml:space="preserve">
+    <value>Cổng COM</value>
+  </data>
+  <data name="Txt_CONNECTDEVICE" xml:space="preserve">
+    <value>KẾT NỐI THIẾT BỊ</value>
+  </data>
+  <data name="Txt_CONTINUOUSMOTION" xml:space="preserve">
+    <value>CHUYỂN ĐỘNG LIÊN TỤC</value>
+  </data>
+  <data name="Txt_CSVExportIsNotAvailableOnThis" xml:space="preserve">
+    <value>Không thể xuất CSV trên máy này.</value>
+  </data>
+  <data name="Txt_CSVImport" xml:space="preserve">
+    <value>Nhập CSV</value>
+  </data>
+  <data name="Txt_CTS" xml:space="preserve">
+    <value>CT/giây</value>
+  </data>
+  <data name="Txt_CURRENTSTATUS" xml:space="preserve">
+    <value>TRẠNG THÁI HIỆN TẠI</value>
+  </data>
+  <data name="Txt_CYLINDERNAME" xml:space="preserve">
+    <value>TÊN XI LANH</value>
+  </data>
+  <data name="Txt_Cable" xml:space="preserve">
+    <value>Cáp</value>
+  </data>
+  <data name="Txt_Calibration" xml:space="preserve">
+    <value>Hiệu chuẩn</value>
+  </data>
+  <data name="Txt_CalibrationFrequency" xml:space="preserve">
+    <value>Tần suất hiệu chuẩn</value>
+  </data>
+  <data name="Txt_CalibrationFrequencyMustBeAWholeNumber" xml:space="preserve">
+    <value>Tần suất hiệu chuẩn phải là số giờ nguyên, từ 1 trở lên.</value>
+  </data>
+  <data name="Txt_CalibrationInProgress" xml:space="preserve">
+    <value>Đang hiệu chuẩn…</value>
+  </data>
+  <data name="Txt_CalibrationIsNotAvailableOnThisBuild" xml:space="preserve">
+    <value>Bản dựng này không hỗ trợ hiệu chuẩn.</value>
+  </data>
+  <data name="Txt_CalibrationPoints" xml:space="preserve">
+    <value>Điểm hiệu chuẩn</value>
+  </data>
+  <data name="Txt_Camera" xml:space="preserve">
+    <value>Camera</value>
+  </data>
+  <data name="Txt_CameraExposure" xml:space="preserve">
+    <value>Độ phơi sáng camera</value>
+  </data>
+  <data name="Txt_CameraGain" xml:space="preserve">
+    <value>Độ khuếch đại camera</value>
+  </data>
+  <data name="Txt_Cancel" xml:space="preserve">
+    <value>Hủy</value>
+  </data>
+  <data name="Txt_CardAxis" xml:space="preserve">
+    <value>Card / Trục</value>
+  </data>
+  <data name="Txt_CartridgeWeightMustBeANumberAbove" xml:space="preserve">
+    <value>Khối lượng ống keo phải là số lớn hơn 0.</value>
+  </data>
+  <data name="Txt_ChangeConfig" xml:space="preserve">
+    <value>Thay đổi cấu hình</value>
+  </data>
+  <data name="Txt_ChangeErrorDetail" xml:space="preserve">
+    <value>&lt;Thay đổi chi tiết lỗi&gt;</value>
+  </data>
+  <data name="Txt_ChangeGlueNow" xml:space="preserve">
+    <value>Thay keo ngay</value>
+  </data>
+  <data name="Txt_ChangeGlueThreshold" xml:space="preserve">
+    <value>Ngưỡng thay keo (%)</value>
+  </data>
+  <data name="Txt_ChangeGlueThresholdMustBeAPercentage" xml:space="preserve">
+    <value>Ngưỡng thay keo phải là phần trăm từ 0 đến 100.</value>
+  </data>
+  <data name="Txt_ChangeToRunning" xml:space="preserve">
+    <value>Chuyển sang Đang chạy</value>
+  </data>
+  <data name="Txt_ChangingSpecLimitsRequiresLevel3" xml:space="preserve">
+    <value>Thay đổi giới hạn quy cách cần cấp 3</value>
+  </data>
+  <data name="Txt_CheckTheGapBetweenNeedleAndBlock" xml:space="preserve">
+    <value>Kiểm tra khe hở giữa kim và khối bằng thước lá, sau đó chấp nhận hoặc từ chối trên màn hình.</value>
+  </data>
+  <data name="Txt_Checking" xml:space="preserve">
+    <value>Đang kiểm tra</value>
+  </data>
+  <data name="Txt_CheckingAccess" xml:space="preserve">
+    <value>Đang kiểm tra quyền truy cập…</value>
+  </data>
+  <data name="Txt_CheckingTheBadge" xml:space="preserve">
+    <value>Đang kiểm tra thẻ...</value>
+  </data>
+  <data name="Txt_ChooseATimeRangeAndPressQuery" xml:space="preserve">
+    <value>Chọn khoảng thời gian rồi nhấn Truy vấn.</value>
+  </data>
+  <data name="Txt_ChooseAtLeastOneTriggerOrThe" xml:space="preserve">
+    <value>Chọn ít nhất một điều kiện kích hoạt, nếu không cân sẽ không bao giờ cân.</value>
+  </data>
+  <data name="Txt_ChooseOrTypeAMachineNameBefore" xml:space="preserve">
+    <value>Chọn hoặc nhập tên máy trước khi lưu.</value>
+  </data>
+  <data name="Txt_ChooseTheGantryAndScanTheValve" xml:space="preserve">
+    <value>Chọn giàn và quét SN van.</value>
+  </data>
+  <data name="Txt_Circularity" xml:space="preserve">
+    <value>Độ tròn</value>
+  </data>
+  <data name="Txt_CircularityMin" xml:space="preserve">
+    <value>Độ tròn tối thiểu</value>
+  </data>
+  <data name="Txt_Clear" xml:space="preserve">
+    <value>Xóa</value>
+  </data>
+  <data name="Txt_ClearAll" xml:space="preserve">
+    <value>Xóa tất cả</value>
+  </data>
+  <data name="Txt_ClearError" xml:space="preserve">
+    <value>Xóa lỗi</value>
+  </data>
+  <data name="Txt_ClearEverySelectedPDATAField" xml:space="preserve">
+    <value>Xóa mọi trường PDATA đã chọn?</value>
+  </data>
+  <data name="Txt_ClearFilter" xml:space="preserve">
+    <value>Xóa bộ lọc</value>
+  </data>
+  <data name="Txt_ClickANonCriticalSensorToDisable" xml:space="preserve">
+    <value>Nhấn vào cảm biến không quan trọng để tắt hoặc bật. Không thể tắt cảm biến quan trọng.</value>
+  </data>
+  <data name="Txt_ClickEditBeforeTeachingAPosition" xml:space="preserve">
+    <value>Nhấn Sửa trước khi dạy vị trí.</value>
+  </data>
+  <data name="Txt_Close" xml:space="preserve">
+    <value>Đóng</value>
+  </data>
+  <data name="Txt_CloseWindow" xml:space="preserve">
+    <value>Đóng cửa sổ</value>
+  </data>
+  <data name="Txt_Color" xml:space="preserve">
+    <value>Màu</value>
+  </data>
+  <data name="Txt_ColumnSchemaWarning" xml:space="preserve">
+    <value>Cảnh báo cấu trúc cột</value>
+  </data>
+  <data name="Txt_ComponentSN" xml:space="preserve">
+    <value>SN linh kiện</value>
+  </data>
+  <data name="Txt_Config" xml:space="preserve">
+    <value>Cấu hình</value>
+  </data>
+  <data name="Txt_Confirm" xml:space="preserve">
+    <value>Xác nhận</value>
+  </data>
+  <data name="Txt_ConfirmModeChange" xml:space="preserve">
+    <value>Xác nhận đổi chế độ</value>
+  </data>
+  <data name="Txt_ConfirmToLogOut" xml:space="preserve">
+    <value>Xác nhận đăng xuất?</value>
+  </data>
+  <data name="Txt_Confirmation" xml:space="preserve">
+    <value>Xác nhận</value>
+  </data>
+  <data name="Txt_Connect" xml:space="preserve">
+    <value>Kết nối</value>
+  </data>
+  <data name="Txt_Connected" xml:space="preserve">
+    <value>Đã kết nối</value>
+  </data>
+  <data name="Txt_ConsumablePartReplacement" xml:space="preserve">
+    <value>Thay thế linh kiện tiêu hao</value>
+  </data>
+  <data name="Txt_ContinueTestWithTheSameOperator" xml:space="preserve">
+    <value>Tiếp tục kiểm tra với cùng người vận hành</value>
+  </data>
+  <data name="Txt_ContinuousForward" xml:space="preserve">
+    <value>Tiến liên tục</value>
+  </data>
+  <data name="Txt_ContinuousReverse" xml:space="preserve">
+    <value>Lùi liên tục</value>
+  </data>
+  <data name="Txt_ConveyorStatus" xml:space="preserve">
+    <value>Trạng thái băng tải</value>
+  </data>
+  <data name="Txt_CorrectTheDosagesMarkedInRed" xml:space="preserve">
+    <value>Hãy sửa các liều lượng được đánh dấu đỏ.</value>
+  </data>
+  <data name="Txt_CorrectTheseLimitsBeforeSaving" xml:space="preserve">
+    <value>Hãy sửa các giới hạn sau trước khi lưu:</value>
+  </data>
+  <data name="Txt_Count" xml:space="preserve">
+    <value>Số lượng</value>
+  </data>
+  <data name="Txt_CountTotal" xml:space="preserve">
+    <value>Tổng số</value>
+  </data>
+  <data name="Txt_Count_2" xml:space="preserve">
+    <value>Số lượng </value>
+  </data>
+  <data name="Txt_Critical" xml:space="preserve">
+    <value>Quan trọng</value>
+  </data>
+  <data name="Txt_CriticalSensor" xml:space="preserve">
+    <value>Cảm biến quan trọng</value>
+  </data>
+  <data name="Txt_Crosshair" xml:space="preserve">
+    <value>Đường chữ thập</value>
+  </data>
+  <data name="Txt_Cylinder" xml:space="preserve">
+    <value>Xi lanh</value>
+  </data>
+  <data name="Txt_Cylinders" xml:space="preserve">
+    <value>Xi lanh</value>
+  </data>
+  <data name="Txt_DEVICECONTROL" xml:space="preserve">
+    <value>ĐIỀU KHIỂN THIẾT BỊ</value>
+  </data>
+  <data name="Txt_DEVICESTATUS" xml:space="preserve">
+    <value>TRẠNG THÁI THIẾT BỊ</value>
+  </data>
+  <data name="Txt_DISCONNECT" xml:space="preserve">
+    <value>NGẮT KẾT NỐI</value>
+  </data>
+  <data name="Txt_DOEDetailsNeedsAppleAMEApprovalBefore" xml:space="preserve">
+    <value>Chi tiết DOE (cần Apple AME phê duyệt trước khi dùng):</value>
+  </data>
+  <data name="Txt_Daily" xml:space="preserve">
+    <value>Hằng ngày</value>
+  </data>
+  <data name="Txt_DailyMaintenance" xml:space="preserve">
+    <value>Bảo trì hằng ngày</value>
+  </data>
+  <data name="Txt_Data" xml:space="preserve">
+    <value>Dữ liệu</value>
+  </data>
+  <data name="Txt_DataBits" xml:space="preserve">
+    <value>Bit dữ liệu</value>
+  </data>
+  <data name="Txt_Datatype" xml:space="preserve">
+    <value>Kiểu dữ liệu</value>
+  </data>
+  <data name="Txt_Date" xml:space="preserve">
+    <value>Ngày</value>
+  </data>
+  <data name="Txt_Delete" xml:space="preserve">
+    <value>Xóa</value>
+  </data>
+  <data name="Txt_DetailsOfThePlannedWork" xml:space="preserve">
+    <value>Chi tiết công việc theo kế hoạch:</value>
+  </data>
+  <data name="Txt_Deviation" xml:space="preserve">
+    <value>Độ lệch</value>
+  </data>
+  <data name="Txt_DeviationTMax" xml:space="preserve">
+    <value>Độ lệch T tối đa</value>
+  </data>
+  <data name="Txt_DeviationXMax" xml:space="preserve">
+    <value>Độ lệch X tối đa</value>
+  </data>
+  <data name="Txt_DeviationYMax" xml:space="preserve">
+    <value>Độ lệch Y tối đa</value>
+  </data>
+  <data name="Txt_DeviationZMax" xml:space="preserve">
+    <value>Độ lệch Z tối đa</value>
+  </data>
+  <data name="Txt_DeviceConnections" xml:space="preserve">
+    <value>Kết nối thiết bị</value>
+  </data>
+  <data name="Txt_DeviceSettings" xml:space="preserve">
+    <value>Cài đặt thiết bị</value>
+  </data>
+  <data name="Txt_DeviceStatus" xml:space="preserve">
+    <value>Trạng thái thiết bị</value>
+  </data>
+  <data name="Txt_DeviceStatus_2" xml:space="preserve">
+    <value>Trạng thái thiết bị</value>
+  </data>
+  <data name="Txt_Dialog" xml:space="preserve">
+    <value>Hộp thoại</value>
+  </data>
+  <data name="Txt_Disable24HourDryRun" xml:space="preserve">
+    <value>Tắt chạy khô 24 giờ</value>
+  </data>
+  <data name="Txt_DisableHIVE" xml:space="preserve">
+    <value>Tắt HIVE</value>
+  </data>
+  <data name="Txt_DisableSensor" xml:space="preserve">
+    <value>Tắt cảm biến</value>
+  </data>
+  <data name="Txt_Disabled" xml:space="preserve">
+    <value>Đã tắt</value>
+  </data>
+  <data name="Txt_DisabledDefault" xml:space="preserve">
+    <value>Đã tắt (mặc định).</value>
+  </data>
+  <data name="Txt_DiscardTheChangesAndReloadTheSaved" xml:space="preserve">
+    <value>Hủy thay đổi và tải lại các giới hạn đã lưu</value>
+  </data>
+  <data name="Txt_Disconnected" xml:space="preserve">
+    <value>Mất kết nối</value>
+  </data>
+  <data name="Txt_DispensingControl" xml:space="preserve">
+    <value>Điều khiển phun keo</value>
+  </data>
+  <data name="Txt_DispensingPoseCalibration" xml:space="preserve">
+    <value>Hiệu chuẩn tư thế phun keo</value>
+  </data>
+  <data name="Txt_DispensingZAtTouch" xml:space="preserve">
+    <value>Z phun keo khi chạm</value>
+  </data>
+  <data name="Txt_DispensingZMm" xml:space="preserve">
+    <value>Z phun keo (mm)</value>
+  </data>
+  <data name="Txt_Distance" xml:space="preserve">
+    <value>Khoảng cách</value>
+  </data>
+  <data name="Txt_DoYouWantToContinue" xml:space="preserve">
+    <value>Bạn có muốn tiếp tục không?</value>
+  </data>
+  <data name="Txt_DoYouWantToSaveTheData" xml:space="preserve">
+    <value>Bạn có muốn lưu dữ liệu không?</value>
+  </data>
+  <data name="Txt_DoneNG" xml:space="preserve">
+    <value>Hoàn tất - NG</value>
+  </data>
+  <data name="Txt_DoneOK" xml:space="preserve">
+    <value>Hoàn tất - OK</value>
+  </data>
+  <data name="Txt_Downtime" xml:space="preserve">
+    <value>Thời gian dừng máy</value>
+  </data>
+  <data name="Txt_DowntimeStatisticTop10" xml:space="preserve">
+    <value>Thống kê dừng máy (Top 10)</value>
+  </data>
+  <data name="Txt_DragTheHandlesToChooseTheWindow" xml:space="preserve">
+    <value>Kéo các tay cầm để chọn khoảng thời gian trong bảy ngày qua</value>
+  </data>
+  <data name="Txt_DropsTheChangesAndShowsTheSaved" xml:space="preserve">
+    <value>Bỏ thay đổi và hiển thị các giá trị đã lưu</value>
+  </data>
+  <data name="Txt_DynamicRepeatability1CCDIsHeldStatic" xml:space="preserve">
+    <value>Độ lặp lại động_1 (CCD giữ cố định, 100 lần)</value>
+  </data>
+  <data name="Txt_DynamicRepeatability2UCIsHeldStatic" xml:space="preserve">
+    <value>Độ lặp lại động_2 (UC giữ cố định, 100 lần)</value>
+  </data>
+  <data name="Txt_EachDotIsCheckedForAreaCircularity" xml:space="preserve">
+    <value>Mỗi chấm được kiểm tra diện tích, độ tròn và khoảng cách tới điểm chuẩn; chỉ dùng các chấm hợp lệ.</value>
+  </data>
+  <data name="Txt_EachPathMustBeTheCompletePath" xml:space="preserve">
+    <value>Mỗi đường dẫn phải là đường dẫn và tên tệp đầy đủ, kèm phần mở rộng. Để trống đường dẫn của khóa khi tệp không tồn tại hoặc không được giám sát. Các khóa được đọc sau khi khởi động và mỗi lần trạng thái HIVE thay đổi; thiếu tệp sẽ khiến máy chuyển sang trạng thái dừng.</value>
+  </data>
+  <data name="Txt_Edit" xml:space="preserve">
+    <value>Sửa</value>
+  </data>
+  <data name="Txt_EditTheParametersForThisStationAnd" xml:space="preserve">
+    <value>Sửa thông số cho trạm và quy trình con này.</value>
+  </data>
+  <data name="Txt_EditingLanguage" xml:space="preserve">
+    <value>Ngôn ngữ đang sửa:</value>
+  </data>
+  <data name="Txt_EmptyImport" xml:space="preserve">
+    <value>Nhập trống</value>
+  </data>
+  <data name="Txt_Enable" xml:space="preserve">
+    <value>Bật</value>
+  </data>
+  <data name="Txt_Enable24HourDryRun" xml:space="preserve">
+    <value>Bật chạy khô 24 giờ</value>
+  </data>
+  <data name="Txt_EnableHIVE" xml:space="preserve">
+    <value>Bật HIVE</value>
+  </data>
+  <data name="Txt_EnableSensor" xml:space="preserve">
+    <value>Bật cảm biến</value>
+  </data>
+  <data name="Txt_EnableThe24HourDryRunIt" xml:space="preserve">
+    <value>Bật chạy khô 24 giờ? Chỉ dùng cho thẩm định từ xa FAT.</value>
+  </data>
+  <data name="Txt_EnabledEveryStateChangeIsSentTo" xml:space="preserve">
+    <value>Đã bật - mọi thay đổi trạng thái được gửi tới cổng HIVE.</value>
+  </data>
+  <data name="Txt_EnabledForFATRemoteQualificationOnlyIt" xml:space="preserve">
+    <value>Đã bật - chỉ dùng cho thẩm định từ xa FAT. Được đặt lại thành Tắt mỗi khi phần mềm khởi động.</value>
+  </data>
+  <data name="Txt_EndPositionMm" xml:space="preserve">
+    <value>Vị trí kết thúc (mm)</value>
+  </data>
+  <data name="Txt_EndTime" xml:space="preserve">
+    <value>Thời gian kết thúc:</value>
+  </data>
+  <data name="Txt_EndTimeIsBeforeStartTime" xml:space="preserve">
+    <value>Thời gian kết thúc sớm hơn thời gian bắt đầu.</value>
+  </data>
+  <data name="Txt_EndTime_2" xml:space="preserve">
+    <value>Thời gian kết thúc</value>
+  </data>
+  <data name="Txt_English" xml:space="preserve">
+    <value>Tiếng Anh</value>
+  </data>
+  <data name="Txt_EnterANumber" xml:space="preserve">
+    <value>Hãy nhập một số.</value>
+  </data>
+  <data name="Txt_EnterDifferentValuesInStartAndEnd" xml:space="preserve">
+    <value>Nhập các giá trị khác nhau cho vị trí bắt đầu và kết thúc</value>
+  </data>
+  <data name="Txt_EnteredByItsOwnProcedureNotFrom" xml:space="preserve">
+    <value>Được vào qua quy trình riêng, không chọn từ danh sách này.</value>
+  </data>
+  <data name="Txt_Error" xml:space="preserve">
+    <value>Lỗi</value>
+  </data>
+  <data name="Txt_ErrorCode" xml:space="preserve">
+    <value>Mã lỗi:</value>
+  </data>
+  <data name="Txt_ErrorCode_2" xml:space="preserve">
+    <value>Mã lỗi</value>
+  </data>
+  <data name="Txt_ErrorDetail" xml:space="preserve">
+    <value>Chi tiết lỗi:</value>
+  </data>
+  <data name="Txt_ErrorDetail_2" xml:space="preserve">
+    <value>Chi tiết lỗi</value>
+  </data>
+  <data name="Txt_ErrorMessage" xml:space="preserve">
+    <value>Thông báo lỗi</value>
+  </data>
+  <data name="Txt_ErrorMsg" xml:space="preserve">
+    <value>Thông báo lỗi:</value>
+  </data>
+  <data name="Txt_ErrorStatistics" xml:space="preserve">
+    <value>Thống kê lỗi</value>
+  </data>
+  <data name="Txt_EstimatedRemainingOutput" xml:space="preserve">
+    <value>Sản lượng còn lại ước tính</value>
+  </data>
+  <data name="Txt_EverythingIsWithinItsThresholds" xml:space="preserve">
+    <value>Mọi thứ đều nằm trong ngưỡng.</value>
+  </data>
+  <data name="Txt_ExitDowntimeChangeToRunning" xml:space="preserve">
+    <value>Thoát dừng máy (chuyển sang Đang chạy)</value>
+  </data>
+  <data name="Txt_Expired" xml:space="preserve">
+    <value>Đã hết hạn</value>
+  </data>
+  <data name="Txt_ExplainAndDetail" xml:space="preserve">
+    <value>Giải thích và chi tiết</value>
+  </data>
+  <data name="Txt_Export" xml:space="preserve">
+    <value>Xuất</value>
+  </data>
+  <data name="Txt_ExportAccessList" xml:space="preserve">
+    <value>Xuất danh sách truy cập</value>
+  </data>
+  <data name="Txt_ExportAllHashKeys" xml:space="preserve">
+    <value>Xuất tất cả khóa băm</value>
+  </data>
+  <data name="Txt_ExportCSV" xml:space="preserve">
+    <value>Xuất CSV</value>
+  </data>
+  <data name="Txt_ExportIsNotAvailableNoExportService" xml:space="preserve">
+    <value>Không thể xuất: chưa cấu hình dịch vụ xuất.</value>
+  </data>
+  <data name="Txt_Exposure" xml:space="preserve">
+    <value>Phơi sáng</value>
+  </data>
+  <data name="Txt_Extend" xml:space="preserve">
+    <value>Duỗi ra</value>
+  </data>
+  <data name="Txt_Extended" xml:space="preserve">
+    <value>  ·  Đã duỗi ra</value>
+  </data>
+  <data name="Txt_Extended_2" xml:space="preserve">
+    <value>·  Đã duỗi ra</value>
+  </data>
+  <data name="Txt_Extended_3" xml:space="preserve">
+    <value>Đã duỗi ra</value>
+  </data>
+  <data name="Txt_FALSELocalList" xml:space="preserve">
+    <value>FALSE (danh sách cục bộ)</value>
+  </data>
+  <data name="Txt_Fail" xml:space="preserve">
+    <value>Không đạt</value>
+  </data>
+  <data name="Txt_Failed" xml:space="preserve">
+    <value>Thất bại</value>
+  </data>
+  <data name="Txt_FailureCode" xml:space="preserve">
+    <value>Mã lỗi hỏng</value>
+  </data>
+  <data name="Txt_FeelerGauge" xml:space="preserve">
+    <value>Thước lá</value>
+  </data>
+  <data name="Txt_FiducialCentre" xml:space="preserve">
+    <value>Tâm điểm chuẩn</value>
+  </data>
+  <data name="Txt_FiducialX" xml:space="preserve">
+    <value>Điểm chuẩn X</value>
+  </data>
+  <data name="Txt_FiducialY" xml:space="preserve">
+    <value>Điểm chuẩn Y</value>
+  </data>
+  <data name="Txt_File" xml:space="preserve">
+    <value>Tệp</value>
+  </data>
+  <data name="Txt_FilePath" xml:space="preserve">
+    <value>Đường dẫn tệp</value>
+  </data>
+  <data name="Txt_FilePathSetting" xml:space="preserve">
+    <value>Cài đặt đường dẫn tệp</value>
+  </data>
+  <data name="Txt_Filter" xml:space="preserve">
+    <value>Lọc</value>
+  </data>
+  <data name="Txt_FilterValue" xml:space="preserve">
+    <value>Giá trị lọc</value>
+  </data>
+  <data name="Txt_FitANewStraightNeedle" xml:space="preserve">
+    <value>Lắp một kim mới, thẳng.</value>
+  </data>
+  <data name="Txt_FlatnessMaxMaxMin" xml:space="preserve">
+    <value>Độ phẳng tối đa (lớn nhất - nhỏ nhất)</value>
+  </data>
+  <data name="Txt_ForEachOfTheNinePointsThe" xml:space="preserve">
+    <value>Với mỗi điểm trong chín điểm, giàn di chuyển, phun một chấm cạnh điểm chuẩn và kích hoạt camera.</value>
+  </data>
+  <data name="Txt_Forward" xml:space="preserve">
+    <value>Tiến</value>
+  </data>
+  <data name="Txt_From" xml:space="preserve">
+    <value>Từ:</value>
+  </data>
+  <data name="Txt_FromTheLastRunOnThisStation" xml:space="preserve">
+    <value>Từ lần chạy gần nhất trên trạm này.</value>
+  </data>
+  <data name="Txt_Front" xml:space="preserve">
+    <value>Trước</value>
+  </data>
+  <data name="Txt_Function" xml:space="preserve">
+    <value>Chức năng</value>
+  </data>
+  <data name="Txt_Gain" xml:space="preserve">
+    <value>Độ khuếch đại</value>
+  </data>
+  <data name="Txt_Gantry" xml:space="preserve">
+    <value>Giàn</value>
+  </data>
+  <data name="Txt_GantryFront" xml:space="preserve">
+    <value>Giàn: Trước</value>
+  </data>
+  <data name="Txt_GantryRear" xml:space="preserve">
+    <value>Giàn: Sau</value>
+  </data>
+  <data name="Txt_Gantry_2" xml:space="preserve">
+    <value>Giàn:</value>
+  </data>
+  <data name="Txt_General" xml:space="preserve">
+    <value>Chung</value>
+  </data>
+  <data name="Txt_GeneralHashKey" xml:space="preserve">
+    <value>Khóa băm chung</value>
+  </data>
+  <data name="Txt_Glue" xml:space="preserve">
+    <value>Keo</value>
+  </data>
+  <data name="Txt_GlueAlert" xml:space="preserve">
+    <value>Cảnh báo keo</value>
+  </data>
+  <data name="Txt_GlueAreaMax" xml:space="preserve">
+    <value>Diện tích keo tối đa</value>
+  </data>
+  <data name="Txt_GlueAreaMin" xml:space="preserve">
+    <value>Diện tích keo tối thiểu</value>
+  </data>
+  <data name="Txt_GlueCentre" xml:space="preserve">
+    <value>Tâm keo</value>
+  </data>
+  <data name="Txt_GlueChange" xml:space="preserve">
+    <value>Thay keo</value>
+  </data>
+  <data name="Txt_GlueControl" xml:space="preserve">
+    <value>Kiểm soát keo</value>
+  </data>
+  <data name="Txt_GlueControlEarlyWarning" xml:space="preserve">
+    <value>Kiểm soát keo &amp; cảnh báo sớm</value>
+  </data>
+  <data name="Txt_GlueControlSettings" xml:space="preserve">
+    <value>Cài đặt kiểm soát keo</value>
+  </data>
+  <data name="Txt_GlueControlSettingsAreNotAvailableGlue" xml:space="preserve">
+    <value>Cài đặt kiểm soát keo không khả dụng - tình trạng keo chưa được kết nối với HMI này.</value>
+  </data>
+  <data name="Txt_GlueEmptyChangeTheCartridge" xml:space="preserve">
+    <value>Hết keo - hãy thay ống keo</value>
+  </data>
+  <data name="Txt_GluePerProductIsMoreThanThe" xml:space="preserve">
+    <value>Lượng keo mỗi sản phẩm nhiều hơn dung tích ống keo.</value>
+  </data>
+  <data name="Txt_GluePerProductMustBeANumber" xml:space="preserve">
+    <value>Lượng keo mỗi sản phẩm phải là số lớn hơn 0.</value>
+  </data>
+  <data name="Txt_GlueSN" xml:space="preserve">
+    <value>SN keo</value>
+  </data>
+  <data name="Txt_GlueSN_2" xml:space="preserve">
+    <value>SN keo:</value>
+  </data>
+  <data name="Txt_GlueToFiducialMax" xml:space="preserve">
+    <value>Khoảng cách keo tới điểm chuẩn tối đa</value>
+  </data>
+  <data name="Txt_GlueUsagePerPurge" xml:space="preserve">
+    <value>Lượng keo mỗi lần xả</value>
+  </data>
+  <data name="Txt_GlueWeighing" xml:space="preserve">
+    <value>Cân keo</value>
+  </data>
+  <data name="Txt_GlueWeighingSetting" xml:space="preserve">
+    <value>Cài đặt cân keo</value>
+  </data>
+  <data name="Txt_GlueWeighingStatistics" xml:space="preserve">
+    <value>Thống kê cân keo</value>
+  </data>
+  <data name="Txt_GlueWeightMg" xml:space="preserve">
+    <value>Khối lượng keo (mg)</value>
+  </data>
+  <data name="Txt_GlueWeightPerProduct" xml:space="preserve">
+    <value>Khối lượng keo mỗi sản phẩm</value>
+  </data>
+  <data name="Txt_GlueWeightPerProductG" xml:space="preserve">
+    <value>Khối lượng keo mỗi sản phẩm (g)</value>
+  </data>
+  <data name="Txt_GlueWeightRawData" xml:space="preserve">
+    <value>Dữ liệu thô khối lượng keo</value>
+  </data>
+  <data name="Txt_GlueWeightSPECInMg" xml:space="preserve">
+    <value>Quy cách khối lượng keo (mg)</value>
+  </data>
+  <data name="Txt_GlueX" xml:space="preserve">
+    <value>Keo X</value>
+  </data>
+  <data name="Txt_GlueY" xml:space="preserve">
+    <value>Keo Y</value>
+  </data>
+  <data name="Txt_HIVEControl" xml:space="preserve">
+    <value>Điều khiển HIVE</value>
+  </data>
+  <data name="Txt_HIVEDebugUnits" xml:space="preserve">
+    <value>HIVE - sản phẩm gỡ lỗi</value>
+  </data>
+  <data name="Txt_HIVELog" xml:space="preserve">
+    <value>Nhật ký HIVE</value>
+  </data>
+  <data name="Txt_HIVELog_2" xml:space="preserve">
+    <value>Nhật ký HIVE</value>
+  </data>
+  <data name="Txt_HIVEMachineState" xml:space="preserve">
+    <value>Trạng thái máy HIVE</value>
+  </data>
+  <data name="Txt_HIVEReportingIsNotAvailable" xml:space="preserve">
+    <value>Báo cáo HIVE không khả dụng.</value>
+  </data>
+  <data name="Txt_HIVEReportingIsNotAvailableOnThis" xml:space="preserve">
+    <value>Báo cáo HIVE không khả dụng trên máy này.</value>
+  </data>
+  <data name="Txt_HIVESetupConfigurationRemainsIncomplete" xml:space="preserve">
+    <value>Cấu hình thiết lập HIVE vẫn chưa hoàn tất</value>
+  </data>
+  <data name="Txt_HIVEState" xml:space="preserve">
+    <value>Trạng thái HIVE</value>
+  </data>
+  <data name="Txt_HIVEStateHistoryIsNotAvailableOn" xml:space="preserve">
+    <value>Lịch sử trạng thái HIVE không khả dụng trên máy này.</value>
+  </data>
+  <data name="Txt_HOMINGCONTROL" xml:space="preserve">
+    <value>ĐIỀU KHIỂN VỀ GỐC</value>
+  </data>
+  <data name="Txt_Hardware" xml:space="preserve">
+    <value>Phần cứng</value>
+  </data>
+  <data name="Txt_HardwareConfigurationRequiresLevel3" xml:space="preserve">
+    <value>Cấu hình phần cứng cần cấp 3</value>
+  </data>
+  <data name="Txt_HardwareSetting" xml:space="preserve">
+    <value>Cài đặt phần cứng</value>
+  </data>
+  <data name="Txt_HashKey" xml:space="preserve">
+    <value>Khóa băm</value>
+  </data>
+  <data name="Txt_HashKeyCheckWithMES" xml:space="preserve">
+    <value>Kiểm tra khóa băm với MES</value>
+  </data>
+  <data name="Txt_HashKeysAreNotAvailableOnThis" xml:space="preserve">
+    <value>Khóa băm không khả dụng trên máy này.</value>
+  </data>
+  <data name="Txt_Health" xml:space="preserve">
+    <value>Tình trạng</value>
+  </data>
+  <data name="Txt_Height" xml:space="preserve">
+    <value>Chiều cao</value>
+  </data>
+  <data name="Txt_HeightDifferenceMax" xml:space="preserve">
+    <value>Chênh lệch độ cao tối đa</value>
+  </data>
+  <data name="Txt_Home" xml:space="preserve">
+    <value>Trang chủ</value>
+  </data>
+  <data name="Txt_HomeEveryComponentThePLCRunsThe" xml:space="preserve">
+    <value>Đưa mọi bộ phận về gốc (PLC chạy trình tự về gốc)</value>
+  </data>
+  <data name="Txt_HomeTheMachineFirst" xml:space="preserve">
+    <value>Hãy đưa máy về gốc trước.</value>
+  </data>
+  <data name="Txt_Homing" xml:space="preserve">
+    <value>Về gốc</value>
+  </data>
+  <data name="Txt_HomingAcc" xml:space="preserve">
+    <value>Gia tốc về gốc</value>
+  </data>
+  <data name="Txt_HomingDeAcc" xml:space="preserve">
+    <value>Giảm tốc về gốc</value>
+  </data>
+  <data name="Txt_HomingDone" xml:space="preserve">
+    <value>Đã về gốc xong.</value>
+  </data>
+  <data name="Txt_HomingIsNotReportedByThePLC" xml:space="preserve">
+    <value>PLC không báo trạng thái về gốc (chưa đặt PlcHomingDoneSymbol), nên không thể bắt đầu hiệu chuẩn.</value>
+  </data>
+  <data name="Txt_HomingStarted" xml:space="preserve">
+    <value>Đã bắt đầu về gốc</value>
+  </data>
+  <data name="Txt_HomingStartedCalibrationTab" xml:space="preserve">
+    <value>Đã bắt đầu về gốc (thẻ Hiệu chuẩn)</value>
+  </data>
+  <data name="Txt_HomingVelocity" xml:space="preserve">
+    <value>Vận tốc về gốc</value>
+  </data>
+  <data name="Txt_Homing_2" xml:space="preserve">
+    <value>Đang về gốc...</value>
+  </data>
+  <data name="Txt_Hourly" xml:space="preserve">
+    <value>Hằng giờ</value>
+  </data>
+  <data name="Txt_HoursOneTime" xml:space="preserve">
+    <value>giờ/lần</value>
+  </data>
+  <data name="Txt_INPUTADDR" xml:space="preserve">
+    <value>ĐỊA CHỈ VÀO</value>
+  </data>
+  <data name="Txt_IOStepper" xml:space="preserve">
+    <value>Động cơ bước IO</value>
+  </data>
+  <data name="Txt_IOSummary" xml:space="preserve">
+    <value>Tổng hợp I/O</value>
+  </data>
+  <data name="Txt_IPAddress" xml:space="preserve">
+    <value>Địa chỉ IP</value>
+  </data>
+  <data name="Txt_Idle" xml:space="preserve">
+    <value>Chờ</value>
+  </data>
+  <data name="Txt_IgnoreLimits" xml:space="preserve">
+    <value>Bỏ qua giới hạn</value>
+  </data>
+  <data name="Txt_Image" xml:space="preserve">
+    <value>Hình ảnh</value>
+  </data>
+  <data name="Txt_ImageThreshold" xml:space="preserve">
+    <value>Ngưỡng hình ảnh</value>
+  </data>
+  <data name="Txt_ImportAccessList" xml:space="preserve">
+    <value>Nhập danh sách truy cập</value>
+  </data>
+  <data name="Txt_ImportCSV" xml:space="preserve">
+    <value>Nhập CSV</value>
+  </data>
+  <data name="Txt_InAlarm" xml:space="preserve">
+    <value>Đang báo động</value>
+  </data>
+  <data name="Txt_Information" xml:space="preserve">
+    <value>Thông tin</value>
+  </data>
+  <data name="Txt_InitiateThe24HourDryRunProcedure" xml:space="preserve">
+    <value>Chỉ khởi động quy trình chạy khô 24 giờ cho việc thẩm định từ xa FAT. Trong khi chạy khô, unit_sn và mac_addr lấy từ UUID.DLL và unique_machine_state_id lấy từ UMSID.DLL.</value>
+  </data>
+  <data name="Txt_InputName" xml:space="preserve">
+    <value>Tên đầu vào</value>
+  </data>
+  <data name="Txt_Inputs" xml:space="preserve">
+    <value>Đầu vào</value>
+  </data>
+  <data name="Txt_Item" xml:space="preserve">
+    <value>Mục</value>
+  </data>
+  <data name="Txt_JOGCONTROL" xml:space="preserve">
+    <value>ĐIỀU KHIỂN JOG</value>
+  </data>
+  <data name="Txt_Jog" xml:space="preserve">
+    <value>Jog</value>
+  </data>
+  <data name="Txt_Jog0Negative" xml:space="preserve">
+    <value>Jog {0} chiều âm</value>
+  </data>
+  <data name="Txt_Jog0Positive" xml:space="preserve">
+    <value>Jog {0} chiều dương</value>
+  </data>
+  <data name="Txt_Key" xml:space="preserve">
+    <value>Khóa</value>
+  </data>
+  <data name="Txt_KeyName" xml:space="preserve">
+    <value>Tên khóa</value>
+  </data>
+  <data name="Txt_LIVEVALUES" xml:space="preserve">
+    <value>GIÁ TRỊ TRỰC TIẾP</value>
+  </data>
+  <data name="Txt_LSLIsGreaterThanUSL" xml:space="preserve">
+    <value>LSL lớn hơn USL.</value>
+  </data>
+  <data name="Txt_LSLIsNotANumber" xml:space="preserve">
+    <value>LSL không phải là số.</value>
+  </data>
+  <data name="Txt_LSLNominalUSL" xml:space="preserve">
+    <value>LSL / Danh định / USL </value>
+  </data>
+  <data name="Txt_LSLNominalUSL_2" xml:space="preserve">
+    <value>LSL / Danh định / USL</value>
+  </data>
+  <data name="Txt_Language" xml:space="preserve">
+    <value>Ngôn ngữ:</value>
+  </data>
+  <data name="Txt_Language_2" xml:space="preserve">
+    <value>Ngôn ngữ</value>
+  </data>
+  <data name="Txt_LaserCalibration" xml:space="preserve">
+    <value>Hiệu chuẩn laser</value>
+  </data>
+  <data name="Txt_LeastSquareMethod" xml:space="preserve">
+    <value>• Phương pháp bình phương tối thiểu:</value>
+  </data>
+  <data name="Txt_LeaveALimitBlankOrTypeN" xml:space="preserve">
+    <value>Để trống giới hạn (hoặc nhập N/A) khi phía đó không có giới hạn quy cách.</value>
+  </data>
+  <data name="Txt_Level1NonCriticalEditsAtLevel" xml:space="preserve">
+    <value>Cấp 1, cấp 2 sửa mục không quan trọng, cấp 3 sửa toàn bộ.</value>
+  </data>
+  <data name="Txt_Level1ViewOnly" xml:space="preserve">
+    <value>Cấp 1 - chỉ xem</value>
+  </data>
+  <data name="Txt_Level1ViewOnlyLevel2Or" xml:space="preserve">
+    <value>Cấp 1: chỉ xem. Cấp 2 hoặc 3 có thể tắt cảm biến không quan trọng.</value>
+  </data>
+  <data name="Txt_Level2And3AreSignedOut" xml:space="preserve">
+    <value>Cấp 2 và 3 sẽ bị đăng xuất sau khoảng thời gian không thao tác này (trang 39: tối đa 5 phút).</value>
+  </data>
+  <data name="Txt_Level2Or3ToChange" xml:space="preserve">
+    <value>Cần cấp 2 hoặc 3 để thay đổi.</value>
+  </data>
+  <data name="Txt_Level2Or3ToChangeOSS" xml:space="preserve">
+    <value>Cần cấp 2 hoặc 3 để thay đổi. OSS đặt liều lượng keo và ngưỡng cảnh báo phù hợp với trạm.</value>
+  </data>
+  <data name="Txt_Level2OrLevel3IsNeeded" xml:space="preserve">
+    <value>Cần cấp 2 hoặc cấp 3 để tắt hoặc bật cảm biến.</value>
+  </data>
+  <data name="Txt_Level2UniversalChangeAccess" xml:space="preserve">
+    <value>Cấp 2 - quyền thay đổi chung</value>
+  </data>
+  <data name="Txt_Level3CanChangeAllParameters" xml:space="preserve">
+    <value>Cấp 3 - có thể thay đổi mọi thông số</value>
+  </data>
+  <data name="Txt_Level3CanChangeTheWordingSaved" xml:space="preserve">
+    <value>Cấp 3 có thể thay đổi nội dung. Thay đổi đã lưu hiển thị ngay trên màn hình.</value>
+  </data>
+  <data name="Txt_Level3ChooseEachGantrySValve" xml:space="preserve">
+    <value>Cấp 3: chọn mẫu van cho từng giàn, sau đó Lưu.</value>
+  </data>
+  <data name="Txt_Level3EverySettingOnThisPage" xml:space="preserve">
+    <value>Cấp 3: có thể thay đổi mọi cài đặt trên trang này.</value>
+  </data>
+  <data name="Txt_Level3TheListAndTheSettings" xml:space="preserve">
+    <value>Cấp 3: có thể thay đổi danh sách và cài đặt. Mọi thay đổi được ghi vào nhật ký máy.</value>
+  </data>
+  <data name="Txt_LimitsFromConfigSpecLimitsLiveValues" xml:space="preserve">
+    <value>Giới hạn lấy từ Cấu hình &gt; Giới hạn quy cách. Giá trị trực tiếp cần liên kết thông số PLC, hiện chưa được kết nối.</value>
+  </data>
+  <data name="Txt_Line" xml:space="preserve">
+    <value>Dây chuyền:</value>
+  </data>
+  <data name="Txt_LiveValues" xml:space="preserve">
+    <value>Giá trị trực tiếp</value>
+  </data>
+  <data name="Txt_LoadCells" xml:space="preserve">
+    <value>Cảm biến lực</value>
+  </data>
+  <data name="Txt_LoadConfigSaveTheHardwareConfiguration" xml:space="preserve">
+    <value>Tải cấu hình - lưu cấu hình phần cứng</value>
+  </data>
+  <data name="Txt_LocalAccessList" xml:space="preserve">
+    <value>Danh sách truy cập cục bộ</value>
+  </data>
+  <data name="Txt_Localization" xml:space="preserve">
+    <value>Bản địa hóa</value>
+  </data>
+  <data name="Txt_LocalizationEditor" xml:space="preserve">
+    <value>Trình chỉnh sửa bản địa hóa</value>
+  </data>
+  <data name="Txt_LockedThisSectionNeedsAHigherAccess" xml:space="preserve">
+    <value>Đã khóa — cần cấp truy cập cao hơn để thay đổi phần này.</value>
+  </data>
+  <data name="Txt_LongPurgeCycles" xml:space="preserve">
+    <value>Số chu kỳ xả keo dài</value>
+  </data>
+  <data name="Txt_LongPurgeDoseMustBeANumber" xml:space="preserve">
+    <value>Liều xả keo dài phải là số từ 0 trở lên.</value>
+  </data>
+  <data name="Txt_LongPurgeGlueConsumption" xml:space="preserve">
+    <value>Lượng keo tiêu thụ xả dài</value>
+  </data>
+  <data name="Txt_LongPurgeGlueUsagePerPurge" xml:space="preserve">
+    <value>Lượng keo mỗi lần xả dài</value>
+  </data>
+  <data name="Txt_LongPurgePerPurgeG" xml:space="preserve">
+    <value>Xả keo dài, mỗi lần (g)</value>
+  </data>
+  <data name="Txt_LongPurgeStatistics" xml:space="preserve">
+    <value>Thống kê xả keo dài</value>
+  </data>
+  <data name="Txt_LowGlueStagingRequested" xml:space="preserve">
+    <value>Keo thấp - đã yêu cầu chuẩn bị</value>
+  </data>
+  <data name="Txt_LowGlueThreshold" xml:space="preserve">
+    <value>Ngưỡng keo thấp (%)</value>
+  </data>
+  <data name="Txt_LowGlueThresholdMustBeAPercentage" xml:space="preserve">
+    <value>Ngưỡng keo thấp phải là phần trăm từ 0 đến 100.</value>
+  </data>
+  <data name="Txt_MANUALRESET" xml:space="preserve">
+    <value>ĐẶT LẠI THỦ CÔNG</value>
+  </data>
+  <data name="Txt_MESIsNotConfiguredOnThisMachine" xml:space="preserve">
+    <value>Máy này chưa cấu hình MES (MesUrl trong App.config), nên thẻ được kiểm tra theo danh sách bên dưới.</value>
+  </data>
+  <data name="Txt_MESIsNotConfiguredOnThisMachine_2" xml:space="preserve">
+    <value>Máy này chưa cấu hình MES (MesUrl trong App.config), nên không thể tải các khóa lên.</value>
+  </data>
+  <data name="Txt_MESIsNotConfiguredOnThisMachine_3" xml:space="preserve">
+    <value>Máy này chưa cấu hình MES: vòi phun được ghi nhận mà không kiểm tra MES.</value>
+  </data>
+  <data name="Txt_MODE" xml:space="preserve">
+    <value>CHẾ ĐỘ</value>
+  </data>
+  <data name="Txt_MOTIONCONTROL" xml:space="preserve">
+    <value>ĐIỀU KHIỂN CHUYỂN ĐỘNG</value>
+  </data>
+  <data name="Txt_MSHash" xml:space="preserve">
+    <value>MS_Hash:</value>
+  </data>
+  <data name="Txt_Machine" xml:space="preserve">
+    <value>Số máy:</value>
+  </data>
+  <data name="Txt_MachineConfigs" xml:space="preserve">
+    <value>Cấu hình máy</value>
+  </data>
+  <data name="Txt_MachineHomed" xml:space="preserve">
+    <value>Máy đã về gốc.</value>
+  </data>
+  <data name="Txt_MachineLog" xml:space="preserve">
+    <value>Nhật ký máy</value>
+  </data>
+  <data name="Txt_MachineLog_2" xml:space="preserve">
+    <value>Nhật ký máy</value>
+  </data>
+  <data name="Txt_Machine_2" xml:space="preserve">
+    <value>Máy:</value>
+  </data>
+  <data name="Txt_Machine_3" xml:space="preserve">
+    <value>Máy</value>
+  </data>
+  <data name="Txt_MainSW" xml:space="preserve">
+    <value>Phần mềm chính</value>
+  </data>
+  <data name="Txt_MainSWPath" xml:space="preserve">
+    <value>Đường dẫn phần mềm chính:</value>
+  </data>
+  <data name="Txt_MaintenanceMode" xml:space="preserve">
+    <value>Chế độ bảo trì</value>
+  </data>
+  <data name="Txt_MaintenanceStations" xml:space="preserve">
+    <value>Trạm bảo trì</value>
+  </data>
+  <data name="Txt_Manual" xml:space="preserve">
+    <value>Thủ công</value>
+  </data>
+  <data name="Txt_ManualDowntime" xml:space="preserve">
+    <value>Dừng máy thủ công</value>
+  </data>
+  <data name="Txt_ManualScreen" xml:space="preserve">
+    <value>Màn hình thủ công</value>
+  </data>
+  <data name="Txt_ManuallyDisabled" xml:space="preserve">
+    <value>Đã tắt thủ công</value>
+  </data>
+  <data name="Txt_MaterialReplacement" xml:space="preserve">
+    <value>Thay vật liệu</value>
+  </data>
+  <data name="Txt_Max" xml:space="preserve">
+    <value>Tối đa</value>
+  </data>
+  <data name="Txt_MaxLimit" xml:space="preserve">
+    <value>Giới hạn tối đa</value>
+  </data>
+  <data name="Txt_MaxMin" xml:space="preserve">
+    <value>Lớn nhất - nhỏ nhất</value>
+  </data>
+  <data name="Txt_MaxMinOfTheHeightsMustBe" xml:space="preserve">
+    <value>Chênh lệch lớn nhất - nhỏ nhất của các độ cao phải nằm trong giới hạn; nếu không, bù bằng A / R rồi lặp lại, hoặc điều chỉnh cơ khí.</value>
+  </data>
+  <data name="Txt_MaxMinOfTheTwoHeightsMust" xml:space="preserve">
+    <value>Chênh lệch lớn nhất - nhỏ nhất của hai độ cao phải nằm trong giới hạn; nếu không, hãy điều chỉnh cơ khí.</value>
+  </data>
+  <data name="Txt_MaxWeightPerCartridgeG" xml:space="preserve">
+    <value>Khối lượng tối đa mỗi ống keo (g)</value>
+  </data>
+  <data name="Txt_MaxWeightPerGlueCartridge" xml:space="preserve">
+    <value>Khối lượng tối đa mỗi ống keo</value>
+  </data>
+  <data name="Txt_Maximum" xml:space="preserve">
+    <value>Tối đa</value>
+  </data>
+  <data name="Txt_Mean" xml:space="preserve">
+    <value>Trung bình </value>
+  </data>
+  <data name="Txt_Mean_2" xml:space="preserve">
+    <value>Trung bình</value>
+  </data>
+  <data name="Txt_Measured" xml:space="preserve">
+    <value>Giá trị đo</value>
+  </data>
+  <data name="Txt_MeasuringValuesFillInAsThePLC" xml:space="preserve">
+    <value>Đang đo - các giá trị sẽ được điền khi PLC báo về.</value>
+  </data>
+  <data name="Txt_Message" xml:space="preserve">
+    <value>Thông báo</value>
+  </data>
+  <data name="Txt_Min" xml:space="preserve">
+    <value>Tối thiểu</value>
+  </data>
+  <data name="Txt_MinLimit" xml:space="preserve">
+    <value>Giới hạn tối thiểu</value>
+  </data>
+  <data name="Txt_MinToMax" xml:space="preserve">
+    <value>Từ nhỏ nhất đến lớn nhất </value>
+  </data>
+  <data name="Txt_MinToMax_2" xml:space="preserve">
+    <value>Từ nhỏ nhất đến lớn nhất</value>
+  </data>
+  <data name="Txt_Minimum" xml:space="preserve">
+    <value>Tối thiểu</value>
+  </data>
+  <data name="Txt_ModeChanged" xml:space="preserve">
+    <value>Đã đổi chế độ</value>
+  </data>
+  <data name="Txt_MotionControl" xml:space="preserve">
+    <value>Điều khiển chuyển động</value>
+  </data>
+  <data name="Txt_Move" xml:space="preserve">
+    <value>Di chuyển</value>
+  </data>
+  <data name="Txt_MustBeAValidInteger" xml:space="preserve">
+    <value>Phải là số nguyên hợp lệ.</value>
+  </data>
+  <data name="Txt_MustBeAValidNumericValue" xml:space="preserve">
+    <value>Phải là giá trị số hợp lệ.</value>
+  </data>
+  <data name="Txt_MustBeGreaterThanOrEqualTo" xml:space="preserve">
+    <value>Phải lớn hơn hoặc bằng 0.</value>
+  </data>
+  <data name="Txt_Mute" xml:space="preserve">
+    <value>Tắt tiếng</value>
+  </data>
+  <data name="Txt_Name" xml:space="preserve">
+    <value>Tên</value>
+  </data>
+  <data name="Txt_NeedleChange" xml:space="preserve">
+    <value>Thay kim</value>
+  </data>
+  <data name="Txt_NeedleDeviationCheckCCD3" xml:space="preserve">
+    <value>Kiểm tra độ lệch kim (CCD3)</value>
+  </data>
+  <data name="Txt_NeedleHeightFeelerGauge" xml:space="preserve">
+    <value>Chiều cao kim (thước lá)</value>
+  </data>
+  <data name="Txt_NeedleOffsetCCD1CCD2" xml:space="preserve">
+    <value>Độ lệch kim (CCD1 / CCD2)</value>
+  </data>
+  <data name="Txt_NeedleTemplateTeachCCD3" xml:space="preserve">
+    <value>Dạy mẫu kim (CCD3)</value>
+  </data>
+  <data name="Txt_NeedleZZeroTouchSensor" xml:space="preserve">
+    <value>Đặt không Z cho kim (cảm biến chạm)</value>
+  </data>
+  <data name="Txt_NeedsALevel2OrLevel3" xml:space="preserve">
+    <value>Cần thẻ cấp 2 hoặc cấp 3</value>
+  </data>
+  <data name="Txt_NeedsTwoStepVerification" xml:space="preserve">
+    <value>Cần xác minh hai bước</value>
+  </data>
+  <data name="Txt_NegativeLimit" xml:space="preserve">
+    <value>Giới hạn âm</value>
+  </data>
+  <data name="Txt_Network" xml:space="preserve">
+    <value>Mạng</value>
+  </data>
+  <data name="Txt_NetworkAnomaliesOccur" xml:space="preserve">
+    <value>Xảy ra sự cố mạng</value>
+  </data>
+  <data name="Txt_New0" xml:space="preserve">
+    <value>{0} mới:</value>
+  </data>
+  <data name="Txt_No" xml:space="preserve">
+    <value>Không</value>
+  </data>
+  <data name="Txt_NoAccess" xml:space="preserve">
+    <value>Không có quyền truy cập</value>
+  </data>
+  <data name="Txt_NoAlarmLogIsConfiguredOnThis" xml:space="preserve">
+    <value>Máy này chưa cấu hình nhật ký báo động.</value>
+  </data>
+  <data name="Txt_NoAlarmsInThisWindow" xml:space="preserve">
+    <value>Không có báo động trong khoảng thời gian này.</value>
+  </data>
+  <data name="Txt_NoAnswerFromMES" xml:space="preserve">
+    <value>Không có phản hồi từ MES</value>
+  </data>
+  <data name="Txt_NoCalibrationHasBeenRecordedForThis" xml:space="preserve">
+    <value>Chưa có bản ghi hiệu chuẩn cho giàn và đường dẫn này.</value>
+  </data>
+  <data name="Txt_NoCalibrationStatusFromThePLC" xml:space="preserve">
+    <value>Không có trạng thái hiệu chuẩn từ PLC.</value>
+  </data>
+  <data name="Txt_NoCoordinatesWereMeasuredInThisWindow" xml:space="preserve">
+    <value>Không đo được tọa độ nào trong khoảng thời gian này.</value>
+  </data>
+  <data name="Txt_NoFields" xml:space="preserve">
+    <value>Không có trường</value>
+  </data>
+  <data name="Txt_NoFieldsSelectedPleaseTickPDATAItems" xml:space="preserve">
+    <value>Chưa chọn trường nào. Hãy đánh dấu các mục PDATA trong danh sách trước.</value>
+  </data>
+  <data name="Txt_NoFrameCaptured" xml:space="preserve">
+    <value>chưa chụp được khung hình</value>
+  </data>
+  <data name="Txt_NoFrontGantryWeighingsForThisPath" xml:space="preserve">
+    <value>Không có lần cân giàn trước nào cho đường dẫn này trong khoảng thời gian.</value>
+  </data>
+  <data name="Txt_NoGlueCartridgeData" xml:space="preserve">
+    <value>Không có dữ liệu ống keo.</value>
+  </data>
+  <data name="Txt_NoHIVEStateChangesRecordedInThe" xml:space="preserve">
+    <value>Không có thay đổi trạng thái HIVE nào được ghi nhận trong bảy ngày qua.</value>
+  </data>
+  <data name="Txt_NoHardwareSubsystemsAreListedAddThem" xml:space="preserve">
+    <value>Chưa liệt kê hệ thống con phần cứng nào. Hãy thêm vào mục "Hardware" trong Data\Settings\StationOptions.json.</value>
+  </data>
+  <data name="Txt_NoImageSourceIsConfiguredAppConfig" xml:space="preserve">
+    <value>Chưa cấu hình nguồn hình ảnh (VisionImageFolder trong App.config): hãy đặt thành thư mục mà phần mềm thị giác lưu ảnh.</value>
+  </data>
+  <data name="Txt_NoLimitsWereChanged" xml:space="preserve">
+    <value>Không có giới hạn nào được thay đổi.</value>
+  </data>
+  <data name="Txt_NoNozzleHealthFromMES" xml:space="preserve">
+    <value>Không có tình trạng vòi phun từ MES.</value>
+  </data>
+  <data name="Txt_NoPDATANamesFoundInTheCSV" xml:space="preserve">
+    <value>Không tìm thấy tên PDATA trong tệp CSV.</value>
+  </data>
+  <data name="Txt_NoPLCStatus" xml:space="preserve">
+    <value>Không có trạng thái PLC</value>
+  </data>
+  <data name="Txt_NoPlannedDowntimeReasonCanBeChosen" xml:space="preserve">
+    <value>Hiện không thể chọn lý do dừng máy theo kế hoạch.</value>
+  </data>
+  <data name="Txt_NoProductionRecordIsConfiguredOnThis" xml:space="preserve">
+    <value>Máy này chưa cấu hình bản ghi sản xuất.</value>
+  </data>
+  <data name="Txt_NoProductionRecordOnThisMachine" xml:space="preserve">
+    <value>Không có bản ghi sản xuất trên máy này.</value>
+  </data>
+  <data name="Txt_NoProductionSpecLimitsAreSetConfig" xml:space="preserve">
+    <value>Chưa đặt giới hạn quy cách sản xuất (Cấu hình &gt; Giới hạn quy cách).</value>
+  </data>
+  <data name="Txt_NoProfileToSave" xml:space="preserve">
+    <value>Không có hồ sơ để lưu.</value>
+  </data>
+  <data name="Txt_NoRearGantryWeighingsForThisPath" xml:space="preserve">
+    <value>Không có lần cân giàn sau nào cho đường dẫn này trong khoảng thời gian.</value>
+  </data>
+  <data name="Txt_NoRecord" xml:space="preserve">
+    <value>Không có bản ghi</value>
+  </data>
+  <data name="Txt_NoResponse" xml:space="preserve">
+    <value>(không có phản hồi)</value>
+  </data>
+  <data name="Txt_NoResultFromThePLCForThis" xml:space="preserve">
+    <value>PLC chưa trả kết quả cho quy trình con này trên trạm này.</value>
+  </data>
+  <data name="Txt_NoSFCServerIsAvailableThereIs" xml:space="preserve">
+    <value>Không có máy chủ SFC: bản dựng này chưa có máy khách SFC.</value>
+  </data>
+  <data name="Txt_NoSpecLimitsAreConfiguredOnThis" xml:space="preserve">
+    <value>Máy này chưa cấu hình giới hạn quy cách.</value>
+  </data>
+  <data name="Txt_NoStationProfileIsConfiguredOnThis" xml:space="preserve">
+    <value>Máy này chưa cấu hình hồ sơ trạm.</value>
+  </data>
+  <data name="Txt_NoTextInThisLanguageEnglishIs" xml:space="preserve">
+    <value>Chưa có văn bản cho ngôn ngữ này - hiển thị tiếng Anh</value>
+  </data>
+  <data name="Txt_NoUnitHasBeenRecordedToday" xml:space="preserve">
+    <value>Hôm nay chưa ghi nhận sản phẩm nào.</value>
+  </data>
+  <data name="Txt_NoValveModelIsSetForThis" xml:space="preserve">
+    <value>Giàn này chưa đặt mẫu van. Hãy chọn trong Cài đặt &gt; Mẫu van trước.</value>
+  </data>
+  <data name="Txt_NoValveSNIsRecordedForThis" xml:space="preserve">
+    <value>Giàn này chưa ghi nhận SN van. Hãy thực hiện Thay van (PD-04) trước.</value>
+  </data>
+  <data name="Txt_Nominal" xml:space="preserve">
+    <value>Danh định</value>
+  </data>
+  <data name="Txt_NominalMg" xml:space="preserve">
+    <value>Danh định (mg)</value>
+  </data>
+  <data name="Txt_NoneRecorded" xml:space="preserve">
+    <value>(chưa ghi nhận)</value>
+  </data>
+  <data name="Txt_Normal" xml:space="preserve">
+    <value>Bình thường</value>
+  </data>
+  <data name="Txt_NormalProduction" xml:space="preserve">
+    <value>Sản xuất bình thường</value>
+  </data>
+  <data name="Txt_NotANumber" xml:space="preserve">
+    <value>Không phải là số</value>
+  </data>
+  <data name="Txt_NotAStandardValveSNXXXYYY" xml:space="preserve">
+    <value>Không phải SN van tiêu chuẩn (XXX-YYY-001_YYMMDD). Vui lòng quét lại.</value>
+  </data>
+  <data name="Txt_NotAvailable" xml:space="preserve">
+    <value>Không khả dụng</value>
+  </data>
+  <data name="Txt_NotBuiltYet" xml:space="preserve">
+    <value>Chưa được xây dựng</value>
+  </data>
+  <data name="Txt_NotHomedHomeTheMachineBeforeCalibrating" xml:space="preserve">
+    <value>Chưa về gốc: hãy đưa máy về gốc trước khi hiệu chuẩn.</value>
+  </data>
+  <data name="Txt_NotMonitored" xml:space="preserve">
+    <value>Không giám sát</value>
+  </data>
+  <data name="Txt_NotReadYet" xml:space="preserve">
+    <value>Chưa đọc</value>
+  </data>
+  <data name="Txt_NotSignedInClickToSignIn" xml:space="preserve">
+    <value>Chưa đăng nhập - nhấn để đăng nhập</value>
+  </data>
+  <data name="Txt_NothingHasRunSinceThePLCStarted" xml:space="preserve">
+    <value>Chưa có gì chạy kể từ khi PLC khởi động.</value>
+  </data>
+  <data name="Txt_NothingLoggedYet" xml:space="preserve">
+    <value>Chưa có nhật ký.</value>
+  </data>
+  <data name="Txt_NozzleChange" xml:space="preserve">
+    <value>Thay vòi phun</value>
+  </data>
+  <data name="Txt_NozzleCriticalH" xml:space="preserve">
+    <value>Vòi phun nghiêm trọng (giờ)</value>
+  </data>
+  <data name="Txt_NozzleCriticalLevelMustBeANumber" xml:space="preserve">
+    <value>Mức nghiêm trọng của vòi phun phải là số giờ lớn hơn 0.</value>
+  </data>
+  <data name="Txt_NozzleHealth" xml:space="preserve">
+    <value>Tình trạng vòi phun</value>
+  </data>
+  <data name="Txt_NozzleID" xml:space="preserve">
+    <value>ID vòi phun</value>
+  </data>
+  <data name="Txt_NozzleSN" xml:space="preserve">
+    <value>SN vòi phun:</value>
+  </data>
+  <data name="Txt_NozzleWarningH" xml:space="preserve">
+    <value>Cảnh báo vòi phun (giờ)</value>
+  </data>
+  <data name="Txt_NozzleWarningMustBeANumberOf" xml:space="preserve">
+    <value>Cảnh báo vòi phun phải là số giờ lớn hơn 0.</value>
+  </data>
+  <data name="Txt_OFFDefault" xml:space="preserve">
+    <value>TẮT (Mặc định)</value>
+  </data>
+  <data name="Txt_OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Txt_ON" xml:space="preserve">
+    <value>BẬT</value>
+  </data>
+  <data name="Txt_ONLINE" xml:space="preserve">
+    <value>TRỰC TUYẾN</value>
+  </data>
+  <data name="Txt_ONOFF" xml:space="preserve">
+    <value>BẬT/TẮT</value>
+  </data>
+  <data name="Txt_ONTurnsTheHomePageStationCard" xml:space="preserve">
+    <value>BẬT sẽ làm thẻ trạm ở trang chủ chuyển màu cam và ghi mọi gói machine_state vào nhật ký thẩm định từ xa (HIVE log \ RemoteQualification, mỗi dòng một JSON, S2.4).</value>
+  </data>
+  <data name="Txt_OUTPUTADDR" xml:space="preserve">
+    <value>ĐỊA CHỈ RA</value>
+  </data>
+  <data name="Txt_Off" xml:space="preserve">
+    <value>Tắt</value>
+  </data>
+  <data name="Txt_OfflineProcessing" xml:space="preserve">
+    <value>Xử lý ngoại tuyến</value>
+  </data>
+  <data name="Txt_Offset" xml:space="preserve">
+    <value>Độ lệch</value>
+  </data>
+  <data name="Txt_OffsetXMax" xml:space="preserve">
+    <value>Độ lệch X tối đa</value>
+  </data>
+  <data name="Txt_OffsetYMax" xml:space="preserve">
+    <value>Độ lệch Y tối đa</value>
+  </data>
+  <data name="Txt_Old0" xml:space="preserve">
+    <value>{0} cũ:</value>
+  </data>
+  <data name="Txt_Ongoing" xml:space="preserve">
+    <value>Đang diễn ra</value>
+  </data>
+  <data name="Txt_OnlyALevel3UserCanChange" xml:space="preserve">
+    <value>Chỉ người dùng cấp 3 mới có thể thay đổi nội dung hiển thị trên màn hình.</value>
+  </data>
+  <data name="Txt_OnlyEnabledWhenAnAdminLevel3" xml:space="preserve">
+    <value>Chỉ bật khi người dùng Quản trị (cấp 3) đăng nhập.</value>
+  </data>
+  <data name="Txt_OpenAlarmPage" xml:space="preserve">
+    <value>Mở trang báo động ›</value>
+  </data>
+  <data name="Txt_OpenTheAlarmPage" xml:space="preserve">
+    <value>Mở trang báo động</value>
+  </data>
+  <data name="Txt_OpenTheDataPage" xml:space="preserve">
+    <value>Mở trang dữ liệu</value>
+  </data>
+  <data name="Txt_Operator" xml:space="preserve">
+    <value>Người vận hành:</value>
+  </data>
+  <data name="Txt_OperatorCheck" xml:space="preserve">
+    <value>Người vận hành kiểm tra</value>
+  </data>
+  <data name="Txt_Operator_2" xml:space="preserve">
+    <value>Người vận hành</value>
+  </data>
+  <data name="Txt_Options" xml:space="preserve">
+    <value>Tùy chọn</value>
+  </data>
+  <data name="Txt_Organization" xml:space="preserve">
+    <value>Tổ chức</value>
+  </data>
+  <data name="Txt_Other" xml:space="preserve">
+    <value>Khác</value>
+  </data>
+  <data name="Txt_OutOfSpec" xml:space="preserve">
+    <value>Ngoài quy cách</value>
+  </data>
+  <data name="Txt_OutputCT" xml:space="preserve">
+    <value>CT đầu ra</value>
+  </data>
+  <data name="Txt_OutputCTSByShift" xml:space="preserve">
+    <value>CT đầu ra (giây) theo ca</value>
+  </data>
+  <data name="Txt_OutputName" xml:space="preserve">
+    <value>Tên đầu ra</value>
+  </data>
+  <data name="Txt_OutputUnitsByShift" xml:space="preserve">
+    <value>Sản lượng theo ca</value>
+  </data>
+  <data name="Txt_Outputs" xml:space="preserve">
+    <value>Đầu ra</value>
+  </data>
+  <data name="Txt_PD15UploadedHashKeysToMES" xml:space="preserve">
+    <value>PD-15 Đã tải khóa băm lên MES</value>
+  </data>
+  <data name="Txt_PDATAList" xml:space="preserve">
+    <value>Danh sách PDATA</value>
+  </data>
+  <data name="Txt_PDATAMapping" xml:space="preserve">
+    <value>Ánh xạ PDATA</value>
+  </data>
+  <data name="Txt_POINTTOPOINTCONTROL" xml:space="preserve">
+    <value>ĐIỀU KHIỂN ĐIỂM ĐẾN ĐIỂM</value>
+  </data>
+  <data name="Txt_POSITIONMM" xml:space="preserve">
+    <value>VỊ TRÍ (MM)</value>
+  </data>
+  <data name="Txt_Parameter" xml:space="preserve">
+    <value>Thông số</value>
+  </data>
+  <data name="Txt_ParameterDashboard" xml:space="preserve">
+    <value>Bảng thông số</value>
+  </data>
+  <data name="Txt_Parameters0" xml:space="preserve">
+    <value>Thông số - {0}</value>
+  </data>
+  <data name="Txt_Pass" xml:space="preserve">
+    <value>Đạt</value>
+  </data>
+  <data name="Txt_PassFailUnits" xml:space="preserve">
+    <value>Sản phẩm đạt / không đạt</value>
+  </data>
+  <data name="Txt_Path" xml:space="preserve">
+    <value>Đường dẫn</value>
+  </data>
+  <data name="Txt_Pause" xml:space="preserve">
+    <value>Tạm dừng</value>
+  </data>
+  <data name="Txt_PauseTheMachine" xml:space="preserve">
+    <value>Tạm dừng máy</value>
+  </data>
+  <data name="Txt_Paused" xml:space="preserve">
+    <value>Đã tạm dừng</value>
+  </data>
+  <data name="Txt_PictureQtyCheck" xml:space="preserve">
+    <value>Kiểm tra số lượng ảnh</value>
+  </data>
+  <data name="Txt_PictureQtyCheckEdit" xml:space="preserve">
+    <value>Kiểm tra số lượng ảnh - Sửa</value>
+  </data>
+  <data name="Txt_PitchMm" xml:space="preserve">
+    <value>Bước (mm)</value>
+  </data>
+  <data name="Txt_PlaceTheCalibrationPlateOnTheFixture" xml:space="preserve">
+    <value>Đặt tấm hiệu chuẩn lên đồ gá; cảm biến hiện diện sẽ phát hiện nó.</value>
+  </data>
+  <data name="Txt_PlaceTheCalibrationPlateWithTheAngled" xml:space="preserve">
+    <value>Đặt tấm hiệu chuẩn có khối nghiêng lên đồ gá; cảm biến hiện diện sẽ phát hiện nó.</value>
+  </data>
+  <data name="Txt_PlaceTheCameraCheckerSheetUnderThe" xml:space="preserve">
+    <value>Đặt tấm kiểm tra camera dưới camera của trạm; PLC sẽ kiểm tra ánh sáng và lấy nét.</value>
+  </data>
+  <data name="Txt_PlaceTheFiveAxisCalibrationPlateOn" xml:space="preserve">
+    <value>Đặt tấm hiệu chuẩn năm trục lên đồ gá; cảm biến hiện diện sẽ phát hiện nó.</value>
+  </data>
+  <data name="Txt_PlaceTheNeedleCalibrationPlateWithThe" xml:space="preserve">
+    <value>Đặt tấm hiệu chuẩn kim có điểm chuẩn tham chiếu dưới camera của trạm.</value>
+  </data>
+  <data name="Txt_Placeholder" xml:space="preserve">
+    <value>Chỗ giữ chỗ</value>
+  </data>
+  <data name="Txt_PlannedDowntime" xml:space="preserve">
+    <value>Dừng máy theo kế hoạch</value>
+  </data>
+  <data name="Txt_PlannedDowntime0" xml:space="preserve">
+    <value>Dừng máy theo kế hoạch - {0}</value>
+  </data>
+  <data name="Txt_Play" xml:space="preserve">
+    <value>Phát</value>
+  </data>
+  <data name="Txt_PleaseCorrectInvalidValuesBeforeSaving" xml:space="preserve">
+    <value>Vui lòng sửa các giá trị không hợp lệ trước khi lưu.</value>
+  </data>
+  <data name="Txt_PleaseEnterASpeedGreaterThan0" xml:space="preserve">
+    <value>Vui lòng nhập tốc độ lớn hơn 0, hoặc để trống để dùng tốc độ đã cấu hình.</value>
+  </data>
+  <data name="Txt_PleaseEnterAValidPosition" xml:space="preserve">
+    <value>Vui lòng nhập vị trí hợp lệ.</value>
+  </data>
+  <data name="Txt_PleaseEnterAValidSpeed" xml:space="preserve">
+    <value>Vui lòng nhập tốc độ hợp lệ.</value>
+  </data>
+  <data name="Txt_PleaseEnterSpeedGreaterThan0And" xml:space="preserve">
+    <value>Vui lòng nhập tốc độ lớn hơn 0 và nhỏ hơn tốc độ trong thông số trục</value>
+  </data>
+  <data name="Txt_PleaseEnterTheVelocityForHoming" xml:space="preserve">
+    <value>Vui lòng nhập vận tốc về gốc</value>
+  </data>
+  <data name="Txt_PleaseSwipeAgain" xml:space="preserve">
+    <value>Vui lòng quẹt lại.</value>
+  </data>
+  <data name="Txt_Point" xml:space="preserve">
+    <value>Điểm</value>
+  </data>
+  <data name="Txt_Point1" xml:space="preserve">
+    <value>Điểm 1</value>
+  </data>
+  <data name="Txt_Point2" xml:space="preserve">
+    <value>Điểm 2</value>
+  </data>
+  <data name="Txt_Point3" xml:space="preserve">
+    <value>Điểm 3</value>
+  </data>
+  <data name="Txt_Point4" xml:space="preserve">
+    <value>Điểm 4</value>
+  </data>
+  <data name="Txt_PointName" xml:space="preserve">
+    <value>Tên điểm:</value>
+  </data>
+  <data name="Txt_PointPitchX" xml:space="preserve">
+    <value>Bước điểm X</value>
+  </data>
+  <data name="Txt_PointPitchY" xml:space="preserve">
+    <value>Bước điểm Y</value>
+  </data>
+  <data name="Txt_Port" xml:space="preserve">
+    <value>Cổng</value>
+  </data>
+  <data name="Txt_Position" xml:space="preserve">
+    <value>Vị trí</value>
+  </data>
+  <data name="Txt_PositionMm" xml:space="preserve">
+    <value>Vị trí (mm)</value>
+  </data>
+  <data name="Txt_PositiveLimit" xml:space="preserve">
+    <value>Giới hạn dương</value>
+  </data>
+  <data name="Txt_PotLife" xml:space="preserve">
+    <value>Thời gian sử dụng</value>
+  </data>
+  <data name="Txt_PotLifeThreshold" xml:space="preserve">
+    <value>Ngưỡng thời gian sử dụng</value>
+  </data>
+  <data name="Txt_PotLifeThresholdH" xml:space="preserve">
+    <value>Ngưỡng thời gian sử dụng (giờ)</value>
+  </data>
+  <data name="Txt_PotLifeWarningMustBeANumber" xml:space="preserve">
+    <value>Cảnh báo thời gian sử dụng phải là số giờ lớn hơn 0.</value>
+  </data>
+  <data name="Txt_Prefix" xml:space="preserve">
+    <value>Tiền tố</value>
+  </data>
+  <data name="Txt_PressAndHold" xml:space="preserve">
+    <value>Nhấn và giữ</value>
+  </data>
+  <data name="Txt_PressEditToChangeTheMapping" xml:space="preserve">
+    <value>Nhấn Sửa để thay đổi ánh xạ.</value>
+  </data>
+  <data name="Txt_Preview" xml:space="preserve">
+    <value>Xem trước</value>
+  </data>
+  <data name="Txt_PriorApprovalMustBeObtainedFromCM" xml:space="preserve">
+    <value>Phải được CM/BUD phê duyệt trước khi thực hiện. Chỉ được tắt HIVE khi xảy ra sự cố mạng hoặc khi cấu hình thiết lập HIVE vẫn chưa hoàn tất.</value>
+  </data>
+  <data name="Txt_Priority" xml:space="preserve">
+    <value>Mức ưu tiên</value>
+  </data>
+  <data name="Txt_Procedure" xml:space="preserve">
+    <value>Quy trình</value>
+  </data>
+  <data name="Txt_ProcessingDowntime" xml:space="preserve">
+    <value>Xử lý dừng máy</value>
+  </data>
+  <data name="Txt_ProdType" xml:space="preserve">
+    <value>Loại sản phẩm:</value>
+  </data>
+  <data name="Txt_ProductionGlueConsumption" xml:space="preserve">
+    <value>Lượng keo tiêu thụ sản xuất</value>
+  </data>
+  <data name="Txt_Project" xml:space="preserve">
+    <value>Dự án</value>
+  </data>
+  <data name="Txt_ProjectCode" xml:space="preserve">
+    <value>Mã dự án:</value>
+  </data>
+  <data name="Txt_PulsesMm" xml:space="preserve">
+    <value>Xung / mm</value>
+  </data>
+  <data name="Txt_PurgeCycles" xml:space="preserve">
+    <value>Số chu kỳ xả keo</value>
+  </data>
+  <data name="Txt_QtyProduced" xml:space="preserve">
+    <value>Số lượng đã sản xuất</value>
+  </data>
+  <data name="Txt_Query" xml:space="preserve">
+    <value>Truy vấn</value>
+  </data>
+  <data name="Txt_QueryPreview" xml:space="preserve">
+    <value>Xem trước truy vấn</value>
+  </data>
+  <data name="Txt_Question" xml:space="preserve">
+    <value>Câu hỏi</value>
+  </data>
+  <data name="Txt_RAxis" xml:space="preserve">
+    <value>Trục R (°)</value>
+  </data>
+  <data name="Txt_RAxisAngle" xml:space="preserve">
+    <value>Góc trục R</value>
+  </data>
+  <data name="Txt_RECEIVEDDATASTREAM" xml:space="preserve">
+    <value>LUỒNG DỮ LIỆU NHẬN ĐƯỢC</value>
+  </data>
+  <data name="Txt_RECEIVEDRESPONSE" xml:space="preserve">
+    <value>PHẢN HỒI NHẬN ĐƯỢC</value>
+  </data>
+  <data name="Txt_RPOS" xml:space="preserve">
+    <value>VỊ TRÍ R</value>
+  </data>
+  <data name="Txt_ReadOnlyChangingThePDATAMappingNeeds" xml:space="preserve">
+    <value>Chỉ đọc. Thay đổi ánh xạ PDATA cần cấp 3.</value>
+  </data>
+  <data name="Txt_ReadOnlyChangingTheValveModelNeeds" xml:space="preserve">
+    <value>Chỉ đọc. Thay đổi mẫu van cần cấp 3.</value>
+  </data>
+  <data name="Txt_Ready" xml:space="preserve">
+    <value>Sẵn sàng</value>
+  </data>
+  <data name="Txt_ReadyForProcedure" xml:space="preserve">
+    <value>Sẵn sàng cho quy trình</value>
+  </data>
+  <data name="Txt_Rear" xml:space="preserve">
+    <value>Sau</value>
+  </data>
+  <data name="Txt_Reason" xml:space="preserve">
+    <value>Lý do:</value>
+  </data>
+  <data name="Txt_ReasonNotRecorded" xml:space="preserve">
+    <value>Không ghi lý do</value>
+  </data>
+  <data name="Txt_RecentUnits" xml:space="preserve">
+    <value>Sản phẩm gần đây</value>
+  </data>
+  <data name="Txt_Recipe" xml:space="preserve">
+    <value>Công thức</value>
+  </data>
+  <data name="Txt_Refresh" xml:space="preserve">
+    <value>Làm mới</value>
+  </data>
+  <data name="Txt_RefreshAllHashKeys" xml:space="preserve">
+    <value>Làm mới tất cả khóa băm</value>
+  </data>
+  <data name="Txt_Regression" xml:space="preserve">
+    <value>Hồi quy</value>
+  </data>
+  <data name="Txt_RegressionCalibration" xml:space="preserve">
+    <value>Hiệu chuẩn hồi quy:</value>
+  </data>
+  <data name="Txt_Reject" xml:space="preserve">
+    <value>Từ chối</value>
+  </data>
+  <data name="Txt_Relative" xml:space="preserve">
+    <value>Tương đối</value>
+  </data>
+  <data name="Txt_Remaining" xml:space="preserve">
+    <value>Còn lại %</value>
+  </data>
+  <data name="Txt_RemainingGlueWeight" xml:space="preserve">
+    <value>Khối lượng keo còn lại</value>
+  </data>
+  <data name="Txt_RemainingPotLifeHours" xml:space="preserve">
+    <value>Thời gian sử dụng còn lại (giờ)</value>
+  </data>
+  <data name="Txt_RemainingPotLifeOfGlueHours" xml:space="preserve">
+    <value>Thời gian sử dụng còn lại của keo (giờ)</value>
+  </data>
+  <data name="Txt_RemoteQualification" xml:space="preserve">
+    <value>Thẩm định từ xa</value>
+  </data>
+  <data name="Txt_ReplaceItWithTheGlueCalibrationBlock" xml:space="preserve">
+    <value>Thay bằng khối hiệu chuẩn keo; cả chín điểm chuẩn phải sạch và nhìn thấy được.</value>
+  </data>
+  <data name="Txt_Required" xml:space="preserve">
+    <value>Bắt buộc</value>
+  </data>
+  <data name="Txt_Result" xml:space="preserve">
+    <value>Kết quả</value>
+  </data>
+  <data name="Txt_Results" xml:space="preserve">
+    <value>Kết quả</value>
+  </data>
+  <data name="Txt_Resume" xml:space="preserve">
+    <value>Tiếp tục</value>
+  </data>
+  <data name="Txt_Retract" xml:space="preserve">
+    <value>Thu về</value>
+  </data>
+  <data name="Txt_Retracted" xml:space="preserve">
+    <value>  ·  Đã thu về</value>
+  </data>
+  <data name="Txt_Retracted_2" xml:space="preserve">
+    <value>·  Đã thu về</value>
+  </data>
+  <data name="Txt_Retracted_3" xml:space="preserve">
+    <value>Đã thu về</value>
+  </data>
+  <data name="Txt_Reverse" xml:space="preserve">
+    <value>Lùi</value>
+  </data>
+  <data name="Txt_Revert" xml:space="preserve">
+    <value>Hoàn tác</value>
+  </data>
+  <data name="Txt_Robot" xml:space="preserve">
+    <value>Robot</value>
+  </data>
+  <data name="Txt_RobotRecipe" xml:space="preserve">
+    <value>Công thức robot</value>
+  </data>
+  <data name="Txt_RobotTCPSettings" xml:space="preserve">
+    <value>Cài đặt TCP robot</value>
+  </data>
+  <data name="Txt_Rotate0Clockwise" xml:space="preserve">
+    <value>Xoay {0} theo chiều kim đồng hồ</value>
+  </data>
+  <data name="Txt_Rotate0CounterClockwise" xml:space="preserve">
+    <value>Xoay {0} ngược chiều kim đồng hồ</value>
+  </data>
+  <data name="Txt_Routine" xml:space="preserve">
+    <value>Quy trình con</value>
+  </data>
+  <data name="Txt_Running" xml:space="preserve">
+    <value>Đang chạy</value>
+  </data>
+  <data name="Txt_RunningLog" xml:space="preserve">
+    <value>Nhật ký vận hành</value>
+  </data>
+  <data name="Txt_SAFE" xml:space="preserve">
+    <value>AN TOÀN</value>
+  </data>
+  <data name="Txt_SELECTAXIS" xml:space="preserve">
+    <value>CHỌN TRỤC</value>
+  </data>
+  <data name="Txt_SELECTEDDEVICE" xml:space="preserve">
+    <value>THIẾT BỊ ĐÃ CHỌN</value>
+  </data>
+  <data name="Txt_SELECTGANTRYMODULE" xml:space="preserve">
+    <value>CHỌN MÔ-ĐUN GIÀN</value>
+  </data>
+  <data name="Txt_SELECTTRIGGERCOMMAND" xml:space="preserve">
+    <value>CHỌN LỆNH KÍCH HOẠT</value>
+  </data>
+  <data name="Txt_SENDCOMMAND" xml:space="preserve">
+    <value>GỬI LỆNH</value>
+  </data>
+  <data name="Txt_SFCPDCA" xml:space="preserve">
+    <value>SFC &amp; PDCA</value>
+  </data>
+  <data name="Txt_SFCPDCASettings" xml:space="preserve">
+    <value>Cài đặt SFC &amp; PDCA</value>
+  </data>
+  <data name="Txt_SFCPDCATCPSettings" xml:space="preserve">
+    <value>Cài đặt TCP SFC PDCA</value>
+  </data>
+  <data name="Txt_SNO" xml:space="preserve">
+    <value>STT</value>
+  </data>
+  <data name="Txt_SPEEDMMS" xml:space="preserve">
+    <value>TỐC ĐỘ (MM/S)</value>
+  </data>
+  <data name="Txt_STATUS" xml:space="preserve">
+    <value>TRẠNG THÁI</value>
+  </data>
+  <data name="Txt_SWFileBeingControlled" xml:space="preserve">
+    <value>Phần mềm / tệp được kiểm soát</value>
+  </data>
+  <data name="Txt_SWVersion" xml:space="preserve">
+    <value>Phiên bản phần mềm:</value>
+  </data>
+  <data name="Txt_SampleData" xml:space="preserve">
+    <value>Dữ liệu mẫu</value>
+  </data>
+  <data name="Txt_Save" xml:space="preserve">
+    <value>Lưu</value>
+  </data>
+  <data name="Txt_SaveOrCancelTheParameterEditFirst" xml:space="preserve">
+    <value>Hãy lưu hoặc hủy chỉnh sửa thông số trước.</value>
+  </data>
+  <data name="Txt_SaveOrRevertTheGeneralChangesFirst" xml:space="preserve">
+    <value>Hãy lưu hoặc hoàn tác các thay đổi ở mục Chung trước, sau đó mở Thay đổi cấu hình.</value>
+  </data>
+  <data name="Txt_SaveTheSpecLimits" xml:space="preserve">
+    <value>Lưu giới hạn quy cách?</value>
+  </data>
+  <data name="Txt_SavesTheParametersForThisStationAnd" xml:space="preserve">
+    <value>Lưu thông số cho trạm và quy trình con này</value>
+  </data>
+  <data name="Txt_SavesThenSignsTheAuthorizedUserOut" xml:space="preserve">
+    <value>Lưu, sau đó đăng xuất người dùng được ủy quyền</value>
+  </data>
+  <data name="Txt_ScanThe0" xml:space="preserve">
+    <value>Hãy quét {0}.</value>
+  </data>
+  <data name="Txt_ScanTheNewCartridgeSNOfEach" xml:space="preserve">
+    <value>Quét SN ống keo mới của từng giàn đã thay keo. purge_idx của giàn đó sẽ trở về 0.</value>
+  </data>
+  <data name="Txt_ScanTheNozzleSNFirst" xml:space="preserve">
+    <value>Hãy quét SN vòi phun trước.</value>
+  </data>
+  <data name="Txt_Scanner" xml:space="preserve">
+    <value>Máy quét</value>
+  </data>
+  <data name="Txt_ScannerTCPSettings" xml:space="preserve">
+    <value>Cài đặt TCP máy quét</value>
+  </data>
+  <data name="Txt_SearchFields" xml:space="preserve">
+    <value>Tìm trường</value>
+  </data>
+  <data name="Txt_SearchKeyOrText" xml:space="preserve">
+    <value>Tìm khóa hoặc văn bản</value>
+  </data>
+  <data name="Txt_SearchParameters" xml:space="preserve">
+    <value>Tìm thông số...</value>
+  </data>
+  <data name="Txt_SearchSpeed" xml:space="preserve">
+    <value>Tốc độ tìm kiếm</value>
+  </data>
+  <data name="Txt_SearchTravelMax" xml:space="preserve">
+    <value>Hành trình tìm kiếm tối đa</value>
+  </data>
+  <data name="Txt_Section" xml:space="preserve">
+    <value>Phần</value>
+  </data>
+  <data name="Txt_SelectARowToMove" xml:space="preserve">
+    <value>Chọn một hàng để di chuyển.</value>
+  </data>
+  <data name="Txt_SelectARowToTeach" xml:space="preserve">
+    <value>Chọn một hàng để dạy điểm.</value>
+  </data>
+  <data name="Txt_SelectAStationAndARoutine" xml:space="preserve">
+    <value>Chọn một trạm và một quy trình con.</value>
+  </data>
+  <data name="Txt_SelectCCD" xml:space="preserve">
+    <value>Chọn CCD</value>
+  </data>
+  <data name="Txt_SelectDevice" xml:space="preserve">
+    <value>Chọn thiết bị</value>
+  </data>
+  <data name="Txt_SelectRobotUnit" xml:space="preserve">
+    <value>Chọn bộ robot</value>
+  </data>
+  <data name="Txt_SelectSFCServer" xml:space="preserve">
+    <value>Chọn máy chủ SFC</value>
+  </data>
+  <data name="Txt_SelectScanner" xml:space="preserve">
+    <value>Chọn máy quét</value>
+  </data>
+  <data name="Txt_SelectStation1Station2OrBoth" xml:space="preserve">
+    <value>Chọn Trạm 1, Trạm 2 hoặc cả hai cho chế độ bảo trì.</value>
+  </data>
+  <data name="Txt_SelectTheAnalysisType" xml:space="preserve">
+    <value>Chọn loại phân tích.</value>
+  </data>
+  <data name="Txt_SelectTheRepeatabilityType" xml:space="preserve">
+    <value>Chọn loại độ lặp lại.</value>
+  </data>
+  <data name="Txt_SelectVacuumUnit" xml:space="preserve">
+    <value>Chọn bộ chân không</value>
+  </data>
+  <data name="Txt_Send" xml:space="preserve">
+    <value>Gửi</value>
+  </data>
+  <data name="Txt_SendingToThePLC" xml:space="preserve">
+    <value>Đang gửi tới PLC...</value>
+  </data>
+  <data name="Txt_SensorConnection" xml:space="preserve">
+    <value>Kết nối cảm biến ›</value>
+  </data>
+  <data name="Txt_SensorConnectionDashboard" xml:space="preserve">
+    <value>Bảng kết nối cảm biến</value>
+  </data>
+  <data name="Txt_SensorStatesAreNotLinkedToThis" xml:space="preserve">
+    <value>Trạng thái cảm biến chưa được liên kết với bảng này - chúng đến từ các đầu vào của PLC. Các kết nối thiết bị bên phải là trực tiếp.</value>
+  </data>
+  <data name="Txt_SensorStatesComeFromThePLCWhich" xml:space="preserve">
+    <value>Trạng thái cảm biến đến từ PLC, hiện chưa được liên kết với bảng này. Các thiết bị bên dưới là trực tiếp.</value>
+  </data>
+  <data name="Txt_SentToMESWithEveryBadgeCheck" xml:space="preserve">
+    <value>Được gửi tới MES mỗi lần kiểm tra thẻ. Các mã khả dụng được liệt kê trong ProjectCodes ở Data\Settings\AccessControl.json.</value>
+  </data>
+  <data name="Txt_SequenceStopped" xml:space="preserve">
+    <value>Trình tự đã dừng.</value>
+  </data>
+  <data name="Txt_SerialComm" xml:space="preserve">
+    <value>Truyền thông nối tiếp</value>
+  </data>
+  <data name="Txt_SerialCommSettings" xml:space="preserve">
+    <value>Cài đặt truyền thông nối tiếp</value>
+  </data>
+  <data name="Txt_SetAsPicUploadQuantityInConfig" xml:space="preserve">
+    <value>Đặt là Pic_Upload_quantity trong Cấu hình &gt; Giới hạn quy cách (Sản xuất). Sản phẩm nằm ngoài giới hạn sẽ dừng phun keo và đưa máy vào trạng thái dừng.</value>
+  </data>
+  <data name="Txt_SetTheGlueDosageForThisGantry" xml:space="preserve">
+    <value>Đặt liều lượng keo cho giàn này</value>
+  </data>
+  <data name="Txt_Setting" xml:space="preserve">
+    <value>Cài đặt</value>
+  </data>
+  <data name="Txt_Settings" xml:space="preserve">
+    <value>Cài đặt</value>
+  </data>
+  <data name="Txt_ShareOfEachDayInEachHIVE" xml:space="preserve">
+    <value>Tỷ lệ mỗi ngày ở từng trạng thái HIVE</value>
+  </data>
+  <data name="Txt_Shift" xml:space="preserve">
+    <value>Ca</value>
+  </data>
+  <data name="Txt_ShiftEnd" xml:space="preserve">
+    <value>Kết thúc ca</value>
+  </data>
+  <data name="Txt_ShiftStart" xml:space="preserve">
+    <value>Bắt đầu ca</value>
+  </data>
+  <data name="Txt_ShiftStartAndEnd" xml:space="preserve">
+    <value>Bắt đầu và kết thúc ca</value>
+  </data>
+  <data name="Txt_ShortPurgeCycles" xml:space="preserve">
+    <value>Số chu kỳ xả keo ngắn</value>
+  </data>
+  <data name="Txt_ShortPurgeDoseMustBeANumber" xml:space="preserve">
+    <value>Liều xả keo ngắn phải là số từ 0 trở lên.</value>
+  </data>
+  <data name="Txt_ShortPurgeGlueConsumption" xml:space="preserve">
+    <value>Lượng keo tiêu thụ xả ngắn</value>
+  </data>
+  <data name="Txt_ShortPurgeGlueUsagePerPurge" xml:space="preserve">
+    <value>Lượng keo mỗi lần xả ngắn</value>
+  </data>
+  <data name="Txt_ShortPurgePerPurgeG" xml:space="preserve">
+    <value>Xả keo ngắn, mỗi lần (g)</value>
+  </data>
+  <data name="Txt_ShortPurgeStatistics" xml:space="preserve">
+    <value>Thống kê xả keo ngắn</value>
+  </data>
+  <data name="Txt_ShowEveryKey" xml:space="preserve">
+    <value>Hiện tất cả khóa</value>
+  </data>
+  <data name="Txt_SignIn" xml:space="preserve">
+    <value>Đăng nhập</value>
+  </data>
+  <data name="Txt_SignInToChangeAnyOfThese" xml:space="preserve">
+    <value>Đăng nhập để thay đổi các cài đặt này.</value>
+  </data>
+  <data name="Txt_SignInToSeeTheAccessList" xml:space="preserve">
+    <value>Đăng nhập để xem danh sách truy cập.</value>
+  </data>
+  <data name="Txt_SignOutAfterMin" xml:space="preserve">
+    <value>Đăng xuất sau (phút):</value>
+  </data>
+  <data name="Txt_SignOutAndSwitchUser" xml:space="preserve">
+    <value>Đăng xuất và đổi người dùng?</value>
+  </data>
+  <data name="Txt_SignalLost" xml:space="preserve">
+    <value>Mất tín hiệu</value>
+  </data>
+  <data name="Txt_Site" xml:space="preserve">
+    <value>Địa điểm:</value>
+  </data>
+  <data name="Txt_Site_2" xml:space="preserve">
+    <value>Địa điểm</value>
+  </data>
+  <data name="Txt_Spare" xml:space="preserve">
+    <value>Dự phòng</value>
+  </data>
+  <data name="Txt_SpecLimits" xml:space="preserve">
+    <value>Giới hạn quy cách</value>
+  </data>
+  <data name="Txt_SpecLimitsSaved" xml:space="preserve">
+    <value>Đã lưu giới hạn quy cách.</value>
+  </data>
+  <data name="Txt_Speed" xml:space="preserve">
+    <value>Tốc độ</value>
+  </data>
+  <data name="Txt_Velocity" xml:space="preserve">
+    <value>Vận tốc</value>
+  </data>
+  <data name="Txt_Start" xml:space="preserve">
+    <value>Bắt đầu</value>
+  </data>
+  <data name="Txt_StartPositionMm" xml:space="preserve">
+    <value>Vị trí bắt đầu (mm)</value>
+  </data>
+  <data name="Txt_StartResumeTheMachine" xml:space="preserve">
+    <value>Khởi động / tiếp tục máy</value>
+  </data>
+  <data name="Txt_StartTime" xml:space="preserve">
+    <value>Thời gian bắt đầu:</value>
+  </data>
+  <data name="Txt_StartTime_2" xml:space="preserve">
+    <value>Thời gian bắt đầu</value>
+  </data>
+  <data name="Txt_Startup" xml:space="preserve">
+    <value>Khởi động</value>
+  </data>
+  <data name="Txt_StateChanges" xml:space="preserve">
+    <value>Thay đổi trạng thái</value>
+  </data>
+  <data name="Txt_StaticRepeatabilityPartUCAndCCDAre" xml:space="preserve">
+    <value>Độ lặp lại tĩnh (Chi tiết/UC và CCD giữ cố định, 100 lần)</value>
+  </data>
+  <data name="Txt_Station" xml:space="preserve">
+    <value>Trạm:</value>
+  </data>
+  <data name="Txt_Station1" xml:space="preserve">
+    <value>Trạm 1</value>
+  </data>
+  <data name="Txt_Station1CCD1" xml:space="preserve">
+    <value>Trạm 1 (CCD1)</value>
+  </data>
+  <data name="Txt_Station2" xml:space="preserve">
+    <value>Trạm 2</value>
+  </data>
+  <data name="Txt_Station2CCD2" xml:space="preserve">
+    <value>Trạm 2 (CCD2)</value>
+  </data>
+  <data name="Txt_Station_2" xml:space="preserve">
+    <value>Trạm</value>
+  </data>
+  <data name="Txt_Status" xml:space="preserve">
+    <value>Trạng thái</value>
+  </data>
+  <data name="Txt_Stepper" xml:space="preserve">
+    <value>Động cơ bước :</value>
+  </data>
+  <data name="Txt_Stop" xml:space="preserve">
+    <value>Dừng</value>
+  </data>
+  <data name="Txt_StopContinuousMotion" xml:space="preserve">
+    <value>Dừng chuyển động liên tục</value>
+  </data>
+  <data name="Txt_StopTheMachine" xml:space="preserve">
+    <value>Dừng máy</value>
+  </data>
+  <data name="Txt_Stopped" xml:space="preserve">
+    <value>Đã dừng</value>
+  </data>
+  <data name="Txt_StressTest" xml:space="preserve">
+    <value>Kiểm tra tải</value>
+  </data>
+  <data name="Txt_Suffix" xml:space="preserve">
+    <value>Hậu tố</value>
+  </data>
+  <data name="Txt_SwipeALevel0OrHigherID" xml:space="preserve">
+    <value>Quẹt thẻ ID cấp {0} trở lên.</value>
+  </data>
+  <data name="Txt_SwipeALevel0OrHigherID_2" xml:space="preserve">
+    <value>Quẹt thẻ ID cấp {0} trở lên, sau đó quét SN.</value>
+  </data>
+  <data name="Txt_SwipeALevel3CMBadgeTo" xml:space="preserve">
+    <value>Quẹt thẻ CM cấp 3 để tiếp tục.</value>
+  </data>
+  <data name="Txt_SwipeOrScanYourIDCardTo" xml:space="preserve">
+    <value>Quẹt hoặc quét thẻ ID để đăng nhập.</value>
+  </data>
+  <data name="Txt_SwipeYourIDCard" xml:space="preserve">
+    <value>Hãy quẹt thẻ ID của bạn.</value>
+  </data>
+  <data name="Txt_SwipeYourIDCardThenScanThe" xml:space="preserve">
+    <value>Quẹt thẻ ID, sau đó quét SN.</value>
+  </data>
+  <data name="Txt_SwitchUser" xml:space="preserve">
+    <value>Đổi người dùng</value>
+  </data>
+  <data name="Txt_SystemSettings" xml:space="preserve">
+    <value>Cài đặt hệ thống</value>
+  </data>
+  <data name="Txt_TRIGGERCAPTURE" xml:space="preserve">
+    <value>KÍCH HOẠT CHỤP</value>
+  </data>
+  <data name="Txt_Target" xml:space="preserve">
+    <value>Mục tiêu</value>
+  </data>
+  <data name="Txt_TargetYield" xml:space="preserve">
+    <value>Hiệu suất mục tiêu</value>
+  </data>
+  <data name="Txt_CncHmi" xml:space="preserve">
+    <value>CNC HMI</value>
+  </data>
+  <data name="Txt_Teach" xml:space="preserve">
+    <value>Dạy điểm</value>
+  </data>
+  <data name="Txt_Team" xml:space="preserve">
+    <value>Nhóm</value>
+  </data>
+  <data name="Txt_Template" xml:space="preserve">
+    <value>Mẫu</value>
+  </data>
+  <data name="Txt_TerminalNotConfigured" xml:space="preserve">
+    <value>(chưa cấu hình thiết bị đầu cuối)</value>
+  </data>
+  <data name="Txt_ThatPositionBecomesZ0ForThe" xml:space="preserve">
+    <value>Vị trí đó trở thành Z = 0 cho Z phun keo.</value>
+  </data>
+  <data name="Txt_TheAccessListIsNotAvailableOn" xml:space="preserve">
+    <value>Danh sách truy cập không khả dụng trên máy này.</value>
+  </data>
+  <data name="Txt_TheCameraFindsTheFiducialCentreAnd" xml:space="preserve">
+    <value>Camera tìm tâm điểm chuẩn và giàn phun một chấm lên đó.</value>
+  </data>
+  <data name="Txt_TheCameraFindsTheGlueCentreGlue" xml:space="preserve">
+    <value>Camera tìm tâm keo; tâm keo trừ tâm điểm chuẩn là độ lệch kim.</value>
+  </data>
+  <data name="Txt_TheChangeGlueThresholdMustBeBelow" xml:space="preserve">
+    <value>Ngưỡng thay keo phải thấp hơn ngưỡng keo thấp.</value>
+  </data>
+  <data name="Txt_TheChipShowsTheMachineSOwn" xml:space="preserve">
+    <value>Nhãn này chỉ hiển thị trạng thái của chính máy.</value>
+  </data>
+  <data name="Txt_TheDispensingXAndZMoveTo" xml:space="preserve">
+    <value>X và Z phun keo di chuyển tới vị trí dạy của mô-đun hiệu chuẩn kim.</value>
+  </data>
+  <data name="Txt_TheDispensingZMovesDownOntoThe" xml:space="preserve">
+    <value>Z phun keo di chuyển xuống cảm biến chạm (dụng cụ so dao) cho đến khi phát hiện kim.</value>
+  </data>
+  <data name="Txt_TheLaserMountedHorizontalAndParallelTo" xml:space="preserve">
+    <value>Laser lắp nằm ngang và song song với đồ gá đo điểm 1, rồi điểm 2 theo trục Y.</value>
+  </data>
+  <data name="Txt_TheLaserOnTheVerticalZMeasures" xml:space="preserve">
+    <value>Laser trên trục Z thẳng đứng đo điểm 1, rồi 2 (Y), 4 (X), 3 (Y) và trở lại 1 (X).</value>
+  </data>
+  <data name="Txt_TheMachineIgnoresItUntilItIs" xml:space="preserve">
+    <value>Máy sẽ bỏ qua nó cho đến khi được bật lại.</value>
+  </data>
+  <data name="Txt_TheMachineIsInPD15A" xml:space="preserve">
+    <value>Máy đang ở PD-15. Người dùng cấp 3 giờ có thể thấy thẻ Khóa băm ở trang Cài đặt.</value>
+  </data>
+  <data name="Txt_TheMachinePromptsOnceEvery2Hours" xml:space="preserve">
+    <value>Máy nhắc mỗi 2 giờ một lần (bật cửa sổ + còi báo); máy vẫn tiếp tục chạy mà không dừng.</value>
+  </data>
+  <data name="Txt_TheMachinePromptsOnceEvery4Hours" xml:space="preserve">
+    <value>Máy nhắc mỗi 4 giờ một lần (bật cửa sổ + còi báo); máy vẫn tiếp tục chạy mà không dừng.</value>
+  </data>
+  <data name="Txt_TheMachineRemainsInNormalProductionMode" xml:space="preserve">
+    <value>Máy vẫn ở chế độ sản xuất bình thường. Không cần lo lắng gì.</value>
+  </data>
+  <data name="Txt_TheNineGantryPositionsArePairedWith" xml:space="preserve">
+    <value>Chín vị trí giàn được ghép với các tâm keo của camera và phép biến đổi camera-giàn được lưu lại.</value>
+  </data>
+  <data name="Txt_TheNozzleCriticalLevelMustBeBelow" xml:space="preserve">
+    <value>Mức nghiêm trọng của vòi phun phải thấp hơn mức cảnh báo.</value>
+  </data>
+  <data name="Txt_ThePDATAMappingStoreIsNotAvailable" xml:space="preserve">
+    <value>Kho ánh xạ PDATA không khả dụng.</value>
+  </data>
+  <data name="Txt_ThePLCDoesNotReportHomingPlcHomingDoneSymbol" xml:space="preserve">
+    <value>PLC không báo trạng thái về gốc (chưa đặt PlcHomingDoneSymbol).</value>
+  </data>
+  <data name="Txt_ThePictureCheckIsNotAvailableOn" xml:space="preserve">
+    <value>Kiểm tra ảnh không khả dụng trên máy này.</value>
+  </data>
+  <data name="Txt_TheRemainingGlueWeightIsAboveThe" xml:space="preserve">
+    <value>Khối lượng keo còn lại trên mức an toàn.</value>
+  </data>
+  <data name="Txt_TheSecondApprovalMustComeFromA" xml:space="preserve">
+    <value>Lần phê duyệt thứ hai phải từ một thẻ khác.</value>
+  </data>
+  <data name="Txt_TheSecondApprovalMustComeFromA_2" xml:space="preserve">
+    <value>Lần phê duyệt thứ hai phải từ một thẻ khác. Vui lòng quẹt thẻ ID khác.</value>
+  </data>
+  <data name="Txt_TheTranslationFilesCouldNotBeRead" xml:space="preserve">
+    <value>Không thể đọc tệp bản dịch: {0}</value>
+  </data>
+  <data name="Txt_TheTranslationsCouldNotBeSaved0" xml:space="preserve">
+    <value>Không thể lưu bản dịch: {0}</value>
+  </data>
+  <data name="Txt_TheVisionZMovesItsLaserTo" xml:space="preserve">
+    <value>Z thị giác di chuyển laser của nó tới cùng điểm 0.</value>
+  </data>
+  <data name="Txt_TheWeighingScaleIsNotConnectedTo" xml:space="preserve">
+    <value>Cân chưa được kết nối với HMI này, nên không có dữ liệu cân keo để hiển thị.</value>
+  </data>
+  <data name="Txt_TheoreticalOutputPerCartridge" xml:space="preserve">
+    <value>Sản lượng lý thuyết mỗi ống keo</value>
+  </data>
+  <data name="Txt_ThereIsNothingToExport" xml:space="preserve">
+    <value>Không có gì để xuất.</value>
+  </data>
+  <data name="Txt_TheseAlarmsAreGeneratedSampleDataTrueNot" xml:space="preserve">
+    <value>Các báo động này được tạo ra (SampleData=true), không phải do máy ghi lại.</value>
+  </data>
+  <data name="Txt_TheseFiguresAreGeneratedSampleDataTrueNot" xml:space="preserve">
+    <value>Các số liệu này được tạo ra (SampleData=true), không phải do máy ghi lại.</value>
+  </data>
+  <data name="Txt_ThisBuildHasNoManualOperationScreens" xml:space="preserve">
+    <value>Bản dựng này không có màn hình thao tác thủ công.</value>
+  </data>
+  <data name="Txt_ThisCameraHasNoCaptureYet" xml:space="preserve">
+    <value>Camera này chưa chụp ảnh nào.</value>
+  </data>
+  <data name="Txt_ThisRoutineTakesNoParameters" xml:space="preserve">
+    <value>Quy trình con này không có thông số.</value>
+  </data>
+  <data name="Txt_Threshold" xml:space="preserve">
+    <value>Ngưỡng</value>
+  </data>
+  <data name="Txt_ThresholdForActivatingTheNotificationOfStock" xml:space="preserve">
+    <value>Ngưỡng kích hoạt thông báo chuẩn bị hàng và làm nóng trước tới kho KT (khối lượng keo còn lại).</value>
+  </data>
+  <data name="Txt_ThresholdHours" xml:space="preserve">
+    <value>Ngưỡng (giờ)</value>
+  </data>
+  <data name="Txt_TickTheFieldsToReportSetTheir" xml:space="preserve">
+    <value>Đánh dấu các trường cần báo cáo, đặt giới hạn, sau đó Lưu.</value>
+  </data>
+  <data name="Txt_Time" xml:space="preserve">
+    <value>Thời gian</value>
+  </data>
+  <data name="Txt_TimeInStateMin" xml:space="preserve">
+    <value>Thời gian ở trạng thái (phút)</value>
+  </data>
+  <data name="Txt_To" xml:space="preserve">
+    <value>Đến:</value>
+  </data>
+  <data name="Txt_ToMESCheck" xml:space="preserve">
+    <value>Kiểm tra với MES</value>
+  </data>
+  <data name="Txt_TossedUnits" xml:space="preserve">
+    <value>Sản phẩm bị loại</value>
+  </data>
+  <data name="Txt_TossedUnitsByShift" xml:space="preserve">
+    <value>Sản phẩm bị loại theo ca</value>
+  </data>
+  <data name="Txt_Tossing" xml:space="preserve">
+    <value>Loại bỏ</value>
+  </data>
+  <data name="Txt_TossingRate" xml:space="preserve">
+    <value>Tỷ lệ loại bỏ</value>
+  </data>
+  <data name="Txt_TossingRateByShift" xml:space="preserve">
+    <value>Tỷ lệ loại bỏ (%) theo ca</value>
+  </data>
+  <data name="Txt_TossingReason" xml:space="preserve">
+    <value>Lý do loại bỏ</value>
+  </data>
+  <data name="Txt_TossingSummary" xml:space="preserve">
+    <value>Tổng hợp loại bỏ</value>
+  </data>
+  <data name="Txt_Total" xml:space="preserve">
+    <value>Tổng</value>
+  </data>
+  <data name="Txt_TotalGlueConsumption" xml:space="preserve">
+    <value>Tổng lượng keo tiêu thụ</value>
+  </data>
+  <data name="Txt_TotalTimeMin" xml:space="preserve">
+    <value>Tổng thời gian (phút)</value>
+  </data>
+  <data name="Txt_Translation" xml:space="preserve">
+    <value>Bản dịch</value>
+  </data>
+  <data name="Txt_TranslationsSaved" xml:space="preserve">
+    <value>Đã lưu bản dịch.</value>
+  </data>
+  <data name="Txt_Trigger" xml:space="preserve">
+    <value>Kích hoạt</value>
+  </data>
+  <data name="Txt_TuningDebugMaterialRun" xml:space="preserve">
+    <value>Chạy vật liệu chỉnh/gỡ lỗi</value>
+  </data>
+  <data name="Txt_TwoStepVerificationAnApproverSwipesTheir" xml:space="preserve">
+    <value>Xác minh hai bước: người phê duyệt quẹt thẻ ID của họ.</value>
+  </data>
+  <data name="Txt_USLIsNotANumber" xml:space="preserve">
+    <value>USL không phải là số.</value>
+  </data>
+  <data name="Txt_Unassigned" xml:space="preserve">
+    <value>Chưa gán</value>
+  </data>
+  <data name="Txt_Unclassified" xml:space="preserve">
+    <value>Chưa phân loại</value>
+  </data>
+  <data name="Txt_Unit" xml:space="preserve">
+    <value>Đơn vị</value>
+  </data>
+  <data name="Txt_UnitIntervalMustBeAWholeNumber" xml:space="preserve">
+    <value>Khoảng sản phẩm phải là số nguyên từ 1 trở lên.</value>
+  </data>
+  <data name="Txt_UnitSN" xml:space="preserve">
+    <value>SN sản phẩm</value>
+  </data>
+  <data name="Txt_UnitsOnTheMachine" xml:space="preserve">
+    <value>Sản phẩm trên máy</value>
+  </data>
+  <data name="Txt_UnitsOneTime" xml:space="preserve">
+    <value>sản phẩm/lần</value>
+  </data>
+  <data name="Txt_Unnamed" xml:space="preserve">
+    <value>(chưa đặt tên)</value>
+  </data>
+  <data name="Txt_UnplannedDowntime0" xml:space="preserve">
+    <value>Dừng máy ngoài kế hoạch - {0}</value>
+  </data>
+  <data name="Txt_UntranslatedOnly" xml:space="preserve">
+    <value>Chỉ hiện mục chưa dịch</value>
+  </data>
+  <data name="Txt_UploadToMES" xml:space="preserve">
+    <value>Tải lên MES</value>
+  </data>
+  <data name="Txt_UploadedHashKeysToMES" xml:space="preserve">
+    <value>Đã tải khóa băm lên MES</value>
+  </data>
+  <data name="Txt_UploadingToMES" xml:space="preserve">
+    <value>Đang tải lên MES...</value>
+  </data>
+  <data name="Txt_VALUE" xml:space="preserve">
+    <value>GIÁ TRỊ</value>
+  </data>
+  <data name="Txt_VALUES" xml:space="preserve">
+    <value>GIÁ TRỊ</value>
+  </data>
+  <data name="Txt_Vacuum" xml:space="preserve">
+    <value>Chân không</value>
+  </data>
+  <data name="Txt_Value" xml:space="preserve">
+    <value>Giá trị</value>
+  </data>
+  <data name="Txt_ValueMg" xml:space="preserve">
+    <value>Giá trị (mg)</value>
+  </data>
+  <data name="Txt_ValveChange" xml:space="preserve">
+    <value>Thay van</value>
+  </data>
+  <data name="Txt_ValveModel" xml:space="preserve">
+    <value>Mẫu van:</value>
+  </data>
+  <data name="Txt_ValveModelSelectionErrorPlsSelectThe" xml:space="preserve">
+    <value>Chọn sai mẫu van, vui lòng chọn đúng mẫu van ở trang cài đặt.</value>
+  </data>
+  <data name="Txt_ValveModelSetting" xml:space="preserve">
+    <value>Cài đặt mẫu van</value>
+  </data>
+  <data name="Txt_ValveModel_2" xml:space="preserve">
+    <value>Mẫu van</value>
+  </data>
+  <data name="Txt_ValveSN" xml:space="preserve">
+    <value>SN van</value>
+  </data>
+  <data name="Txt_ValveSN_2" xml:space="preserve">
+    <value>SN van:</value>
+  </data>
+  <data name="Txt_ValveUsage" xml:space="preserve">
+    <value>Mức sử dụng van:</value>
+  </data>
+  <data name="Txt_Vendor" xml:space="preserve">
+    <value>Nhà cung cấp:</value>
+  </data>
+  <data name="Txt_Vendor_2" xml:space="preserve">
+    <value>Nhà cung cấp</value>
+  </data>
+  <data name="Txt_Vision" xml:space="preserve">
+    <value>Thị giác</value>
+  </data>
+  <data name="Txt_VisionZAtLaserZero" xml:space="preserve">
+    <value>Z thị giác tại điểm không của laser</value>
+  </data>
+  <data name="Txt_WaitForHomingToFinish" xml:space="preserve">
+    <value>Hãy chờ về gốc hoàn tất.</value>
+  </data>
+  <data name="Txt_WaitSec" xml:space="preserve">
+    <value>Chờ (giây)</value>
+  </data>
+  <data name="Txt_WaitingForOperator" xml:space="preserve">
+    <value>Đang chờ người vận hành</value>
+  </data>
+  <data name="Txt_Warning" xml:space="preserve">
+    <value>Cảnh báo</value>
+  </data>
+  <data name="Txt_WeeklyMaintenance" xml:space="preserve">
+    <value>Bảo trì hằng tuần</value>
+  </data>
+  <data name="Txt_WeighingAtShiftChange" xml:space="preserve">
+    <value>Cân khi đổi ca</value>
+  </data>
+  <data name="Txt_WeighingByUnitCount" xml:space="preserve">
+    <value>Cân theo số lượng sản phẩm</value>
+  </data>
+  <data name="Txt_WeighingCycles" xml:space="preserve">
+    <value>Số chu kỳ cân</value>
+  </data>
+  <data name="Txt_WeighingFrequency" xml:space="preserve">
+    <value>Tần suất cân</value>
+  </data>
+  <data name="Txt_WeighingFrequencyMustBeANumberOf" xml:space="preserve">
+    <value>Tần suất cân phải là số giờ, tối thiểu một phút.</value>
+  </data>
+  <data name="Txt_WeighingGlueConsumption" xml:space="preserve">
+    <value>Lượng keo tiêu thụ khi cân</value>
+  </data>
+  <data name="Txt_WeighingSettingsAreNotAvailableTheWeighing" xml:space="preserve">
+    <value>Cài đặt cân không khả dụng - cân chưa được kết nối với HMI này.</value>
+  </data>
+  <data name="Txt_WeighingTimes" xml:space="preserve">
+    <value>Số lần cân</value>
+  </data>
+  <data name="Txt_WeighingTimesMustBeAWholeNumber" xml:space="preserve">
+    <value>Số lần cân phải là số nguyên từ 1 trở lên.</value>
+  </data>
+  <data name="Txt_Work" xml:space="preserve">
+    <value>Làm việc</value>
+  </data>
+  <data name="Txt_WritesTheStationRoutineAndParametersTo" xml:space="preserve">
+    <value>Ghi trạm, quy trình con và thông số vào PLC rồi bắt đầu hiệu chuẩn; tiếp tục khi đang tạm dừng</value>
+  </data>
+  <data name="Txt_XDispensingSpeed" xml:space="preserve">
+    <value>- x = Tốc độ phun keo</value>
+  </data>
+  <data name="Txt_XPOS" xml:space="preserve">
+    <value>VỊ TRÍ X</value>
+  </data>
+  <data name="Txt_YGlueWeight" xml:space="preserve">
+    <value>- y = Khối lượng keo</value>
+  </data>
+  <data name="Txt_YPOS" xml:space="preserve">
+    <value>VỊ TRÍ Y</value>
+  </data>
+  <data name="Txt_Yes" xml:space="preserve">
+    <value>Có</value>
+  </data>
+  <data name="Txt_Yield" xml:space="preserve">
+    <value>Hiệu suất</value>
+  </data>
+  <data name="Txt_YieldByShift" xml:space="preserve">
+    <value>Hiệu suất (%) theo ca</value>
+  </data>
+  <data name="Txt_ZPOS" xml:space="preserve">
+    <value>VỊ TRÍ Z</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_000" xml:space="preserve">
+    <value>Mã lỗi không hợp lệ</value>
+  </data>
+  <data name="AlarmDesc_Invalid_ECode" xml:space="preserve">
+    <value>Mã lỗi không hợp lệ</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_001" xml:space="preserve">
+    <value>Xi lanh duỗi ra thất bại</value>
+  </data>
+  <data name="AlarmDesc_Cyl_Extend_Fail" xml:space="preserve">
+    <value>Xi lanh duỗi ra thất bại</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_002" xml:space="preserve">
+    <value>Xi lanh thu về thất bại</value>
+  </data>
+  <data name="AlarmDesc_Cyl_Retract_Fail" xml:space="preserve">
+    <value>Xi lanh thu về thất bại</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_003" xml:space="preserve">
+    <value>Xi lanh duỗi ra quá thời gian</value>
+  </data>
+  <data name="AlarmDesc_Cyl_Extend_Timeout" xml:space="preserve">
+    <value>Xi lanh duỗi ra quá thời gian</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_004" xml:space="preserve">
+    <value>Xi lanh thu về quá thời gian</value>
+  </data>
+  <data name="AlarmDesc_Cyl_Retract_Timeout" xml:space="preserve">
+    <value>Xi lanh thu về quá thời gian</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_005" xml:space="preserve">
+    <value>Không an toàn để duỗi xi lanh</value>
+  </data>
+  <data name="AlarmDesc_Cyl_UnSafe_Extend" xml:space="preserve">
+    <value>Không an toàn để duỗi xi lanh</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_006" xml:space="preserve">
+    <value>Không an toàn để thu xi lanh</value>
+  </data>
+  <data name="AlarmDesc_Cyl_UnSafe_Retract" xml:space="preserve">
+    <value>Không an toàn để thu xi lanh</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_007" xml:space="preserve">
+    <value>Cả hai cảm biến xi lanh cùng bật</value>
+  </data>
+  <data name="AlarmDesc_Cyl_Both_Sensor" xml:space="preserve">
+    <value>Cả hai cảm biến xi lanh cùng bật</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_008" xml:space="preserve">
+    <value>Khóa liên động thất bại</value>
+  </data>
+  <data name="AlarmDesc_Interlock_Fail" xml:space="preserve">
+    <value>Khóa liên động thất bại</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_009" xml:space="preserve">
+    <value>Chạm giới hạn dương</value>
+  </data>
+  <data name="AlarmDesc_PosLimit_Error" xml:space="preserve">
+    <value>Chạm giới hạn dương</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_010" xml:space="preserve">
+    <value>Chạm giới hạn âm</value>
+  </data>
+  <data name="AlarmDesc_NegLimit_Error" xml:space="preserve">
+    <value>Chạm giới hạn âm</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_011" xml:space="preserve">
+    <value>Trục bị tắt</value>
+  </data>
+  <data name="AlarmDesc_Disable_Error" xml:space="preserve">
+    <value>Trục bị tắt</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_012" xml:space="preserve">
+    <value>Di chuyển quá thời gian</value>
+  </data>
+  <data name="AlarmDesc_MoveTimeout_Error" xml:space="preserve">
+    <value>Di chuyển quá thời gian</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_013" xml:space="preserve">
+    <value>Lỗi bộ truyền động</value>
+  </data>
+  <data name="AlarmDesc_DriveError_Error" xml:space="preserve">
+    <value>Lỗi bộ truyền động</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_014" xml:space="preserve">
+    <value>Nút dừng khẩn cấp đã được nhấn</value>
+  </data>
+  <data name="AlarmDesc_Emg_Pressed_Error" xml:space="preserve">
+    <value>Nút dừng khẩn cấp đã được nhấn</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_015" xml:space="preserve">
+    <value>Cửa an toàn đang mở</value>
+  </data>
+  <data name="AlarmDesc_SafetyDoor_open_Error" xml:space="preserve">
+    <value>Cửa an toàn đang mở</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_016" xml:space="preserve">
+    <value>Lỗi phản hồi khí nén chính</value>
+  </data>
+  <data name="AlarmDesc_MainAir_FB_Error" xml:space="preserve">
+    <value>Lỗi phản hồi khí nén chính</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_017" xml:space="preserve">
+    <value>Về gốc quá thời gian</value>
+  </data>
+  <data name="AlarmDesc_Homing_TimeOut_Error" xml:space="preserve">
+    <value>Về gốc quá thời gian</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_018" xml:space="preserve">
+    <value>Lỗi ngoại lệ chương trình</value>
+  </data>
+  <data name="AlarmDesc_ProgramException_Error" xml:space="preserve">
+    <value>Lỗi ngoại lệ chương trình</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_019" xml:space="preserve">
+    <value>Chuyển động quá thời gian</value>
+  </data>
+  <data name="AlarmDesc_Motion_Time_out_Error" xml:space="preserve">
+    <value>Chuyển động quá thời gian</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_020" xml:space="preserve">
+    <value>Card chuyển động chưa mở</value>
+  </data>
+  <data name="AlarmDesc_Motion_Card_not_open" xml:space="preserve">
+    <value>Card chuyển động chưa mở</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_021" xml:space="preserve">
+    <value>Báo động robot</value>
+  </data>
+  <data name="AlarmDesc_Robot_Alarm_Error" xml:space="preserve">
+    <value>Báo động robot</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_022" xml:space="preserve">
+    <value>Robot nhận dữ liệu quá thời gian</value>
+  </data>
+  <data name="AlarmDesc_Robot_Receive_TimeOut_Error" xml:space="preserve">
+    <value>Robot nhận dữ liệu quá thời gian</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_023" xml:space="preserve">
+    <value>Bật/tắt chân không thất bại</value>
+  </data>
+  <data name="AlarmDesc_Vac_VacuumOnOffFail" xml:space="preserve">
+    <value>Bật/tắt chân không thất bại</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_024" xml:space="preserve">
+    <value>Bật/tắt thổi khí thất bại</value>
+  </data>
+  <data name="AlarmDesc_Vac_BlowOnOffFail" xml:space="preserve">
+    <value>Bật/tắt thổi khí thất bại</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_025" xml:space="preserve">
+    <value>Chân không quá thời gian</value>
+  </data>
+  <data name="AlarmDesc_Vac_TimeoutEcode" xml:space="preserve">
+    <value>Chân không quá thời gian</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_026" xml:space="preserve">
+    <value>Động cơ bước IO chạy tiến thất bại</value>
+  </data>
+  <data name="AlarmDesc_IO_Stepper_ForwardFail" xml:space="preserve">
+    <value>Động cơ bước IO chạy tiến thất bại</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_027" xml:space="preserve">
+    <value>Động cơ bước IO chạy lùi thất bại</value>
+  </data>
+  <data name="AlarmDesc_IO_Stepper_ReverseFail" xml:space="preserve">
+    <value>Động cơ bước IO chạy lùi thất bại</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_028" xml:space="preserve">
+    <value>Động cơ bước IO dừng thất bại</value>
+  </data>
+  <data name="AlarmDesc_IO_Stepper_StopFail" xml:space="preserve">
+    <value>Động cơ bước IO dừng thất bại</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_029" xml:space="preserve">
+    <value>Đặt lại báo động động cơ bước IO thất bại</value>
+  </data>
+  <data name="AlarmDesc_IO_Stepper_AlarmResetFail" xml:space="preserve">
+    <value>Đặt lại báo động động cơ bước IO thất bại</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_030" xml:space="preserve">
+    <value>Lỗi chế độ robot</value>
+  </data>
+  <data name="AlarmDesc_Robot_Mode_Error" xml:space="preserve">
+    <value>Lỗi chế độ robot</value>
+  </data>
+  <data name="AlarmType_Motion_Error" xml:space="preserve">
+    <value>Lỗi chuyển động</value>
+  </data>
+  <data name="AlarmType_Vision_Error" xml:space="preserve">
+    <value>Lỗi thị giác</value>
+  </data>
+  <data name="AlarmType_Glue_Error" xml:space="preserve">
+    <value>Lỗi keo</value>
+  </data>
+  <data name="AlarmType_Sensor_Error" xml:space="preserve">
+    <value>Lỗi cảm biến</value>
+  </data>
+  <data name="AlarmType_Software_Error" xml:space="preserve">
+    <value>Lỗi phần mềm</value>
+  </data>
+  <data name="AlarmType_Hardware_Error" xml:space="preserve">
+    <value>Lỗi phần cứng</value>
+  </data>
+  <data name="AlarmType_Material_Error" xml:space="preserve">
+    <value>Lỗi vật liệu</value>
+  </data>
+  <data name="AlarmType_Safety_Error" xml:space="preserve">
+    <value>Lỗi an toàn</value>
+  </data>
+  <data name="AlarmType_Communication_Error" xml:space="preserve">
+    <value>Lỗi truyền thông</value>
+  </data>
+  <data name="AlarmType_Pneumatic_Error" xml:space="preserve">
+    <value>Lỗi khí nén</value>
+  </data>
+  <data name="AlarmType_Electrical_Error" xml:space="preserve">
+    <value>Lỗi điện</value>
+  </data>
+  <data name="AlarmType_Mechanical_Error" xml:space="preserve">
+    <value>Lỗi cơ khí</value>
+  </data>
+  <data name="AlarmType_Process_Error" xml:space="preserve">
+    <value>Lỗi quy trình</value>
+  </data>
+  <data name="AlarmType_Others" xml:space="preserve">
+    <value>Khác</value>
+  </data>
+  <data name="AlarmType_Unclassified" xml:space="preserve">
+    <value>Chưa phân loại</value>
+  </data>
+  <data name="Txt_AddRepairAction" xml:space="preserve">
+    <value>&lt;Thêm biện pháp sửa chữa&gt;</value>
+  </data>
+  <data name="Txt_Adjusted" xml:space="preserve">
+    <value>Đã điều chỉnh</value>
+  </data>
+  <data name="Txt_Calibrated" xml:space="preserve">
+    <value>Đã hiệu chuẩn</value>
+  </data>
+  <data name="Txt_Checked" xml:space="preserve">
+    <value>Đã kiểm tra</value>
+  </data>
+  <data name="Txt_Cleaned" xml:space="preserve">
+    <value>Đã làm sạch</value>
+  </data>
+  <data name="Txt_Erased" xml:space="preserve">
+    <value>Đã xóa</value>
+  </data>
+  <data name="Txt_Filled" xml:space="preserve">
+    <value>Đã nạp đầy</value>
+  </data>
+  <data name="Txt_Fixed" xml:space="preserve">
+    <value>Đã sửa</value>
+  </data>
+  <data name="Txt_Lubricated" xml:space="preserve">
+    <value>Đã bôi trơn</value>
+  </data>
+  <data name="Txt_Replaced" xml:space="preserve">
+    <value>Đã thay thế</value>
+  </data>
+  <data name="Txt_Restored" xml:space="preserve">
+    <value>Đã khôi phục</value>
+  </data>
+  <data name="Txt_Stretched" xml:space="preserve">
+    <value>Đã kéo căng</value>
+  </data>
+  <data name="Txt_Tightened" xml:space="preserve">
+    <value>Đã siết chặt</value>
+  </data>
+  <data name="Txt_Trained" xml:space="preserve">
+    <value>Đã đào tạo</value>
+  </data>
+  <data name="Txt_Tuned" xml:space="preserve">
+    <value>Đã tinh chỉnh</value>
+  </data>
+  <data name="Txt_0AlarmS1MinOfDowntime" xml:space="preserve">
+    <value>{0} báo động, dừng máy {1} phút</value>
+  </data>
+  <data name="Txt_0DebugUnitsHaveBeenRunIn" xml:space="preserve">
+    <value>Đã chạy {0} sản phẩm gỡ lỗi trong Chạy vật liệu chỉnh/gỡ lỗi (PD-17). Hãy chuyển trạng thái HIVE sang Đang chạy trước sản phẩm tiếp theo.</value>
+  </data>
+  <data name="Txt_0DebugUnitsHaveBeenRunUnder" xml:space="preserve">
+    <value>Đã chạy {0} sản phẩm gỡ lỗi theo mã {1}. Không được dùng thêm sản phẩm gỡ lỗi với mã lỗi này.</value>
+  </data>
+  <data name="Txt_0RoundComplete" xml:space="preserve">
+    <value>{0} - hoàn tất vòng</value>
+  </data>
+  <data name="Txt_0ContinueTest" xml:space="preserve">
+    <value>{0}. Tiếp tục kiểm tra?</value>
+  </data>
+  <data name="Txt_NextOperatorOperatorID0" xml:space="preserve">
+    <value>Người vận hành tiếp theo (Operator_ID {0})</value>
+  </data>
+  <data name="Txt_TheHIVEStateWasNotChanged0" xml:space="preserve">
+    <value>Trạng thái HIVE chưa được thay đổi. {0}</value>
+  </data>
+  <data name="Txt_PlannedDowntime01" xml:space="preserve">
+    <value>Dừng máy theo kế hoạch - {0} ({1})</value>
+  </data>
+  <data name="Txt_UnplannedDowntime01" xml:space="preserve">
+    <value>Dừng máy ngoài kế hoạch - {0} ({1})</value>
+  </data>
+  <data name="Txt_TheBadgeCouldNotBeChecked0" xml:space="preserve">
+    <value>Không thể kiểm tra thẻ: {0}</value>
+  </data>
+  <data name="Txt_0IsLevel1ThisNeedsLevel" xml:space="preserve">
+    <value>{0} là cấp {1}. Thao tác này cần cấp {2} trở lên - vui lòng quẹt thẻ ID khác.</value>
+  </data>
+  <data name="Txt_0IsLevel1ThisNeedsLevel_2" xml:space="preserve">
+    <value>{0} là cấp {1}. Thao tác này cần cấp {2} trở lên.</value>
+  </data>
+  <data name="Txt_0Level1PressOK" xml:space="preserve">
+    <value>{0} (cấp {1}). Nhấn OK.</value>
+  </data>
+  <data name="Txt_0Level1ScanTheSN" xml:space="preserve">
+    <value>{0} (cấp {1}). Hãy quét SN.</value>
+  </data>
+  <data name="Txt_ValveSN_3" xml:space="preserve">
+    <value>SN van</value>
+  </data>
+  <data name="Txt_NozzleSN_2" xml:space="preserve">
+    <value>SN vòi phun</value>
+  </data>
+  <data name="Txt_0GlueSN" xml:space="preserve">
+    <value>SN keo {0}</value>
+  </data>
+  <data name="Txt_GlueChange0" xml:space="preserve">
+    <value>Thay keo: {0}</value>
+  </data>
+  <data name="Txt_MaterialReplacement0" xml:space="preserve">
+    <value>Thay vật liệu: {0}</value>
+  </data>
+  <data name="Txt_MESCouldNotGiveTheStandardValve" xml:space="preserve">
+    <value>MES không thể cung cấp SN van tiêu chuẩn: {0}</value>
+  </data>
+  <data name="Txt_MESCouldNotGiveTheValveS" xml:space="preserve">
+    <value>MES không thể cung cấp mức sử dụng van: {0}</value>
+  </data>
+  <data name="Txt_MESCheckNGTheNozzleWasNot" xml:space="preserve">
+    <value>MES kiểm tra NG - vòi phun chưa được liên kết với van: {0}</value>
+  </data>
+  <data name="Txt_MESCheckNG0" xml:space="preserve">
+    <value>MES kiểm tra NG: {0}</value>
+  </data>
+  <data name="Txt_MESCheckOK0" xml:space="preserve">
+    <value>MES kiểm tra OK: {0}</value>
+  </data>
+  <data name="Txt_01MachineWillSwitchToAudit" xml:space="preserve">
+    <value>{0}: {1} - máy sẽ chuyển sang chế độ kiểm tra</value>
+  </data>
+  <data name="Txt_NoValveModelIsSetForThe" xml:space="preserve">
+    <value>Giàn {0} chưa đặt mẫu van. Hãy chọn trong Cài đặt &gt; Mẫu van (cấp 3) trước.</value>
+  </data>
+  <data name="Txt_ValveModel0ScanTheValveS" xml:space="preserve">
+    <value>Mẫu van: {0} - hãy quét SN nội bộ của van; MES sẽ trả về SN tiêu chuẩn.</value>
+  </data>
+  <data name="Txt_NoValveSNIsRecordedForThe" xml:space="preserve">
+    <value>Giàn {0} chưa ghi nhận SN van nên không thể liên kết vòi phun. Hãy thực hiện Thay van (PD-04) trước.</value>
+  </data>
+  <data name="Txt_ValveSNToLinkTheNozzleTo" xml:space="preserve">
+    <value>SN van để liên kết vòi phun: {0}</value>
+  </data>
+  <data name="Txt_0NeedsTheConsumablesFileWhichIs" xml:space="preserve">
+    <value>{0} cần tệp vật tư tiêu hao nhưng tệp này không khả dụng.</value>
+  </data>
+  <data name="Txt_24hrDryRun" xml:space="preserve">
+    <value>Chạy khô 24 giờ</value>
+  </data>
+  <data name="Txt_HIVE" xml:space="preserve">
+    <value>HIVE</value>
+  </data>
+  <data name="Txt_HIVEIsLineCriticalDisableHIVEBecause" xml:space="preserve">
+    <value>HIVE rất quan trọng với dây chuyền. Tắt HIVE vì "{0}"?
+
+Phải được CM/BUD phê duyệt trước. Tiếp theo, người phê duyệt thứ hai quẹt thẻ.</value>
+  </data>
+  <data name="Txt_SignedInAs01ClickTo" xml:space="preserve">
+    <value>Đã đăng nhập: {0} ({1}) - nhấn để đổi người dùng, nhấn chuột phải để đăng xuất</value>
+  </data>
+  <data name="Txt_HIVEIsNotRunningOnThisMachine" xml:space="preserve">
+    <value>HIVE không chạy trên máy này nên không thể thay đổi trạng thái. Nhãn này chỉ hiển thị trạng thái của chính máy.</value>
+  </data>
+  <data name="Txt_Search" xml:space="preserve">
+    <value>Tìm kiếm:</value>
+  </data>
+  <data name="Txt_DescriptionOf" xml:space="preserve">
+    <value>Mô tả cho:</value>
+  </data>
+  <data name="Txt_Type" xml:space="preserve">
+    <value>Loại:</value>
+  </data>
+  <data name="Txt_Type_2" xml:space="preserve">
+    <value>Loại</value>
+  </data>
+  <data name="Txt_SearchByNameIOAddressOr" xml:space="preserve">
+    <value>Tìm theo tên, địa chỉ I/O hoặc mô tả</value>
+  </data>
+  <data name="Txt_OnlyRowsWithoutADescription" xml:space="preserve">
+    <value>Chỉ hiện các hàng chưa có mô tả</value>
+  </data>
+  <data name="Txt_IOAddress" xml:space="preserve">
+    <value>Địa chỉ I/O</value>
+  </data>
+  <data name="Txt_ARowWithoutADescriptionInThe" xml:space="preserve">
+    <value>Hàng chưa có mô tả ở ngôn ngữ đã chọn sẽ hiển thị mô tả tiếng Anh, nếu không có cả hai thì hiển thị tên. Cấp 3 có thể thay đổi; thay đổi đã lưu hiển thị ngay trên màn hình.</value>
+  </data>
+  <data name="Txt_ConfigDescription" xml:space="preserve">
+    <value>Mô tả cấu hình</value>
+  </data>
+  <data name="Txt_IOPoints" xml:space="preserve">
+    <value>Điểm I/O</value>
+  </data>
+  <data name="Txt_DescriptionsSaved" xml:space="preserve">
+    <value>Đã lưu mô tả.</value>
+  </data>
+  <data name="Txt_TheDescriptionsCouldNotBeSaved0" xml:space="preserve">
+    <value>Không thể lưu mô tả: {0}</value>
+  </data>
+  <data name="Txt_TheDescriptionsCouldNotBeRead0" xml:space="preserve">
+    <value>Không thể đọc mô tả: {0}</value>
+  </data>
+  <data name="Txt_0Of1RowsShown2Without" xml:space="preserve">
+    <value>Hiển thị {0} / {1} hàng · {2} hàng chưa có mô tả</value>
+  </data>
+  <data name="Txt_OnlyALevel3UserCanChange_2" xml:space="preserve">
+    <value>Chỉ người dùng cấp 3 mới có thể thay đổi các mô tả này.</value>
+  </data>
+  <data name="Txt_Input" xml:space="preserve">
+    <value>Đầu vào</value>
+  </data>
+  <data name="Txt_Output" xml:space="preserve">
+    <value>Đầu ra</value>
+  </data>
+  <data name="Txt_All" xml:space="preserve">
+    <value>Tất cả</value>
+  </data>
+  <data name="Txt_Production" xml:space="preserve">
+    <value>Sản xuất</value>
+  </data>
+  <data name="Txt_CPK" xml:space="preserve">
+    <value>CPK</value>
+  </data>
+  <data name="Txt_GRR" xml:space="preserve">
+    <value>GRR</value>
+  </data>
+  <data name="Txt_Main" xml:space="preserve">
+    <value>Chính</value>
+  </data>
+  <data name="Txt_IODiagnostics" xml:space="preserve">
+    <value>Chẩn đoán I/O</value>
+  </data>
+  <data name="Txt_DigitalIO" xml:space="preserve">
+    <value>I/O số</value>
+  </data>
+  <data name="Txt_AxisParameters" xml:space="preserve">
+    <value>Thông số trục</value>
+  </data>
+  <data name="Txt_TCPIPSettings" xml:space="preserve">
+    <value>Cài đặt TCP/IP</value>
+  </data>
+  <data name="Txt_VisionSettings" xml:space="preserve">
+    <value>Cài đặt thị giác</value>
+  </data>
+  <data name="Txt_AELimitsCPK_2" xml:space="preserve">
+    <value>Giới hạn AE (CPK)</value>
+  </data>
+  <data name="Txt_AELimitsGRR_2" xml:space="preserve">
+    <value>Giới hạn AE (GRR)</value>
+  </data>
+  <data name="Txt_AELimitsProduction" xml:space="preserve">
+    <value>Giới hạn AE (Sản xuất)</value>
+  </data>
+  <data name="Txt_PARAMETER" xml:space="preserve">
+    <value>THÔNG SỐ</value>
+  </data>
+  <data name="Txt_MINIMUMLIMIT" xml:space="preserve">
+    <value>GIỚI HẠN TỐI THIỂU</value>
+  </data>
+  <data name="Txt_MAXIMUMLIMIT" xml:space="preserve">
+    <value>GIỚI HẠN TỐI ĐA</value>
+  </data>
+  <data name="Txt_UNIT" xml:space="preserve">
+    <value>ĐƠN VỊ</value>
+  </data>
+  <data name="Txt_CARDID" xml:space="preserve">
+    <value>ID CARD</value>
+  </data>
+  <data name="Txt_AXISID" xml:space="preserve">
+    <value>ID TRỤC</value>
+  </data>
+  <data name="Txt_AXISNAME" xml:space="preserve">
+    <value>TÊN TRỤC</value>
+  </data>
+  <data name="Txt_PITCH" xml:space="preserve">
+    <value>BƯỚC</value>
+  </data>
+  <data name="Txt_PULSESMM" xml:space="preserve">
+    <value>XUNG/MM</value>
+  </data>
+  <data name="Txt_PPR" xml:space="preserve">
+    <value>XUNG/VÒNG</value>
+  </data>
+  <data name="Txt_HOMINGACC" xml:space="preserve">
+    <value>GIA TỐC VỀ GỐC</value>
+  </data>
+  <data name="Txt_HOMINGDEACC" xml:space="preserve">
+    <value>GIẢM TỐC VỀ GỐC</value>
+  </data>
+  <data name="Txt_HOMINGSPEED" xml:space="preserve">
+    <value>TỐC ĐỘ VỀ GỐC</value>
+  </data>
+  <data name="Txt_Parity" xml:space="preserve">
+    <value>Bit chẵn lẻ</value>
+  </data>
+  <data name="Txt_StopBits" xml:space="preserve">
+    <value>Bit dừng</value>
+  </data>
+  <data name="Txt_Handshake" xml:space="preserve">
+    <value>Bắt tay</value>
+  </data>
+  <data name="Txt_Colour" xml:space="preserve">
+    <value>Màu</value>
+  </data>
+  <data name="Txt_OptID" xml:space="preserve">
+    <value>ID quang học</value>
+  </data>
+  <data name="Txt_CameraID" xml:space="preserve">
+    <value>ID camera</value>
+  </data>
+  <data name="Txt_RobotAuto" xml:space="preserve">
+    <value>Robot tự động</value>
+  </data>
+  <data name="Txt_RobotError" xml:space="preserve">
+    <value>Lỗi robot</value>
+  </data>
+  <data name="Txt_BarcodeScanner" xml:space="preserve">
+    <value>Máy quét mã vạch</value>
+  </data>
+  <data name="Txt_SFCPDCA_2" xml:space="preserve">
+    <value>SFC_PDCA</value>
+  </data>
+  <data name="Txt_Point01" xml:space="preserve">
+    <value>Điểm {0} {1}</value>
+  </data>
+  <data name="Txt_0Tossed" xml:space="preserve">
+    <value>{0} bị loại</value>
+  </data>
+  <data name="Txt_0Output" xml:space="preserve">
+    <value>{0} sản lượng</value>
+  </data>
+  <data name="Txt_QueryFailed" xml:space="preserve">
+    <value>Truy vấn thất bại:</value>
+  </data>
+  <data name="Txt_CouldNotSave" xml:space="preserve">
+    <value>Không thể lưu:</value>
+  </data>
+  <data name="Txt_StateHistoryCouldNotBeRead" xml:space="preserve">
+    <value>Không thể đọc lịch sử trạng thái:</value>
+  </data>
+  <data name="Txt_AlarmHistoryCouldNotBeRead" xml:space="preserve">
+    <value>Không thể đọc lịch sử báo động:</value>
+  </data>
+  <data name="Txt_ProductionRecordCouldNotBeRead" xml:space="preserve">
+    <value>Không thể đọc bản ghi sản xuất:</value>
+  </data>
+  <data name="Txt_SpecLimitsCouldNotBeRead" xml:space="preserve">
+    <value>Không thể đọc giới hạn quy cách:</value>
+  </data>
+  <data name="Txt_ParameterValuesCouldNotBeRead" xml:space="preserve">
+    <value>Không thể đọc giá trị thông số:</value>
+  </data>
+  <data name="Txt_TheSpecLimitsCouldNotBeSaved" xml:space="preserve">
+    <value>Không thể lưu giới hạn quy cách:</value>
+  </data>
+  <data name="Txt_TheSettingsCouldNotBeSaved" xml:space="preserve">
+    <value>Không thể lưu cài đặt:</value>
+  </data>
+  <data name="Txt_TheHardwareConfigurationCouldNotBeSaved" xml:space="preserve">
+    <value>Không thể lưu cấu hình phần cứng:</value>
+  </data>
+  <data name="Txt_TheParametersCouldNotBeSaved" xml:space="preserve">
+    <value>Không thể lưu thông số:</value>
+  </data>
+  <data name="Txt_TheAccessListCouldNotBeExported" xml:space="preserve">
+    <value>Không thể xuất danh sách truy cập:</value>
+  </data>
+  <data name="Txt_TheHashKeysCouldNotBeExported" xml:space="preserve">
+    <value>Không thể xuất khóa băm:</value>
+  </data>
+  <data name="Txt_HomingCouldNotBeStarted" xml:space="preserve">
+    <value>Không thể bắt đầu về gốc:</value>
+  </data>
+  <data name="Txt_CoordinateDataCouldNotBeRead" xml:space="preserve">
+    <value>Không thể đọc dữ liệu tọa độ:</value>
+  </data>
+  <data name="Txt_GlueWeighingSettingsChanged" xml:space="preserve">
+    <value>Đã thay đổi cài đặt cân keo:</value>
+  </data>
+  <data name="Txt_GlueControlSettingsChanged" xml:space="preserve">
+    <value>Đã thay đổi cài đặt kiểm soát keo:</value>
+  </data>
+  <data name="Txt_TheRequestCouldNotBeSent" xml:space="preserve">
+    <value>Không thể gửi yêu cầu:</value>
+  </data>
+  <data name="Txt_SensorDisabled" xml:space="preserve">
+    <value>Đã tắt cảm biến:</value>
+  </data>
+  <data name="Txt_SensorEnabled" xml:space="preserve">
+    <value>Đã bật cảm biến:</value>
+  </data>
+  <data name="Txt_ModeChangedTo" xml:space="preserve">
+    <value>Đã chuyển chế độ sang</value>
+  </data>
+  <data name="Txt_YouNeedToStartAgainForSelected" xml:space="preserve">
+    <value>Cần khởi động lại cho chế độ đã chọn:</value>
+  </data>
+  <data name="Txt_SWVersion_2" xml:space="preserve">
+    <value>Phiên bản phần mềm:</value>
+  </data>
+  <data name="Txt_MCVersion" xml:space="preserve">
+    <value>Phiên bản máy:</value>
+  </data>
+  <data name="Txt_RemoteQualification_2" xml:space="preserve">
+    <value>Thẩm định từ xa:</value>
+  </data>
+  <data name="Txt_ModeChangedTo0" xml:space="preserve">
+    <value>Đã chuyển chế độ sang {0}</value>
+  </data>
+  <data name="Txt_LogInAtLevel2Or3" xml:space="preserve">
+    <value>Đăng nhập cấp 2 hoặc 3 để sửa thông số và chạy hiệu chuẩn.</value>
+  </data>
+  <data name="Txt_LogInAtLevel2Or3_2" xml:space="preserve">
+    <value>Đăng nhập cấp 2 hoặc 3 để sửa thông số.</value>
+  </data>
+  <data name="Txt_LogInAtLevel2Or3_3" xml:space="preserve">
+    <value>Đăng nhập cấp 2 hoặc 3 để chạy hiệu chuẩn.</value>
+  </data>
+  <data name="Txt_WithinTheLimitsTheOffsetIsStored" xml:space="preserve">
+    <value>Trong giới hạn, độ lệch được lưu và áp dụng cho mọi lần phun keo sau đó.</value>
+  </data>
+  <data name="Txt_XYZAndTAreStored" xml:space="preserve">
+    <value>X, Y, Z và T được lưu làm mẫu để so sánh với mọi kim sau đó.</value>
+  </data>
+  <data name="Txt_WithinTheLimitsTheDeviationIsStored" xml:space="preserve">
+    <value>Trong giới hạn, độ lệch được lưu làm độ lệch kim; nếu không, hãy điều chỉnh hoặc thay kim.</value>
+  </data>
+  <data name="Txt_NotMapped" xml:space="preserve">
+    <value>Chưa ánh xạ</value>
+  </data>
+  <data name="AlarmType_Cylinder_Error" xml:space="preserve">
+    <value>Lỗi xi lanh</value>
+  </data>
+  <data name="AlarmType_Scanning_Error" xml:space="preserve">
+    <value>Lỗi quét mã</value>
+  </data>
+  <data name="AlarmType_Traceability_Error" xml:space="preserve">
+    <value>Lỗi truy xuất nguồn gốc</value>
+  </data>
+  <data name="AlarmDesc_Station_1_Y_axis_move_timeout" xml:space="preserve">
+    <value>Trục Y trạm 1 di chuyển quá thời gian</value>
+  </data>
+  <data name="AlarmDesc_Station_2_dispensing_Z_axis_not_in_position" xml:space="preserve">
+    <value>Trục Z phun keo trạm 2 chưa đến vị trí</value>
+  </data>
+  <data name="AlarmDesc_UC_loading_lifter_did_not_reach_the_down_position" xml:space="preserve">
+    <value>Bộ nâng nạp UC chưa đến vị trí dưới</value>
+  </data>
+  <data name="AlarmDesc_Transfer_conveyor_stopper_did_not_reach_the_up_position" xml:space="preserve">
+    <value>Chốt chặn băng tải chuyển chưa đến vị trí trên</value>
+  </data>
+  <data name="AlarmDesc_UC_in_place_sensor_not_detected_at_the_scanning_position" xml:space="preserve">
+    <value>Không phát hiện cảm biến UC tại vị trí quét</value>
+  </data>
+  <data name="AlarmDesc_CCD1_pre_check_unable_to_find_pattern" xml:space="preserve">
+    <value>CCD1 kiểm tra trước không tìm thấy mẫu</value>
+  </data>
+  <data name="AlarmDesc_CCD2_post_check_unable_to_find_pattern" xml:space="preserve">
+    <value>CCD2 kiểm tra sau không tìm thấy mẫu</value>
+  </data>
+  <data name="AlarmDesc_Transfer_conveyor_barcode_scan_failed" xml:space="preserve">
+    <value>Quét mã vạch băng tải chuyển thất bại</value>
+  </data>
+  <data name="AlarmDesc_Automatic_glue_weight_out_of_spec" xml:space="preserve">
+    <value>Khối lượng keo tự động ngoài quy cách</value>
+  </data>
+  <data name="AlarmDesc_Front_door_opened_during_auto_run" xml:space="preserve">
+    <value>Cửa trước bị mở khi đang chạy tự động</value>
+  </data>
+  <data name="AlarmDesc_No_answer_from_MES_for_the_carrier_SN" xml:space="preserve">
+    <value>MES không phản hồi SN khay</value>
+  </data>
+  <data name="Txt_SELECTCHANNEL" xml:space="preserve">
+    <value>CHỌN KÊNH</value>
+  </data>
+  <data name="Txt_AxisJog" xml:space="preserve">
+    <value>Jog trục</value>
+  </data>
+  <data name="Txt_LINEAR" xml:space="preserve">
+    <value>TUYẾN TÍNH</value>
+  </data>
+  <data name="Txt_ROTATIONAL" xml:space="preserve">
+    <value>XOAY</value>
+  </data>
+  <data name="Txt_JOGSPEED" xml:space="preserve">
+    <value>TỐC ĐỘ JOG</value>
+  </data>
+  <data name="Txt_LivePosition" xml:space="preserve">
+    <value>Vị trí hiện tại</value>
+  </data>
+  <data name="Txt_ActiveAlarms" xml:space="preserve">
+    <value>Báo động hiện tại</value>
+  </data>
+  <data name="Txt_NoActiveAlarms" xml:space="preserve">
+    <value>Không có báo động.</value>
+  </data>
+  <data name="Txt_Log" xml:space="preserve">
+    <value>Nhật ký</value>
+  </data>
+  <data name="Txt_EnablePictureQuantityCheck" xml:space="preserve">
+    <value>Enable Picture Quantity Check</value>
+  </data>
+  <data name="Txt_EarlyWarningTest" xml:space="preserve">
+    <value>Early warning for common defect factors - test</value>
+  </data>
+  <data name="Txt_TerminalNameLabel" xml:space="preserve">
+    <value>Terminal Name:</value>
+  </data>
+  <data name="Txt_SerialNumberLabel" xml:space="preserve">
+    <value>Serial Number:</value>
+  </data>
+  <data name="Txt_ResetFields" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="Txt_RunTest" xml:space="preserve">
+    <value>Test</value>
+  </data>
+  <data name="Txt_RequestBody" xml:space="preserve">
+    <value>Request body</value>
+  </data>
+  <data name="Txt_ResponseBody" xml:space="preserve">
+    <value>Response body</value>
+  </data>
+  <data name="Txt_DisableEarlyWarning" xml:space="preserve">
+    <value>!!! Disable the early warning for common defect factors</value>
+  </data>
+  <data name="Txt_BackToFixtures" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="Txt_Maintenance" xml:space="preserve">
+    <value>Maintenance</value>
+  </data>
+  <data name="Txt_AddNewItem" xml:space="preserve">
+    <value>Add New Item</value>
+  </data>
+  <data name="Txt_Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="Txt_MaintAdd" xml:space="preserve">
+    <value>Maint. / Add</value>
+  </data>
+  <data name="Txt_Active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Txt_LineType" xml:space="preserve">
+    <value>Line type</value>
+  </data>
+  <data name="Txt_HeadId" xml:space="preserve">
+    <value>Head ID</value>
+  </data>
+  <data name="Txt_MaintItem" xml:space="preserve">
+    <value>Maint. Item</value>
+  </data>
+  <data name="Txt_MaintPeriod" xml:space="preserve">
+    <value>Maint. Period (h)</value>
+  </data>
+  <data name="Txt_MaintCountdown" xml:space="preserve">
+    <value>Maint. Countdown (h)</value>
+  </data>
+  <data name="Txt_AlarmThreshold" xml:space="preserve">
+    <value>Alarm-triggering Threshold (h)</value>
+  </data>
+  <data name="Txt_LatestMaintRecord" xml:space="preserve">
+    <value>Latest maintenance record</value>
+  </data>
+  <data name="Txt_ScheduledMaintTime" xml:space="preserve">
+    <value>Scheduled Maint. Time</value>
+  </data>
+  <data name="Txt_HealthStatus" xml:space="preserve">
+    <value>Health Status</value>
+  </data>
+</root>

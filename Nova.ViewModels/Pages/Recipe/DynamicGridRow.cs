@@ -126,6 +126,16 @@ namespace Nova.ViewModels.Pages.Recipe
                 return;
             }
 
+            // FAM 2 SET_05: an IP address must be one, not any text.
+            if (colSchema.IsIpAddress)
+            {
+                if (IsIpv4(value))
+                    ClearErrors(columnKey);
+                else
+                    SetErrors(columnKey, "Must be an IP address such as 192.168.1.10.");
+                return;
+            }
+
             switch (colSchema.DataType)
             {
                 case ColumnDataType.Text:
@@ -175,6 +185,31 @@ namespace Nova.ViewModels.Pages.Recipe
                     }
                     break;
             }
+        }
+
+        /// <summary>Four numbers of 0-255, dot-separated, digits only.</summary>
+        private static bool IsIpv4(string value)
+        {
+            string[] parts = value.Trim().Split('.');
+            if (parts.Length != 4)
+                return false;
+
+            foreach (string part in parts)
+            {
+                if (part.Length == 0 || part.Length > 3)
+                    return false;
+
+                foreach (char c in part)
+                {
+                    if (c < '0' || c > '9')
+                        return false;
+                }
+
+                if (int.Parse(part, CultureInfo.InvariantCulture) > 255)
+                    return false;
+            }
+
+            return true;
         }
 
         private static bool TryParseNumber(string value, out double parsed)

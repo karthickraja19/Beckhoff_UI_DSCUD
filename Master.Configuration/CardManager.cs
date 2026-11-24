@@ -68,6 +68,9 @@ namespace Master.Configuration
                     CylinderDUTName = cardConfigs.CylinderDUTName,
                     InputCount = cardConfigs.InputCount,
                     OutputCount = cardConfigs.OutputCount,
+                    InputArray = cardConfigs.InputArray,
+                    OutputArray = cardConfigs.OutputArray,
+                    IOFirstIndex = cardConfigs.IOFirstIndex,
                 };
 
                 _card = new TwincatCard(cardproperties);

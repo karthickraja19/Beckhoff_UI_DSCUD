@@ -1,0 +1,29 @@
+<Project>
+  <!--
+    Imported by every project in the solution.
+
+    NuGet restore writes obj\project.assets.json with the absolute paths of the folder
+    it ran in (the project and the packages folder). When obj folders are copied to
+    another PC or folder, a build that runs without restoring first looks for the
+    packages under the old path and fails with "The package X with version Y could
+    not be found in <old path>". This check catches that before it happens and says
+    what to do. A restore (Visual Studio, msbuild -restore)
+    rewrites the file and the check passes.
+  -->
+  <Target Name="NovaCheckRestoreLocation"
+          BeforeTargets="PrepareForBuild;ResolvePackageAssets;ResolveNuGetPackageAssets"
+          Condition="'$(DesignTimeBuild)' != 'true'">
+    <PropertyGroup>
+      <_NovaAssetsFile>$([MSBuild]::NormalizePath('$(MSBuildProjectDirectory)', '$(MSBuildProjectExtensionsPath)', 'project.assets.json'))</_NovaAssetsFile>
+    </PropertyGroup>
+    <PropertyGroup Condition="Exists('$(_NovaAssetsFile)')">
+      <_NovaAssetsText>$([System.IO.File]::ReadAllText('$(_NovaAssetsFile)').ToLowerInvariant())</_NovaAssetsText>
+      <!-- The project's folder, not its file: WPF builds a temporary <name>_xxxx_wpftmp.csproj
+           beside the real one that uses the same assets file. -->
+      <_NovaProjectPathJson>$([MSBuild]::EnsureTrailingSlash('$(MSBuildProjectDirectory)').Replace('\', '\\').ToLowerInvariant())</_NovaProjectPathJson>
+      <_NovaRestoredHere>$(_NovaAssetsText.Contains('$(_NovaProjectPathJson)'))</_NovaRestoredHere>
+    </PropertyGroup>
+    <Error Condition="Exists('$(_NovaAssetsFile)') and '$(_NovaRestoredHere)' != 'true'"
+           Text="$(MSBuildProjectName): obj\project.assets.json was restored in another folder or on another PC, so the NuGet packages would be looked for there. Restore first: in Visual Studio right-click the solution &gt; Restore NuGet Packages, then build again (or run: msbuild Odyssey.Master.Beckhoff.sln -restore). This happens when bin/obj folders are copied with the source; delete them before zipping." />
+  </Target>
+</Project>

@@ -13,7 +13,7 @@ namespace Nova.Abstractions.Data
     /// <para>
     /// The second block is not routable. Those view models are hosted inside a tab of
     /// one of the six - Manual in Setting's Manual tab (the "GUI for manual operation"
-    /// slide 57 gives Home's Vendor tab), MachineConfig and Recipe in Config's Machine Configs area
+    /// slide 57 gives Home's Vendor tab), MachineConfig, Recipe and Calibration in Config's Machine Configs area
     /// (slide 58) - but they still derive from PageViewModel, which requires a key.
     /// They are listed here so each has a distinct identity; nothing navigates to
     /// them, so no page factory case exists for them.
@@ -32,6 +32,7 @@ namespace Nova.Abstractions.Data
         // Hosted inside the pages above; never routed to directly.
         Manual,
         MachineConfig,
-        Recipe
+        Recipe,
+        Calibration
     }
 }

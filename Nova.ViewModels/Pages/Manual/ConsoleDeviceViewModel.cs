@@ -11,7 +11,7 @@ using Nova.ViewModels.Common;
 namespace Nova.ViewModels.Pages.Manual
 {
     /// <summary>
-    /// Shared shell for the console-style Manual device tabs (Scanner, CCD, Light Control,
+    /// Shared shell for the console-style Manual device tabs (Scanner, CCD,
     /// SFC &amp; PDCA): a device selector + live connection status, a "Send
     /// Command" editor, a "Received Response" console and Connect / Trigger /
     /// Disconnect actions.
@@ -54,7 +54,20 @@ namespace Nova.ViewModels.Pages.Manual
         [ObservableProperty]
         private string _sendCommand;
 
-        public ObservableCollection<CameraConsoleLine> Console { get; } = new ObservableCollection<CameraConsoleLine>();
+        /// <summary>Shown while no device is selected (and for a tab with no devices at all).</summary>
+        private readonly ObservableCollection<CameraConsoleLine> _noDevice = new ObservableCollection<CameraConsoleLine>();
+
+        /// <summary>
+        /// The selected device's own Received Response history. FAM 2 Bug_Id_038 / MS_11 /
+        /// MS_16: one console used to hold every device's answers and kept them across a change.
+        /// </summary>
+        public ObservableCollection<CameraConsoleLine> Console => SelectedDevice != null ? SelectedDevice.Console : _noDevice;
+
+        /// <summary>
+        /// What the console shows when a command got no answer. FAM 2 Bug_Id_039: the device
+        /// sends nothing back for a command it does not know, so the line says so.
+        /// </summary>
+        public const string NoResponseText = "No response: invalid command, or the device did not answer.";
 
         public bool CanConnect => !IsConnected;
         public string StatusText => IsConnected ? "CONNECTED" : "DISCONNECTED";
@@ -64,14 +77,6 @@ namespace Nova.ViewModels.Pages.Manual
         public virtual string SendCaption => "SEND COMMAND";
         public virtual string DeviceCaption => "SELECTED DEVICE";
 
-        /// <summary>
-        /// Set by tabs that need a second dropdown next to the device selector — the
-        /// Light Control tab picks a light object and a colour recipe, mirroring V3's
-        /// cmbCOMPort + cmbOPTSend pair. Hidden for every other console tab.
-        /// </summary>
-        public virtual bool HasSecondarySelector => false;
-
-        public virtual string SecondarySelectorCaption => "";
         public virtual string TriggerLabel => "TRIGGER";
         public virtual string TriggerIcon => "Play";
 
@@ -103,8 +108,8 @@ namespace Nova.ViewModels.Pages.Manual
         /// than pre-loading anything into it.
         ///
         /// Selecting a device used to drop that device's default command straight into
-        /// the Send Command box, across Scanner, CCD, Robot, SFC &amp; PDCA and Light
-        /// Control. Removed by request: a command sitting in the box ready to send is one
+        /// the Send Command box, across Scanner, CCD, Robot and SFC &amp; PDCA
+        /// tabs. Removed by request: a command sitting in the box ready to send is one
         /// keypress from being sent to real hardware, and after switching devices it was
         /// the *previous* device's command left in view. Clearing on every change means
         /// what is in the box is always something the operator typed for the device
@@ -113,6 +118,7 @@ namespace Nova.ViewModels.Pages.Manual
         protected virtual void OnDeviceSelected(ConsoleDeviceItem item)
         {
             SendCommand = string.Empty;
+            OnPropertyChanged(nameof(Console));
             RefreshConnection();
         }
 
@@ -160,12 +166,14 @@ namespace Nova.ViewModels.Pages.Manual
         private async Task ConnectDevice()
         {
             if (IsConnected) return;
-            Console.Add(new CameraConsoleLine("CONNECT " + (SelectedDevice?.Name ?? "DEVICE") + "..."));
+            // The device's own history, captured now: the selection may change during the await.
+            var console = Console;
+            console.Add(new CameraConsoleLine("CONNECT " + (SelectedDevice?.Name ?? "DEVICE") + "..."));
             bool ok = await DoConnectAsync();
             // The device's own status can arrive a moment after the connect returns; the
             // status change then confirms it.
             IsConnected = ok || ReadDeviceConnected();
-            Console.Add(new CameraConsoleLine(ok ? "ACK LINK_ESTABLISHED" : "CONNECT_FAILED", isAck: ok));
+            console.Add(new CameraConsoleLine(ok ? "ACK LINK_ESTABLISHED" : "CONNECT_FAILED", isAck: ok));
             if (ok) OnConnected();
         }
 
@@ -173,11 +181,13 @@ namespace Nova.ViewModels.Pages.Manual
         private async Task Trigger()
         {
             if (!IsConnected) return;
+            var console = Console;
+            string command = SendCommand;
             string response = await DoTriggerAsync() ?? string.Empty;
-            if (!string.IsNullOrEmpty(SendCommand))
-                Console.Add(new CameraConsoleLine(SendCommand));
-            Console.Add(new CameraConsoleLine(
-                response.Length == 0 ? "(no response)" : response.Trim(),
+            if (!string.IsNullOrEmpty(command))
+                console.Add(new CameraConsoleLine(command));
+            console.Add(new CameraConsoleLine(
+                response.Length == 0 ? NoResponseText : response.Trim(),
                 isAck: response.Length > 0));
         }
 
@@ -185,11 +195,12 @@ namespace Nova.ViewModels.Pages.Manual
         private async Task Disconnect()
         {
             if (!IsConnected) return;
+            var console = Console;
             await DoDisconnectAsync();
             // A TCP device closes its link in the background, so it can still report
             // connected here; the status change shows it closed.
             RefreshConnection();
-            Console.Add(new CameraConsoleLine("DISCONNECT"));
+            console.Add(new CameraConsoleLine("DISCONNECT"));
         }
 
        
@@ -201,7 +212,7 @@ private void RefreshResponse()
 
 
 
-        // ---- Transport hooks (socket subclasses use ActiveProtocol; light overrides) ----
+        // ---- Transport hooks (socket subclasses use ActiveProtocol) ----
 
         protected virtual async Task<bool> DoConnectAsync()
         {

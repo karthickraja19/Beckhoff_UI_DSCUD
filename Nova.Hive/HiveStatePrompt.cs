@@ -38,13 +38,24 @@ namespace Nova.Hive
             _uiThread = Application.Current.Dispatcher;
 
             _hive.StateChanged += OnHiveStateChanged;
+            _hive.SuspendedChanged += OnSuspendedChanged;
             _hive.AuditRoundComplete += OnAuditRoundComplete;
             _hive.DebugLimitReached += OnDebugLimitReached;
+            _hive.AuditUploadFailed += OnAuditUploadFailed;
         }
 
+        /// <summary>S3.4 / S3.5: any gateway error but 1024 and 1025 on an audit unit is shown to the OSS.</summary>
+        private void OnAuditUploadFailed(object sender, string message)
+        {
+            _uiThread.BeginInvoke(new Action(() =>
+                MessageBox.Show(Application.Current.MainWindow, HiveText.T(message), HiveText.T("HIVE - audit upload"),
+                    MessageBoxButton.OK, MessageBoxImage.Warning)));
+        }
+
+        /// <summary>The chip; HIVE disabled (grey, the bar not red) while the PLC is in manual.</summary>
         public HiveState CurrentState
         {
-            get { return Describe(_hive.CurrentState, _hive.RootError); }
+            get { return Shown(_hive.CurrentState); }
         }
 
         /// <summary>
@@ -53,6 +64,14 @@ namespace Nova.Hive
         /// </summary>
         public void ShowStateChange()
         {
+            if (_hive.IsSuspended)
+            {
+                MessageBox.Show(Application.Current.MainWindow,
+                    HiveText.T("HIVE is off while the machine is in manual mode."),
+                    "HIVE", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
             List<PlannedDowntimeOption> planned = PlannedOptions();
 
             var options = new HiveStateDialog(
@@ -89,8 +108,8 @@ namespace Nova.Hive
         public void RecordStopDowntime()
         {
             // Already down - planned or not - Stop changes nothing in HIVE, so there is no
-            // state change for the badge to go with.
-            if (_hive.CurrentState == HiveStateMachine.Downtime)
+            // state change for the badge to go with. In manual HIVE is off.
+            if (_hive.CurrentState == HiveStateMachine.Downtime || _hive.IsSuspended)
                 return;
 
             // Any operator may stop the machine, so this badge is not checked for a level.
@@ -104,8 +123,10 @@ namespace Nova.Hive
         public void Dispose()
         {
             _hive.StateChanged -= OnHiveStateChanged;
+            _hive.SuspendedChanged -= OnSuspendedChanged;
             _hive.AuditRoundComplete -= OnAuditRoundComplete;
             _hive.DebugLimitReached -= OnDebugLimitReached;
+            _hive.AuditUploadFailed -= OnAuditUploadFailed;
         }
 
         private bool InPoseCalibration
@@ -126,21 +147,42 @@ namespace Nova.Hive
         {
             _uiThread.BeginInvoke(new Action(() =>
             {
+                // The choices after "Continue", in the order they are offered.
                 var choices = new List<Choice> { new Choice("Continue test with the same operator", true) };
+                var actions = new List<Action> { () => _hive.ContinueAudit() };
+
                 if (session.HasNextOperator)
+                {
                     choices.Add(new Choice("Next operator (Operator_ID " + (session.OperatorIndex + 1) + ")"));
+                    actions.Add(() => _hive.NextAuditOperator());
+                }
+
+                // S3.4: GRR is 30 captures for each of three operators, then 10 more as operator 3.
+                if (session.HasFinalTen)
+                {
+                    choices.Add(new Choice("Last 10 captures (Operator_ID 3)"));
+                    actions.Add(() => _hive.StartAuditFinalTen());
+                }
+
                 choices.Add(new Choice("Exit downtime (change to Running)"));
+                actions.Add(() => AskForBadgeAndApply(HiveStateMachine.Running, "Change to Running", null,
+                    session.Code == HiveStateMachine.PoseCalibrationCode ? AccessLevel.Level3 : AccessLevel.Level2));
 
                 int picked = ChoiceDialog.Ask(session.Code + " - round complete",
                     session.Describe() + ". Continue test?", choices.ToArray());
 
-                if (picked == 0)
-                    _hive.ContinueAudit();
-                else if (session.HasNextOperator && picked == 1)
-                    _hive.NextAuditOperator();
-                else if (picked > 0)
-                    AskForBadgeAndApply(HiveStateMachine.Running, "Change to Running", null,
-                        session.Code == HiveStateMachine.PoseCalibrationCode ? AccessLevel.Level3 : AccessLevel.Level2);
+                if (picked >= 0 && picked < actions.Count)
+                {
+                    actions[picked]();
+                    return;
+                }
+
+                // Cancel (S3.4, S3.5): HIVE stays in the planned downtime, the test is over and
+                // the machine may not be started for another one from here.
+                _hive.FinishAudit();
+                MessageBox.Show(Application.Current.MainWindow,
+                    HiveText.T("The test has ended and HIVE stays in " + session.Code + ". To test again, change the HIVE state to Running first, then choose " + session.Code + " again."),
+                    HiveText.T(session.Code + " - test ended"), MessageBoxButton.OK, MessageBoxImage.Information);
             }));
         }
 
@@ -149,7 +191,7 @@ namespace Nova.Hive
         {
             _uiThread.BeginInvoke(new Action(() =>
             {
-                MessageBox.Show(Application.Current.MainWindow, message, "HIVE - debug units",
+                MessageBox.Show(Application.Current.MainWindow, HiveText.T(message), HiveText.T("HIVE - debug units"),
                     MessageBoxButton.OK, MessageBoxImage.Warning);
                 ShowStateChange();
             }));
@@ -174,7 +216,7 @@ namespace Nova.Hive
                 string refused = _hive.ChangeStateManually(HiveStateMachine.Downtime, outcome.OperatorId, outcome.Error);
                 if (refused != null)
                 {
-                    MessageBox.Show(Application.Current.MainWindow, "The HIVE state was not changed. " + refused,
+                    MessageBox.Show(Application.Current.MainWindow, HiveText.T("The HIVE state was not changed. " + refused),
                         "HIVE", MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
@@ -200,6 +242,10 @@ namespace Nova.Hive
 
                 if (blocked == null && reason.NeedsLevel3 && _session != null && _session.Level < AccessLevel.Level3)
                     blocked = "Only enabled when an Admin (Level 3) user is logged in.";
+
+                // Slide 31: Stress Test is "for non-MES stress test only".
+                if (blocked == null && reason.Code == "PD-05" && _procedures != null && _procedures.IsMesConfigured)
+                    blocked = "Stress Test is for non-MES stress tests only: MES is switched on for this machine.";
 
                 options.Add(new PlannedDowntimeOption(reason, blocked));
             }
@@ -263,7 +309,7 @@ namespace Nova.Hive
             string refused = _hive.ChangeStateManually(state, badge.OperatorId, error);
             if (refused != null)
             {
-                MessageBox.Show(Application.Current.MainWindow, "The HIVE state was not changed. " + refused,
+                MessageBox.Show(Application.Current.MainWindow, HiveText.T("The HIVE state was not changed. " + refused),
                     "HIVE", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
@@ -284,15 +330,26 @@ namespace Nova.Hive
 
         private void OnHiveStateChanged(object sender, int state)
         {
-            HiveState shown = Describe(state, _hive.RootError);
+            HiveState shown = Shown(state);
 
             // The chip is a bound property, so the change has to reach the UI thread.
             _uiThread.BeginInvoke(new Action(() => StateChanged?.Invoke(this, shown)));
         }
 
+        /// <summary>The PLC went into or out of manual: the chip goes grey, or back to the HIVE state.</summary>
+        private void OnSuspendedChanged(object sender, EventArgs e)
+        {
+            OnHiveStateChanged(sender, _hive.CurrentState);
+        }
+
+        private HiveState Shown(int state)
+        {
+            return _hive.IsSuspended ? HiveState.Disconnected : Describe(state, _hive.RootError);
+        }
+
         /// <summary>
-        /// Which chip to show. Downtime with a "PD-" code is planned downtime, and
-        /// PD-100 is engineering time (DFM slide 9).
+        /// Which chip to show: Running, Idle or Downtime. Planned downtime ("PD-" codes) and
+        /// offline processing (PD-100) have no chip of their own.
         /// </summary>
         private static HiveState Describe(int state, HiveError error)
         {
@@ -305,13 +362,8 @@ namespace Nova.Hive
                     return HiveState.Idle;
 
                 case HiveStateMachine.Downtime:
-                    string code = error != null ? error.Code : null;
-                    if (string.IsNullOrEmpty(code) || !code.StartsWith("PD-", StringComparison.OrdinalIgnoreCase))
-                        return HiveState.Downtime;
-
-                    return code.StartsWith("PD-100", StringComparison.OrdinalIgnoreCase)
-                        ? HiveState.Engineering
-                        : HiveState.PlannedDowntime;
+                    // Planned or not, downtime is one chip (3 state standard, v5.0).
+                    return HiveState.Downtime;
 
                 default:
                     return HiveState.Disconnected;

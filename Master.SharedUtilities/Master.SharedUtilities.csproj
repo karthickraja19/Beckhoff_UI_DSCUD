@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Only what Master.Scheduler uses is kept from V3: the shift status / OEE helper and
+       the state it works on. SDK-style like the other projects, so NuGet restore always
+       rewrites its obj for the folder the solution is in. -->
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <AssemblyName>Master.SharedUtilities</AssemblyName>
+    <RootNamespace>Master.SharedUtilities</RootNamespace>
+    <!-- Properties\AssemblyInfo.cs is kept as it is. -->
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- GlobalClass.CurrentShift sets NLog's ShiftName for the log file names. -->
+    <PackageReference Include="NLog" Version="6.1.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.Configuration" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Master.Repository\Master.Repository.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,4 +1,0 @@
-{
-  "_note": "Parameter Dashboard live values (DFM slide 43). Map each Parameter of Config > Spec Limits (Production) to the PLC variable that holds it: \"parameter\": { \"Symbol\": \"GVL_HMI.rValue\", \"Type\": \"REAL\" }. Types: LREAL, REAL, DINT, INT, UDINT, UINT, BOOL. Keys starting with _ are ignored.",
-  "_example_front_cartridge_temperature": { "Symbol": "GVL_HMI.rFrontCartridgeTemperature", "Type": "REAL" }
-}

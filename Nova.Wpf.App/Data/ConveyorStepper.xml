@@ -1,9 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<ConveyorStepper>
-  <Stepper MotorName="LoadingConveyor" ForwardCommand="Load_Conv_Motor_FW_Cmd" ReverseCommand="Load_Conv_Motor_Rev_Cmd" 
-		AlarmResetCommand="Load_Conv_Motor_Alm_Rst" AlarmSignal="Load_Conv_Alarm_Signl"  />
-  <Stepper MotorName="WorkingConveyor" ForwardCommand="Work_Conv_Motor_FW_Cmd" ReverseCommand="Work_Conv_Motor_Rev_Cmd" 
-		AlarmResetCommand="Work_Conv_Motor_Alm_Rst" AlarmSignal="Work_Conv_Motor_Alarm_Signl" />
-  <Stepper MotorName="UnloadingConveyor" ForwardCommand="Unload_Conv_Motor_FW_Cmd" ReverseCommand="Unload_Conv_Motor_Rev_Cmd" 
-		AlarmResetCommand="Unload_Conv_Motor_Alm_Rst" AlarmSignal="Unload_Conv_Motor_Alarm_Signl" />
-</ConveyorStepper>

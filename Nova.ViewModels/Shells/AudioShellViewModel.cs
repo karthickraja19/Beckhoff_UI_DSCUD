@@ -48,6 +48,7 @@ namespace Nova.ViewModels.Shells
 
         /// <summary>HIVE state and its pop-ups (slides 47 and 49). Null with no PLC.</summary>
         private readonly IHiveStatePrompt _hivePrompt;
+        private readonly IHomingService _homing;
 
         /// <summary>The six menu buttons, in the order slide 42 draws them.</summary>
         public ObservableCollection<AudioNavItem> NavItems { get; } =
@@ -170,8 +171,6 @@ namespace Nova.ViewModels.Shells
                     case HiveState.Running: return "HIVE_Running";
                     case HiveState.Idle: return "HIVE_Idle";
                     case HiveState.Downtime: return "HIVE_DT";
-                    case HiveState.PlannedDowntime: return "HIVE_Plan_DT";
-                    case HiveState.Engineering: return "HIVE_Engineering";
                     default: return "HIVE_Disabled";
                 }
             }
@@ -181,10 +180,7 @@ namespace Nova.ViewModels.Shells
         /// Slide 42: "Downtime state turns indicator bar background red". Bound by the
         /// view to swap the whole bar's fill to #EB7373.
         /// </summary>
-        public bool IsDowntime =>
-            HiveState == HiveState.Downtime ||
-            HiveState == HiveState.PlannedDowntime ||
-            HiveState == HiveState.Engineering;
+        public bool IsDowntime => HiveState == HiveState.Downtime;
 
         /// <summary>
         /// Slide 42: the chip is "read only for no login and L1"; slide 49 makes it
@@ -383,8 +379,22 @@ namespace Nova.ViewModels.Shells
         [RelayCommand]
         private void Navigate(AppPageNames page)
         {
+            // FAM 2 Bug_Id_004: homing runs from the Manual tab, in manual mode. Leaving the
+            // page releases manual mode, which sends the PLC back to IDLE mid-homing, so
+            // the operator stays where homing was started until it ends.
+            if (IsHomingInProgress && (CurrentPage == null || CurrentPage.PageName != page))
+            {
+                if (_dialog != null)
+                    _dialog.ShowWarning("Homing is in progress. Wait for it to finish before leaving this screen.", "Homing");
+                return;
+            }
+
             _navigation.NavigateTo(page);
         }
+
+        /// <summary>The PLC is homing, or the Homing button was pressed and the PLC has not finished.</summary>
+        private bool IsHomingInProgress =>
+            MachineStatus == MachineStatus.Homing || (_homing != null && _homing.IsHoming);
 
 
         // ==================================================================
@@ -396,8 +406,10 @@ namespace Nova.ViewModels.Shells
             IStationProfileService profile = null,
             IDialogService dialog = null,
             IActiveAlarmService activeAlarms = null,
-            IHiveStatePrompt hivePrompt = null)
+            IHiveStatePrompt hivePrompt = null,
+            IHomingService homing = null)
         {
+            _homing = homing;
             _navigation = navigation;
             _session = session;
             _orchestrator = orchestrator;

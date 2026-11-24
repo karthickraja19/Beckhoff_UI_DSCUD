@@ -37,12 +37,6 @@ namespace Nova.ViewModels.Pages.Audio
     {
         public override AppPageNames PageName => AppPageNames.Alarm;
 
-        /// <summary>
-        /// True when the alarm log generates its rows (SampleData=true). The view labels
-        /// the page, so a generated alarm history is never taken for the machine's.
-        /// </summary>
-        public bool IsSampleData => _alarms is ISampleDataSource;
-
         private readonly IAlarmLogRepository _alarms;
 
         /// <summary>
@@ -184,6 +178,9 @@ namespace Nova.ViewModels.Pages.Audio
         /// </summary>
         private void Apply(IReadOnlyList<AlarmData> records)
         {
+            // Kept so a language change can redraw the pie in the new language.
+            _lastRecords = records;
+
             AlarmRows.Clear();
             DowntimeTop10.Clear();
 
@@ -282,7 +279,7 @@ namespace Nova.ViewModels.Pages.Audio
 
                 slices.Add(new PieSeries<double>
                 {
-                    Name = byType[i].Name,
+                    Name = UiLanguage.Alarm(byType[i].Name),
                     Values = new[] { byType[i].Minutes },
                     Fill = AudioChartPalette.Fill(AudioChartPalette.TopN(i)),
                     Stroke = null,
@@ -426,7 +423,7 @@ namespace Nova.ViewModels.Pages.Audio
             : base(session)
         {
             _alarms = alarms;
-            _errorCodes = alarms is ISampleDataSource ? null : errorCodes;
+            _errorCodes = errorCodes;
             _csv = csv;
             _dialog = dialog;
 
@@ -436,6 +433,14 @@ namespace Nova.ViewModels.Pages.Audio
             // Empty axes would render as a blank box rather than an empty chart, so the
             // histogram is built once up front against no records.
             BuildDurationHistogram(new AlarmData[0]);
+
+            // The table and Top 10 follow the language through their bindings; the pie's
+            // slice names are set here, so redraw it in the new language.
+            UiLanguage.Changed += (sender, e) =>
+            {
+                if (_lastRecords != null)
+                    Apply(_lastRecords);
+            };
         }
 
         /// <summary>
@@ -443,17 +448,33 @@ namespace Nova.ViewModels.Pages.Audio
         /// default query (today) rather than making the operator press Query to see
         /// anything at all.
         /// </summary>
+        /// <summary>
+        /// FAM 2 RPT_Al_06: the page opens on its default window every time, rather than on
+        /// whatever range the last operator left (the view model lives for the whole HMI).
+        /// </summary>
         public override void OnNavigatedTo()
         {
             base.OnNavigatedTo();
-
-            if (!_hasQueried && QueryCommand.CanExecute(null))
-            {
-                _hasQueried = true;
-                QueryCommand.Execute(null);
-            }
+            ResetWindowAndQuery();
         }
 
-        private bool _hasQueried;
+        /// <summary>A sign-in or sign-out starts the page from its defaults too (RPT_Al_06).</summary>
+        protected override void OnAccessLevelChanged(Nova.Abstractions.Data.AccessLevel level)
+        {
+            base.OnAccessLevelChanged(level);
+            ResetWindowAndQuery();
+        }
+
+        private void ResetWindowAndQuery()
+        {
+            StartTime = DateTime.Today.AddDays(-1);
+            EndTime = DateTime.Today.AddDays(1);
+
+            if (QueryCommand != null && QueryCommand.CanExecute(null))
+                QueryCommand.Execute(null);
+        }
+
+        /// <summary>The records on screen, untranslated; null before the first query.</summary>
+        private IReadOnlyList<AlarmData> _lastRecords;
     }
 }

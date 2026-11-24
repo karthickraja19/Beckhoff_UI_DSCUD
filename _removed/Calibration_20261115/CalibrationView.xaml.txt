@@ -1,0 +1,598 @@
+<UserControl x:Class="Nova.Wpf.App.Views.Pages.Audio.CalibrationView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="clr-namespace:Nova.Wpf.UI.Localization;assembly=Nova.Wpf.UI"
+             xmlns:converters="clr-namespace:Nova.Wpf.App.Converters"
+             Background="Transparent">
+
+    <!-- ================================================================== -->
+    <!-- The Setting page's Calibration tab (SOP sheet TE010_CALIBRATION).   -->
+    <!-- Left: station, the machine's five calibrations, homing and manual   -->
+    <!-- mode. Middle: what the calibration in front is, its routines, what  -->
+    <!-- to confirm before Start, and the parameters. Right: the buttons,    -->
+    <!-- what the PLC is doing, the result and when it last ran.             -->
+    <!-- The barcode scanner (tuned in its own software) has its own page.   -->
+    <!-- ================================================================== -->
+    <UserControl.Resources>
+        <converters:AudioBoolToVisibilityConverter x:Key="BoolToVisibility"/>
+
+        <Style x:Key="Bullet" TargetType="TextBlock" BasedOn="{StaticResource Audio.Callout}">
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+        </Style>
+
+        <Style x:Key="Recessed" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource Audio.Surface.RecessedBrush}"/>
+            <Setter Property="CornerRadius" Value="{DynamicResource Audio.Radius.Field}"/>
+            <Setter Property="Padding" Value="12,8"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="320"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ============================================================== -->
+        <!-- LEFT: station, the five calibrations, machine                   -->
+        <!-- ============================================================== -->
+        <Border Grid.Column="0" Style="{StaticResource Audio.Card}">
+            <Grid Margin="16,12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Style="{StaticResource Audio.Title3}" Text="{loc:Tr Txt_Calibration}" Margin="0,0,0,12"/>
+
+                <StackPanel Grid.Row="1" Margin="0,0,0,12">
+                    <TextBlock Style="{StaticResource Audio.Headline}" Text="{loc:Tr Txt_Station_2}" Margin="0,0,0,6"/>
+                    <ListBox Style="{StaticResource Audio.SegmentedControl}" ItemTemplate="{StaticResource Loc.ItemText}"
+                             ItemsSource="{Binding Stations}"
+                             SelectedItem="{Binding SelectedStation, Mode=TwoWay}"
+                             IsEnabled="{Binding CanChangeSelection}"
+                             AutomationProperties.Name="Calibration station"/>
+                </StackPanel>
+
+                <TextBlock Grid.Row="2" Style="{StaticResource Audio.Headline}" Text="Calibration" Margin="0,0,0,6"/>
+                <Border Grid.Row="3" BorderBrush="{DynamicResource Audio.System.GrayBrush}" BorderThickness="1"
+                        CornerRadius="{DynamicResource Audio.Radius.Field}">
+                    <ListBox ItemsSource="{Binding Groups}"
+                             SelectedItem="{Binding SelectedGroup, Mode=TwoWay}"
+                             IsEnabled="{Binding CanChangeSelection}"
+                             Background="Transparent" BorderThickness="0"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             AutomationProperties.Name="Calibration">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="6,8">
+                                    <TextBlock Style="{StaticResource Audio.Callout}" FontWeight="SemiBold"
+                                               Text="{loc:TrBinding Name}" TextWrapping="Wrap"/>
+                                    <TextBlock Style="{StaticResource Audio.Footnote}" Text="{loc:TrBinding Reference}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Border>
+
+                <!-- Machine: homing, and manual mode for jogging and Teach -->
+                <Border Grid.Row="4" Style="{StaticResource Recessed}" Margin="0,12,0,0">
+                    <StackPanel>
+                        <TextBlock TextWrapping="Wrap" Text="{loc:TrBinding HomingText}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource Audio.Callout}">
+                                    <Setter Property="Foreground" Value="{DynamicResource Audio.System.OrangeBrush}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsHomed}" Value="True">
+                                            <Setter Property="Foreground" Value="{DynamicResource Audio.System.GreenBrush}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <Button Style="{StaticResource Audio.Button}" Content="{loc:Tr Txt_Homing}" Margin="0,8,0,0"
+                                HorizontalAlignment="Stretch" Command="{Binding HomeCommand}"
+                                ToolTip="{loc:Tr Txt_HomeEveryComponentThePLCRunsThe}"
+                                Visibility="{Binding HasHoming, Converter={StaticResource BoolToVisibility}}"/>
+                        <CheckBox Margin="0,10,0,0" Content="Manual mode (for jogging and Teach)"
+                                  IsChecked="{Binding IsManualHeld, Mode=TwoWay}"
+                                  IsEnabled="{Binding CanHoldManual}"
+                                  ToolTip="Holds the machine in manual mode until switched off. Switch it off before a run that needs the machine in auto."/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- ============================================================== -->
+        <!-- MIDDLE: the calibration, its routines, checks and parameters.   -->
+        <!-- No procedure text: the users know the procedure (SOP).          -->
+        <!-- ============================================================== -->
+        <Border Grid.Column="1" Style="{StaticResource Audio.Card}"
+                Visibility="{Binding IsRoutineGroup, Converter={StaticResource BoolToVisibility}}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="16,12">
+                <StackPanel Margin="0,0,8,0">
+                    <TextBlock Style="{StaticResource Audio.Title3}" TextWrapping="Wrap" Text="{loc:TrBinding SelectedGroup.Name}"/>
+                    <TextBlock Style="{StaticResource Audio.Footnote}" Margin="0,2,0,8" Text="{loc:TrBinding GroupReference}"/>
+
+                    <!-- Its routines, in the order they are done -->
+                    <TextBlock Style="{StaticResource Audio.Headline}" Text="{loc:Tr Txt_Routine}" Margin="0,0,0,6"/>
+                    <Border BorderBrush="{DynamicResource Audio.System.GrayBrush}" BorderThickness="1"
+                            CornerRadius="{DynamicResource Audio.Radius.Field}" Margin="0,0,0,14">
+                        <ListBox ItemsSource="{Binding Routines}"
+                                 SelectedItem="{Binding SelectedRoutine, Mode=TwoWay}"
+                                 IsEnabled="{Binding CanChangeSelection}"
+                                 Background="Transparent" BorderThickness="0"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 AutomationProperties.Name="Calibration routine">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="6,6">
+                                        <TextBlock Style="{StaticResource Audio.Callout}" Text="{loc:TrBinding Name}" TextWrapping="Wrap"/>
+                                        <TextBlock Style="{StaticResource Audio.Footnote}" Text="{loc:TrBinding Duration}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Border>
+
+                    <!-- What the operator confirms by hand -->
+                    <StackPanel Margin="0,0,0,14" Visibility="{Binding HasChecks, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Style="{StaticResource Audio.Headline}" Text="Before you start" Margin="0,0,0,6"/>
+                        <ItemsControl ItemsSource="{Binding Checks}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox Margin="0,0,0,8" IsChecked="{Binding IsChecked, Mode=TwoWay}"
+                                              IsEnabled="{Binding DataContext.CanChangeSelection, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                                        <TextBlock Style="{StaticResource Audio.Callout}" TextWrapping="Wrap" Text="{loc:TrBinding Text}"/>
+                                    </CheckBox>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <!-- Its parameters, read only until Edit -->
+                    <TextBlock Style="{StaticResource Audio.Headline}" Text="Parameters" Margin="0,0,0,2"/>
+                    <TextBlock Style="{StaticResource Audio.Footnote}" TextWrapping="Wrap" Margin="0,0,0,10" Text="{loc:TrBinding SavedText}"/>
+
+                    <ItemsControl ItemsSource="{Binding Parameters}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="190"/>
+                                        <ColumnDefinition Width="120"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Style="{StaticResource Audio.FieldLabel}"
+                                               Text="{loc:TrBinding Label}" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                                    <TextBox Grid.Column="1" Style="{StaticResource Audio.TextBoxMono}"
+                                             Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}"
+                                             IsReadOnly="{Binding DataContext.IsNotEditing, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                             AutomationProperties.Name="{Binding Label}"/>
+                                    <StackPanel Grid.Column="2" Margin="8,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Style="{StaticResource Audio.Footnote}" Text="{loc:TrBinding RangeText}"/>
+                                        <TextBlock Style="{StaticResource Audio.Footnote}" Text="{loc:TrBinding Error}"
+                                                   Foreground="{DynamicResource Audio.System.RedBrush}"
+                                                   Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0"
+                                Visibility="{Binding HasParameters, Converter={StaticResource BoolToVisibility}}">
+                        <Button Style="{StaticResource Audio.Button}" Width="120" Content="{loc:Tr Txt_Edit}" Command="{Binding EditCommand}"
+                                ToolTip="{loc:TrBinding EditTooltip}" ToolTipService.ShowOnDisabled="True"
+                                Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"/>
+                        <StackPanel Orientation="Horizontal"
+                                    Visibility="{Binding IsEditing, Converter={StaticResource BoolToVisibility}}">
+                            <Button Style="{StaticResource Audio.Button}" Width="120" Content="{loc:Tr Txt_Cancel}" Command="{Binding CancelCommand}" Margin="0,0,8,0"/>
+                            <Button Style="{StaticResource Audio.FilledButton}" Width="120" Content="{loc:Tr Txt_Save}" Command="{Binding SaveCommand}"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <Border Style="{StaticResource Recessed}" Margin="0,12,0,0">
+                        <TextBlock Style="{StaticResource Audio.Caption1}" TextWrapping="Wrap" Text="{loc:TrBinding AccessHint}"/>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- ============================================================== -->
+        <!-- RIGHT: run it, what the PLC is doing, the result, last runs     -->
+        <!-- ============================================================== -->
+        <Border Grid.Column="2" Style="{StaticResource Audio.Card}"
+                Visibility="{Binding IsRoutineGroup, Converter={StaticResource BoolToVisibility}}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="16,12">
+                <StackPanel Margin="0,0,8,0">
+                    <TextBlock Style="{StaticResource Audio.Title3}" TextWrapping="Wrap" Text="{loc:TrBinding RoutineName}"/>
+
+                    <TextBlock FontSize="28" FontWeight="SemiBold" Margin="0,4,0,0" Text="{loc:TrBinding StateText}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="{DynamicResource Audio.Text.SecondaryBrush}"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsStateActive}" Value="True">
+                                        <Setter Property="Foreground" Value="{DynamicResource Audio.System.BlueBrush}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsStateOk}" Value="True">
+                                        <Setter Property="Foreground" Value="{DynamicResource Audio.System.GreenBrush}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsStateFail}" Value="True">
+                                        <Setter Property="Foreground" Value="{DynamicResource Audio.System.RedBrush}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <TextBlock Style="{StaticResource Audio.Callout}" TextWrapping="Wrap" Margin="0,4,0,12" Text="{loc:TrBinding RunText}"/>
+
+                    <!-- Teaching the routine's start point (manual mode) -->
+                    <Border Style="{StaticResource Recessed}" Margin="0,0,0,12"
+                            Visibility="{Binding SupportsTeach, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel>
+                            <TextBlock TextWrapping="Wrap" Text="{Binding TeachText}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource Audio.Callout}">
+                                        <Setter Property="Foreground" Value="{DynamicResource Audio.System.OrangeBrush}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsTaught}" Value="True">
+                                                <Setter Property="Foreground" Value="{DynamicResource Audio.System.GreenBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                            <Button Style="{StaticResource Audio.Button}" Content="Teach first point" Margin="0,8,0,0"
+                                    HorizontalAlignment="Stretch" Command="{Binding TeachCommand}"
+                                    ToolTip="The PLC stores where the camera stands now as point 1. The machine must be in manual mode."/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Start / Pause / Stop / Clear -->
+                    <UniformGrid Rows="1">
+                        <Button Style="{StaticResource Audio.FilledButton}" Height="52" Margin="0,0,6,0"
+                                Content="{loc:TrBinding StartCaption}" Command="{Binding StartCommand}"
+                                ToolTip="Writes the saved parameters to the PLC and starts the routine."/>
+                        <Button Style="{StaticResource Audio.Button}" Height="52" Margin="0,0,6,0"
+                                Content="{loc:Tr Txt_Pause}" Command="{Binding PauseCommand}"
+                                Visibility="{Binding SupportsPause, Converter={StaticResource BoolToVisibility}}"/>
+                        <Button Style="{StaticResource Audio.Button}" Height="52" Margin="0,0,6,0"
+                                Content="{loc:Tr Txt_Stop}" Command="{Binding StopCommand}"/>
+                        <Button Style="{StaticResource Audio.Button}" Height="52"
+                                Content="Clear" Command="{Binding ClearCommand}"
+                                ToolTip="The PLC forgets the last run and clears a failure."
+                                Visibility="{Binding SupportsClear, Converter={StaticResource BoolToVisibility}}"/>
+                    </UniformGrid>
+                    <TextBlock Style="{StaticResource Audio.Footnote}" TextWrapping="Wrap" Margin="0,8,0,12"
+                               Text="{loc:TrBinding StartBlockedReason}"/>
+
+                    <!-- The operator's judgement, when the PLC asks for it -->
+                    <Border Margin="0,0,0,12" Padding="12,10"
+                            Background="{DynamicResource Audio.Surface.RecessedBrush}"
+                            BorderBrush="{DynamicResource Audio.System.OrangeBrush}" BorderThickness="2"
+                            CornerRadius="{DynamicResource Audio.Radius.Field}"
+                            Visibility="{Binding IsWaitingOperator, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource Audio.Headline}" Text="{loc:Tr Txt_OperatorCheck}"/>
+                            <TextBlock Style="{StaticResource Audio.Callout}" TextWrapping="Wrap" Margin="0,4,0,10" Text="{loc:TrBinding Prompt}"/>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Style="{StaticResource Audio.FilledButton}" Width="120" Content="{loc:Tr Txt_OK}" Command="{Binding AcceptCommand}" Margin="0,0,8,0"/>
+                                <Button Style="{StaticResource Audio.Button}" Width="120" Content="NG" Command="{Binding RejectCommand}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Result -->
+                    <TextBlock Style="{StaticResource Audio.Headline}" Text="{loc:Tr Txt_Results}"/>
+                    <TextBlock Style="{StaticResource Audio.Footnote}" TextWrapping="Wrap" Margin="0,0,0,2"
+                               Visibility="{Binding HasAcceptance, Converter={StaticResource BoolToVisibility}}">
+                        <Run Text="Pass when: "/><Run Text="{Binding Acceptance, Mode=OneWay}"/>
+                    </TextBlock>
+                    <TextBlock Style="{StaticResource Audio.Footnote}" TextWrapping="Wrap" Margin="0,0,0,8" Text="{loc:TrBinding ResultNote}"/>
+
+                    <!-- The nine points, drawn where they lie on the plate -->
+                    <StackPanel Visibility="{Binding ShowGrid, Converter={StaticResource BoolToVisibility}}" Margin="0,0,0,12">
+                        <ItemsControl ItemsSource="{Binding GridPoints}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Rows="3" Columns="3"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border x:Name="Cell" Margin="3" MinHeight="64" Padding="6"
+                                            CornerRadius="{DynamicResource Audio.Radius.Field}"
+                                            BorderThickness="2" BorderBrush="{DynamicResource Audio.System.GrayBrush}"
+                                            Background="{DynamicResource Audio.Surface.RecessedBrush}">
+                                        <StackPanel VerticalAlignment="Center">
+                                            <TextBlock x:Name="PointName" Style="{StaticResource Audio.Headline}" HorizontalAlignment="Center"
+                                                       Text="{Binding Label}"/>
+                                            <TextBlock Style="{StaticResource Audio.Footnote}" HorizontalAlignment="Center"
+                                                       TextWrapping="Wrap" TextAlignment="Center" Text="{Binding Detail}"/>
+                                        </StackPanel>
+                                    </Border>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding State}" Value="Active">
+                                            <Setter TargetName="Cell" Property="BorderBrush" Value="{DynamicResource Audio.System.BlueBrush}"/>
+                                            <Setter TargetName="PointName" Property="Foreground" Value="{DynamicResource Audio.System.BlueBrush}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding State}" Value="Ok">
+                                            <Setter TargetName="Cell" Property="BorderBrush" Value="{DynamicResource Audio.System.GreenBrush}"/>
+                                            <Setter TargetName="PointName" Property="Foreground" Value="{DynamicResource Audio.System.GreenBrush}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding State}" Value="Ng">
+                                            <Setter TargetName="Cell" Property="BorderBrush" Value="{DynamicResource Audio.System.RedBrush}"/>
+                                            <Setter TargetName="PointName" Property="Foreground" Value="{DynamicResource Audio.System.RedBrush}"/>
+                                        </DataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock Style="{StaticResource Audio.Callout}" Margin="3,6,0,0" Text="{Binding GridSummary}"/>
+                    </StackPanel>
+
+                    <!-- Every other routine: its values as a table -->
+                    <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,0,0,12"
+                                  Visibility="{Binding ShowTable, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                <TextBlock Style="{StaticResource Audio.TableHeaderText}" Width="170" Text=""/>
+                                <ItemsControl ItemsSource="{Binding ResultHeaders}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel Orientation="Horizontal"/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Style="{StaticResource Audio.TableHeaderText}" Width="100"
+                                                       TextAlignment="Right" TextWrapping="Wrap" Text="{loc:TrBinding}"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                            <ItemsControl ItemsSource="{Binding ResultRows}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="{DynamicResource Audio.Separator.SubtleBrush}" BorderThickness="0,0,0,1" Padding="0,5">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Style="{StaticResource Audio.Callout}" Width="170" Text="{loc:TrBinding Label}"/>
+                                                <ItemsControl ItemsSource="{Binding Cells}">
+                                                    <ItemsControl.ItemsPanel>
+                                                        <ItemsPanelTemplate>
+                                                            <StackPanel Orientation="Horizontal"/>
+                                                        </ItemsPanelTemplate>
+                                                    </ItemsControl.ItemsPanel>
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock Width="100" TextAlignment="Right" Text="{loc:TrBinding Text}">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock" BasedOn="{StaticResource Audio.CalloutMono}">
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding IsFail}" Value="True">
+                                                                                <Setter Property="Foreground" Value="{DynamicResource Audio.System.RedBrush}"/>
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- When it last ran -->
+                    <TextBlock Style="{StaticResource Audio.Headline}" Text="Last runs"/>
+                    <TextBlock TextWrapping="Wrap" Margin="0,2,0,6" Text="{Binding LastRunText}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource Audio.Callout}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasLastRun}" Value="False">
+                                        <Setter Property="Foreground" Value="{DynamicResource Audio.System.OrangeBrush}"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding LastRunOk}" Value="True">
+                                        <Setter Property="Foreground" Value="{DynamicResource Audio.System.GreenBrush}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    <ItemsControl ItemsSource="{Binding History}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="{DynamicResource Audio.Separator.SubtleBrush}" BorderThickness="0,0,0,1" Padding="0,4">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="130"/>
+                                            <ColumnDefinition Width="90"/>
+                                            <ColumnDefinition Width="70"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Style="{StaticResource Audio.Footnote}" Text="{Binding When}"/>
+                                        <TextBlock Grid.Column="1" Style="{StaticResource Audio.Footnote}" Text="{Binding User}" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock x:Name="Verdict" Grid.Column="2" Style="{StaticResource Audio.Footnote}" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource Audio.System.RedBrush}" Text="{Binding Verdict}"/>
+                                        <TextBlock Grid.Column="3" Style="{StaticResource Audio.Footnote}" Text="{Binding Detail}"
+                                                   TextTrimming="CharacterEllipsis" ToolTip="{Binding Detail}"/>
+                                    </Grid>
+                                </Border>
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding IsOk}" Value="True">
+                                        <Setter TargetName="Verdict" Property="Foreground" Value="{DynamicResource Audio.System.GreenBrush}"/>
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- ============================================================== -->
+        <!-- BARCODE SCANNER: tuned in its own software; the read test here   -->
+        <!-- ============================================================== -->
+        <Border Grid.Column="1" Grid.ColumnSpan="2" Style="{StaticResource Audio.Card}"
+                Visibility="{Binding IsScannerGroup, Converter={StaticResource BoolToVisibility}}">
+            <Grid Margin="16,12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Style="{StaticResource Audio.Title3}" Text="Read test" Margin="0,0,0,10"/>
+
+                <StackPanel Grid.Row="1" Margin="0,0,0,12">
+                    <TextBlock Style="{StaticResource Audio.FieldLabel}" Text="Scanner" Margin="0,0,0,4"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <ComboBox Grid.Column="0" ItemsSource="{Binding Scanners}" SelectedIndex="{Binding SelectedScannerIndex, Mode=TwoWay}"
+                                  IsEnabled="{Binding HasScanners}"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center">
+                            <Ellipse Width="10" Height="10" Margin="0,0,6,0">
+                                <Ellipse.Style>
+                                    <Style TargetType="Ellipse">
+                                        <Setter Property="Fill" Value="{DynamicResource Audio.System.RedBrush}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsScannerConnected}" Value="True">
+                                                <Setter Property="Fill" Value="{DynamicResource Audio.System.GreenBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Ellipse.Style>
+                            </Ellipse>
+                            <TextBlock VerticalAlignment="Center">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource Audio.Callout}">
+                                        <Setter Property="Text" Value="Not connected"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsScannerConnected}" Value="True">
+                                                <Setter Property="Text" Value="Connected"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+
+                <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,10">
+                    <Button Width="130" Margin="0,0,8,0" Command="{Binding ConnectScannerCommand}">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource Audio.Button}">
+                                <Setter Property="Content" Value="Connect"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsScannerConnected}" Value="True">
+                                        <Setter Property="Content" Value="Disconnect"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    <TextBlock Style="{StaticResource Audio.FieldLabel}" Text="Reads" VerticalAlignment="Center" Margin="8,0,6,0"/>
+                    <TextBox Style="{StaticResource Audio.TextBoxMono}" Width="64" Margin="0,0,8,0"
+                             Text="{Binding ScannerReadCount, UpdateSourceTrigger=PropertyChanged}"
+                             AutomationProperties.Name="Number of reads"/>
+                    <Button Style="{StaticResource Audio.FilledButton}" Width="130" Margin="0,0,8,0"
+                            Content="Test read" Command="{Binding TestScannerCommand}"
+                            ToolTip="Triggers the scanner through the PLC this many times and lists what it read."
+                            ToolTipService.ShowOnDisabled="True"/>
+                    <Button Style="{StaticResource Audio.Button}" Width="90"
+                            Content="{loc:Tr Txt_Stop}" Command="{Binding StopScannerTestCommand}"/>
+                </StackPanel>
+
+                <TextBlock Grid.Row="3" TextWrapping="Wrap" Margin="0,0,0,10" Text="{Binding ScannerSummary}">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource Audio.Headline}">
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding HasScannerResult}" Value="True"/>
+                                        <Condition Binding="{Binding ScannerAllRead}" Value="True"/>
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Foreground" Value="{DynamicResource Audio.System.GreenBrush}"/>
+                                </MultiDataTrigger>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding HasScannerResult}" Value="True"/>
+                                        <Condition Binding="{Binding ScannerAllRead}" Value="False"/>
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Foreground" Value="{DynamicResource Audio.System.RedBrush}"/>
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+
+                <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding ScannerReads}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="{DynamicResource Audio.Separator.SubtleBrush}" BorderThickness="0,0,0,1" Padding="0,5">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="40"/>
+                                            <ColumnDefinition Width="80"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Style="{StaticResource Audio.Footnote}" Text="{Binding Number}"/>
+                                        <TextBlock x:Name="Read" Grid.Column="1" Style="{StaticResource Audio.Callout}" FontWeight="SemiBold"
+                                                   Text="Not read" Foreground="{DynamicResource Audio.System.RedBrush}"/>
+                                        <TextBlock Grid.Column="2" Style="{StaticResource Audio.CalloutMono}" Text="{Binding Code}"
+                                                   TextTrimming="CharacterEllipsis" ToolTip="{Binding Code}"/>
+                                    </Grid>
+                                </Border>
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding IsRead}" Value="True">
+                                        <Setter TargetName="Read" Property="Text" Value="Read"/>
+                                        <Setter TargetName="Read" Property="Foreground" Value="{DynamicResource Audio.System.GreenBrush}"/>
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <!-- ============================================================== -->
+        <!-- A calibration with no procedure yet (5-axis)                     -->
+        <!-- ============================================================== -->
+        <Border Grid.Column="1" Grid.ColumnSpan="2" Style="{StaticResource Audio.Card}"
+                Visibility="{Binding IsUnavailableGroup, Converter={StaticResource BoolToVisibility}}">
+            <StackPanel Margin="16,12" MaxWidth="640" VerticalAlignment="Center">
+                <TextBlock Style="{StaticResource Audio.Title3}" TextWrapping="Wrap" HorizontalAlignment="Center"
+                           Text="{loc:TrBinding SelectedGroup.Name}"/>
+                <TextBlock Style="{StaticResource Audio.Footnote}" Margin="0,2,0,12" HorizontalAlignment="Center"
+                           Text="{loc:TrBinding GroupReference}"/>
+                <ItemsControl ItemsSource="{Binding GroupNotes}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Style="{StaticResource Audio.EmptyState}" TextWrapping="Wrap" Margin="0,0,0,6"
+                                       Text="{loc:TrBinding}"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

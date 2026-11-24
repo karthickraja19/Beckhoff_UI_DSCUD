@@ -242,9 +242,13 @@
         <Setter Property="ColumnHeaderStyle" Value="{StaticResource Nova.DataGridColumnHeader}"/>
         <Setter Property="RowStyle" Value="{StaticResource Nova.DataGridRow}"/>
         <Setter Property="CellStyle" Value="{StaticResource Nova.DataGridCell}"/>
-        <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+        <!-- FAM 2 SET_15 / RC_10: vertical lines between the columns too. -->
+        <Setter Property="GridLinesVisibility" Value="All"/>
         <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource BorderBrush}"/>
-        <Setter Property="VerticalGridLinesBrush" Value="Transparent"/>
+        <Setter Property="VerticalGridLinesBrush" Value="{DynamicResource BorderBrush}"/>
+        <!-- FAM 2 SET_14: a dragged column order was dropped on the next visit (the
+             columns are rebuilt from their schema), so columns are not dragged at all. -->
+        <Setter Property="CanUserReorderColumns" Value="False"/>
         <Setter Property="HeadersVisibility" Value="Column"/>
         <Setter Property="AutoGenerateColumns" Value="False"/>
         <Setter Property="CanUserAddRows" Value="False"/>

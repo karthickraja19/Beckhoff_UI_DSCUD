@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using Nova.Abstractions.Hardware.Interfaces;
 
 namespace Nova.ViewModels.Pages.Manual
@@ -14,11 +15,21 @@ namespace Nova.ViewModels.Pages.Manual
         /// <summary>"CCD1 - Sony IMX250" style label for the selected-device card.</summary>
         public string DisplayName => Model.Length > 0 ? Name + " - " + Model : Name;
 
-        public CcdDeviceViewModel(string name, string model, INetworkProtocol protocol = null)
+        /// <summary>This CCD's own Received Response history (FAM 2 Bug_Id_038 / MS_16).</summary>
+        public ObservableCollection<CameraConsoleLine> Console { get; } = new ObservableCollection<CameraConsoleLine>();
+
+        /// <summary>
+        /// This CCD's Send Command, kept while another CCD is selected. FAM 2 MS_15: one box
+        /// was shared, so an edit made for one CCD was what the next one was sent.
+        /// </summary>
+        public string SendCommand { get; set; }
+
+        public CcdDeviceViewModel(string name, string model, INetworkProtocol protocol = null, string defaultCommand = null)
         {
             Name = name;
             Model = model;
             Protocol = protocol;
+            SendCommand = defaultCommand ?? string.Empty;
         }
     }
 }

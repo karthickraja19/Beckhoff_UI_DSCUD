@@ -21,6 +21,9 @@ namespace Nova.Wpf.App.Services.Twincat.HmiDisplay
     /// END_TYPE
     /// </code>
     /// 7 bytes. FB_CylinderSD has one sensor per side, so the board's sensor chips are one each.
+    /// FB_CylinderMapping fills it: sensWorkFB / sensHomeFB from GVL_Inputs.Inputs[E_Input.x],
+    /// checkWorkSafe / checkHomeSafe with the interlock (TRUE for every cylinder today).
+    /// blockEnable, operationEnable and reset are not shown but must stay for the layout.
     /// </summary>
     [StructLayout(LayoutKind.Sequential, Pack = 8)]
     public struct typeCylFBIn : ICylinderHmiDisplay
@@ -40,6 +43,10 @@ namespace Nova.Wpf.App.Services.Twincat.HmiDisplay
             snapshot.IsExtended = sensWorkFB && !sensHomeFB;
             snapshot.IsRetracted = sensHomeFB && !sensWorkFB;
             snapshot.IsBothSensed = sensWorkFB && sensHomeFB;
+
+            // FB_CylinderSD: status.safeToWork := in.checkWorkSafe, status.safeToHome := in.checkHomeSafe.
+            snapshot.SafeToExtend = checkWorkSafe;
+            snapshot.SafeToRetract = checkHomeSafe;
         }
     }
 }

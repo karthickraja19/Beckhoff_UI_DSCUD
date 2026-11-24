@@ -2,21 +2,71 @@
   {
     "EnumName": "LiftingStepper0",
     "Name": "Lifting Stepper 0",
-    "Id": 1
+    "Id": 1,
+    "IsAxisEnabled": false,
+    "Pulse": 70,
+    "Velocity": 20,
+    "Acceleration": 5000,
+    "Deceleration": 5000
   },
   {
     "EnumName": "LiftingStepper1",
     "Name": "Lifting Stepper 1",
-    "Id": 2
+    "Id": 2,
+    "IsAxisEnabled": false,
+    "Pulse": 70,
+    "Velocity": 20,
+    "Acceleration": 5000,
+    "Deceleration": 5000
   },
   {
     "EnumName": "LiftingStepper2",
     "Name": "Lifting Stepper 2",
-    "Id": 3
+    "Id": 3,
+    "IsAxisEnabled": false,
+    "Pulse": 70,
+    "Velocity": 20,
+    "Acceleration": 5000,
+    "Deceleration": 5000
   },
   {
     "EnumName": "LiftingStepper3",
     "Name": "Lifting Stepper 3",
-    "Id": 4
+    "Id": 4,
+    "IsAxisEnabled": false,
+    "Pulse": 70,
+    "Velocity": 20,
+    "Acceleration": 5000,
+    "Deceleration": 5000
+  },
+  {
+    "EnumName": "LoadingConveyor",
+    "Name": "Loading Conveyor",
+    "Id": 5,
+    "IsAxisEnabled": true,
+    "Pulse": 0,
+    "Velocity": 100,
+    "Acceleration": 0,
+    "Deceleration": 0
+  },
+  {
+    "EnumName": "WorkingConveyor",
+    "Name": "Working Conveyor",
+    "Id": 6,
+    "IsAxisEnabled": true,
+    "Pulse": 0,
+    "Velocity": 100,
+    "Acceleration": 0,
+    "Deceleration": 0
+  },
+  {
+    "EnumName": "UnloadingConveyor",
+    "Name": "Unloading Conveyor",
+    "Id": 7,
+    "IsAxisEnabled": true,
+    "Pulse": 0,
+    "Velocity": 100,
+    "Acceleration": 0,
+    "Deceleration": 0
   }
 ]

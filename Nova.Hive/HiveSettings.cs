@@ -81,5 +81,28 @@ namespace Nova.Hive
 
         /// <summary>True when <see cref="UnitEnteredSymbol"/> is an INT counter, false for a BOOL pulse.</summary>
         public bool UnitEnteredIsCounter { get; set; }
+
+        /// <summary>
+        /// How long one machine_data upload may wait for the gateway's 200/201 (S12 Data
+        /// Upload Process Flow: 2 seconds, then the next attempt).
+        /// </summary>
+        public TimeSpan UnitTimeout { get; set; } = TimeSpan.FromSeconds(2);
+
+        /// <summary>
+        /// How many times a machine_data upload is tried before HIVE counts as not answering
+        /// (S12: three). The DFM (slide 14) wants the 200/201 within 3 seconds; set 1 attempt
+        /// of 3 seconds to follow that to the letter.
+        /// </summary>
+        public int UnitAttempts { get; set; } = 3;
+
+        /// <summary>
+        /// True while the 24-hour dry run of FAT remote qualification is on (HIVE Control tab;
+        /// S4.1). unit_sn, input_time and mac_addr then come from UUID.dll and
+        /// unique_machine_state_id from UMSID.dll. Null: there is no dry run.
+        /// </summary>
+        public System.Func<bool> DryRun { get; set; }
+
+        /// <summary>The SI code both DLLs are called with (App.config HiveDryRunSiCode).</summary>
+        public string DryRunSiCode { get; set; } = "";
     }
 }

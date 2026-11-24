@@ -31,15 +31,15 @@ namespace Nova.Wpf.App.Services.Twincat
         {
             _plc = plc ?? throw new ArgumentNullException(nameof(plc));
             _subscriptions = subscriptions ?? throw new ArgumentNullException(nameof(subscriptions));
-            _commandSymbol = commandSymbol ?? string.Empty;
-            _doneSymbol = doneSymbol ?? string.Empty;
+            _commandSymbol = (commandSymbol ?? string.Empty).Trim();
+            _doneSymbol = (doneSymbol ?? string.Empty).Trim();
         }
 
         public bool IsAvailable => _commandSymbol.Length > 0;
 
         public string UnavailableReason => IsAvailable
             ? string.Empty
-            : "PlcHomingCommandSymbol is not set in App.config.";
+            : "The PLC has no home command yet: Commands.HomingStart is blank in Data\\PlcSymbols.json.";
 
         public bool ReportsHomed => _doneSymbol.Length > 0;
 
@@ -76,6 +76,12 @@ namespace Nova.Wpf.App.Services.Twincat
 
             _plc.WriteSymbol(_commandSymbol, true);
             SetHoming(true);
+        }
+
+        /// <summary>Called by the orchestrator when the PLC abandons a homing (E-stop, alarm, Stop).</summary>
+        public void EndHoming()
+        {
+            SetHoming(false);
         }
 
         /// <summary>Runs on the ADS thread: no ADS calls, and nothing slow.</summary>

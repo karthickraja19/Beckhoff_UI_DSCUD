@@ -1,9 +1,11 @@
 <UserControl x:Class="Nova.Wpf.App.Views.Pages.Manual.ConsoleDeviceView"
           xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+          xmlns:loc="clr-namespace:Nova.Wpf.UI.Localization;assembly=Nova.Wpf.UI"
           xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
           xmlns:hc="https://handyorg.github.io/handycontrol"
           xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
           xmlns:ui="clr-namespace:Nova.Wpf.UI.Components;assembly=Nova.Wpf.UI"
+          xmlns:behaviors="clr-namespace:Nova.Wpf.UI.Behaviors;assembly=Nova.Wpf.UI"
           Background="Transparent">
 
     
@@ -129,7 +131,7 @@
                 <TextBlock
                 x:Name="LineText"
                 Grid.Column="1"
-                Text="{Binding Text}"
+                Text="{loc:TrBinding Text}"
                 FontFamily="Consolas"
                 FontSize="{DynamicResource Nova.FontSize.Body}"
                 Foreground="{DynamicResource ReverseTextBrush}"
@@ -452,7 +454,7 @@
                 <StackPanel>
 
                     <TextBlock
-                    Text="{Binding SelectorCaption}"
+                    Text="{loc:TrBinding SelectorCaption}"
                     Style="{StaticResource Caption}"
                     Margin="2,0,0,6"/>
 
@@ -502,66 +504,6 @@
                 </StackPanel>
 
 
-                <!-- =================================================
-                 SECONDARY SELECTOR
-                 ================================================= -->
-                <StackPanel
-                Margin="14,0,0,0">
-
-                    <StackPanel.Style>
-
-                        <Style
-                        TargetType="{x:Type StackPanel}">
-
-                            <Setter
-                            Property="Visibility"
-                            Value="Collapsed"/>
-
-                            <Style.Triggers>
-
-                                <DataTrigger
-                                Binding="{Binding HasSecondarySelector}"
-                                Value="True">
-
-                                    <Setter
-                                    Property="Visibility"
-                                    Value="Visible"/>
-
-                                </DataTrigger>
-
-                            </Style.Triggers>
-
-                        </Style>
-
-                    </StackPanel.Style>
-
-
-                    <TextBlock
-                    Text="{Binding SecondarySelectorCaption}"
-                    Style="{StaticResource Caption}"
-                    Margin="2,0,0,6"/>
-
-
-                    <Border
-                    CornerRadius="8"
-                    Height="{DynamicResource Nova.Field.Height}"
-                    Width="220"
-                    Background="{DynamicResource RegionBrush}"
-                    BorderBrush="{DynamicResource BorderBrush}"
-                    BorderThickness="1">
-
-                        <ComboBox
-                        VerticalContentAlignment="Center"
-                        Margin="8,0"
-                        BorderThickness="0"
-                        Background="Transparent"
-                        ItemsSource="{Binding Colours}"
-                        SelectedItem="{Binding SelectedColour, Mode=TwoWay}"/>
-
-                    </Border>
-
-                </StackPanel>
-
             </StackPanel>
 
 
@@ -574,7 +516,7 @@
             HorizontalAlignment="Right">
 
                 <TextBlock
-                Text="STATUS"
+                Text="{loc:Tr Txt_STATUS}"
                 Style="{StaticResource Caption}"
                 HorizontalAlignment="Right"
                 Margin="0,0,0,6"/>
@@ -586,7 +528,7 @@
 
 
                     <TextBlock
-                    Text="{Binding StatusText}"
+                    Text="{loc:TrBinding StatusText}"
                     FontSize="{DynamicResource Nova.FontSize.Body}"
                     FontWeight="SemiBold"
                     VerticalAlignment="Center">
@@ -699,7 +641,7 @@
                      SEND COMMAND
                      ================================================= -->
                     <TextBlock
-                    Text="{Binding SendCaption}"
+                    Text="{loc:TrBinding SendCaption}"
                     Style="{StaticResource Caption}"
                     Margin="0,0,0,6"/>
 
@@ -729,7 +671,7 @@
                      ================================================= -->
                     <Grid>
                         <TextBlock
-                    Text="RECEIVED RESPONSE"
+                    Text="{loc:Tr Txt_RECEIVEDRESPONSE}"
                     Style="{StaticResource Caption}"
                     Margin="0,16,0,6"/>
 
@@ -755,7 +697,7 @@
                                   VerticalAlignment="Center"
                                   Foreground="{DynamicResource PrimaryBrush}"/>
 
-                                <TextBlock Text="Refresh"
+                                <TextBlock Text="{loc:Tr Txt_Refresh}"
                    VerticalAlignment="Center"/>
                             </StackPanel>
 
@@ -788,6 +730,7 @@
                          ================================================= -->
                         <ScrollViewer
                         Style="{StaticResource CcdConsoleScrollViewer}"
+                        behaviors:AutoScroll.ToEnd="True"
                         VerticalScrollBarVisibility="Auto"
                         HorizontalScrollBarVisibility="Disabled"
                         Background="Transparent"
@@ -825,12 +768,12 @@
 
 
                         <TextBlock
-                        Text="{Binding DeviceCaption}"
+                        Text="{loc:TrBinding DeviceCaption}"
                         Style="{StaticResource Caption}"/>
 
 
                         <TextBlock
-                        Text="{Binding SelectedDevice.DisplayName}"
+                        Text="{loc:TrBinding SelectedDevice.DisplayName}"
                         FontSize="{DynamicResource Nova.FontSize.Heading}"
                         FontWeight="SemiBold"
                         Foreground="{DynamicResource PrimaryTextBrush}"
@@ -862,7 +805,7 @@
 
 
                                 <TextBlock
-                                Text="CONNECT DEVICE"
+                                Text="{loc:Tr Txt_CONNECTDEVICE}"
                                 VerticalAlignment="Center"/>
 
 
@@ -896,7 +839,7 @@
 
 
                                 <TextBlock
-                                Text="{Binding TriggerLabel}"
+                                Text="{loc:TrBinding TriggerLabel}"
                                 VerticalAlignment="Center"/>
 
 
@@ -930,7 +873,7 @@
 
 
                                 <TextBlock
-                                Text="DISCONNECT"
+                                Text="{loc:Tr Txt_DISCONNECT}"
                                 VerticalAlignment="Center"/>
 
 

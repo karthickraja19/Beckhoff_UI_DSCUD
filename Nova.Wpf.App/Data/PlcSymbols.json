@@ -1,0 +1,987 @@
+// =====================================================================================
+//  PLC SYMBOL MAP - every TwinCAT variable name the HMI uses, in this one file.
+//
+//  Change a name here when the PLC variable is renamed or moved; no code changes.
+//  Leave an entry "" when the PLC has no variable for it yet: that function then shows
+//  itself as "not available" with the reason, and nothing is written or faked.
+//
+//  Names are the full ADS symbol path, exactly as TwinCAT shows it (not case sensitive).
+//  At startup the HMI looks every name up in the PLC and lists the ones it cannot find
+//  (startup warnings and the Error log).
+//
+//  Basis: TwincatStandardDSCUD-master / BeckhoffTwincatSDBlocks, read on 10 Nov 2026.
+//  What the PLC still has to provide is listed in Docs\TwinCAT_Integration.md.
+//
+//  Not in this file (owned by the Beckhoff library, see the same document):
+//    Data\CardsConfiguration.json - AMS Net Id, port, and the mapping block of each
+//    device kind (MAIN.servocall, MAIN.cylindercall, ...).
+// =====================================================================================
+{
+  // ---------------------------------------------------------------------------------
+  // COMMANDS  (HMI -> PLC)   BOOL
+  // ---------------------------------------------------------------------------------
+  "Commands": {
+    // Pulsed TRUE for PulseMilliseconds: FB_ModeSelection acts on the rising edge.
+    // MAIN hands its own bStartPb / bPausePb / bStopPb / bResetPb to MAIN.modecall every
+    // cycle, so the buttons are MAIN's - a write to MAIN.modecall.bStartPb is overwritten.
+    "Start": "MAIN.bStartPb",
+    "Pause": "MAIN.bPausePb",
+    "Stop": "MAIN.bStopPb",
+    // Pulsed together, in this order. MAIN.bResetPb clears the alarm list (AckAll), resets
+    // the drives and takes the mode block out of STOP.
+    "Reset": [ "MAIN.bResetPb" ],
+    // Held TRUE while a manual screen is in front (Setting > Manual, Config > Calibration, Recipe teach).
+    "ManualMode": "MAIN.modecall.bManualSelect",
+    // Set TRUE by the Homing button. PLC TODO: there is no home command bit yet - the PLC
+    // goes to HOMING on START while it is not homed.
+    "HomingStart": "",
+    "PulseMilliseconds": 200
+  },
+
+  // ---------------------------------------------------------------------------------
+  // STATUS  (PLC -> HMI)
+  // ---------------------------------------------------------------------------------
+  "Status": {
+    // E_MachineState (INT): 0 IDLE, 1 AUTO_RUNNING, 2 PAUSE, 3 HOMING, 4 ALARM, 5 MANUAL, 6 STOP
+    "MachineState": "GVL_Module.eStationState",
+    // BOOL: the mode block's homing memory. PLC TODO: MAIN.modecall.bMachineInHome is
+    // never set, so this stays FALSE until the homing sequence reports it.
+    "HomingDone": "MAIN.modecall.fbMode.bHomed",
+    // STRING(80): 'Ready - press START', 'Homing required - press START', ...
+    "OperatorMessage": "MAIN.modecall.fbMode.sMessage",
+    // HIVE Running / Idle. PLC TODO: a BOOL pulsed (or INT counted) per unit entering.
+    "UnitEntered": "",
+    "UnitEnteredIsCounter": false,
+    // HIVE unit counting (debug-run limits, CPK / GRR / CCD audit rounds).
+    // PLC TODO: a counter raised for every finished unit, and optionally its serial number.
+    "UnitDoneCount": "",
+    "UnitDoneSerial": ""
+  },
+
+  // ---------------------------------------------------------------------------------
+  // RUN MODE  -  Config > Device Settings > mode
+  // ---------------------------------------------------------------------------------
+  "RunMode": {
+    "Request": "MAIN.runmode.eRequest",          // INT (E_RunMode), HMI writes
+    "Active": "MAIN.runmode.eMode",              // INT (E_RunMode), PLC reports
+    "ChangeAllowed": "MAIN.runmode.bChangeAllowed", // BOOL: machine standing still and empty
+    // HMI mode -> E_RunMode. null = the PLC has no such mode; it cannot be selected.
+    // E_RunMode: 0 NOTSELECTED, 1 PRODUCTION, 2 DRYRUN, 3 DUMMYRUN, 4 GRR, 5 CPK, 6 STATIC, 7 CALIBRATION
+    "Values": {
+      "Production": 1,
+      "DryRun": 2,
+      "GRR": 4,
+      "CPK": 5,
+      "Static": 6,
+      "Calibration": 7,
+      "Dynamic": null,      // PLC TODO: no dynamic test mode in E_RunMode
+      "Maintenance": null   // not a run mode: expressed by Bypass.MaintenanceStations below
+    }
+  },
+
+  // ---------------------------------------------------------------------------------
+  // BYPASS  -  Config > Device Settings > bypass switches and maintenance stations
+  // ---------------------------------------------------------------------------------
+  "Bypass": {
+    // Each switch holds all of its BOOLs at its own value. [] = the PLC has no bypass
+    // for it; the switch is shown locked.
+    "Devices": {
+      "SafetyDoor": [ "MAIN.safetycall.bFrontDoor_Bypass", "MAIN.safetycall.bBackDoor_Bypass" ],
+      "Scanner": [],
+      "Buzzer": [],     // PLC TODO: FB_TowerLampMapping passes bMuteBuzzer := FALSE
+      "SfcPdca": [],
+      "Vision": [],
+      "Robot": []
+    },
+    "MaintenanceStations": {
+      "1": "BypassVariables.Maintenance_Station_1",
+      "2": "BypassVariables.Maintenance_Station_2"
+    }
+  },
+
+  // ---------------------------------------------------------------------------------
+  // ALARMS  (PLC -> HMI)
+  // ---------------------------------------------------------------------------------
+  "Alarms": {
+    "List": "GVL_Alarm.fbAlarmManager.aAlarms"   // ARRAY[1..50] OF ST_Alarms
+  },
+
+  // ---------------------------------------------------------------------------------
+  // SEQUENCE LOG  (PLC -> HMI)  one ST_SeqLog per module, into the Running Log
+  // ---------------------------------------------------------------------------------
+  "SequenceLog": {
+    // GVL_Module.MAX_MODULES is 10. PLC TODO: the modules numbered 11..15 (dispensing
+    // stations, backflow entry / middle / exit) are outside aLog and aModule.
+    "Entries": [
+      "MAIN.seqlog.aLog[1]",
+      "MAIN.seqlog.aLog[2]",
+      "MAIN.seqlog.aLog[3]",
+      "MAIN.seqlog.aLog[4]",
+      "MAIN.seqlog.aLog[5]",
+      "MAIN.seqlog.aLog[6]",
+      "MAIN.seqlog.aLog[7]",
+      "MAIN.seqlog.aLog[8]",
+      "MAIN.seqlog.aLog[9]",
+      "MAIN.seqlog.aLog[10]"
+    ]
+  },
+
+  // ---------------------------------------------------------------------------------
+  // CUSTOM LOGS  (PLC -> HMI)  one FB_CustomLog per kind of data; each row the PLC logs
+  // (a whole struct) is written by the HMI to that log's CSV (Nova.Wpf.App CustomLogs.All)
+  // ---------------------------------------------------------------------------------
+  "CustomLog": {
+    // key = the key in CustomLogs.All, value = the FB_CustomLog instance. "" = not fed from the PLC.
+    "Logs": {
+      "Production": "MAIN.prodlog",  // ST_ProductionLog  <->  ProductionLogModel
+      "StaticDynamic": "MAIN.sdlog"  // ST_SDLog          <->  StaticDynamicLogModel: one row per vision command
+    }
+  },
+
+  // ---------------------------------------------------------------------------------
+  // RECIPES  (HMI -> PLC)
+  // ---------------------------------------------------------------------------------
+  "Recipe": {
+    // ARRAY[1..8] OF FB_Recipe. Which gantry a recipe page writes is its "PlcGantry" in
+    // Data\Gantry.json; a CNC channel's is Cnc.Channels below.
+    "Gantry": "MAIN.recipe.Recipe",
+    // TE010 has no robot. On a machine with robots: the array of typeRobotFB.
+    "Robot": ""
+  },
+
+  // ---------------------------------------------------------------------------------
+  // CALIBRATION  -  Config > Calibration
+  // ---------------------------------------------------------------------------------
+  "Calibration": {
+    // FB_CalibrationManager (MAIN.calibration), the only thing the HMI talks to for running
+    // a calibration. Select is E_Calibration: 1 nine point, 2 five axis, 3 needle,
+    // 4 camera needle. Start / Abort / Reset are rising edges, held TRUE for 200 ms.
+    // The PLC allows a calibration only in MANUAL or AUTO_RUNNING; stations 2 and 3 need
+    // their maintenance mode (GVL_Calibration.aMaintenance) for the nine point.
+    // PLC TODO: the five axis and needle sequences are not written yet - they answer
+    // "sequence not written yet".
+    "Manager": {
+      "Select": "GVL_Calibration.nSelect",                 // INT
+      "Station": "GVL_Calibration.nStation",               // INT, 1..4
+      "Start": "GVL_Calibration.bStart",
+      "Abort": "GVL_Calibration.bAbort",
+      "Reset": "GVL_Calibration.bReset",
+      "Busy": "GVL_Calibration.bBusy",
+      "Done": "GVL_Calibration.bDone",
+      "Error": "GVL_Calibration.bError",
+      "Active": "GVL_Calibration.nActive",                 // INT
+      "ActiveStation": "GVL_Calibration.nActiveStation",   // INT
+      "Step": "GVL_Calibration.nStep",                     // INT
+      "Message": "GVL_Calibration.sMessage"                // STRING(80)
+    },
+    // The taught positions of every calibration (persistent in the PLC), one array per
+    // calibration, index = station. The HMI keeps them in Data\Calibration\NinePoint.json,
+    // FiveAxis.json, CameraNeedle.json and NeedleModule.json and writes a whole station
+    // record at a time on Save, then sets Save: FB_CalTeachStore (MAIN.calteach) writes the
+    // persistent data and answers with SaveDone or SaveError.
+    "Teach": {
+      "NinePoint": "GVL_CalTeach.aNinePoint",              // ST_TeachNinePoint: bTaught, rX, rY
+      "FiveAxis": "GVL_CalTeach.aFiveAxis",                // ST_TeachFiveAxis: bTaught, aPoint[n] OF (rA, rC, rX, rY, rZ)
+      "CameraNeedle": "GVL_CalTeach.aCameraNeedle",        // ST_TeachCameraNeedle: bTaught, aGlue[1..9], aVision[1..9] OF (rX, rY)
+      "NeedleModule": "GVL_CalTeach.aNeedleModule",        // ST_TeachNeedleModule: bTaught, rX, rY, rZ
+      "Save": "GVL_CalTeach.bSave",
+      "SaveBusy": "GVL_CalTeach.bSaveBusy",
+      "SaveDone": "GVL_CalTeach.bSaveDone",
+      "SaveError": "GVL_CalTeach.bSaveError",
+      "SaveErrorId": "GVL_CalTeach.nSaveErrId"             // UDINT
+    },
+    // Static & Dynamic (GVL_StaticDynamic; Static_Seq / Dynamic_Seq): the camera goes to its recipe
+    // position and the PLC sends the vision command Iteration times (Dynamic also moves the camera X
+    // away and back between two commands). The PLC owns the positions, the vision commands and the
+    // custom log (CustomLog.Logs.StaticDynamic); the HMI picks Mode / Ccd / Iteration and presses
+    // Start / End / Stop (rising edges, held TRUE for 200 ms). Mode is also read by the main
+    // sequence for every unit: while it is not 0 the dispensing station skips dispensing and the CNC
+    // cycle, so the tab always shows it and "Off" gives the machine back to production. A run needs
+    // the machine in AUTO; the PLC answers in Status when it is not. Cameras = the length of the
+    // PLC's aRcpGantry / aCncAxis tables.
+    "StaticDynamic": {
+      "Cameras": 2,
+      "Mode": "GVL_StaticDynamic.nMode",                   // INT: 0 none, 1 static, 2 dynamic
+      "Ccd": "GVL_StaticDynamic.nCcd",                     // INT: 1..Cameras
+      "Iteration": "GVL_StaticDynamic.nIteration",         // INT: 1 or more
+      "Start": "GVL_StaticDynamic.bStart",
+      "End": "GVL_StaticDynamic.bEnd",
+      "Stop": "GVL_StaticDynamic.bStop",
+      "Busy": "GVL_StaticDynamic.bBusy",
+      "Done": "GVL_StaticDynamic.bDone",
+      "Error": "GVL_StaticDynamic.bError",
+      "Step": "GVL_StaticDynamic.nStep",                   // INT
+      "Count": "GVL_StaticDynamic.nCount",                 // INT
+      "Status": "GVL_StaticDynamic.sStatus",               // STRING(80)
+      "VisionX": "GVL_StaticDynamic.rVisionX",             // LREAL
+      "VisionY": "GVL_StaticDynamic.rVisionY",             // LREAL
+      "VisionZ": "GVL_StaticDynamic.rVisionZ"              // LREAL
+    },
+    // PD-13 CCD Repeatability Testing (S3.4): the PLC counts CaptureCount up for every CCD
+    // capture of a test and holds that capture's X / Y until the next. The HMI keeps the
+    // first capture and from the second on uploads delta = max - min so far to HIVE as
+    // {gantry}_delta_x_test{n} / {gantry}_delta_y_test{n} (n: 1 static, 2 and 3 dynamic).
+    // "Gantries" names each station's gantry in that key.
+    // PLC TODO: none of this exists yet (Q12: capture results through the PLC or from vision).
+    "Repeatability": {
+      "CaptureCount": "",                              // UDINT
+      "Station": { "Symbol": "", "Type": "INT" },      // 1 / 2; blank = station 1
+      "X": { "Symbol": "", "Type": "LREAL" },          // mm
+      "Y": { "Symbol": "", "Type": "LREAL" },          // mm
+      "Serial": { "Symbol": "", "Type": "STRING" },    // SN under the CCD; blank = Status.UnitDoneSerial
+      "Gantries": { "1": "front", "2": "rear" }
+    },
+    // PD-14 Dispensing Pose Calibration (S3.5): the PLC counts DoneCount up once the flatness
+    // and pose routines have all run, and holds every result. Each result is checked against
+    // its Config > Spec Limits row; all in spec gives one upload to HIVE, one out of spec
+    // gives none. Results are by HIVE's key (S3.5 P-12), for example:
+    //   "conveyor_L&front_base_flatness":      { "Symbol": "GVL_HMI.stPose.rFrontFlatness", "Type": "LREAL" }
+    //   "conveyor_L&front_dispensing_pose1_C": { "Symbol": "GVL_HMI.stPose.rFrontPose1C",   "Type": "LREAL" }
+    //   "conveyor_L&front_dispensing_pose1_A", "conveyor_L&front_parallelism_error_of_base_to_X-axis",
+    //   "conveyor_L&front_parallelism_error_of_C-axis_to_X-axis", and the same with conveyor_R / rear.
+    // PLC TODO: the flatness and pose routines do not exist yet.
+    "Pose": {
+      "DoneCount": "",                                 // UDINT
+      "Results": {
+      }
+    }
+  },
+
+  // ---------------------------------------------------------------------------------
+  // CNC  -  the two dispensing stations (Recipe > CNC: jog, teach, positions)
+  // ---------------------------------------------------------------------------------
+  "Cnc": {
+    // One ST_ChannelData per channel; {channel} is the PLC channel number.
+    "Channel": "GVL_Channel_Interface.CNCData.Ch[{channel}]",
+    "AxisEnable": "GVL_Channel_Interface.CNCData.bEnable",
+    "AxesPerChannel": 7,
+    // HMI channel ("PlcChannel" in Data\CncRecipe.json) -> PLC channel and the FB_Recipe
+    // (Recipe.Gantry index) its positions are written to. Dispensing_Stn_A_Auto.Load_Pos
+    // reads Recipe[4]. PLC TODO: station 2 has no sequence yet; 5 is the next free table.
+    "Channels": {
+      "1": { "PlcChannel": 1, "RecipeGantry": 4 },
+      "2": { "PlcChannel": 2, "RecipeGantry": 5 }
+    },
+    // Number of each HMI axis inside its channel: its place in stAxisCmdStatus[] and its
+    // column in the recipe table (Dispensing_Stn_A_Auto.Load_Pos reads Step[position, axis]).
+    // PLC TODO - NOT CONFIRMED: taken from the order assumed in NinePointCalibration_StationN
+    // (vision X, vision Z, dispensing X, dispensing Z, working Y, A, R) with X2 / Z2 as the
+    // vision gantry, as Seq_NC_Program.nc uses them. Jog one axis and watch which moves
+    // before trusting this - a wrong number jogs the wrong axis.
+    "AxisIndex": { "X2": 1, "Z2": 2, "X1": 3, "Z1": 4, "Y1": 5, "A": 6, "R": 7 },
+    // Written as the speed of every taught position: FB_Recipe.Ok() takes speed 0 as
+    // "not taught". The feed itself is in the CNC program.
+    "TaughtVelocity": 1.0,
+    // Members of one channel, relative to "Channel"; {axis} is the axis number 1..7.
+    "Members": {
+      "JogModeRequest": "UiToPlc.bJogMode",
+      "JogType": "UiToPlc.nJogMode",
+      "JogAxisIndex": "UiToPlc.nJogAxisIndex",
+      "JogPlus": "UiToPlc.bJogPlus",
+      "JogMinus": "UiToPlc.bJogMinus",
+      "JogSpeed": "UiToPlc.nJogUserDefinedSpeed",
+      "JogInchingValue": "UiToPlc.nJogInchingValue",
+      "Reset": "UiToPlc.bReset",
+      "JogModeActive": "PlcToUi.bJogModeEnabled",
+      "ErrorState": "PlcToUi.bErrorState",
+      "CycleRunning": "PlcToUi.bCycleRunning",
+      "AxisActualPosition": "PlcToUi.stAxisCmdStatus[{axis}].rActPosACS",
+      "AxisEnabled": "PlcToUi.stAxisCmdStatus[{axis}].bEnabled",
+      "AxisHomed": "PlcToUi.stAxisCmdStatus[{axis}].bHomingDone",
+      "AxisMoving": "PlcToUi.stAxisCmdStatus[{axis}].bMoving",
+      "AxisError": "PlcToUi.stAxisCmdStatus[{axis}].bError"
+    }
+  },
+
+  // DIGITAL I/O is not mapped here: it is the library card's (Data\CardsConfiguration.json:
+  // InputArray, OutputArray, IOFirstIndex, InputCount, OutputCount).
+
+  // ---------------------------------------------------------------------------------
+  // PROCESS SIGNALS  (HMI -> PLC)
+  // ---------------------------------------------------------------------------------
+  "Process": {
+    // PLC TODO: none of these exists yet (FB_TowerLampMapping: bMaterialLow := FALSE).
+    "GlueAlertLevel": "",          // INT: 0 none, then the warning level
+    "GlueBuzzerMute": "",          // BOOL
+    "PictureDispensingStop": "",   // BOOL held TRUE after a short picture count
+    "HmiStopRequest": "",          // BOOL held TRUE while HIVE is in a downtime the HMI raised (hash key error, HIVE upload not confirmed): the PLC finishes the unit in process and stops
+    "UnitUploadNg": "",            // BOOL pulsed when HIVE failed a unit or did not confirm it (S12): the PLC diverts that unit to the NG conveyor
+    "UnitUploadNgSerial": "",      // STRING written before the pulse: that unit's serial number
+    "EarlyWarningLamp": "",        // BOOL held TRUE while an early-warning pop-up is open (S17): tower light red
+    "EarlyWarningBuzzer": "",      // BOOL held TRUE while it is open and not muted: the PLC times the buzzer 2 s on / 1 s off
+    "NgWarningBuzzer": ""          // BOOL pulsed at a unit's first NG (T6): buzzer only, the machine goes on
+  },
+
+  // ---------------------------------------------------------------------------------
+  // DEVICES  -  type names the library-backed device screens need
+  // ---------------------------------------------------------------------------------
+  "Devices": {
+    // PLC type of each device kind's HMI display struct.
+    "HmiDisplayTypes": {
+      "Servo": "SERVO_SD_HMI_DISPLAY",
+      "IoStepper": "ST_STEPPER_STATUS",
+      "Cylinder": "typeCylFBIn",
+      "Vacuum": "typeVacFB",
+      "Vision": "typeVisionFBstatus",
+      "Scanner": "typeScnFBstatus"
+    }
+  },
+
+  // ---------------------------------------------------------------------------------
+  // PARAMETER DASHBOARD  (PLC -> HMI)  -  Home > Parameter Dashboard live values
+  // ---------------------------------------------------------------------------------
+  // One entry per parameter of Config > Spec Limits (Production), by its name:
+  //   "front_cartridge_temperature": { "Symbol": "GVL_HMI.rFrontCartridgeTemperature", "Type": "REAL" }
+  // Types: LREAL, REAL, DINT, INT, UDINT, UINT, BOOL.
+  // Every entry is also sent to HIVE with each finished unit (machine_data, DFM slides 16-18),
+  // under this same name, with the limits of its Spec Limits row. So name them as HIVE wants:
+  // front_ / rear_ first on a D-SCUD, e.g. front_nozzle_temperature, front_cartridge_temperature,
+  // front_cartridge_air_pressure, front_ring_pin_frequency, front_valve_unit_count,
+  // front_valve_cycles, front_total_dispense_time, front_other_vision_tossing_NG,
+  // front_recheck_result_NG. The PLC must hold a unit's values until it counts the next unit.
+  // PLC TODO: the PLC publishes no process values yet.
+  "Parameters": {
+  },
+
+  // ---------------------------------------------------------------------------------
+  // UNIT RECORD  (PLC -> HMI)  read once each time Status.UnitDoneCount steps up
+  // ---------------------------------------------------------------------------------
+  // Saved as one [ProductionData] row per finished unit: Home I/O summary, Data > I/O,
+  // Tossing and Yield. The PLC must hold these until it counts the next unit.
+  // Pass is required (no row without a result); the others are saved as unknown when blank.
+  // Also the unit's HIVE machine_data payload: that needs Status.UnitDoneSerial, Pass and
+  // CycleTime; Tossing is sent as first_vision_tossing_NG, Station as head_id.
+  // PLC TODO: none exists yet (ST_PartData has barcode, valueX/Y and result only).
+  "UnitRecord": {
+    "Pass": { "Symbol": "", "Type": "BOOL" },          // TRUE = OK
+    "CycleTime": { "Symbol": "", "Type": "REAL" },     // s, input to output
+    "Tossing": { "Symbol": "", "Type": "BOOL" },       // tossed by the pre-process CCD
+    "Iteration": { "Symbol": "", "Type": "INT" },      // 1 = first pass
+    "Station": { "Symbol": "", "Type": "INT" },        // 1 / 2
+    "FailureCode": { "Symbol": "", "Type": "STRING" }, // HIVE failure_code, "NA" for a pass
+    "FixtureId": { "Symbol": "", "Type": "STRING" },   // HIVE fixture_id: SN of the UC / fixture
+    // S16 Glue Path AOI Inspection State: the vision software's state code of each dispensing
+    // pose, by HIVE's key - a DINT of seven digits (no glue, shift, missing, broken, keep-out,
+    // hole, less glue; 1 enabled, 0 disabled, 2 not applicable):
+    //   "pose1_aoi_inspection_state": { "Symbol": "GVL_HMI.stUnit.nAoiState[1]", "Type": "DINT" }
+    // A pose listed here that reads 0 (the vision answer had no code) is sent as 0 with both
+    // limits 1111111; otherwise its limits are its row in Config > Spec Limits (Production),
+    // both sides the station's matrix value. A pose not listed is not sent.
+    // PLC TODO: the PLC does not pass the vision software's AOI code on yet (Q10: how many poses).
+    "AoiStates": {
+    }
+  },
+
+  // ---------------------------------------------------------------------------------
+  // COORDINATES  (PLC -> HMI)  Data > Axis, read with the unit record
+  // ---------------------------------------------------------------------------------
+  // One entry per measured value of a unit. Nominal / Lsl / Usl are the HMI's limits.
+  //   { "Point": "1", "Axis": "X", "Symbol": "GVL_HMI.stUnit.aPos[1].rX", "Nominal": 140.0, "Lsl": 139.95, "Usl": 140.05 }
+  // PLC TODO: the PLC publishes no measured coordinates yet.
+  "Coordinates": {
+    "Points": []
+  },
+
+  // ---------------------------------------------------------------------------------
+  // GLUE  -  Data > Glue and Health, Home glue panel, glue warnings
+  // ---------------------------------------------------------------------------------
+  // PLC TODO: none of this exists yet (no weighing module sequence, no glue counters).
+  "Glue": {
+    // By gantry name, as Setting > Valve Model and the consumables use it. "Station" is the
+    // station number the PLC gives a weighing. DFM slide 16: front = nearest the input
+    // (open question Q2: which station that is).
+    "Gantries": {
+      "Front": {
+        "Station": 1,
+        "ProducedQty": "",            // DINT units on this cartridge
+        "LongPurgeCycles": "",        // DINT
+        "ShortPurgeCycles": "",       // DINT
+        "WeighingCycles": "",         // DINT
+        "RemainingPotLifeHours": "",  // REAL h
+        "NozzleHoursLeft": "",        // REAL h
+        "NozzleLifeHours": 168
+      },
+      "Rear": {
+        "Station": 2,
+        "ProducedQty": "",
+        "LongPurgeCycles": "",
+        "ShortPurgeCycles": "",
+        "WeighingCycles": "",
+        "RemainingPotLifeHours": "",
+        "NozzleHoursLeft": "",
+        "NozzleLifeHours": 168
+      }
+    },
+    // One glue weighing: the PLC counts Count up for every weighing and holds its values
+    // until the next. Weight, nominal and both limits are required.
+    "Weighing": {
+      "Count": "",                                     // UDINT
+      "Station": { "Symbol": "", "Type": "INT" },
+      "Path": { "Symbol": "", "Type": "INT" },
+      "Speed": { "Symbol": "", "Type": "REAL" },       // mm/s
+      "WeightMg": { "Symbol": "", "Type": "REAL" },
+      "NominalMg": { "Symbol": "", "Type": "REAL" },
+      "LowerLimitMg": { "Symbol": "", "Type": "REAL" },
+      "UpperLimitMg": { "Symbol": "", "Type": "REAL" },
+      "IsManual": { "Symbol": "", "Type": "BOOL" }    // TRUE when the last weighing was done by hand (PD-17 after PD-10)
+    },
+    // Weight against speed from each path's last calibration (LREAL).
+    "Regressions": [
+      { "Gantry": "Front", "Path": 1, "W": "", "B": "", "R2": "" },
+      { "Gantry": "Rear", "Path": 1, "W": "", "B": "", "R2": "" }
+    ],
+    // Data > Glue weighing settings, written on Save and each time the PLC comes back.
+    "WeighingSettings": {
+      "ByTime": "",                     // BOOL
+      "IntervalMinutes": "",            // INT
+      "ByUnitCount": "",                // BOOL
+      "IntervalUnits": "",              // INT
+      "AtShiftStart": "",               // BOOL
+      "AtShiftEnd": "",                 // BOOL
+      "ShotsPerWeighing": "",           // INT
+      "CalibrationIntervalHours": ""    // INT
+    }
+  },
+
+  // ---------------------------------------------------------------------------------
+  // THIRD-PARTY DEVICES  -  Manual > Dispenser, Weighing, Vibration
+  // ---------------------------------------------------------------------------------
+  // Each device is a PLC data block ("Path"); "Members" are relative to it, by the key the
+  // Manual tab uses. A key left out is not offered on the tab. "Scale": PLC value = HMI
+  // value x Scale. Command bits are pulsed TRUE for PulseMilliseconds.
+  // PLC TODO: these paths are the standalone projects' (rs485_final_30102026 and
+  // DISPENSER_WEIGHING_RS232_final): change them when the blocks are merged into the
+  // D-SCUD PLC. The blocks take HMI commands only while their own in.automode is FALSE,
+  // not from the machine's MANUAL state.
+  // PLC TODO: the dispenser block has no member for the valve SN its controller reports. Once it
+  // has, add it to Dispenser > Members as
+  //   "SerialNumber": { "Symbol": "status.sValveSn", "Type": "STRING(40)" }
+  // and the 5 minute valve SN check (S3.1 PD-04) runs for valve models with an internal SN:
+  // gantry 1 (Front) is read from the first instance, gantry 2 (Rear) from the second.
+  "ThirdPartyDevices": {
+    "Dispenser": {
+      "Instances": [
+        {
+          "Name": "Dispenser 1 (Station 1)",
+          "Path": "MAIN.dispenser.dispenserdata[1]"
+        },
+        {
+          "Name": "Dispenser 2 (Station 2)",
+          "Path": "MAIN.dispenser.dispenserdata[2]"
+        }
+      ],
+      "PulseMilliseconds": 200,
+      "Members": {
+        "Start": {
+          "Symbol": "hmicmd.bstart",
+          "Type": "BOOL"
+        },
+        "Stop": {
+          "Symbol": "hmicmd.bstop",
+          "Type": "BOOL"
+        },
+        "Reset": {
+          "Symbol": "hmicmd.breset",
+          "Type": "BOOL"
+        },
+        "Save": {
+          "Symbol": "hmicmd.bsave",
+          "Type": "BOOL"
+        },
+        "ReadStatus": {
+          "Symbol": "hmicmd.breadstatus",
+          "Type": "BOOL"
+        },
+        "Recipe": {
+          "Symbol": "hmicmd.recipe",
+          "Type": "UINT"
+        },
+        "Ratio": {
+          "Symbol": "hmicmd.mixing_ratio",
+          "Type": "UINT",
+          "Scale": 10
+        },
+        "Time": {
+          "Symbol": "hmicmd.time_mode",
+          "Type": "UINT",
+          "Scale": 10
+        },
+        "Volume": {
+          "Symbol": "hmicmd.volume_mode",
+          "Type": "UINT",
+          "Scale": 10
+        },
+        "Speed": {
+          "Symbol": "hmicmd.auto_speed",
+          "Type": "UINT",
+          "Scale": 10
+        },
+        "RecipeInUse": {
+          "Symbol": "par.nrecipe",
+          "Type": "UINT"
+        },
+        "RatioInUse": {
+          "Symbol": "par.fratio",
+          "Type": "REAL"
+        },
+        "TimeInUse": {
+          "Symbol": "par.ftime",
+          "Type": "REAL"
+        },
+        "VolumeInUse": {
+          "Symbol": "par.fvolume",
+          "Type": "REAL"
+        },
+        "SpeedInUse": {
+          "Symbol": "par.fspeed",
+          "Type": "REAL"
+        },
+        "DualFluid": {
+          "Symbol": "config.bdualfluid",
+          "Type": "BOOL"
+        },
+        "AutoMode": {
+          "Symbol": "in.automode",
+          "Type": "BOOL"
+        },
+        "Connected": {
+          "Symbol": "status.bconnect",
+          "Type": "BOOL"
+        },
+        "DataValid": {
+          "Symbol": "status.bdatavalid",
+          "Type": "BOOL"
+        },
+        "PowerOn": {
+          "Symbol": "status.bpoweron",
+          "Type": "BOOL"
+        },
+        "Ready": {
+          "Symbol": "status.bready",
+          "Type": "BOOL"
+        },
+        "Busy": {
+          "Symbol": "status.bbusy",
+          "Type": "BOOL"
+        },
+        "Dispensing": {
+          "Symbol": "status.bdispensing",
+          "Type": "BOOL"
+        },
+        "Done": {
+          "Symbol": "status.bdone",
+          "Type": "BOOL"
+        },
+        "Error": {
+          "Symbol": "status.berror",
+          "Type": "BOOL"
+        },
+        "SuctionOn": {
+          "Symbol": "status.bSuctionOn",
+          "Type": "BOOL"
+        },
+        "Mode": {
+          "Symbol": "status.nMode",
+          "Type": "INT"
+        },
+        "DeviceAlarm": {
+          "Symbol": "status.nAlarm",
+          "Type": "INT"
+        },
+        "LastReply": {
+          "Symbol": "status.sreply",
+          "Type": "STRING(80)"
+        },
+        "SpeedA": {
+          "Symbol": "status.fSpeedA",
+          "Type": "REAL"
+        },
+        "SpeedB": {
+          "Symbol": "status.fSpeedB",
+          "Type": "REAL"
+        },
+        "OutputA": {
+          "Symbol": "status.fOutputA",
+          "Type": "REAL"
+        },
+        "OutputB": {
+          "Symbol": "status.fOutputB",
+          "Type": "REAL"
+        },
+        "PressureA": {
+          "Symbol": "status.fPressureA",
+          "Type": "REAL"
+        },
+        "PressureB": {
+          "Symbol": "status.fPressureB",
+          "Type": "REAL"
+        },
+        "GlueA": {
+          "Symbol": "status.fGlueA",
+          "Type": "REAL"
+        },
+        "GlueB": {
+          "Symbol": "status.fGlueB",
+          "Type": "REAL"
+        },
+        "CurrentA": {
+          "Symbol": "status.fCurrentA",
+          "Type": "REAL"
+        },
+        "CurrentB": {
+          "Symbol": "status.fCurrentB",
+          "Type": "REAL"
+        },
+        "TurnsA": {
+          "Symbol": "status.fTurnsA",
+          "Type": "REAL"
+        },
+        "TurnsB": {
+          "Symbol": "status.fTurnsB",
+          "Type": "REAL"
+        },
+        "ReportedRatio": {
+          "Symbol": "status.fRatio",
+          "Type": "REAL"
+        },
+        "ReportedTime": {
+          "Symbol": "status.fTime",
+          "Type": "REAL"
+        },
+        "ReportedTimeSpeed": {
+          "Symbol": "status.fTimeSpeed",
+          "Type": "REAL"
+        },
+        "ReportedVolume": {
+          "Symbol": "status.fVolume",
+          "Type": "REAL"
+        },
+        "ReportedVolumeSpeed": {
+          "Symbol": "status.fVolumeSpeed",
+          "Type": "REAL"
+        },
+        "ReportedAutoSpeed": {
+          "Symbol": "status.fAutoSpeed",
+          "Type": "REAL"
+        },
+        "PressureLimit": {
+          "Symbol": "status.fPressLimit",
+          "Type": "REAL"
+        },
+        "RatioFix": {
+          "Symbol": "status.fRatioFix",
+          "Type": "REAL"
+        },
+        "LevelDeviation": {
+          "Symbol": "status.fLevelDev",
+          "Type": "REAL"
+        },
+        "SuctionSpeed": {
+          "Symbol": "status.fSuctionSpeed",
+          "Type": "REAL"
+        },
+        "SuctionTime": {
+          "Symbol": "status.fSuctionTime",
+          "Type": "REAL"
+        },
+        "DropSpeed": {
+          "Symbol": "status.fDropSpeed",
+          "Type": "REAL"
+        },
+        "DropTime": {
+          "Symbol": "status.fDropTime",
+          "Type": "REAL"
+        },
+        "DropInterval": {
+          "Symbol": "status.fDropInterval",
+          "Type": "REAL"
+        },
+        "AlarmActive": {
+          "Symbol": "alarm.alarmActive",
+          "Type": "BOOL"
+        },
+        "AlarmCode": {
+          "Symbol": "alarm.errorid",
+          "Type": "UDINT"
+        },
+        "AlarmText": {
+          "Symbol": "alarm.errordescription",
+          "Type": "STRING(100)"
+        }
+      }
+    },
+    "Weighing": {
+      "Instances": [
+        {
+          "Name": "Weighing scale",
+          "Path": "MAIN.weighing.weighingdata[1]"
+        }
+      ],
+      "PulseMilliseconds": 200,
+      "Members": {
+        "Weigh": {
+          "Symbol": "hmicmd.bon",
+          "Type": "BOOL"
+        },
+        "Stop": {
+          "Symbol": "hmicmd.boff",
+          "Type": "BOOL"
+        },
+        "ReadOnce": {
+          "Symbol": "hmicmd.bread",
+          "Type": "BOOL"
+        },
+        "Tare": {
+          "Symbol": "hmicmd.bzero",
+          "Type": "BOOL"
+        },
+        "Reset": {
+          "Symbol": "hmicmd.breset",
+          "Type": "BOOL"
+        },
+        "MinWeight": {
+          "Symbol": "par.minweight",
+          "Type": "LREAL"
+        },
+        "MaxWeight": {
+          "Symbol": "par.maxweight",
+          "Type": "LREAL"
+        },
+        "AutoMode": {
+          "Symbol": "in.automode",
+          "Type": "BOOL"
+        },
+        "ReadMode": {
+          "Symbol": "config.command",
+          "Type": "INT"
+        },
+        "StableTimeout": {
+          "Symbol": "config.tstabletimeout",
+          "Type": "TIME"
+        },
+        "Connected": {
+          "Symbol": "status.bconnect",
+          "Type": "BOOL"
+        },
+        "Stable": {
+          "Symbol": "status.bstable",
+          "Type": "BOOL"
+        },
+        "Unstable": {
+          "Symbol": "status.bunstable",
+          "Type": "BOOL"
+        },
+        "Busy": {
+          "Symbol": "status.bbusy",
+          "Type": "BOOL"
+        },
+        "CommError": {
+          "Symbol": "status.berror",
+          "Type": "BOOL"
+        },
+        "Weight": {
+          "Symbol": "status.Actualweight",
+          "Type": "LREAL"
+        },
+        "LastReply": {
+          "Symbol": "status.sreply",
+          "Type": "STRING(80)"
+        },
+        "Pass": {
+          "Symbol": "out.bpass",
+          "Type": "BOOL"
+        },
+        "Fail": {
+          "Symbol": "out.bfail",
+          "Type": "BOOL"
+        },
+        "WeighDone": {
+          "Symbol": "out.bweighdone",
+          "Type": "BOOL"
+        },
+        "AlarmActive": {
+          "Symbol": "alarm.com_alarm",
+          "Type": "BOOL"
+        },
+        "AlarmCode": {
+          "Symbol": "alarm.errorid",
+          "Type": "UDINT"
+        },
+        "AlarmText": {
+          "Symbol": "alarm.alarmdescription",
+          "Type": "STRING(100)"
+        },
+        "AlarmDetail": {
+          "Symbol": "alarm.errordescription",
+          "Type": "STRING(100)"
+        }
+      }
+    },
+    "Vibration": {
+      "Instances": [
+        {
+          "Name": "Vibration sensor 1",
+          "Path": "MAIN.vibration.vibsen_data[1]"
+        },
+        {
+          "Name": "Vibration sensor 2",
+          "Path": "MAIN.vibration.vibsen_data[2]"
+        },
+        {
+          "Name": "Vibration sensor 3",
+          "Path": "MAIN.vibration.vibsen_data[3]"
+        }
+      ],
+      "PulseMilliseconds": 200,
+      "Members": {
+        "Monitoring": {
+          "Symbol": "hmicmd.breaddata",
+          "Type": "BOOL"
+        },
+        "ReadSettings": {
+          "Symbol": "hmicmd.breadconfig",
+          "Type": "BOOL",
+          "PulseMilliseconds": 2000
+        },
+        "WriteSettings": {
+          "Symbol": "hmicmd.bwriteconfig",
+          "Type": "BOOL"
+        },
+        "Reset": {
+          "Symbol": "hmicmd.breset",
+          "Type": "BOOL"
+        },
+        "Fmax": {
+          "Symbol": "config.nfmaxsetting",
+          "Type": "USINT"
+        },
+        "FmaxInUse": {
+          "Symbol": "status.readfmax",
+          "Type": "UINT"
+        },
+        "VibrationMin": {
+          "Symbol": "par.fminlimit",
+          "Type": "REAL"
+        },
+        "VibrationMax": {
+          "Symbol": "par.fmaxlimit",
+          "Type": "REAL"
+        },
+        "OverJerkLimit": {
+          "Symbol": "par.foverjerklimit",
+          "Type": "REAL"
+        },
+        "TemperatureMin": {
+          "Symbol": "par.ftempminlimit",
+          "Type": "REAL"
+        },
+        "TemperatureMax": {
+          "Symbol": "par.ftempmaxlimit",
+          "Type": "REAL"
+        },
+        "OverTemperatureLimit": {
+          "Symbol": "par.fovertemplimit",
+          "Type": "REAL"
+        },
+        "ScaleFactor": {
+          "Symbol": "par.fscale",
+          "Type": "REAL"
+        },
+        "Connected": {
+          "Symbol": "status.bconnect",
+          "Type": "BOOL"
+        },
+        "DataValid": {
+          "Symbol": "status.bdatavalid",
+          "Type": "BOOL"
+        },
+        "Busy": {
+          "Symbol": "status.bbusy",
+          "Type": "BOOL"
+        },
+        "VibrationWarning": {
+          "Symbol": "status.bwarning_vib",
+          "Type": "BOOL"
+        },
+        "OverJerk": {
+          "Symbol": "status.boverjerk",
+          "Type": "BOOL"
+        },
+        "TemperatureWarning": {
+          "Symbol": "status.bwarning_temp",
+          "Type": "BOOL"
+        },
+        "OverTemperature": {
+          "Symbol": "status.bovertemp",
+          "Type": "BOOL"
+        },
+        "ConfigReadDone": {
+          "Symbol": "status.bcfgreaddone",
+          "Type": "BOOL"
+        },
+        "ConfigWriteDone": {
+          "Symbol": "status.bwritedone",
+          "Type": "BOOL"
+        },
+        "ConfigWriteError": {
+          "Symbol": "status.bwriteerror",
+          "Type": "BOOL"
+        },
+        "CommError": {
+          "Symbol": "status.berror",
+          "Type": "BOOL"
+        },
+        "Vibration": {
+          "Symbol": "status.Vib_currentvalue",
+          "Type": "REAL"
+        },
+        "Temperature": {
+          "Symbol": "status.Temp_currentvalue",
+          "Type": "REAL"
+        },
+        "BaudRate": {
+          "Symbol": "status.baudrate",
+          "Type": "UINT"
+        },
+        "Parity": {
+          "Symbol": "status.parity",
+          "Type": "UINT"
+        },
+        "ModbusAddress": {
+          "Symbol": "status.modbusaddress",
+          "Type": "UINT"
+        },
+        "Axis": {
+          "Symbol": "config.naxisselection",
+          "Type": "UINT"
+        },
+        "ErrorId": {
+          "Symbol": "status.nerrorid",
+          "Type": "UDINT"
+        },
+        "AlarmActive": {
+          "Symbol": "alarm.berror",
+          "Type": "BOOL"
+        },
+        "AlarmCode": {
+          "Symbol": "alarm.nerrorid",
+          "Type": "UDINT"
+        }
+      }
+    }
+  },
+
+  // ---------------------------------------------------------------------------------
+  // SENSOR DISABLE  (HMI -> PLC)  -  Home > Sensor Connection Dashboard
+  // ---------------------------------------------------------------------------------
+  // The PLC's ARRAY OF BOOL that disables the sensors: one element per Master.Configuration
+  // ESensor member, in the enum's order (a sensor's "Input" in Data\Settings\Sensors.json is
+  // the ESensor / EInput member name). The HMI writes TRUE to disable, FALSE to enable.
+  // FirstIndex is the array's lower bound in the PLC: 0 for ARRAY[0..n], 1 for ARRAY[1..n].
+  // Example:   "Array": "GVL_HMI.abSensorDisable", "FirstIndex": 0
+  // PLC TODO: the PLC has no sensor disable array yet; blank = no sensor can be disabled.
+  "SensorDisable": {
+    "Array": "",
+    "FirstIndex": 0
+  }
+}

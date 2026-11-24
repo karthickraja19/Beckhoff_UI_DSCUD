@@ -369,7 +369,8 @@ namespace Nova.ViewModels.Pages.Audio
                 _glueRecords = Empty<GlueWeighingRecord>();
                 _regressions = Empty<GlueRegression>();
                 _weighingSettings = null;
-                GlueStatus = "The weighing scale is not connected to this HMI yet, so there are no glue weighings to show.";
+                GlueStatus = "The machine does not report glue weighings yet, so there are none to show. "
+                             + "Each weighing is recorded once the PLC provides it.";
                 BuildGlue();
                 LoadWeighingFields();
                 return;
@@ -723,7 +724,7 @@ namespace Nova.ViewModels.Pages.Audio
 
             RegressionEquation = "y = " + regression.W.ToString("0.0000") + "x "
                                  + (regression.B < 0 ? "- " : "+ ") + Math.Abs(regression.B).ToString("0.0000");
-            RegressionR2Text = "R² = " + regression.R2.ToString("0.0000");
+            RegressionR2Text = double.IsNaN(regression.R2) ? "R² not reported" : "R² = " + regression.R2.ToString("0.0000");
             RegressionCalibratedText = regression.CalibratedAt.HasValue
                 ? "Calibrated " + regression.CalibratedAt.Value.ToString("yyyy/M/d HH:mm")
                 : string.Empty;

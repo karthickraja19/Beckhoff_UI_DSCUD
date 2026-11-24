@@ -1,5 +1,6 @@
 ﻿<UserControl x:Class="Nova.Wpf.App.Views.Pages.Settings.SettingsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:loc="clr-namespace:Nova.Wpf.UI.Localization;assembly=Nova.Wpf.UI"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:hc="https://handyorg.github.io/handycontrol"
              xmlns:settingsVm="clr-namespace:Nova.ViewModels.Pages.Settings;assembly=Nova.ViewModels"
@@ -34,20 +35,6 @@
                     <local:SettingsGroupView/>
                 </DataTemplate>
 
-                <!-- Every other tab is a data-driven settings form (sections + fields). -->
-                <DataTemplate DataType="{x:Type settingsVm:SettingsTabViewModel}">
-                    <local:SettingsFormView/>
-                </DataTemplate>
-
-                <!-- Fallback for any tab still on a placeholder. -->
-                <DataTemplate DataType="{x:Type settingsVm:SettingsPlaceholderViewModel}">
-                    <Border Background="{DynamicResource RegionBrush}" CornerRadius="6"
-                            Padding="20" Margin="0,8,0,0" Effect="{StaticResource EffectShadow1}">
-                        <TextBlock VerticalAlignment="Center" HorizontalAlignment="Center"
-                                   FontSize="{DynamicResource Nova.FontSize.Heading}" Foreground="{DynamicResource SecondaryTextBrush}"
-                                   Text="{Binding Title, StringFormat='{}{0} settings — not yet implemented'}"/>
-                    </Border>
-                </DataTemplate>
             </TabControl.Resources>
         </TabControl>
     </Grid>

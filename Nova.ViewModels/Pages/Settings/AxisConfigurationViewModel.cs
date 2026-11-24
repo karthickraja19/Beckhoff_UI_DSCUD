@@ -12,8 +12,8 @@ using Nova.ViewModels.Common;
 namespace Nova.ViewModels.Pages.Settings
 {
     /// <summary>
-    /// The axis-parameter table (V3 Axis_Settings grid, persisted in Axis_Parameters.xml)
-    /// with Edit/Save.
+    /// The axis table: the servos of Data\Servos.json (the same entries the Recipe page's
+    /// Gantry tab teaches positions into), with Edit/Save writing back into that file.
     /// </summary>
     public partial class AxisConfigurationTableViewModel : ObservableObject, IEditableTab
     {
@@ -69,7 +69,13 @@ namespace Nova.ViewModels.Pages.Settings
         }
 
         [RelayCommand]
-        private void Edit() => IsEditing = true;
+        private void Edit()
+        {
+            // Servos.json may have changed since the table was loaded (a Recipe save writes
+            // it too), so edit what is in the file now.
+            LoadData();
+            IsEditing = true;
+        }
 
         [RelayCommand]
         private void Save()
@@ -98,7 +104,17 @@ namespace Nova.ViewModels.Pages.Settings
                 Rows = Rows.Select(r => r.ToDictionary()).ToList(),
             };
 
-            var result = _settingsService.SaveAxisParametersDynamic(doc);
+            RecipeSaveResult result;
+            try
+            {
+                result = _settingsService.SaveAxisParametersDynamic(doc);
+            }
+            catch (InvalidOperationException ex)
+            {
+                _dialogService.ShowError(ex.Message, "Settings");
+                return;
+            }
+
             _dialogService.ShowInfo(result.Message, "Settings");
 
             // "No data modified !" ends the edit too: the operator pressed Save and

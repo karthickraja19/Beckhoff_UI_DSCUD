@@ -1,0 +1,3466 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+  English master (default language).
+
+  Read at runtime by Teal.Library.Localization (Localization\ beside the exe) and written by
+  Setting > Localization Editor, so a correction made on the machine needs no rebuild.
+  Keys are Txt_ + the English words. XAML uses {loc:Tr Key}; text the view models build is
+  matched by its English value, so keep the English here identical to the code's English.
+-->
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Txt_0Gantry" xml:space="preserve">
+    <value>{0} Gantry</value>
+  </data>
+  <data name="Txt_0Jog" xml:space="preserve">
+    <value>{0} Jog</value>
+  </data>
+  <data name="Txt_0Motion" xml:space="preserve">
+    <value>{0} Motion</value>
+  </data>
+  <data name="Txt_0NotYetImplemented" xml:space="preserve">
+    <value>{0} — not yet implemented</value>
+  </data>
+  <data name="Txt_0Of1KeysShown2Untranslated" xml:space="preserve">
+    <value>{0} of {1} keys shown · {2} untranslated</value>
+  </data>
+  <data name="Txt_0SettingsNotYetImplemented" xml:space="preserve">
+    <value>{0} settings — not yet implemented</value>
+  </data>
+  <data name="Txt_0Software" xml:space="preserve">
+    <value>{0} software</value>
+  </data>
+  <data name="Txt_0TheSCUDWillNotDispenseA" xml:space="preserve">
+    <value>0 - the SCUD will not dispense: a unit had the wrong number of pictures. Solve the image problem, then set it back to 1.</value>
+  </data>
+  <data name="Txt_10xPointsToFormRegressionFormula" xml:space="preserve">
+    <value>- 10x points to form Regression formula:</value>
+  </data>
+  <data name="Txt_1Field" xml:space="preserve">
+    <value>1 field</value>
+  </data>
+  <data name="Txt_1Parameter" xml:space="preserve">
+    <value>1 parameter</value>
+  </data>
+  <data name="Txt_1TheSCUDCanDispense" xml:space="preserve">
+    <value>1 - the SCUD can dispense.</value>
+  </data>
+  <data name="Txt_24HourDryRun" xml:space="preserve">
+    <value>24-Hour Dry Run</value>
+  </data>
+  <data name="Txt_24HourDryRunFunctionModule" xml:space="preserve">
+    <value>24-Hour Dry Run (function module)</value>
+  </data>
+  <data name="Txt_2StepVerification" xml:space="preserve">
+    <value>2-Step Verification</value>
+  </data>
+  <data name="Txt_9PointCalibrationCCD1CCD2" xml:space="preserve">
+    <value>9-point calibration (CCD1 / CCD2)</value>
+  </data>
+  <data name="Txt_AAndRTurnToTheBlock" xml:space="preserve">
+    <value>A and R turn to the block's angles and the dispensing Z stops above the block at the gauge height.</value>
+  </data>
+  <data name="Txt_AAxis" xml:space="preserve">
+    <value>A axis (°)</value>
+  </data>
+  <data name="Txt_AAxisAngle" xml:space="preserve">
+    <value>A axis angle</value>
+  </data>
+  <data name="Txt_ACTION" xml:space="preserve">
+    <value>ACTION</value>
+  </data>
+  <data name="Txt_ACTUALPOSITION" xml:space="preserve">
+    <value>ACTUAL POSITION</value>
+  </data>
+  <data name="Txt_ACTUALVELOCITY" xml:space="preserve">
+    <value>ACTUAL VELOCITY</value>
+  </data>
+  <data name="Txt_ACalibrationIsRunning" xml:space="preserve">
+    <value>A calibration is running.</value>
+  </data>
+  <data name="Txt_AELimitsCPK" xml:space="preserve">
+    <value>AE limits (CPK)</value>
+  </data>
+  <data name="Txt_AELimitsGRR" xml:space="preserve">
+    <value>AE limits (GRR)</value>
+  </data>
+  <data name="Txt_AXISSTATE" xml:space="preserve">
+    <value>AXIS STATE</value>
+  </data>
+  <data name="Txt_Absolute" xml:space="preserve">
+    <value>Absolute</value>
+  </data>
+  <data name="Txt_Accept" xml:space="preserve">
+    <value>Accept</value>
+  </data>
+  <data name="Txt_AcceptedAAndRAtTheseAngles" xml:space="preserve">
+    <value>Accepted: A and R at these angles become the zero reference.</value>
+  </data>
+  <data name="Txt_Access" xml:space="preserve">
+    <value>Access</value>
+  </data>
+  <data name="Txt_AccessCheckFailed" xml:space="preserve">
+    <value>Access check failed.</value>
+  </data>
+  <data name="Txt_AccessControl" xml:space="preserve">
+    <value>Access Control</value>
+  </data>
+  <data name="Txt_AccessControlWithMES" xml:space="preserve">
+    <value>Access Control with MES</value>
+  </data>
+  <data name="Txt_AccessDenied" xml:space="preserve">
+    <value>Access denied.</value>
+  </data>
+  <data name="Txt_Activated" xml:space="preserve">
+    <value>Activated</value>
+  </data>
+  <data name="Txt_Activity" xml:space="preserve">
+    <value>Activity</value>
+  </data>
+  <data name="Txt_Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Txt_AfterANeedleChangeTheNeedleMoves" xml:space="preserve">
+    <value>After a needle change, the needle moves to the needle calibration module.</value>
+  </data>
+  <data name="Txt_Alarm" xml:space="preserve">
+    <value>Alarm</value>
+  </data>
+  <data name="Txt_AlarmDurations" xml:space="preserve">
+    <value>Alarm Durations</value>
+  </data>
+  <data name="Txt_AlarmDurationsMin" xml:space="preserve">
+    <value>Alarm Durations (min)</value>
+  </data>
+  <data name="Txt_AlarmHistory" xml:space="preserve">
+    <value>Alarm History</value>
+  </data>
+  <data name="Txt_AlarmHistoryIsNotAvailableOnThis" xml:space="preserve">
+    <value>Alarm history is not available on this machine.</value>
+  </data>
+  <data name="Txt_Alarms" xml:space="preserve">
+    <value>Alarms</value>
+  </data>
+  <data name="Txt_AllColumns" xml:space="preserve">
+    <value>All columns</value>
+  </data>
+  <data name="Txt_AlwaysKeepAnEyeOnTheRemaining" xml:space="preserve">
+    <value>Always keep an eye on the remaining amount of glue on the machine, and change the glue in time when the machine sounds the alarm.</value>
+  </data>
+  <data name="Txt_Angle" xml:space="preserve">
+    <value>Angle</value>
+  </data>
+  <data name="Txt_Area" xml:space="preserve">
+    <value>Area</value>
+  </data>
+  <data name="Txt_Authorize" xml:space="preserve">
+    <value>Authorize</value>
+  </data>
+  <data name="Txt_Axis" xml:space="preserve">
+    <value>Axis:</value>
+  </data>
+  <data name="Txt_AxisConfiguration" xml:space="preserve">
+    <value>Axis Configuration</value>
+  </data>
+  <data name="Txt_AxisConfigurationSettings" xml:space="preserve">
+    <value>Axis Configuration Settings</value>
+  </data>
+  <data name="Txt_AxisEnable" xml:space="preserve">
+    <value>Axis enable</value>
+  </data>
+  <data name="Txt_AxisHome" xml:space="preserve">
+    <value>Axis home</value>
+  </data>
+  <data name="Txt_AxisHomed" xml:space="preserve">
+    <value>Axis homed</value>
+  </data>
+  <data name="Txt_AxisInError" xml:space="preserve">
+    <value>Axis in error</value>
+  </data>
+  <data name="Txt_AxisIsNotSelected" xml:space="preserve">
+    <value>Axis is not selected.</value>
+  </data>
+  <data name="Txt_AxisParameterTableIsEmpty" xml:space="preserve">
+    <value>Axis parameter table is empty.</value>
+  </data>
+  <data name="Txt_AxisRunning" xml:space="preserve">
+    <value>Axis running</value>
+  </data>
+  <data name="Txt_Axis_2" xml:space="preserve">
+    <value>Axis</value>
+  </data>
+  <data name="Txt_BackToHome" xml:space="preserve">
+    <value>‹ Back to Home</value>
+  </data>
+  <data name="Txt_BadgeReadPressOK" xml:space="preserve">
+    <value>Badge read. Press OK.</value>
+  </data>
+  <data name="Txt_BadgeReadScanTheSN" xml:space="preserve">
+    <value>Badge read. Scan the SN.</value>
+  </data>
+  <data name="Txt_BasePlateAngleZeroLaser" xml:space="preserve">
+    <value>Base plate angle zero (laser)</value>
+  </data>
+  <data name="Txt_BasePlateFlatnessLaser" xml:space="preserve">
+    <value>Base plate flatness (laser)</value>
+  </data>
+  <data name="Txt_BaudRate" xml:space="preserve">
+    <value>Baud Rate</value>
+  </data>
+  <data name="Txt_Blow" xml:space="preserve">
+    <value>Blow</value>
+  </data>
+  <data name="Txt_Browse" xml:space="preserve">
+    <value>Browse</value>
+  </data>
+  <data name="Txt_BuzzerMuted" xml:space="preserve">
+    <value>Buzzer muted.</value>
+  </data>
+  <data name="Txt_BypassSettings" xml:space="preserve">
+    <value>Bypass Settings</value>
+  </data>
+  <data name="Txt_CCD123" xml:space="preserve">
+    <value>CCD 1, 2, 3</value>
+  </data>
+  <data name="Txt_CCD3FindsTheNeedleSLeftRight" xml:space="preserve">
+    <value>CCD3 finds the needle's left, right and bottom edges, its tip centre and angle T.</value>
+  </data>
+  <data name="Txt_CCD3MeasuresTheNeedleSXY" xml:space="preserve">
+    <value>CCD3 measures the needle's X, Y, Z and T; deviation = measured - template.</value>
+  </data>
+  <data name="Txt_CCDCalibration" xml:space="preserve">
+    <value>CCD Calibration</value>
+  </data>
+  <data name="Txt_CCDRepeatabilityTesting" xml:space="preserve">
+    <value>CCD Repeatability Testing</value>
+  </data>
+  <data name="Txt_CCDTCPSettings" xml:space="preserve">
+    <value>CCD TCP Settings</value>
+  </data>
+  <data name="Txt_CHOOSECAMERA" xml:space="preserve">
+    <value>CHOOSE CAMERA</value>
+  </data>
+  <data name="Txt_COMPort" xml:space="preserve">
+    <value>COM Port</value>
+  </data>
+  <data name="Txt_CONNECTDEVICE" xml:space="preserve">
+    <value>CONNECT DEVICE</value>
+  </data>
+  <data name="Txt_CONTINUOUSMOTION" xml:space="preserve">
+    <value>CONTINUOUS MOTION</value>
+  </data>
+  <data name="Txt_CSVExportIsNotAvailableOnThis" xml:space="preserve">
+    <value>CSV export is not available on this machine.</value>
+  </data>
+  <data name="Txt_CSVImport" xml:space="preserve">
+    <value>CSV Import</value>
+  </data>
+  <data name="Txt_CTS" xml:space="preserve">
+    <value>CT/s</value>
+  </data>
+  <data name="Txt_CURRENTSTATUS" xml:space="preserve">
+    <value>CURRENT STATUS</value>
+  </data>
+  <data name="Txt_CYLINDERNAME" xml:space="preserve">
+    <value>CYLINDER NAME</value>
+  </data>
+  <data name="Txt_Cable" xml:space="preserve">
+    <value>Cable</value>
+  </data>
+  <data name="Txt_Calibration" xml:space="preserve">
+    <value>Calibration</value>
+  </data>
+  <data name="Txt_CalibrationFrequency" xml:space="preserve">
+    <value>Calibration frequency</value>
+  </data>
+  <data name="Txt_CalibrationFrequencyMustBeAWholeNumber" xml:space="preserve">
+    <value>Calibration frequency must be a whole number of hours, 1 or more.</value>
+  </data>
+  <data name="Txt_CalibrationInProgress" xml:space="preserve">
+    <value>Calibration in progress…</value>
+  </data>
+  <data name="Txt_CalibrationIsNotAvailableOnThisBuild" xml:space="preserve">
+    <value>Calibration is not available on this build.</value>
+  </data>
+  <data name="Txt_CalibrationPoints" xml:space="preserve">
+    <value>Calibration points</value>
+  </data>
+  <data name="Txt_Camera" xml:space="preserve">
+    <value>Camera</value>
+  </data>
+  <data name="Txt_CameraExposure" xml:space="preserve">
+    <value>Camera exposure</value>
+  </data>
+  <data name="Txt_CameraGain" xml:space="preserve">
+    <value>Camera gain</value>
+  </data>
+  <data name="Txt_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Txt_CardAxis" xml:space="preserve">
+    <value>Card / Axis</value>
+  </data>
+  <data name="Txt_CartridgeWeightMustBeANumberAbove" xml:space="preserve">
+    <value>Cartridge weight must be a number above 0.</value>
+  </data>
+  <data name="Txt_ChangeConfig" xml:space="preserve">
+    <value>Change Config</value>
+  </data>
+  <data name="Txt_ChangeErrorDetail" xml:space="preserve">
+    <value>&lt;Change error detail&gt;</value>
+  </data>
+  <data name="Txt_ChangeGlueNow" xml:space="preserve">
+    <value>Change glue now</value>
+  </data>
+  <data name="Txt_ChangeGlueThreshold" xml:space="preserve">
+    <value>Change-glue threshold (%)</value>
+  </data>
+  <data name="Txt_ChangeGlueThresholdMustBeAPercentage" xml:space="preserve">
+    <value>Change-glue threshold must be a percentage from 0 to 100.</value>
+  </data>
+  <data name="Txt_ChangeToRunning" xml:space="preserve">
+    <value>Change to Running</value>
+  </data>
+  <data name="Txt_ChangingSpecLimitsRequiresLevel3" xml:space="preserve">
+    <value>Changing spec limits requires Level 3</value>
+  </data>
+  <data name="Txt_CheckTheGapBetweenNeedleAndBlock" xml:space="preserve">
+    <value>Check the gap between needle and block with the feeler gauge, then accept or reject on screen.</value>
+  </data>
+  <data name="Txt_Checking" xml:space="preserve">
+    <value>Checking</value>
+  </data>
+  <data name="Txt_CheckingAccess" xml:space="preserve">
+    <value>Checking access…</value>
+  </data>
+  <data name="Txt_CheckingTheBadge" xml:space="preserve">
+    <value>Checking the badge...</value>
+  </data>
+  <data name="Txt_ChooseATimeRangeAndPressQuery" xml:space="preserve">
+    <value>Choose a time range and press Query.</value>
+  </data>
+  <data name="Txt_ChooseAtLeastOneTriggerOrThe" xml:space="preserve">
+    <value>Choose at least one trigger, or the scale never weighs.</value>
+  </data>
+  <data name="Txt_ChooseOrTypeAMachineNameBefore" xml:space="preserve">
+    <value>Choose or type a machine name before saving.</value>
+  </data>
+  <data name="Txt_ChooseTheGantryAndScanTheValve" xml:space="preserve">
+    <value>Choose the gantry and scan the valve SN.</value>
+  </data>
+  <data name="Txt_Circularity" xml:space="preserve">
+    <value>Circularity</value>
+  </data>
+  <data name="Txt_CircularityMin" xml:space="preserve">
+    <value>Circularity min</value>
+  </data>
+  <data name="Txt_Clear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="Txt_ClearAll" xml:space="preserve">
+    <value>Clear All</value>
+  </data>
+  <data name="Txt_ClearError" xml:space="preserve">
+    <value>Clear error</value>
+  </data>
+  <data name="Txt_ClearEverySelectedPDATAField" xml:space="preserve">
+    <value>Clear every selected PDATA field?</value>
+  </data>
+  <data name="Txt_ClearFilter" xml:space="preserve">
+    <value>Clear filter</value>
+  </data>
+  <data name="Txt_ClickANonCriticalSensorToDisable" xml:space="preserve">
+    <value>Click a non-critical sensor to disable or enable it. Critical sensors cannot be disabled.</value>
+  </data>
+  <data name="Txt_ClickEditBeforeTeachingAPosition" xml:space="preserve">
+    <value>Click Edit before teaching a position.</value>
+  </data>
+  <data name="Txt_Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Txt_CloseWindow" xml:space="preserve">
+    <value>Close window</value>
+  </data>
+  <data name="Txt_Color" xml:space="preserve">
+    <value>Color</value>
+  </data>
+  <data name="Txt_ColumnSchemaWarning" xml:space="preserve">
+    <value>Column Schema Warning</value>
+  </data>
+  <data name="Txt_ComponentSN" xml:space="preserve">
+    <value>Component SN</value>
+  </data>
+  <data name="Txt_Config" xml:space="preserve">
+    <value>Config</value>
+  </data>
+  <data name="Txt_Confirm" xml:space="preserve">
+    <value>Confirm</value>
+  </data>
+  <data name="Txt_ConfirmModeChange" xml:space="preserve">
+    <value>Confirm Mode Change</value>
+  </data>
+  <data name="Txt_ConfirmToLogOut" xml:space="preserve">
+    <value>Confirm to log out?</value>
+  </data>
+  <data name="Txt_Confirmation" xml:space="preserve">
+    <value>Confirmation</value>
+  </data>
+  <data name="Txt_Connect" xml:space="preserve">
+    <value>Connect</value>
+  </data>
+  <data name="Txt_Connected" xml:space="preserve">
+    <value>Connected</value>
+  </data>
+  <data name="Txt_ConsumablePartReplacement" xml:space="preserve">
+    <value>Consumable part Replacement</value>
+  </data>
+  <data name="Txt_ContinueTestWithTheSameOperator" xml:space="preserve">
+    <value>Continue test with the same operator</value>
+  </data>
+  <data name="Txt_ContinuousForward" xml:space="preserve">
+    <value>Continuous forward</value>
+  </data>
+  <data name="Txt_ContinuousReverse" xml:space="preserve">
+    <value>Continuous reverse</value>
+  </data>
+  <data name="Txt_ConveyorStatus" xml:space="preserve">
+    <value>Conveyor Status</value>
+  </data>
+  <data name="Txt_CorrectTheDosagesMarkedInRed" xml:space="preserve">
+    <value>Correct the dosages marked in red.</value>
+  </data>
+  <data name="Txt_CorrectTheseLimitsBeforeSaving" xml:space="preserve">
+    <value>Correct these limits before saving:</value>
+  </data>
+  <data name="Txt_Count" xml:space="preserve">
+    <value>Count</value>
+  </data>
+  <data name="Txt_CountTotal" xml:space="preserve">
+    <value>Count Total</value>
+  </data>
+  <data name="Txt_Count_2" xml:space="preserve">
+    <value>Count </value>
+  </data>
+  <data name="Txt_Critical" xml:space="preserve">
+    <value>Critical</value>
+  </data>
+  <data name="Txt_CriticalSensor" xml:space="preserve">
+    <value>Critical sensor</value>
+  </data>
+  <data name="Txt_Crosshair" xml:space="preserve">
+    <value>Crosshair</value>
+  </data>
+  <data name="Txt_Cylinder" xml:space="preserve">
+    <value>Cylinder</value>
+  </data>
+  <data name="Txt_Cylinders" xml:space="preserve">
+    <value>Cylinders</value>
+  </data>
+  <data name="Txt_DEVICECONTROL" xml:space="preserve">
+    <value>DEVICE CONTROL</value>
+  </data>
+  <data name="Txt_DEVICESTATUS" xml:space="preserve">
+    <value>DEVICE STATUS</value>
+  </data>
+  <data name="Txt_DISCONNECT" xml:space="preserve">
+    <value>DISCONNECT</value>
+  </data>
+  <data name="Txt_DOEDetailsNeedsAppleAMEApprovalBefore" xml:space="preserve">
+    <value>DOE details (needs Apple AME approval before use):</value>
+  </data>
+  <data name="Txt_Daily" xml:space="preserve">
+    <value>Daily</value>
+  </data>
+  <data name="Txt_DailyMaintenance" xml:space="preserve">
+    <value>Daily Maintenance</value>
+  </data>
+  <data name="Txt_Data" xml:space="preserve">
+    <value>Data</value>
+  </data>
+  <data name="Txt_DataBits" xml:space="preserve">
+    <value>Data Bits</value>
+  </data>
+  <data name="Txt_Datatype" xml:space="preserve">
+    <value>Datatype</value>
+  </data>
+  <data name="Txt_Date" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="Txt_Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Txt_DetailsOfThePlannedWork" xml:space="preserve">
+    <value>Details of the planned work:</value>
+  </data>
+  <data name="Txt_Deviation" xml:space="preserve">
+    <value>Deviation</value>
+  </data>
+  <data name="Txt_DeviationTMax" xml:space="preserve">
+    <value>Deviation T max</value>
+  </data>
+  <data name="Txt_DeviationXMax" xml:space="preserve">
+    <value>Deviation X max</value>
+  </data>
+  <data name="Txt_DeviationYMax" xml:space="preserve">
+    <value>Deviation Y max</value>
+  </data>
+  <data name="Txt_DeviationZMax" xml:space="preserve">
+    <value>Deviation Z max</value>
+  </data>
+  <data name="Txt_DeviceConnections" xml:space="preserve">
+    <value>Device connections</value>
+  </data>
+  <data name="Txt_DeviceSettings" xml:space="preserve">
+    <value>Device Settings</value>
+  </data>
+  <data name="Txt_DeviceStatus" xml:space="preserve">
+    <value>Device Status</value>
+  </data>
+  <data name="Txt_DeviceStatus_2" xml:space="preserve">
+    <value>Device status</value>
+  </data>
+  <data name="Txt_Dialog" xml:space="preserve">
+    <value>Dialog</value>
+  </data>
+  <data name="Txt_Disable24HourDryRun" xml:space="preserve">
+    <value>Disable 24-hour dry run</value>
+  </data>
+  <data name="Txt_DisableHIVE" xml:space="preserve">
+    <value>Disable HIVE</value>
+  </data>
+  <data name="Txt_DisableSensor" xml:space="preserve">
+    <value>Disable sensor</value>
+  </data>
+  <data name="Txt_Disabled" xml:space="preserve">
+    <value>Disabled</value>
+  </data>
+  <data name="Txt_DisabledDefault" xml:space="preserve">
+    <value>Disabled (default).</value>
+  </data>
+  <data name="Txt_DiscardTheChangesAndReloadTheSaved" xml:space="preserve">
+    <value>Discard the changes and reload the saved limits</value>
+  </data>
+  <data name="Txt_Disconnected" xml:space="preserve">
+    <value>Disconnected</value>
+  </data>
+  <data name="Txt_DispensingControl" xml:space="preserve">
+    <value>Dispensing control</value>
+  </data>
+  <data name="Txt_DispensingPoseCalibration" xml:space="preserve">
+    <value>Dispensing Pose Calibration</value>
+  </data>
+  <data name="Txt_DispensingZAtTouch" xml:space="preserve">
+    <value>Dispensing Z at touch</value>
+  </data>
+  <data name="Txt_DispensingZMm" xml:space="preserve">
+    <value>Dispensing Z (mm)</value>
+  </data>
+  <data name="Txt_Distance" xml:space="preserve">
+    <value>Distance</value>
+  </data>
+  <data name="Txt_DoYouWantToContinue" xml:space="preserve">
+    <value>Do you want to continue?</value>
+  </data>
+  <data name="Txt_DoYouWantToSaveTheData" xml:space="preserve">
+    <value>Do you want to save the data?</value>
+  </data>
+  <data name="Txt_DoneNG" xml:space="preserve">
+    <value>Done - NG</value>
+  </data>
+  <data name="Txt_DoneOK" xml:space="preserve">
+    <value>Done - OK</value>
+  </data>
+  <data name="Txt_Downtime" xml:space="preserve">
+    <value>Downtime</value>
+  </data>
+  <data name="Txt_DowntimeStatisticTop10" xml:space="preserve">
+    <value>Downtime Statistic (Top10)</value>
+  </data>
+  <data name="Txt_DragTheHandlesToChooseTheWindow" xml:space="preserve">
+    <value>Drag the handles to choose the window within the last seven days</value>
+  </data>
+  <data name="Txt_DropsTheChangesAndShowsTheSaved" xml:space="preserve">
+    <value>Drops the changes and shows the saved values</value>
+  </data>
+  <data name="Txt_DynamicRepeatability1CCDIsHeldStatic" xml:space="preserve">
+    <value>Dynamic repeatability_1 (CCD is held static, 100x times)</value>
+  </data>
+  <data name="Txt_DynamicRepeatability2UCIsHeldStatic" xml:space="preserve">
+    <value>Dynamic repeatability_2 (UC is held static, 100x times)</value>
+  </data>
+  <data name="Txt_EachDotIsCheckedForAreaCircularity" xml:space="preserve">
+    <value>Each dot is checked for area, circularity and distance to its fiducial; only valid dots are used.</value>
+  </data>
+  <data name="Txt_EachPathMustBeTheCompletePath" xml:space="preserve">
+    <value>Each path must be the complete path and file name, with its extension. Leave a key without a path when its file does not exist or is not monitored. The keys are read after start-up and on every HIVE state change; a missing file puts the machine into downtime.</value>
+  </data>
+  <data name="Txt_Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Txt_EditTheParametersForThisStationAnd" xml:space="preserve">
+    <value>Edit the parameters for this station and routine.</value>
+  </data>
+  <data name="Txt_EditingLanguage" xml:space="preserve">
+    <value>Editing language:</value>
+  </data>
+  <data name="Txt_EmptyImport" xml:space="preserve">
+    <value>Empty Import</value>
+  </data>
+  <data name="Txt_Enable" xml:space="preserve">
+    <value>Enable</value>
+  </data>
+  <data name="Txt_Enable24HourDryRun" xml:space="preserve">
+    <value>Enable 24-hour dry run</value>
+  </data>
+  <data name="Txt_EnableHIVE" xml:space="preserve">
+    <value>Enable HIVE</value>
+  </data>
+  <data name="Txt_EnableSensor" xml:space="preserve">
+    <value>Enable sensor</value>
+  </data>
+  <data name="Txt_EnableThe24HourDryRunIt" xml:space="preserve">
+    <value>Enable the 24-hour dry run? It is for FAT remote qualification only.</value>
+  </data>
+  <data name="Txt_EnabledEveryStateChangeIsSentTo" xml:space="preserve">
+    <value>Enabled - every state change is sent to the HIVE gateway.</value>
+  </data>
+  <data name="Txt_EnabledForFATRemoteQualificationOnlyIt" xml:space="preserve">
+    <value>Enabled - for FAT remote qualification only. It is reset to Disabled every time the software starts.</value>
+  </data>
+  <data name="Txt_EndPositionMm" xml:space="preserve">
+    <value>End position (mm)</value>
+  </data>
+  <data name="Txt_EndTime" xml:space="preserve">
+    <value>End Time:</value>
+  </data>
+  <data name="Txt_EndTimeIsBeforeStartTime" xml:space="preserve">
+    <value>End time is before start time.</value>
+  </data>
+  <data name="Txt_EndTime_2" xml:space="preserve">
+    <value>End Time</value>
+  </data>
+  <data name="Txt_English" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="Txt_EnterANumber" xml:space="preserve">
+    <value>Enter a number.</value>
+  </data>
+  <data name="Txt_EnterDifferentValuesInStartAndEnd" xml:space="preserve">
+    <value>Enter different values in start and end position fields</value>
+  </data>
+  <data name="Txt_EnteredByItsOwnProcedureNotFrom" xml:space="preserve">
+    <value>Entered by its own procedure, not from this list.</value>
+  </data>
+  <data name="Txt_Error" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="Txt_ErrorCode" xml:space="preserve">
+    <value>Error Code:</value>
+  </data>
+  <data name="Txt_ErrorCode_2" xml:space="preserve">
+    <value>Error Code</value>
+  </data>
+  <data name="Txt_ErrorDetail" xml:space="preserve">
+    <value>Error Detail:</value>
+  </data>
+  <data name="Txt_ErrorDetail_2" xml:space="preserve">
+    <value>Error Detail</value>
+  </data>
+  <data name="Txt_ErrorMessage" xml:space="preserve">
+    <value>Error Message</value>
+  </data>
+  <data name="Txt_ErrorMsg" xml:space="preserve">
+    <value>Error Msg:</value>
+  </data>
+  <data name="Txt_ErrorStatistics" xml:space="preserve">
+    <value>Error Statistics</value>
+  </data>
+  <data name="Txt_EstimatedRemainingOutput" xml:space="preserve">
+    <value>Estimated Remaining Output</value>
+  </data>
+  <data name="Txt_EverythingIsWithinItsThresholds" xml:space="preserve">
+    <value>Everything is within its thresholds.</value>
+  </data>
+  <data name="Txt_ExitDowntimeChangeToRunning" xml:space="preserve">
+    <value>Exit downtime (change to Running)</value>
+  </data>
+  <data name="Txt_Expired" xml:space="preserve">
+    <value>Expired</value>
+  </data>
+  <data name="Txt_ExplainAndDetail" xml:space="preserve">
+    <value>Explain and Detail</value>
+  </data>
+  <data name="Txt_Export" xml:space="preserve">
+    <value>Export</value>
+  </data>
+  <data name="Txt_ExportAccessList" xml:space="preserve">
+    <value>Export access list</value>
+  </data>
+  <data name="Txt_ExportAllHashKeys" xml:space="preserve">
+    <value>Export all hash keys</value>
+  </data>
+  <data name="Txt_ExportCSV" xml:space="preserve">
+    <value>Export CSV</value>
+  </data>
+  <data name="Txt_ExportIsNotAvailableNoExportService" xml:space="preserve">
+    <value>Export is not available: no export service is configured.</value>
+  </data>
+  <data name="Txt_Exposure" xml:space="preserve">
+    <value>Exposure</value>
+  </data>
+  <data name="Txt_Extend" xml:space="preserve">
+    <value>Extend</value>
+  </data>
+  <data name="Txt_Extended" xml:space="preserve">
+    <value>  ·  Extended</value>
+  </data>
+  <data name="Txt_Extended_2" xml:space="preserve">
+    <value>·  Extended</value>
+  </data>
+  <data name="Txt_Extended_3" xml:space="preserve">
+    <value>Extended</value>
+  </data>
+  <data name="Txt_FALSELocalList" xml:space="preserve">
+    <value>FALSE (local list)</value>
+  </data>
+  <data name="Txt_Fail" xml:space="preserve">
+    <value>Fail</value>
+  </data>
+  <data name="Txt_Failed" xml:space="preserve">
+    <value>Failed</value>
+  </data>
+  <data name="Txt_FailureCode" xml:space="preserve">
+    <value>Failure Code</value>
+  </data>
+  <data name="Txt_FeelerGauge" xml:space="preserve">
+    <value>Feeler gauge</value>
+  </data>
+  <data name="Txt_FiducialCentre" xml:space="preserve">
+    <value>Fiducial centre</value>
+  </data>
+  <data name="Txt_FiducialX" xml:space="preserve">
+    <value>Fiducial X</value>
+  </data>
+  <data name="Txt_FiducialY" xml:space="preserve">
+    <value>Fiducial Y</value>
+  </data>
+  <data name="Txt_File" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="Txt_FilePath" xml:space="preserve">
+    <value>File Path</value>
+  </data>
+  <data name="Txt_FilePathSetting" xml:space="preserve">
+    <value>File Path Setting</value>
+  </data>
+  <data name="Txt_Filter" xml:space="preserve">
+    <value>Filter</value>
+  </data>
+  <data name="Txt_FilterValue" xml:space="preserve">
+    <value>Filter value</value>
+  </data>
+  <data name="Txt_FitANewStraightNeedle" xml:space="preserve">
+    <value>Fit a new, straight needle.</value>
+  </data>
+  <data name="Txt_FlatnessMaxMaxMin" xml:space="preserve">
+    <value>Flatness max (max - min)</value>
+  </data>
+  <data name="Txt_ForEachOfTheNinePointsThe" xml:space="preserve">
+    <value>For each of the nine points the gantry moves, dispenses one dot beside the fiducial and triggers the camera.</value>
+  </data>
+  <data name="Txt_Forward" xml:space="preserve">
+    <value>Forward</value>
+  </data>
+  <data name="Txt_From" xml:space="preserve">
+    <value>From:</value>
+  </data>
+  <data name="Txt_FromTheLastRunOnThisStation" xml:space="preserve">
+    <value>From the last run on this station.</value>
+  </data>
+  <data name="Txt_Front" xml:space="preserve">
+    <value>Front</value>
+  </data>
+  <data name="Txt_Function" xml:space="preserve">
+    <value>Function</value>
+  </data>
+  <data name="Txt_Gain" xml:space="preserve">
+    <value>Gain</value>
+  </data>
+  <data name="Txt_Gantry" xml:space="preserve">
+    <value>Gantry</value>
+  </data>
+  <data name="Txt_GantryFront" xml:space="preserve">
+    <value>Gantry: Front</value>
+  </data>
+  <data name="Txt_GantryRear" xml:space="preserve">
+    <value>Gantry: Rear</value>
+  </data>
+  <data name="Txt_Gantry_2" xml:space="preserve">
+    <value>Gantry:</value>
+  </data>
+  <data name="Txt_General" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="Txt_GeneralHashKey" xml:space="preserve">
+    <value>General Hash Key</value>
+  </data>
+  <data name="Txt_Glue" xml:space="preserve">
+    <value>Glue</value>
+  </data>
+  <data name="Txt_GlueAlert" xml:space="preserve">
+    <value>Glue alert</value>
+  </data>
+  <data name="Txt_GlueAreaMax" xml:space="preserve">
+    <value>Glue area max</value>
+  </data>
+  <data name="Txt_GlueAreaMin" xml:space="preserve">
+    <value>Glue area min</value>
+  </data>
+  <data name="Txt_GlueCentre" xml:space="preserve">
+    <value>Glue centre</value>
+  </data>
+  <data name="Txt_GlueChange" xml:space="preserve">
+    <value>Glue Change</value>
+  </data>
+  <data name="Txt_GlueControl" xml:space="preserve">
+    <value>Glue Control</value>
+  </data>
+  <data name="Txt_GlueControlEarlyWarning" xml:space="preserve">
+    <value>Glue Control &amp; Early Warning</value>
+  </data>
+  <data name="Txt_GlueControlSettings" xml:space="preserve">
+    <value>Glue control settings</value>
+  </data>
+  <data name="Txt_GlueControlSettingsAreNotAvailableGlue" xml:space="preserve">
+    <value>Glue control settings are not available - glue health is not connected to this HMI yet.</value>
+  </data>
+  <data name="Txt_GlueEmptyChangeTheCartridge" xml:space="preserve">
+    <value>Glue empty - change the cartridge</value>
+  </data>
+  <data name="Txt_GluePerProductIsMoreThanThe" xml:space="preserve">
+    <value>Glue per product is more than the cartridge holds.</value>
+  </data>
+  <data name="Txt_GluePerProductMustBeANumber" xml:space="preserve">
+    <value>Glue per product must be a number above 0.</value>
+  </data>
+  <data name="Txt_GlueSN" xml:space="preserve">
+    <value>Glue SN</value>
+  </data>
+  <data name="Txt_GlueSN_2" xml:space="preserve">
+    <value>Glue SN:</value>
+  </data>
+  <data name="Txt_GlueToFiducialMax" xml:space="preserve">
+    <value>Glue to fiducial max</value>
+  </data>
+  <data name="Txt_GlueUsagePerPurge" xml:space="preserve">
+    <value>Glue Usage Per Purge</value>
+  </data>
+  <data name="Txt_GlueWeighing" xml:space="preserve">
+    <value>Glue Weighing</value>
+  </data>
+  <data name="Txt_GlueWeighingSetting" xml:space="preserve">
+    <value>Glue weighing setting</value>
+  </data>
+  <data name="Txt_GlueWeighingStatistics" xml:space="preserve">
+    <value>Glue Weighing Statistics</value>
+  </data>
+  <data name="Txt_GlueWeightMg" xml:space="preserve">
+    <value>Glue weight (mg)</value>
+  </data>
+  <data name="Txt_GlueWeightPerProduct" xml:space="preserve">
+    <value>Glue Weight Per Product</value>
+  </data>
+  <data name="Txt_GlueWeightPerProductG" xml:space="preserve">
+    <value>Glue weight per product (g)</value>
+  </data>
+  <data name="Txt_GlueWeightRawData" xml:space="preserve">
+    <value>Glue weight raw data</value>
+  </data>
+  <data name="Txt_GlueWeightSPECInMg" xml:space="preserve">
+    <value>Glue weight SPEC in mg</value>
+  </data>
+  <data name="Txt_GlueX" xml:space="preserve">
+    <value>Glue X</value>
+  </data>
+  <data name="Txt_GlueY" xml:space="preserve">
+    <value>Glue Y</value>
+  </data>
+  <data name="Txt_HIVEControl" xml:space="preserve">
+    <value>HIVE Control</value>
+  </data>
+  <data name="Txt_HIVEDebugUnits" xml:space="preserve">
+    <value>HIVE - debug units</value>
+  </data>
+  <data name="Txt_HIVELog" xml:space="preserve">
+    <value>HIVE Log</value>
+  </data>
+  <data name="Txt_HIVELog_2" xml:space="preserve">
+    <value>HIVE log</value>
+  </data>
+  <data name="Txt_HIVEMachineState" xml:space="preserve">
+    <value>HIVE machine state</value>
+  </data>
+  <data name="Txt_HIVEReportingIsNotAvailable" xml:space="preserve">
+    <value>HIVE reporting is not available.</value>
+  </data>
+  <data name="Txt_HIVEReportingIsNotAvailableOnThis" xml:space="preserve">
+    <value>HIVE reporting is not available on this machine.</value>
+  </data>
+  <data name="Txt_HIVESetupConfigurationRemainsIncomplete" xml:space="preserve">
+    <value>HIVE setup configuration remains incomplete</value>
+  </data>
+  <data name="Txt_HIVEState" xml:space="preserve">
+    <value>HIVE State</value>
+  </data>
+  <data name="Txt_HIVEStateHistoryIsNotAvailableOn" xml:space="preserve">
+    <value>HIVE state history is not available on this machine.</value>
+  </data>
+  <data name="Txt_HOMINGCONTROL" xml:space="preserve">
+    <value>HOMING CONTROL</value>
+  </data>
+  <data name="Txt_Hardware" xml:space="preserve">
+    <value>Hardware</value>
+  </data>
+  <data name="Txt_HardwareConfigurationRequiresLevel3" xml:space="preserve">
+    <value>Hardware configuration requires Level 3</value>
+  </data>
+  <data name="Txt_HardwareSetting" xml:space="preserve">
+    <value>Hardware Setting</value>
+  </data>
+  <data name="Txt_HashKey" xml:space="preserve">
+    <value>Hash Key</value>
+  </data>
+  <data name="Txt_HashKeyCheckWithMES" xml:space="preserve">
+    <value>Hash Key check with MES</value>
+  </data>
+  <data name="Txt_HashKeysAreNotAvailableOnThis" xml:space="preserve">
+    <value>Hash keys are not available on this machine.</value>
+  </data>
+  <data name="Txt_Health" xml:space="preserve">
+    <value>Health</value>
+  </data>
+  <data name="Txt_Height" xml:space="preserve">
+    <value>Height</value>
+  </data>
+  <data name="Txt_HeightDifferenceMax" xml:space="preserve">
+    <value>Height difference max</value>
+  </data>
+  <data name="Txt_Home" xml:space="preserve">
+    <value>Home</value>
+  </data>
+  <data name="Txt_HomeEveryComponentThePLCRunsThe" xml:space="preserve">
+    <value>Home every component (the PLC runs the homing sequence)</value>
+  </data>
+  <data name="Txt_HomeTheMachineFirst" xml:space="preserve">
+    <value>Home the machine first.</value>
+  </data>
+  <data name="Txt_Homing" xml:space="preserve">
+    <value>Homing</value>
+  </data>
+  <data name="Txt_HomingAcc" xml:space="preserve">
+    <value>Homing acc</value>
+  </data>
+  <data name="Txt_HomingDeAcc" xml:space="preserve">
+    <value>Homing de-acc</value>
+  </data>
+  <data name="Txt_HomingDone" xml:space="preserve">
+    <value>Homing done.</value>
+  </data>
+  <data name="Txt_HomingIsNotReportedByThePLC" xml:space="preserve">
+    <value>Homing is not reported by the PLC (PlcHomingDoneSymbol is not set), so calibration cannot start.</value>
+  </data>
+  <data name="Txt_HomingStarted" xml:space="preserve">
+    <value>Homing started</value>
+  </data>
+  <data name="Txt_HomingStartedCalibrationTab" xml:space="preserve">
+    <value>Homing started (Calibration tab)</value>
+  </data>
+  <data name="Txt_HomingVelocity" xml:space="preserve">
+    <value>Homing velocity</value>
+  </data>
+  <data name="Txt_Homing_2" xml:space="preserve">
+    <value>Homing...</value>
+  </data>
+  <data name="Txt_Hourly" xml:space="preserve">
+    <value>Hourly</value>
+  </data>
+  <data name="Txt_HoursOneTime" xml:space="preserve">
+    <value>hours/one time</value>
+  </data>
+  <data name="Txt_INPUTADDR" xml:space="preserve">
+    <value>INPUT ADDR</value>
+  </data>
+  <data name="Txt_IOStepper" xml:space="preserve">
+    <value>IO Stepper</value>
+  </data>
+  <data name="Txt_IOSummary" xml:space="preserve">
+    <value>I/O Summary</value>
+  </data>
+  <data name="Txt_IPAddress" xml:space="preserve">
+    <value>IP Address</value>
+  </data>
+  <data name="Txt_Idle" xml:space="preserve">
+    <value>Idle</value>
+  </data>
+  <data name="Txt_IgnoreLimits" xml:space="preserve">
+    <value>Ignore Limits</value>
+  </data>
+  <data name="Txt_Image" xml:space="preserve">
+    <value>Image</value>
+  </data>
+  <data name="Txt_ImageThreshold" xml:space="preserve">
+    <value>Image threshold</value>
+  </data>
+  <data name="Txt_ImportAccessList" xml:space="preserve">
+    <value>Import access list</value>
+  </data>
+  <data name="Txt_ImportCSV" xml:space="preserve">
+    <value>Import CSV</value>
+  </data>
+  <data name="Txt_InAlarm" xml:space="preserve">
+    <value>In Alarm</value>
+  </data>
+  <data name="Txt_Information" xml:space="preserve">
+    <value>Information</value>
+  </data>
+  <data name="Txt_InitiateThe24HourDryRunProcedure" xml:space="preserve">
+    <value>Initiate the 24-hour dry run procedure exclusively for FAT remote qualification. During the dry run, unit_sn and mac_addr come from UUID.DLL and unique_machine_state_id from UMSID.DLL.</value>
+  </data>
+  <data name="Txt_InputName" xml:space="preserve">
+    <value>Input Name</value>
+  </data>
+  <data name="Txt_Inputs" xml:space="preserve">
+    <value>Inputs</value>
+  </data>
+  <data name="Txt_Item" xml:space="preserve">
+    <value>Item</value>
+  </data>
+  <data name="Txt_JOGCONTROL" xml:space="preserve">
+    <value>JOG CONTROL</value>
+  </data>
+  <data name="Txt_Jog" xml:space="preserve">
+    <value>Jog</value>
+  </data>
+  <data name="Txt_Jog0Negative" xml:space="preserve">
+    <value>Jog {0} negative</value>
+  </data>
+  <data name="Txt_Jog0Positive" xml:space="preserve">
+    <value>Jog {0} positive</value>
+  </data>
+  <data name="Txt_Key" xml:space="preserve">
+    <value>Key</value>
+  </data>
+  <data name="Txt_KeyName" xml:space="preserve">
+    <value>Key Name</value>
+  </data>
+  <data name="Txt_LIVEVALUES" xml:space="preserve">
+    <value>LIVE VALUES</value>
+  </data>
+  <data name="Txt_LSLIsGreaterThanUSL" xml:space="preserve">
+    <value>LSL is greater than USL.</value>
+  </data>
+  <data name="Txt_LSLIsNotANumber" xml:space="preserve">
+    <value>LSL is not a number.</value>
+  </data>
+  <data name="Txt_LSLNominalUSL" xml:space="preserve">
+    <value>LSL / Nominal / USL </value>
+  </data>
+  <data name="Txt_LSLNominalUSL_2" xml:space="preserve">
+    <value>LSL / Nominal / USL</value>
+  </data>
+  <data name="Txt_Language" xml:space="preserve">
+    <value>Language:</value>
+  </data>
+  <data name="Txt_Language_2" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="Txt_LaserCalibration" xml:space="preserve">
+    <value>Laser Calibration</value>
+  </data>
+  <data name="Txt_LeastSquareMethod" xml:space="preserve">
+    <value>• Least Square Method:</value>
+  </data>
+  <data name="Txt_LeaveALimitBlankOrTypeN" xml:space="preserve">
+    <value>Leave a limit blank (or type N/A) when there is no spec limit on that side.</value>
+  </data>
+  <data name="Txt_Level1NonCriticalEditsAtLevel" xml:space="preserve">
+    <value>Level 1, non-critical edits at Level 2, full edit at Level 3.</value>
+  </data>
+  <data name="Txt_Level1ViewOnly" xml:space="preserve">
+    <value>Level 1 - view only</value>
+  </data>
+  <data name="Txt_Level1ViewOnlyLevel2Or" xml:space="preserve">
+    <value>Level 1: view only. Level 2 or 3 can disable non-critical sensors.</value>
+  </data>
+  <data name="Txt_Level2And3AreSignedOut" xml:space="preserve">
+    <value>Level 2 and 3 are signed out after this long with no input (slide 39: at most 5 minutes).</value>
+  </data>
+  <data name="Txt_Level2Or3ToChange" xml:space="preserve">
+    <value>Level 2 or 3 to change.</value>
+  </data>
+  <data name="Txt_Level2Or3ToChangeOSS" xml:space="preserve">
+    <value>Level 2 or 3 to change. OSS set the glue dosages and the warning thresholds to suit the station.</value>
+  </data>
+  <data name="Txt_Level2OrLevel3IsNeeded" xml:space="preserve">
+    <value>Level 2 or Level 3 is needed to disable or enable a sensor.</value>
+  </data>
+  <data name="Txt_Level2UniversalChangeAccess" xml:space="preserve">
+    <value>Level 2 - universal change access</value>
+  </data>
+  <data name="Txt_Level3CanChangeAllParameters" xml:space="preserve">
+    <value>Level 3 - can change all parameters</value>
+  </data>
+  <data name="Txt_Level3CanChangeTheWordingSaved" xml:space="preserve">
+    <value>Level 3 can change the wording. Saved changes show on screen at once.</value>
+  </data>
+  <data name="Txt_Level3ChooseEachGantrySValve" xml:space="preserve">
+    <value>Level 3: choose each gantry's valve model, then Save.</value>
+  </data>
+  <data name="Txt_Level3EverySettingOnThisPage" xml:space="preserve">
+    <value>Level 3: every setting on this page can be changed.</value>
+  </data>
+  <data name="Txt_Level3TheListAndTheSettings" xml:space="preserve">
+    <value>Level 3: the list and the settings can be changed. Every change is recorded in the machine log.</value>
+  </data>
+  <data name="Txt_LimitsFromConfigSpecLimitsLiveValues" xml:space="preserve">
+    <value>Limits from Config &gt; Spec Limits. Live values need the PLC parameter link, which is not connected yet.</value>
+  </data>
+  <data name="Txt_Line" xml:space="preserve">
+    <value>Line:</value>
+  </data>
+  <data name="Txt_LiveValues" xml:space="preserve">
+    <value>Live Values</value>
+  </data>
+  <data name="Txt_LoadCells" xml:space="preserve">
+    <value>Load Cells</value>
+  </data>
+  <data name="Txt_LoadConfigSaveTheHardwareConfiguration" xml:space="preserve">
+    <value>Load Config - save the hardware configuration</value>
+  </data>
+  <data name="Txt_LocalAccessList" xml:space="preserve">
+    <value>Local access list</value>
+  </data>
+  <data name="Txt_Localization" xml:space="preserve">
+    <value>Localization</value>
+  </data>
+  <data name="Txt_LocalizationEditor" xml:space="preserve">
+    <value>Localization Editor</value>
+  </data>
+  <data name="Txt_LockedThisSectionNeedsAHigherAccess" xml:space="preserve">
+    <value>Locked — this section needs a higher access level to change.</value>
+  </data>
+  <data name="Txt_LongPurgeCycles" xml:space="preserve">
+    <value>Long Purge Cycles</value>
+  </data>
+  <data name="Txt_LongPurgeDoseMustBeANumber" xml:space="preserve">
+    <value>Long purge dose must be a number, 0 or more.</value>
+  </data>
+  <data name="Txt_LongPurgeGlueConsumption" xml:space="preserve">
+    <value>Long Purge Glue Consumption</value>
+  </data>
+  <data name="Txt_LongPurgeGlueUsagePerPurge" xml:space="preserve">
+    <value>Long Purge Glue Usage Per Purge</value>
+  </data>
+  <data name="Txt_LongPurgePerPurgeG" xml:space="preserve">
+    <value>Long purge, per purge (g)</value>
+  </data>
+  <data name="Txt_LongPurgeStatistics" xml:space="preserve">
+    <value>Long Purge Statistics</value>
+  </data>
+  <data name="Txt_LowGlueStagingRequested" xml:space="preserve">
+    <value>Low glue - staging requested</value>
+  </data>
+  <data name="Txt_LowGlueThreshold" xml:space="preserve">
+    <value>Low-glue threshold (%)</value>
+  </data>
+  <data name="Txt_LowGlueThresholdMustBeAPercentage" xml:space="preserve">
+    <value>Low-glue threshold must be a percentage from 0 to 100.</value>
+  </data>
+  <data name="Txt_MANUALRESET" xml:space="preserve">
+    <value>MANUAL RESET</value>
+  </data>
+  <data name="Txt_MESIsNotConfiguredOnThisMachine" xml:space="preserve">
+    <value>MES is not configured on this machine (MesUrl in App.config), so badges are checked against the list below.</value>
+  </data>
+  <data name="Txt_MESIsNotConfiguredOnThisMachine_2" xml:space="preserve">
+    <value>MES is not configured on this machine (MesUrl in App.config), so the keys cannot be uploaded.</value>
+  </data>
+  <data name="Txt_MESIsNotConfiguredOnThisMachine_3" xml:space="preserve">
+    <value>MES is not configured on this machine: the nozzle is recorded without the MES check.</value>
+  </data>
+  <data name="Txt_MODE" xml:space="preserve">
+    <value>MODE</value>
+  </data>
+  <data name="Txt_MOTIONCONTROL" xml:space="preserve">
+    <value>MOTION CONTROL</value>
+  </data>
+  <data name="Txt_MSHash" xml:space="preserve">
+    <value>MS_Hash:</value>
+  </data>
+  <data name="Txt_Machine" xml:space="preserve">
+    <value>Machine#:</value>
+  </data>
+  <data name="Txt_MachineConfigs" xml:space="preserve">
+    <value>Machine Configs</value>
+  </data>
+  <data name="Txt_MachineHomed" xml:space="preserve">
+    <value>Machine homed.</value>
+  </data>
+  <data name="Txt_MachineLog" xml:space="preserve">
+    <value>Machine Log</value>
+  </data>
+  <data name="Txt_MachineLog_2" xml:space="preserve">
+    <value>Machine log</value>
+  </data>
+  <data name="Txt_Machine_2" xml:space="preserve">
+    <value>Machine:</value>
+  </data>
+  <data name="Txt_Machine_3" xml:space="preserve">
+    <value>Machine</value>
+  </data>
+  <data name="Txt_MainSW" xml:space="preserve">
+    <value>Main SW</value>
+  </data>
+  <data name="Txt_MainSWPath" xml:space="preserve">
+    <value>Main SW Path:</value>
+  </data>
+  <data name="Txt_MaintenanceMode" xml:space="preserve">
+    <value>Maintenance Mode</value>
+  </data>
+  <data name="Txt_MaintenanceStations" xml:space="preserve">
+    <value>Maintenance Stations</value>
+  </data>
+  <data name="Txt_Manual" xml:space="preserve">
+    <value>Manual</value>
+  </data>
+  <data name="Txt_ManualDowntime" xml:space="preserve">
+    <value>Manual downtime</value>
+  </data>
+  <data name="Txt_ManualScreen" xml:space="preserve">
+    <value>Manual Screen</value>
+  </data>
+  <data name="Txt_ManuallyDisabled" xml:space="preserve">
+    <value>Manually disabled</value>
+  </data>
+  <data name="Txt_MaterialReplacement" xml:space="preserve">
+    <value>Material Replacement</value>
+  </data>
+  <data name="Txt_Max" xml:space="preserve">
+    <value>Max</value>
+  </data>
+  <data name="Txt_MaxLimit" xml:space="preserve">
+    <value>Max Limit</value>
+  </data>
+  <data name="Txt_MaxMin" xml:space="preserve">
+    <value>Max - min</value>
+  </data>
+  <data name="Txt_MaxMinOfTheHeightsMustBe" xml:space="preserve">
+    <value>Max - min of the heights must be within the limit; otherwise offset with A / R and repeat, or adjust mechanically.</value>
+  </data>
+  <data name="Txt_MaxMinOfTheTwoHeightsMust" xml:space="preserve">
+    <value>Max - min of the two heights must be within the limit; otherwise adjust mechanically.</value>
+  </data>
+  <data name="Txt_MaxWeightPerCartridgeG" xml:space="preserve">
+    <value>Max weight per cartridge (g)</value>
+  </data>
+  <data name="Txt_MaxWeightPerGlueCartridge" xml:space="preserve">
+    <value>Max Weight Per Glue Cartridge</value>
+  </data>
+  <data name="Txt_Maximum" xml:space="preserve">
+    <value>Maximum</value>
+  </data>
+  <data name="Txt_Mean" xml:space="preserve">
+    <value>Mean </value>
+  </data>
+  <data name="Txt_Mean_2" xml:space="preserve">
+    <value>Mean</value>
+  </data>
+  <data name="Txt_Measured" xml:space="preserve">
+    <value>Measured</value>
+  </data>
+  <data name="Txt_MeasuringValuesFillInAsThePLC" xml:space="preserve">
+    <value>Measuring - values fill in as the PLC reports them.</value>
+  </data>
+  <data name="Txt_Message" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="Txt_Min" xml:space="preserve">
+    <value>Min</value>
+  </data>
+  <data name="Txt_MinLimit" xml:space="preserve">
+    <value>Min Limit</value>
+  </data>
+  <data name="Txt_MinToMax" xml:space="preserve">
+    <value>Min to max </value>
+  </data>
+  <data name="Txt_MinToMax_2" xml:space="preserve">
+    <value>Min to max</value>
+  </data>
+  <data name="Txt_Minimum" xml:space="preserve">
+    <value>Minimum</value>
+  </data>
+  <data name="Txt_ModeChanged" xml:space="preserve">
+    <value>Mode Changed</value>
+  </data>
+  <data name="Txt_MotionControl" xml:space="preserve">
+    <value>Motion Control</value>
+  </data>
+  <data name="Txt_Move" xml:space="preserve">
+    <value>Move</value>
+  </data>
+  <data name="Txt_MustBeAValidInteger" xml:space="preserve">
+    <value>Must be a valid integer.</value>
+  </data>
+  <data name="Txt_MustBeAValidNumericValue" xml:space="preserve">
+    <value>Must be a valid numeric value.</value>
+  </data>
+  <data name="Txt_MustBeGreaterThanOrEqualTo" xml:space="preserve">
+    <value>Must be greater than or equal to 0.</value>
+  </data>
+  <data name="Txt_Mute" xml:space="preserve">
+    <value>Mute</value>
+  </data>
+  <data name="Txt_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Txt_NeedleChange" xml:space="preserve">
+    <value>Needle Change</value>
+  </data>
+  <data name="Txt_NeedleDeviationCheckCCD3" xml:space="preserve">
+    <value>Needle deviation check (CCD3)</value>
+  </data>
+  <data name="Txt_NeedleHeightFeelerGauge" xml:space="preserve">
+    <value>Needle height (feeler gauge)</value>
+  </data>
+  <data name="Txt_NeedleOffsetCCD1CCD2" xml:space="preserve">
+    <value>Needle offset (CCD1 / CCD2)</value>
+  </data>
+  <data name="Txt_NeedleTemplateTeachCCD3" xml:space="preserve">
+    <value>Needle template teach (CCD3)</value>
+  </data>
+  <data name="Txt_NeedleZZeroTouchSensor" xml:space="preserve">
+    <value>Needle Z zero (touch sensor)</value>
+  </data>
+  <data name="Txt_NeedsALevel2OrLevel3" xml:space="preserve">
+    <value>Needs a Level 2 or Level 3 badge</value>
+  </data>
+  <data name="Txt_NeedsTwoStepVerification" xml:space="preserve">
+    <value>Needs two-step verification</value>
+  </data>
+  <data name="Txt_NegativeLimit" xml:space="preserve">
+    <value>Negative limit</value>
+  </data>
+  <data name="Txt_Network" xml:space="preserve">
+    <value>Network</value>
+  </data>
+  <data name="Txt_NetworkAnomaliesOccur" xml:space="preserve">
+    <value>Network anomalies occur</value>
+  </data>
+  <data name="Txt_New0" xml:space="preserve">
+    <value>New {0}:</value>
+  </data>
+  <data name="Txt_No" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="Txt_NoAccess" xml:space="preserve">
+    <value>No access</value>
+  </data>
+  <data name="Txt_NoAlarmLogIsConfiguredOnThis" xml:space="preserve">
+    <value>No alarm log is configured on this machine.</value>
+  </data>
+  <data name="Txt_NoAlarmsInThisWindow" xml:space="preserve">
+    <value>No alarms in this window.</value>
+  </data>
+  <data name="Txt_NoAnswerFromMES" xml:space="preserve">
+    <value>No answer from MES</value>
+  </data>
+  <data name="Txt_NoCalibrationHasBeenRecordedForThis" xml:space="preserve">
+    <value>No calibration has been recorded for this gantry and path.</value>
+  </data>
+  <data name="Txt_NoCalibrationStatusFromThePLC" xml:space="preserve">
+    <value>No calibration status from the PLC.</value>
+  </data>
+  <data name="Txt_NoCoordinatesWereMeasuredInThisWindow" xml:space="preserve">
+    <value>No coordinates were measured in this window.</value>
+  </data>
+  <data name="Txt_NoFields" xml:space="preserve">
+    <value>No Fields</value>
+  </data>
+  <data name="Txt_NoFieldsSelectedPleaseTickPDATAItems" xml:space="preserve">
+    <value>No fields selected. Please tick PDATA items from the list first.</value>
+  </data>
+  <data name="Txt_NoFrameCaptured" xml:space="preserve">
+    <value>no frame captured</value>
+  </data>
+  <data name="Txt_NoFrontGantryWeighingsForThisPath" xml:space="preserve">
+    <value>No front-gantry weighings for this path in the window.</value>
+  </data>
+  <data name="Txt_NoGlueCartridgeData" xml:space="preserve">
+    <value>No glue cartridge data.</value>
+  </data>
+  <data name="Txt_NoHIVEStateChangesRecordedInThe" xml:space="preserve">
+    <value>No HIVE state changes recorded in the last seven days.</value>
+  </data>
+  <data name="Txt_NoHardwareSubsystemsAreListedAddThem" xml:space="preserve">
+    <value>No hardware subsystems are listed. Add them under "Hardware" in Data\Settings\StationOptions.json.</value>
+  </data>
+  <data name="Txt_NoImageSourceIsConfiguredAppConfig" xml:space="preserve">
+    <value>No image source is configured (App.config VisionImageFolder): set it to the folder the vision software saves its images in.</value>
+  </data>
+  <data name="Txt_NoLimitsWereChanged" xml:space="preserve">
+    <value>No limits were changed.</value>
+  </data>
+  <data name="Txt_NoNozzleHealthFromMES" xml:space="preserve">
+    <value>No nozzle health from MES.</value>
+  </data>
+  <data name="Txt_NoPDATANamesFoundInTheCSV" xml:space="preserve">
+    <value>No PDATA names found in the CSV file.</value>
+  </data>
+  <data name="Txt_NoPLCStatus" xml:space="preserve">
+    <value>No PLC status</value>
+  </data>
+  <data name="Txt_NoPlannedDowntimeReasonCanBeChosen" xml:space="preserve">
+    <value>No planned downtime reason can be chosen now.</value>
+  </data>
+  <data name="Txt_NoProductionRecordIsConfiguredOnThis" xml:space="preserve">
+    <value>No production record is configured on this machine.</value>
+  </data>
+  <data name="Txt_NoProductionRecordOnThisMachine" xml:space="preserve">
+    <value>No production record on this machine.</value>
+  </data>
+  <data name="Txt_NoProductionSpecLimitsAreSetConfig" xml:space="preserve">
+    <value>No production spec limits are set (Config &gt; Spec Limits).</value>
+  </data>
+  <data name="Txt_NoProfileToSave" xml:space="preserve">
+    <value>No profile to save.</value>
+  </data>
+  <data name="Txt_NoRearGantryWeighingsForThisPath" xml:space="preserve">
+    <value>No rear-gantry weighings for this path in the window.</value>
+  </data>
+  <data name="Txt_NoRecord" xml:space="preserve">
+    <value>No record</value>
+  </data>
+  <data name="Txt_NoResponse" xml:space="preserve">
+    <value>(no response)</value>
+  </data>
+  <data name="Txt_NoResultFromThePLCForThis" xml:space="preserve">
+    <value>No result from the PLC for this routine on this station yet.</value>
+  </data>
+  <data name="Txt_NoSFCServerIsAvailableThereIs" xml:space="preserve">
+    <value>No SFC server is available: there is no SFC client in this build yet.</value>
+  </data>
+  <data name="Txt_NoSpecLimitsAreConfiguredOnThis" xml:space="preserve">
+    <value>No spec limits are configured on this machine.</value>
+  </data>
+  <data name="Txt_NoStationProfileIsConfiguredOnThis" xml:space="preserve">
+    <value>No station profile is configured on this machine.</value>
+  </data>
+  <data name="Txt_NoTextInThisLanguageEnglishIs" xml:space="preserve">
+    <value>No text in this language - English is shown</value>
+  </data>
+  <data name="Txt_NoUnitHasBeenRecordedToday" xml:space="preserve">
+    <value>No unit has been recorded today.</value>
+  </data>
+  <data name="Txt_NoValveModelIsSetForThis" xml:space="preserve">
+    <value>No valve model is set for this gantry. Choose it on Setting &gt; Valve Model first.</value>
+  </data>
+  <data name="Txt_NoValveSNIsRecordedForThis" xml:space="preserve">
+    <value>No valve SN is recorded for this gantry. Do a Valve Change (PD-04) first.</value>
+  </data>
+  <data name="Txt_Nominal" xml:space="preserve">
+    <value>Nominal</value>
+  </data>
+  <data name="Txt_NominalMg" xml:space="preserve">
+    <value>Nominal (mg)</value>
+  </data>
+  <data name="Txt_NoneRecorded" xml:space="preserve">
+    <value>(none recorded)</value>
+  </data>
+  <data name="Txt_Normal" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="Txt_NormalProduction" xml:space="preserve">
+    <value>Normal production</value>
+  </data>
+  <data name="Txt_NotANumber" xml:space="preserve">
+    <value>Not a number</value>
+  </data>
+  <data name="Txt_NotAStandardValveSNXXXYYY" xml:space="preserve">
+    <value>Not a standard valve SN (XXX-YYY-001_YYMMDD). Please scan again.</value>
+  </data>
+  <data name="Txt_NotAvailable" xml:space="preserve">
+    <value>Not available</value>
+  </data>
+  <data name="Txt_NotBuiltYet" xml:space="preserve">
+    <value>Not built yet</value>
+  </data>
+  <data name="Txt_NotHomedHomeTheMachineBeforeCalibrating" xml:space="preserve">
+    <value>Not homed: home the machine before calibrating.</value>
+  </data>
+  <data name="Txt_NotMonitored" xml:space="preserve">
+    <value>Not monitored</value>
+  </data>
+  <data name="Txt_NotReadYet" xml:space="preserve">
+    <value>Not read yet</value>
+  </data>
+  <data name="Txt_NotSignedInClickToSignIn" xml:space="preserve">
+    <value>Not signed in - click to sign in</value>
+  </data>
+  <data name="Txt_NothingHasRunSinceThePLCStarted" xml:space="preserve">
+    <value>Nothing has run since the PLC started.</value>
+  </data>
+  <data name="Txt_NothingLoggedYet" xml:space="preserve">
+    <value>Nothing logged yet.</value>
+  </data>
+  <data name="Txt_NozzleChange" xml:space="preserve">
+    <value>Nozzle Change</value>
+  </data>
+  <data name="Txt_NozzleCriticalH" xml:space="preserve">
+    <value>Nozzle critical (h)</value>
+  </data>
+  <data name="Txt_NozzleCriticalLevelMustBeANumber" xml:space="preserve">
+    <value>Nozzle critical level must be a number of hours above 0.</value>
+  </data>
+  <data name="Txt_NozzleHealth" xml:space="preserve">
+    <value>Nozzle Health</value>
+  </data>
+  <data name="Txt_NozzleID" xml:space="preserve">
+    <value>Nozzle ID</value>
+  </data>
+  <data name="Txt_NozzleSN" xml:space="preserve">
+    <value>Nozzle SN:</value>
+  </data>
+  <data name="Txt_NozzleWarningH" xml:space="preserve">
+    <value>Nozzle warning (h)</value>
+  </data>
+  <data name="Txt_NozzleWarningMustBeANumberOf" xml:space="preserve">
+    <value>Nozzle warning must be a number of hours above 0.</value>
+  </data>
+  <data name="Txt_OFFDefault" xml:space="preserve">
+    <value>OFF (Default)</value>
+  </data>
+  <data name="Txt_OK" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Txt_ON" xml:space="preserve">
+    <value>ON</value>
+  </data>
+  <data name="Txt_ONLINE" xml:space="preserve">
+    <value>ONLINE</value>
+  </data>
+  <data name="Txt_ONOFF" xml:space="preserve">
+    <value>ON/OFF</value>
+  </data>
+  <data name="Txt_ONTurnsTheHomePageStationCard" xml:space="preserve">
+    <value>ON turns the Home page station card orange and writes every machine_state payload to the remote qualification log (HIVE log \ RemoteQualification, one JSON per line, S2.4).</value>
+  </data>
+  <data name="Txt_OUTPUTADDR" xml:space="preserve">
+    <value>OUTPUT ADDR</value>
+  </data>
+  <data name="Txt_Off" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="Txt_OfflineProcessing" xml:space="preserve">
+    <value>Offline Processing</value>
+  </data>
+  <data name="Txt_Offset" xml:space="preserve">
+    <value>Offset</value>
+  </data>
+  <data name="Txt_OffsetXMax" xml:space="preserve">
+    <value>Offset X max</value>
+  </data>
+  <data name="Txt_OffsetYMax" xml:space="preserve">
+    <value>Offset Y max</value>
+  </data>
+  <data name="Txt_Old0" xml:space="preserve">
+    <value>Old {0}:</value>
+  </data>
+  <data name="Txt_Ongoing" xml:space="preserve">
+    <value>Ongoing</value>
+  </data>
+  <data name="Txt_OnlyALevel3UserCanChange" xml:space="preserve">
+    <value>Only a Level 3 user can change the wording shown on screen.</value>
+  </data>
+  <data name="Txt_OnlyEnabledWhenAnAdminLevel3" xml:space="preserve">
+    <value>Only enabled when an Admin (Level 3) user is logged in.</value>
+  </data>
+  <data name="Txt_OpenAlarmPage" xml:space="preserve">
+    <value>Open Alarm page ›</value>
+  </data>
+  <data name="Txt_OpenTheAlarmPage" xml:space="preserve">
+    <value>Open the Alarm page</value>
+  </data>
+  <data name="Txt_OpenTheDataPage" xml:space="preserve">
+    <value>Open the Data page</value>
+  </data>
+  <data name="Txt_Operator" xml:space="preserve">
+    <value>Operator:</value>
+  </data>
+  <data name="Txt_OperatorCheck" xml:space="preserve">
+    <value>Operator check</value>
+  </data>
+  <data name="Txt_Operator_2" xml:space="preserve">
+    <value>Operator</value>
+  </data>
+  <data name="Txt_Options" xml:space="preserve">
+    <value>Options</value>
+  </data>
+  <data name="Txt_Organization" xml:space="preserve">
+    <value>Organization</value>
+  </data>
+  <data name="Txt_Other" xml:space="preserve">
+    <value>Other</value>
+  </data>
+  <data name="Txt_OutOfSpec" xml:space="preserve">
+    <value>Out of spec</value>
+  </data>
+  <data name="Txt_OutputCT" xml:space="preserve">
+    <value>Output CT</value>
+  </data>
+  <data name="Txt_OutputCTSByShift" xml:space="preserve">
+    <value>Output CT (s) by shift</value>
+  </data>
+  <data name="Txt_OutputName" xml:space="preserve">
+    <value>Output Name</value>
+  </data>
+  <data name="Txt_OutputUnitsByShift" xml:space="preserve">
+    <value>Output units by shift</value>
+  </data>
+  <data name="Txt_Outputs" xml:space="preserve">
+    <value>Outputs</value>
+  </data>
+  <data name="Txt_PD15UploadedHashKeysToMES" xml:space="preserve">
+    <value>PD-15 Uploaded Hash Keys to MES</value>
+  </data>
+  <data name="Txt_PDATAList" xml:space="preserve">
+    <value>PDATA List</value>
+  </data>
+  <data name="Txt_PDATAMapping" xml:space="preserve">
+    <value>PDATA Mapping</value>
+  </data>
+  <data name="Txt_POINTTOPOINTCONTROL" xml:space="preserve">
+    <value>POINT TO POINT CONTROL</value>
+  </data>
+  <data name="Txt_POSITIONMM" xml:space="preserve">
+    <value>POSITION (MM)</value>
+  </data>
+  <data name="Txt_Parameter" xml:space="preserve">
+    <value>Parameter</value>
+  </data>
+  <data name="Txt_ParameterDashboard" xml:space="preserve">
+    <value>Parameter Dashboard</value>
+  </data>
+  <data name="Txt_Parameters0" xml:space="preserve">
+    <value>Parameters - {0}</value>
+  </data>
+  <data name="Txt_Pass" xml:space="preserve">
+    <value>Pass</value>
+  </data>
+  <data name="Txt_PassFailUnits" xml:space="preserve">
+    <value>Pass / Fail units</value>
+  </data>
+  <data name="Txt_Path" xml:space="preserve">
+    <value>Path</value>
+  </data>
+  <data name="Txt_Pause" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="Txt_PauseTheMachine" xml:space="preserve">
+    <value>Pause the machine</value>
+  </data>
+  <data name="Txt_Paused" xml:space="preserve">
+    <value>Paused</value>
+  </data>
+  <data name="Txt_PictureQtyCheck" xml:space="preserve">
+    <value>Picture Qty. Check</value>
+  </data>
+  <data name="Txt_PictureQtyCheckEdit" xml:space="preserve">
+    <value>Picture Qty. Check - Edit</value>
+  </data>
+  <data name="Txt_PitchMm" xml:space="preserve">
+    <value>Pitch (mm)</value>
+  </data>
+  <data name="Txt_PlaceTheCalibrationPlateOnTheFixture" xml:space="preserve">
+    <value>Place the calibration plate on the fixture; the presence sensor detects it.</value>
+  </data>
+  <data name="Txt_PlaceTheCalibrationPlateWithTheAngled" xml:space="preserve">
+    <value>Place the calibration plate with the angled block on the fixture; the presence sensor detects it.</value>
+  </data>
+  <data name="Txt_PlaceTheCameraCheckerSheetUnderThe" xml:space="preserve">
+    <value>Place the camera checker sheet under the station camera; the PLC checks lighting and focus.</value>
+  </data>
+  <data name="Txt_PlaceTheFiveAxisCalibrationPlateOn" xml:space="preserve">
+    <value>Place the five-axis calibration plate on the fixture; the presence sensor detects it.</value>
+  </data>
+  <data name="Txt_PlaceTheNeedleCalibrationPlateWithThe" xml:space="preserve">
+    <value>Place the needle calibration plate with the reference fiducial under the station camera.</value>
+  </data>
+  <data name="Txt_Placeholder" xml:space="preserve">
+    <value>Placeholder</value>
+  </data>
+  <data name="Txt_PlannedDowntime" xml:space="preserve">
+    <value>Planned downtime</value>
+  </data>
+  <data name="Txt_PlannedDowntime0" xml:space="preserve">
+    <value>Planned downtime - {0}</value>
+  </data>
+  <data name="Txt_Play" xml:space="preserve">
+    <value>Play</value>
+  </data>
+  <data name="Txt_PleaseCorrectInvalidValuesBeforeSaving" xml:space="preserve">
+    <value>Please correct invalid values before saving.</value>
+  </data>
+  <data name="Txt_PleaseEnterASpeedGreaterThan0" xml:space="preserve">
+    <value>Please enter a speed greater than 0, or leave it blank to use the configured speed.</value>
+  </data>
+  <data name="Txt_PleaseEnterAValidPosition" xml:space="preserve">
+    <value>Please enter a valid position.</value>
+  </data>
+  <data name="Txt_PleaseEnterAValidSpeed" xml:space="preserve">
+    <value>Please enter a valid speed.</value>
+  </data>
+  <data name="Txt_PleaseEnterSpeedGreaterThan0And" xml:space="preserve">
+    <value>Please Enter Speed greater than 0 and less than Axis Parameter speed</value>
+  </data>
+  <data name="Txt_PleaseEnterTheVelocityForHoming" xml:space="preserve">
+    <value>Please Enter the Velocity for Homing</value>
+  </data>
+  <data name="Txt_PleaseSwipeAgain" xml:space="preserve">
+    <value>Please swipe again.</value>
+  </data>
+  <data name="Txt_Point" xml:space="preserve">
+    <value>Point</value>
+  </data>
+  <data name="Txt_Point1" xml:space="preserve">
+    <value>Point 1</value>
+  </data>
+  <data name="Txt_Point2" xml:space="preserve">
+    <value>Point 2</value>
+  </data>
+  <data name="Txt_Point3" xml:space="preserve">
+    <value>Point 3</value>
+  </data>
+  <data name="Txt_Point4" xml:space="preserve">
+    <value>Point 4</value>
+  </data>
+  <data name="Txt_PointName" xml:space="preserve">
+    <value>Point Name:</value>
+  </data>
+  <data name="Txt_PointPitchX" xml:space="preserve">
+    <value>Point pitch X</value>
+  </data>
+  <data name="Txt_PointPitchY" xml:space="preserve">
+    <value>Point pitch Y</value>
+  </data>
+  <data name="Txt_Port" xml:space="preserve">
+    <value>Port</value>
+  </data>
+  <data name="Txt_Position" xml:space="preserve">
+    <value>Position</value>
+  </data>
+  <data name="Txt_PositionMm" xml:space="preserve">
+    <value>Position (mm)</value>
+  </data>
+  <data name="Txt_PositiveLimit" xml:space="preserve">
+    <value>Positive limit</value>
+  </data>
+  <data name="Txt_PotLife" xml:space="preserve">
+    <value>Pot Life</value>
+  </data>
+  <data name="Txt_PotLifeThreshold" xml:space="preserve">
+    <value>Pot Life Threshold</value>
+  </data>
+  <data name="Txt_PotLifeThresholdH" xml:space="preserve">
+    <value>Pot-life threshold (h)</value>
+  </data>
+  <data name="Txt_PotLifeWarningMustBeANumber" xml:space="preserve">
+    <value>Pot-life warning must be a number of hours above 0.</value>
+  </data>
+  <data name="Txt_Prefix" xml:space="preserve">
+    <value>Prefix</value>
+  </data>
+  <data name="Txt_PressAndHold" xml:space="preserve">
+    <value>Press and Hold</value>
+  </data>
+  <data name="Txt_PressEditToChangeTheMapping" xml:space="preserve">
+    <value>Press Edit to change the mapping.</value>
+  </data>
+  <data name="Txt_Preview" xml:space="preserve">
+    <value>Preview</value>
+  </data>
+  <data name="Txt_PriorApprovalMustBeObtainedFromCM" xml:space="preserve">
+    <value>Prior approval must be obtained from CM/BUD before execution. HIVE may only be disabled when network anomalies occur, or when the HIVE setup configuration remains incomplete.</value>
+  </data>
+  <data name="Txt_Priority" xml:space="preserve">
+    <value>Priority</value>
+  </data>
+  <data name="Txt_Procedure" xml:space="preserve">
+    <value>Procedure</value>
+  </data>
+  <data name="Txt_ProcessingDowntime" xml:space="preserve">
+    <value>Processing Downtime</value>
+  </data>
+  <data name="Txt_ProdType" xml:space="preserve">
+    <value>Prod Type:</value>
+  </data>
+  <data name="Txt_ProductionGlueConsumption" xml:space="preserve">
+    <value>Production Glue Consumption</value>
+  </data>
+  <data name="Txt_Project" xml:space="preserve">
+    <value>Project</value>
+  </data>
+  <data name="Txt_ProjectCode" xml:space="preserve">
+    <value>Project Code:</value>
+  </data>
+  <data name="Txt_PulsesMm" xml:space="preserve">
+    <value>Pulses / mm</value>
+  </data>
+  <data name="Txt_PurgeCycles" xml:space="preserve">
+    <value>Purge Cycles</value>
+  </data>
+  <data name="Txt_QtyProduced" xml:space="preserve">
+    <value>Qty Produced</value>
+  </data>
+  <data name="Txt_Query" xml:space="preserve">
+    <value>Query</value>
+  </data>
+  <data name="Txt_QueryPreview" xml:space="preserve">
+    <value>Query Preview</value>
+  </data>
+  <data name="Txt_Question" xml:space="preserve">
+    <value>Question</value>
+  </data>
+  <data name="Txt_RAxis" xml:space="preserve">
+    <value>R axis (°)</value>
+  </data>
+  <data name="Txt_RAxisAngle" xml:space="preserve">
+    <value>R axis angle</value>
+  </data>
+  <data name="Txt_RECEIVEDDATASTREAM" xml:space="preserve">
+    <value>RECEIVED DATA STREAM</value>
+  </data>
+  <data name="Txt_RECEIVEDRESPONSE" xml:space="preserve">
+    <value>RECEIVED RESPONSE</value>
+  </data>
+  <data name="Txt_RPOS" xml:space="preserve">
+    <value>R POS</value>
+  </data>
+  <data name="Txt_ReadOnlyChangingThePDATAMappingNeeds" xml:space="preserve">
+    <value>Read only. Changing the PDATA mapping needs Level 3.</value>
+  </data>
+  <data name="Txt_ReadOnlyChangingTheValveModelNeeds" xml:space="preserve">
+    <value>Read only. Changing the valve model needs Level 3.</value>
+  </data>
+  <data name="Txt_Ready" xml:space="preserve">
+    <value>Ready</value>
+  </data>
+  <data name="Txt_ReadyForProcedure" xml:space="preserve">
+    <value>Ready for procedure</value>
+  </data>
+  <data name="Txt_Rear" xml:space="preserve">
+    <value>Rear</value>
+  </data>
+  <data name="Txt_Reason" xml:space="preserve">
+    <value>Reason:</value>
+  </data>
+  <data name="Txt_ReasonNotRecorded" xml:space="preserve">
+    <value>Reason not recorded</value>
+  </data>
+  <data name="Txt_RecentUnits" xml:space="preserve">
+    <value>Recent units</value>
+  </data>
+  <data name="Txt_Recipe" xml:space="preserve">
+    <value>Recipe</value>
+  </data>
+  <data name="Txt_Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="Txt_RefreshAllHashKeys" xml:space="preserve">
+    <value>Refresh all hash keys</value>
+  </data>
+  <data name="Txt_Regression" xml:space="preserve">
+    <value>Regression</value>
+  </data>
+  <data name="Txt_RegressionCalibration" xml:space="preserve">
+    <value>Regression Calibration:</value>
+  </data>
+  <data name="Txt_Reject" xml:space="preserve">
+    <value>Reject</value>
+  </data>
+  <data name="Txt_Relative" xml:space="preserve">
+    <value>Relative</value>
+  </data>
+  <data name="Txt_Remaining" xml:space="preserve">
+    <value>Remaining %</value>
+  </data>
+  <data name="Txt_RemainingGlueWeight" xml:space="preserve">
+    <value>Remaining Glue Weight</value>
+  </data>
+  <data name="Txt_RemainingPotLifeHours" xml:space="preserve">
+    <value>Remaining Pot Life (Hours)</value>
+  </data>
+  <data name="Txt_RemainingPotLifeOfGlueHours" xml:space="preserve">
+    <value>Remaining Pot Life of Glue (Hours)</value>
+  </data>
+  <data name="Txt_RemoteQualification" xml:space="preserve">
+    <value>Remote Qualification</value>
+  </data>
+  <data name="Txt_ReplaceItWithTheGlueCalibrationBlock" xml:space="preserve">
+    <value>Replace it with the glue calibration block; all nine fiducials clean and visible.</value>
+  </data>
+  <data name="Txt_Required" xml:space="preserve">
+    <value>Required</value>
+  </data>
+  <data name="Txt_Result" xml:space="preserve">
+    <value>Result</value>
+  </data>
+  <data name="Txt_Results" xml:space="preserve">
+    <value>Results</value>
+  </data>
+  <data name="Txt_Resume" xml:space="preserve">
+    <value>Resume</value>
+  </data>
+  <data name="Txt_Retract" xml:space="preserve">
+    <value>Retract</value>
+  </data>
+  <data name="Txt_Retracted" xml:space="preserve">
+    <value>  ·  Retracted</value>
+  </data>
+  <data name="Txt_Retracted_2" xml:space="preserve">
+    <value>·  Retracted</value>
+  </data>
+  <data name="Txt_Retracted_3" xml:space="preserve">
+    <value>Retracted</value>
+  </data>
+  <data name="Txt_Reverse" xml:space="preserve">
+    <value>Reverse</value>
+  </data>
+  <data name="Txt_Revert" xml:space="preserve">
+    <value>Revert</value>
+  </data>
+  <data name="Txt_Robot" xml:space="preserve">
+    <value>Robot</value>
+  </data>
+  <data name="Txt_RobotRecipe" xml:space="preserve">
+    <value>Robot Recipe</value>
+  </data>
+  <data name="Txt_RobotTCPSettings" xml:space="preserve">
+    <value>Robot TCP Settings</value>
+  </data>
+  <data name="Txt_Rotate0Clockwise" xml:space="preserve">
+    <value>Rotate {0} clockwise</value>
+  </data>
+  <data name="Txt_Rotate0CounterClockwise" xml:space="preserve">
+    <value>Rotate {0} counter-clockwise</value>
+  </data>
+  <data name="Txt_Routine" xml:space="preserve">
+    <value>Routine</value>
+  </data>
+  <data name="Txt_Running" xml:space="preserve">
+    <value>Running</value>
+  </data>
+  <data name="Txt_RunningLog" xml:space="preserve">
+    <value>Running Log</value>
+  </data>
+  <data name="Txt_SAFE" xml:space="preserve">
+    <value>SAFE</value>
+  </data>
+  <data name="Txt_SELECTAXIS" xml:space="preserve">
+    <value>SELECT AXIS</value>
+  </data>
+  <data name="Txt_SELECTEDDEVICE" xml:space="preserve">
+    <value>SELECTED DEVICE</value>
+  </data>
+  <data name="Txt_SELECTGANTRYMODULE" xml:space="preserve">
+    <value>SELECT GANTRY MODULE</value>
+  </data>
+  <data name="Txt_SELECTTRIGGERCOMMAND" xml:space="preserve">
+    <value>SELECT TRIGGER COMMAND</value>
+  </data>
+  <data name="Txt_SENDCOMMAND" xml:space="preserve">
+    <value>SEND COMMAND</value>
+  </data>
+  <data name="Txt_SFCPDCA" xml:space="preserve">
+    <value>SFC &amp; PDCA</value>
+  </data>
+  <data name="Txt_SFCPDCASettings" xml:space="preserve">
+    <value>SFC &amp; PDCA Settings</value>
+  </data>
+  <data name="Txt_SFCPDCATCPSettings" xml:space="preserve">
+    <value>SFC PDCA TCP Settings</value>
+  </data>
+  <data name="Txt_SNO" xml:space="preserve">
+    <value>S.NO</value>
+  </data>
+  <data name="Txt_SPEEDMMS" xml:space="preserve">
+    <value>SPEED (MM/S)</value>
+  </data>
+  <data name="Txt_STATUS" xml:space="preserve">
+    <value>STATUS</value>
+  </data>
+  <data name="Txt_SWFileBeingControlled" xml:space="preserve">
+    <value>SW / File Being Controlled</value>
+  </data>
+  <data name="Txt_SWVersion" xml:space="preserve">
+    <value>SW Version:</value>
+  </data>
+  <data name="Txt_SampleData" xml:space="preserve">
+    <value>Sample data</value>
+  </data>
+  <data name="Txt_Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Txt_SaveOrCancelTheParameterEditFirst" xml:space="preserve">
+    <value>Save or cancel the parameter edit first.</value>
+  </data>
+  <data name="Txt_SaveOrRevertTheGeneralChangesFirst" xml:space="preserve">
+    <value>Save or revert the General changes first, then open Change Config.</value>
+  </data>
+  <data name="Txt_SaveTheSpecLimits" xml:space="preserve">
+    <value>Save the spec limits?</value>
+  </data>
+  <data name="Txt_SavesTheParametersForThisStationAnd" xml:space="preserve">
+    <value>Saves the parameters for this station and routine</value>
+  </data>
+  <data name="Txt_SavesThenSignsTheAuthorizedUserOut" xml:space="preserve">
+    <value>Saves, then signs the authorized user out</value>
+  </data>
+  <data name="Txt_ScanThe0" xml:space="preserve">
+    <value>Scan the {0}.</value>
+  </data>
+  <data name="Txt_ScanTheNewCartridgeSNOfEach" xml:space="preserve">
+    <value>Scan the new cartridge SN of each gantry whose glue was changed. purge_idx goes back to 0 for it.</value>
+  </data>
+  <data name="Txt_ScanTheNozzleSNFirst" xml:space="preserve">
+    <value>Scan the nozzle SN first.</value>
+  </data>
+  <data name="Txt_Scanner" xml:space="preserve">
+    <value>Scanner</value>
+  </data>
+  <data name="Txt_ScannerTCPSettings" xml:space="preserve">
+    <value>Scanner TCP Settings</value>
+  </data>
+  <data name="Txt_SearchFields" xml:space="preserve">
+    <value>Search fields</value>
+  </data>
+  <data name="Txt_SearchKeyOrText" xml:space="preserve">
+    <value>Search key or text</value>
+  </data>
+  <data name="Txt_SearchParameters" xml:space="preserve">
+    <value>Search parameters...</value>
+  </data>
+  <data name="Txt_SearchSpeed" xml:space="preserve">
+    <value>Search speed</value>
+  </data>
+  <data name="Txt_SearchTravelMax" xml:space="preserve">
+    <value>Search travel max</value>
+  </data>
+  <data name="Txt_Section" xml:space="preserve">
+    <value>Section</value>
+  </data>
+  <data name="Txt_SelectARowToMove" xml:space="preserve">
+    <value>Select a row to move.</value>
+  </data>
+  <data name="Txt_SelectARowToTeach" xml:space="preserve">
+    <value>Select a row to teach.</value>
+  </data>
+  <data name="Txt_SelectAStationAndARoutine" xml:space="preserve">
+    <value>Select a station and a routine.</value>
+  </data>
+  <data name="Txt_SelectCCD" xml:space="preserve">
+    <value>Select CCD</value>
+  </data>
+  <data name="Txt_SelectDevice" xml:space="preserve">
+    <value>Select Device</value>
+  </data>
+  <data name="Txt_SelectRobotUnit" xml:space="preserve">
+    <value>Select Robot Unit</value>
+  </data>
+  <data name="Txt_SelectSFCServer" xml:space="preserve">
+    <value>Select SFC Server</value>
+  </data>
+  <data name="Txt_SelectScanner" xml:space="preserve">
+    <value>Select Scanner</value>
+  </data>
+  <data name="Txt_SelectStation1Station2OrBoth" xml:space="preserve">
+    <value>Select Station 1, Station 2 or both for Maintenance Mode.</value>
+  </data>
+  <data name="Txt_SelectTheAnalysisType" xml:space="preserve">
+    <value>Select the analysis type.</value>
+  </data>
+  <data name="Txt_SelectTheRepeatabilityType" xml:space="preserve">
+    <value>Select the repeatability type.</value>
+  </data>
+  <data name="Txt_SelectVacuumUnit" xml:space="preserve">
+    <value>Select Vacuum Unit</value>
+  </data>
+  <data name="Txt_Send" xml:space="preserve">
+    <value>Send</value>
+  </data>
+  <data name="Txt_SendingToThePLC" xml:space="preserve">
+    <value>Sending to the PLC...</value>
+  </data>
+  <data name="Txt_SensorConnection" xml:space="preserve">
+    <value>Sensor Connection ›</value>
+  </data>
+  <data name="Txt_SensorConnectionDashboard" xml:space="preserve">
+    <value>Sensor Connection Dashboard</value>
+  </data>
+  <data name="Txt_SensorStatesAreNotLinkedToThis" xml:space="preserve">
+    <value>Sensor states are not linked to this dashboard yet - they come from the PLC's inputs. The device connections on the right are live.</value>
+  </data>
+  <data name="Txt_SensorStatesComeFromThePLCWhich" xml:space="preserve">
+    <value>Sensor states come from the PLC, which is not linked to this dashboard yet. The devices below are live.</value>
+  </data>
+  <data name="Txt_SentToMESWithEveryBadgeCheck" xml:space="preserve">
+    <value>Sent to MES with every badge check. Offered codes are listed under ProjectCodes in Data\Settings\AccessControl.json.</value>
+  </data>
+  <data name="Txt_SequenceStopped" xml:space="preserve">
+    <value>Sequence stopped.</value>
+  </data>
+  <data name="Txt_SerialComm" xml:space="preserve">
+    <value>Serial Comm</value>
+  </data>
+  <data name="Txt_SerialCommSettings" xml:space="preserve">
+    <value>Serial Comm Settings</value>
+  </data>
+  <data name="Txt_SetAsPicUploadQuantityInConfig" xml:space="preserve">
+    <value>Set as Pic_Upload_quantity in Config &gt; Spec Limits (Production). A unit outside it stops dispensing and puts the machine down.</value>
+  </data>
+  <data name="Txt_SetTheGlueDosageForThisGantry" xml:space="preserve">
+    <value>Set the glue dosage for this gantry</value>
+  </data>
+  <data name="Txt_Setting" xml:space="preserve">
+    <value>Setting</value>
+  </data>
+  <data name="Txt_Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Txt_ShareOfEachDayInEachHIVE" xml:space="preserve">
+    <value>Share of each day in each HIVE state</value>
+  </data>
+  <data name="Txt_Shift" xml:space="preserve">
+    <value>Shift</value>
+  </data>
+  <data name="Txt_ShiftEnd" xml:space="preserve">
+    <value>Shift end</value>
+  </data>
+  <data name="Txt_ShiftStart" xml:space="preserve">
+    <value>Shift start</value>
+  </data>
+  <data name="Txt_ShiftStartAndEnd" xml:space="preserve">
+    <value>Shift start and end</value>
+  </data>
+  <data name="Txt_ShortPurgeCycles" xml:space="preserve">
+    <value>Short Purge Cycles</value>
+  </data>
+  <data name="Txt_ShortPurgeDoseMustBeANumber" xml:space="preserve">
+    <value>Short purge dose must be a number, 0 or more.</value>
+  </data>
+  <data name="Txt_ShortPurgeGlueConsumption" xml:space="preserve">
+    <value>Short Purge Glue Consumption</value>
+  </data>
+  <data name="Txt_ShortPurgeGlueUsagePerPurge" xml:space="preserve">
+    <value>Short Purge Glue Usage Per Purge</value>
+  </data>
+  <data name="Txt_ShortPurgePerPurgeG" xml:space="preserve">
+    <value>Short purge, per purge (g)</value>
+  </data>
+  <data name="Txt_ShortPurgeStatistics" xml:space="preserve">
+    <value>Short Purge Statistics</value>
+  </data>
+  <data name="Txt_ShowEveryKey" xml:space="preserve">
+    <value>Show every key</value>
+  </data>
+  <data name="Txt_SignIn" xml:space="preserve">
+    <value>Sign in</value>
+  </data>
+  <data name="Txt_SignInToChangeAnyOfThese" xml:space="preserve">
+    <value>Sign in to change any of these settings.</value>
+  </data>
+  <data name="Txt_SignInToSeeTheAccessList" xml:space="preserve">
+    <value>Sign in to see the access list.</value>
+  </data>
+  <data name="Txt_SignOutAfterMin" xml:space="preserve">
+    <value>Sign out after (min):</value>
+  </data>
+  <data name="Txt_SignOutAndSwitchUser" xml:space="preserve">
+    <value>Sign out and switch user?</value>
+  </data>
+  <data name="Txt_SignalLost" xml:space="preserve">
+    <value>Signal lost</value>
+  </data>
+  <data name="Txt_Site" xml:space="preserve">
+    <value>Site:</value>
+  </data>
+  <data name="Txt_Site_2" xml:space="preserve">
+    <value>Site</value>
+  </data>
+  <data name="Txt_Spare" xml:space="preserve">
+    <value>Spare</value>
+  </data>
+  <data name="Txt_SpecLimits" xml:space="preserve">
+    <value>Spec Limits</value>
+  </data>
+  <data name="Txt_SpecLimitsSaved" xml:space="preserve">
+    <value>Spec limits saved.</value>
+  </data>
+  <data name="Txt_Speed" xml:space="preserve">
+    <value>Speed</value>
+  </data>
+  <data name="Txt_Velocity" xml:space="preserve">
+    <value>Velocity</value>
+  </data>
+  <data name="Txt_Start" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="Txt_StartPositionMm" xml:space="preserve">
+    <value>Start position (mm)</value>
+  </data>
+  <data name="Txt_StartResumeTheMachine" xml:space="preserve">
+    <value>Start / resume the machine</value>
+  </data>
+  <data name="Txt_StartTime" xml:space="preserve">
+    <value>Start Time:</value>
+  </data>
+  <data name="Txt_StartTime_2" xml:space="preserve">
+    <value>Start Time</value>
+  </data>
+  <data name="Txt_Startup" xml:space="preserve">
+    <value>Startup</value>
+  </data>
+  <data name="Txt_StateChanges" xml:space="preserve">
+    <value>State Changes</value>
+  </data>
+  <data name="Txt_StaticRepeatabilityPartUCAndCCDAre" xml:space="preserve">
+    <value>Static repeatability (Part/UC and CCD are held static, 100x times)</value>
+  </data>
+  <data name="Txt_Station" xml:space="preserve">
+    <value>Station:</value>
+  </data>
+  <data name="Txt_Station1" xml:space="preserve">
+    <value>Station 1</value>
+  </data>
+  <data name="Txt_Station1CCD1" xml:space="preserve">
+    <value>Station 1 (CCD1)</value>
+  </data>
+  <data name="Txt_Station2" xml:space="preserve">
+    <value>Station 2</value>
+  </data>
+  <data name="Txt_Station2CCD2" xml:space="preserve">
+    <value>Station 2 (CCD2)</value>
+  </data>
+  <data name="Txt_Station_2" xml:space="preserve">
+    <value>Station</value>
+  </data>
+  <data name="Txt_Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Txt_Stepper" xml:space="preserve">
+    <value>Stepper :</value>
+  </data>
+  <data name="Txt_Stop" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="Txt_StopContinuousMotion" xml:space="preserve">
+    <value>Stop continuous motion</value>
+  </data>
+  <data name="Txt_StopTheMachine" xml:space="preserve">
+    <value>Stop the machine</value>
+  </data>
+  <data name="Txt_Stopped" xml:space="preserve">
+    <value>Stopped</value>
+  </data>
+  <data name="Txt_StressTest" xml:space="preserve">
+    <value>Stress Test</value>
+  </data>
+  <data name="Txt_Suffix" xml:space="preserve">
+    <value>Suffix</value>
+  </data>
+  <data name="Txt_SwipeALevel0OrHigherID" xml:space="preserve">
+    <value>Swipe a Level {0} or higher ID card.</value>
+  </data>
+  <data name="Txt_SwipeALevel0OrHigherID_2" xml:space="preserve">
+    <value>Swipe a Level {0} or higher ID card, then scan the SN.</value>
+  </data>
+  <data name="Txt_SwipeALevel3CMBadgeTo" xml:space="preserve">
+    <value>Swipe a Level 3 CM badge to continue.</value>
+  </data>
+  <data name="Txt_SwipeOrScanYourIDCardTo" xml:space="preserve">
+    <value>Swipe or scan your ID card to sign in.</value>
+  </data>
+  <data name="Txt_SwipeYourIDCard" xml:space="preserve">
+    <value>Swipe your ID card.</value>
+  </data>
+  <data name="Txt_SwipeYourIDCardThenScanThe" xml:space="preserve">
+    <value>Swipe your ID card, then scan the SN.</value>
+  </data>
+  <data name="Txt_SwitchUser" xml:space="preserve">
+    <value>Switch User</value>
+  </data>
+  <data name="Txt_SystemSettings" xml:space="preserve">
+    <value>System Settings</value>
+  </data>
+  <data name="Txt_TRIGGERCAPTURE" xml:space="preserve">
+    <value>TRIGGER CAPTURE</value>
+  </data>
+  <data name="Txt_Target" xml:space="preserve">
+    <value>Target</value>
+  </data>
+  <data name="Txt_TargetYield" xml:space="preserve">
+    <value>Target yield</value>
+  </data>
+  <data name="Txt_CncHmi" xml:space="preserve">
+    <value>CNC HMI</value>
+  </data>
+  <data name="Txt_Teach" xml:space="preserve">
+    <value>Teach</value>
+  </data>
+  <data name="Txt_Team" xml:space="preserve">
+    <value>Team</value>
+  </data>
+  <data name="Txt_Template" xml:space="preserve">
+    <value>Template</value>
+  </data>
+  <data name="Txt_TerminalNotConfigured" xml:space="preserve">
+    <value>(terminal not configured)</value>
+  </data>
+  <data name="Txt_ThatPositionBecomesZ0ForThe" xml:space="preserve">
+    <value>That position becomes Z = 0 for the dispensing Z.</value>
+  </data>
+  <data name="Txt_TheAccessListIsNotAvailableOn" xml:space="preserve">
+    <value>The access list is not available on this machine.</value>
+  </data>
+  <data name="Txt_TheCameraFindsTheFiducialCentreAnd" xml:space="preserve">
+    <value>The camera finds the fiducial centre and the gantry dispenses a dot on it.</value>
+  </data>
+  <data name="Txt_TheCameraFindsTheGlueCentreGlue" xml:space="preserve">
+    <value>The camera finds the glue centre; glue centre minus fiducial centre is the needle offset.</value>
+  </data>
+  <data name="Txt_TheChangeGlueThresholdMustBeBelow" xml:space="preserve">
+    <value>The change-glue threshold must be below the low-glue threshold.</value>
+  </data>
+  <data name="Txt_TheChipShowsTheMachineSOwn" xml:space="preserve">
+    <value>The chip shows the machine's own state only.</value>
+  </data>
+  <data name="Txt_TheDispensingXAndZMoveTo" xml:space="preserve">
+    <value>The dispensing X and Z move to the needle calibration module's teach position.</value>
+  </data>
+  <data name="Txt_TheDispensingZMovesDownOntoThe" xml:space="preserve">
+    <value>The dispensing Z moves down onto the touch sensor (tool setter) until it detects the needle.</value>
+  </data>
+  <data name="Txt_TheLaserMountedHorizontalAndParallelTo" xml:space="preserve">
+    <value>The laser, mounted horizontal and parallel to the fixture, measures point 1, then point 2 along Y.</value>
+  </data>
+  <data name="Txt_TheLaserOnTheVerticalZMeasures" xml:space="preserve">
+    <value>The laser on the vertical Z measures point 1, then 2 (Y), 4 (X), 3 (Y) and back to 1 (X).</value>
+  </data>
+  <data name="Txt_TheMachineIgnoresItUntilItIs" xml:space="preserve">
+    <value>The machine ignores it until it is enabled again.</value>
+  </data>
+  <data name="Txt_TheMachineIsInPD15A" xml:space="preserve">
+    <value>The machine is in PD-15. A Level 3 user now finds the Hash Key tab on the Setting page.</value>
+  </data>
+  <data name="Txt_TheMachinePromptsOnceEvery2Hours" xml:space="preserve">
+    <value>The machine prompts once every 2 hours (pop-up a window + siren); the machine continues to run without stopping.</value>
+  </data>
+  <data name="Txt_TheMachinePromptsOnceEvery4Hours" xml:space="preserve">
+    <value>The machine prompts once every 4 hours (pop-up a window + siren); the machine continues to run without stopping.</value>
+  </data>
+  <data name="Txt_TheMachineRemainsInNormalProductionMode" xml:space="preserve">
+    <value>The machine remains in normal production mode. There is no need to worry about anything.</value>
+  </data>
+  <data name="Txt_TheNineGantryPositionsArePairedWith" xml:space="preserve">
+    <value>The nine gantry positions are paired with the camera's glue centres and the camera-to-gantry transform is stored.</value>
+  </data>
+  <data name="Txt_TheNozzleCriticalLevelMustBeBelow" xml:space="preserve">
+    <value>The nozzle critical level must be below the warning level.</value>
+  </data>
+  <data name="Txt_ThePDATAMappingStoreIsNotAvailable" xml:space="preserve">
+    <value>The PDATA mapping store is not available.</value>
+  </data>
+  <data name="Txt_ThePLCDoesNotReportHomingPlcHomingDoneSymbol" xml:space="preserve">
+    <value>The PLC does not report homing (PlcHomingDoneSymbol is not set).</value>
+  </data>
+  <data name="Txt_ThePictureCheckIsNotAvailableOn" xml:space="preserve">
+    <value>The picture check is not available on this machine.</value>
+  </data>
+  <data name="Txt_TheRemainingGlueWeightIsAboveThe" xml:space="preserve">
+    <value>The remaining glue weight is above the safety line.</value>
+  </data>
+  <data name="Txt_TheSecondApprovalMustComeFromA" xml:space="preserve">
+    <value>The second approval must come from a different badge.</value>
+  </data>
+  <data name="Txt_TheSecondApprovalMustComeFromA_2" xml:space="preserve">
+    <value>The second approval must come from a different badge. Please swipe another ID card.</value>
+  </data>
+  <data name="Txt_TheTranslationFilesCouldNotBeRead" xml:space="preserve">
+    <value>The translation files could not be read: {0}</value>
+  </data>
+  <data name="Txt_TheTranslationsCouldNotBeSaved0" xml:space="preserve">
+    <value>The translations could not be saved: {0}</value>
+  </data>
+  <data name="Txt_TheVisionZMovesItsLaserTo" xml:space="preserve">
+    <value>The vision Z moves its laser to the same 0.</value>
+  </data>
+  <data name="Txt_TheWeighingScaleIsNotConnectedTo" xml:space="preserve">
+    <value>The weighing scale is not connected to this HMI yet, so there are no glue weighings to show.</value>
+  </data>
+  <data name="Txt_TheoreticalOutputPerCartridge" xml:space="preserve">
+    <value>Theoretical Output Per Cartridge</value>
+  </data>
+  <data name="Txt_ThereIsNothingToExport" xml:space="preserve">
+    <value>There is nothing to export.</value>
+  </data>
+  <data name="Txt_TheseAlarmsAreGeneratedSampleDataTrueNot" xml:space="preserve">
+    <value>These alarms are generated (SampleData=true), not recorded by the machine.</value>
+  </data>
+  <data name="Txt_TheseFiguresAreGeneratedSampleDataTrueNot" xml:space="preserve">
+    <value>These figures are generated (SampleData=true), not recorded by the machine.</value>
+  </data>
+  <data name="Txt_ThisBuildHasNoManualOperationScreens" xml:space="preserve">
+    <value>This build has no manual-operation screens.</value>
+  </data>
+  <data name="Txt_ThisCameraHasNoCaptureYet" xml:space="preserve">
+    <value>This camera has no capture yet.</value>
+  </data>
+  <data name="Txt_ThisRoutineTakesNoParameters" xml:space="preserve">
+    <value>This routine takes no parameters.</value>
+  </data>
+  <data name="Txt_Threshold" xml:space="preserve">
+    <value>Threshold</value>
+  </data>
+  <data name="Txt_ThresholdForActivatingTheNotificationOfStock" xml:space="preserve">
+    <value>Threshold for activating the notification of stock preparation and preheating to the KT warehouse (weight of glue remaining).</value>
+  </data>
+  <data name="Txt_ThresholdHours" xml:space="preserve">
+    <value>Threshold (Hours)</value>
+  </data>
+  <data name="Txt_TickTheFieldsToReportSetTheir" xml:space="preserve">
+    <value>Tick the fields to report, set their limits, then Save.</value>
+  </data>
+  <data name="Txt_Time" xml:space="preserve">
+    <value>Time</value>
+  </data>
+  <data name="Txt_TimeInStateMin" xml:space="preserve">
+    <value>Time in State (Min)</value>
+  </data>
+  <data name="Txt_To" xml:space="preserve">
+    <value>To:</value>
+  </data>
+  <data name="Txt_ToMESCheck" xml:space="preserve">
+    <value>To MES Check</value>
+  </data>
+  <data name="Txt_TossedUnits" xml:space="preserve">
+    <value>Tossed units</value>
+  </data>
+  <data name="Txt_TossedUnitsByShift" xml:space="preserve">
+    <value>Tossed units by shift</value>
+  </data>
+  <data name="Txt_Tossing" xml:space="preserve">
+    <value>Tossing</value>
+  </data>
+  <data name="Txt_TossingRate" xml:space="preserve">
+    <value>Tossing rate</value>
+  </data>
+  <data name="Txt_TossingRateByShift" xml:space="preserve">
+    <value>Tossing rate (%) by shift</value>
+  </data>
+  <data name="Txt_TossingReason" xml:space="preserve">
+    <value>Tossing Reason</value>
+  </data>
+  <data name="Txt_TossingSummary" xml:space="preserve">
+    <value>Tossing Summary</value>
+  </data>
+  <data name="Txt_Total" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="Txt_TotalGlueConsumption" xml:space="preserve">
+    <value>Total Glue Consumption</value>
+  </data>
+  <data name="Txt_TotalTimeMin" xml:space="preserve">
+    <value>Total Time (Min)</value>
+  </data>
+  <data name="Txt_Translation" xml:space="preserve">
+    <value>Translation</value>
+  </data>
+  <data name="Txt_TranslationsSaved" xml:space="preserve">
+    <value>Translations saved.</value>
+  </data>
+  <data name="Txt_Trigger" xml:space="preserve">
+    <value>Trigger</value>
+  </data>
+  <data name="Txt_TuningDebugMaterialRun" xml:space="preserve">
+    <value>Tuning/Debug Material Run</value>
+  </data>
+  <data name="Txt_TwoStepVerificationAnApproverSwipesTheir" xml:space="preserve">
+    <value>Two-step verification: an approver swipes their ID card.</value>
+  </data>
+  <data name="Txt_USLIsNotANumber" xml:space="preserve">
+    <value>USL is not a number.</value>
+  </data>
+  <data name="Txt_Unassigned" xml:space="preserve">
+    <value>Unassigned</value>
+  </data>
+  <data name="Txt_Unclassified" xml:space="preserve">
+    <value>Unclassified</value>
+  </data>
+  <data name="Txt_Unit" xml:space="preserve">
+    <value>Unit</value>
+  </data>
+  <data name="Txt_UnitIntervalMustBeAWholeNumber" xml:space="preserve">
+    <value>Unit interval must be a whole number, 1 or more.</value>
+  </data>
+  <data name="Txt_UnitSN" xml:space="preserve">
+    <value>Unit SN</value>
+  </data>
+  <data name="Txt_UnitsOnTheMachine" xml:space="preserve">
+    <value>Units on the machine</value>
+  </data>
+  <data name="Txt_UnitsOneTime" xml:space="preserve">
+    <value>units/one time</value>
+  </data>
+  <data name="Txt_Unnamed" xml:space="preserve">
+    <value>(unnamed)</value>
+  </data>
+  <data name="Txt_UnplannedDowntime0" xml:space="preserve">
+    <value>Unplanned downtime - {0}</value>
+  </data>
+  <data name="Txt_UntranslatedOnly" xml:space="preserve">
+    <value>Untranslated only</value>
+  </data>
+  <data name="Txt_UploadToMES" xml:space="preserve">
+    <value>Upload to MES</value>
+  </data>
+  <data name="Txt_UploadedHashKeysToMES" xml:space="preserve">
+    <value>Uploaded Hash keys to MES</value>
+  </data>
+  <data name="Txt_UploadingToMES" xml:space="preserve">
+    <value>Uploading to MES...</value>
+  </data>
+  <data name="Txt_VALUE" xml:space="preserve">
+    <value>VALUE</value>
+  </data>
+  <data name="Txt_VALUES" xml:space="preserve">
+    <value>VALUES</value>
+  </data>
+  <data name="Txt_Vacuum" xml:space="preserve">
+    <value>Vacuum</value>
+  </data>
+  <data name="Txt_Value" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="Txt_ValueMg" xml:space="preserve">
+    <value>Value (mg)</value>
+  </data>
+  <data name="Txt_ValveChange" xml:space="preserve">
+    <value>Valve Change</value>
+  </data>
+  <data name="Txt_ValveModel" xml:space="preserve">
+    <value>Valve model:</value>
+  </data>
+  <data name="Txt_ValveModelSelectionErrorPlsSelectThe" xml:space="preserve">
+    <value>Valve model selection error, pls select the correct valve model on the settings page.</value>
+  </data>
+  <data name="Txt_ValveModelSetting" xml:space="preserve">
+    <value>Valve model setting</value>
+  </data>
+  <data name="Txt_ValveModel_2" xml:space="preserve">
+    <value>Valve Model</value>
+  </data>
+  <data name="Txt_ValveSN" xml:space="preserve">
+    <value>Valve SN</value>
+  </data>
+  <data name="Txt_ValveSN_2" xml:space="preserve">
+    <value>Valve SN:</value>
+  </data>
+  <data name="Txt_ValveUsage" xml:space="preserve">
+    <value>Valve usage:</value>
+  </data>
+  <data name="Txt_Vendor" xml:space="preserve">
+    <value>Vendor:</value>
+  </data>
+  <data name="Txt_Vendor_2" xml:space="preserve">
+    <value>Vendor</value>
+  </data>
+  <data name="Txt_Vision" xml:space="preserve">
+    <value>Vision</value>
+  </data>
+  <data name="Txt_VisionZAtLaserZero" xml:space="preserve">
+    <value>Vision Z at laser zero</value>
+  </data>
+  <data name="Txt_WaitForHomingToFinish" xml:space="preserve">
+    <value>Wait for homing to finish.</value>
+  </data>
+  <data name="Txt_WaitSec" xml:space="preserve">
+    <value>Wait (sec)</value>
+  </data>
+  <data name="Txt_WaitingForOperator" xml:space="preserve">
+    <value>Waiting for operator</value>
+  </data>
+  <data name="Txt_Warning" xml:space="preserve">
+    <value>Warning</value>
+  </data>
+  <data name="Txt_WeeklyMaintenance" xml:space="preserve">
+    <value>Weekly Maintenance</value>
+  </data>
+  <data name="Txt_WeighingAtShiftChange" xml:space="preserve">
+    <value>Weighing at shift change</value>
+  </data>
+  <data name="Txt_WeighingByUnitCount" xml:space="preserve">
+    <value>Weighing by unit count</value>
+  </data>
+  <data name="Txt_WeighingCycles" xml:space="preserve">
+    <value>Weighing Cycles</value>
+  </data>
+  <data name="Txt_WeighingFrequency" xml:space="preserve">
+    <value>Weighing frequency</value>
+  </data>
+  <data name="Txt_WeighingFrequencyMustBeANumberOf" xml:space="preserve">
+    <value>Weighing frequency must be a number of hours, at least one minute.</value>
+  </data>
+  <data name="Txt_WeighingGlueConsumption" xml:space="preserve">
+    <value>Weighing Glue Consumption</value>
+  </data>
+  <data name="Txt_WeighingSettingsAreNotAvailableTheWeighing" xml:space="preserve">
+    <value>Weighing settings are not available - the weighing scale is not connected to this HMI yet.</value>
+  </data>
+  <data name="Txt_WeighingTimes" xml:space="preserve">
+    <value>Weighing times</value>
+  </data>
+  <data name="Txt_WeighingTimesMustBeAWholeNumber" xml:space="preserve">
+    <value>Weighing times must be a whole number, 1 or more.</value>
+  </data>
+  <data name="Txt_Work" xml:space="preserve">
+    <value>Work</value>
+  </data>
+  <data name="Txt_WritesTheStationRoutineAndParametersTo" xml:space="preserve">
+    <value>Writes the station, routine and parameters to the PLC and starts the calibration; resumes when paused</value>
+  </data>
+  <data name="Txt_XDispensingSpeed" xml:space="preserve">
+    <value>- x = Dispensing Speed</value>
+  </data>
+  <data name="Txt_XPOS" xml:space="preserve">
+    <value>X POS</value>
+  </data>
+  <data name="Txt_YGlueWeight" xml:space="preserve">
+    <value>- y = Glue weight</value>
+  </data>
+  <data name="Txt_YPOS" xml:space="preserve">
+    <value>Y POS</value>
+  </data>
+  <data name="Txt_Yes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="Txt_Yield" xml:space="preserve">
+    <value>Yield</value>
+  </data>
+  <data name="Txt_YieldByShift" xml:space="preserve">
+    <value>Yield (%) by shift</value>
+  </data>
+  <data name="Txt_ZPOS" xml:space="preserve">
+    <value>Z POS</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_000" xml:space="preserve">
+    <value>Invalid error code</value>
+  </data>
+  <data name="AlarmDesc_Invalid_ECode" xml:space="preserve">
+    <value>Invalid error code</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_001" xml:space="preserve">
+    <value>Cylinder extend failed</value>
+  </data>
+  <data name="AlarmDesc_Cyl_Extend_Fail" xml:space="preserve">
+    <value>Cylinder extend failed</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_002" xml:space="preserve">
+    <value>Cylinder retract failed</value>
+  </data>
+  <data name="AlarmDesc_Cyl_Retract_Fail" xml:space="preserve">
+    <value>Cylinder retract failed</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_003" xml:space="preserve">
+    <value>Cylinder extend timeout</value>
+  </data>
+  <data name="AlarmDesc_Cyl_Extend_Timeout" xml:space="preserve">
+    <value>Cylinder extend timeout</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_004" xml:space="preserve">
+    <value>Cylinder retract timeout</value>
+  </data>
+  <data name="AlarmDesc_Cyl_Retract_Timeout" xml:space="preserve">
+    <value>Cylinder retract timeout</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_005" xml:space="preserve">
+    <value>Unsafe to extend the cylinder</value>
+  </data>
+  <data name="AlarmDesc_Cyl_UnSafe_Extend" xml:space="preserve">
+    <value>Unsafe to extend the cylinder</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_006" xml:space="preserve">
+    <value>Unsafe to retract the cylinder</value>
+  </data>
+  <data name="AlarmDesc_Cyl_UnSafe_Retract" xml:space="preserve">
+    <value>Unsafe to retract the cylinder</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_007" xml:space="preserve">
+    <value>Both cylinder sensors are on</value>
+  </data>
+  <data name="AlarmDesc_Cyl_Both_Sensor" xml:space="preserve">
+    <value>Both cylinder sensors are on</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_008" xml:space="preserve">
+    <value>Interlock failed</value>
+  </data>
+  <data name="AlarmDesc_Interlock_Fail" xml:space="preserve">
+    <value>Interlock failed</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_009" xml:space="preserve">
+    <value>Positive limit reached</value>
+  </data>
+  <data name="AlarmDesc_PosLimit_Error" xml:space="preserve">
+    <value>Positive limit reached</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_010" xml:space="preserve">
+    <value>Negative limit reached</value>
+  </data>
+  <data name="AlarmDesc_NegLimit_Error" xml:space="preserve">
+    <value>Negative limit reached</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_011" xml:space="preserve">
+    <value>Axis disabled</value>
+  </data>
+  <data name="AlarmDesc_Disable_Error" xml:space="preserve">
+    <value>Axis disabled</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_012" xml:space="preserve">
+    <value>Move timeout</value>
+  </data>
+  <data name="AlarmDesc_MoveTimeout_Error" xml:space="preserve">
+    <value>Move timeout</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_013" xml:space="preserve">
+    <value>Drive error</value>
+  </data>
+  <data name="AlarmDesc_DriveError_Error" xml:space="preserve">
+    <value>Drive error</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_014" xml:space="preserve">
+    <value>Emergency stop pressed</value>
+  </data>
+  <data name="AlarmDesc_Emg_Pressed_Error" xml:space="preserve">
+    <value>Emergency stop pressed</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_015" xml:space="preserve">
+    <value>Safety door open</value>
+  </data>
+  <data name="AlarmDesc_SafetyDoor_open_Error" xml:space="preserve">
+    <value>Safety door open</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_016" xml:space="preserve">
+    <value>Main air feedback error</value>
+  </data>
+  <data name="AlarmDesc_MainAir_FB_Error" xml:space="preserve">
+    <value>Main air feedback error</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_017" xml:space="preserve">
+    <value>Homing timeout</value>
+  </data>
+  <data name="AlarmDesc_Homing_TimeOut_Error" xml:space="preserve">
+    <value>Homing timeout</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_018" xml:space="preserve">
+    <value>Program exception</value>
+  </data>
+  <data name="AlarmDesc_ProgramException_Error" xml:space="preserve">
+    <value>Program exception</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_019" xml:space="preserve">
+    <value>Motion timeout</value>
+  </data>
+  <data name="AlarmDesc_Motion_Time_out_Error" xml:space="preserve">
+    <value>Motion timeout</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_020" xml:space="preserve">
+    <value>Motion card not open</value>
+  </data>
+  <data name="AlarmDesc_Motion_Card_not_open" xml:space="preserve">
+    <value>Motion card not open</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_021" xml:space="preserve">
+    <value>Robot alarm</value>
+  </data>
+  <data name="AlarmDesc_Robot_Alarm_Error" xml:space="preserve">
+    <value>Robot alarm</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_022" xml:space="preserve">
+    <value>Robot receive timeout</value>
+  </data>
+  <data name="AlarmDesc_Robot_Receive_TimeOut_Error" xml:space="preserve">
+    <value>Robot receive timeout</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_023" xml:space="preserve">
+    <value>Vacuum on/off failed</value>
+  </data>
+  <data name="AlarmDesc_Vac_VacuumOnOffFail" xml:space="preserve">
+    <value>Vacuum on/off failed</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_024" xml:space="preserve">
+    <value>Blow on/off failed</value>
+  </data>
+  <data name="AlarmDesc_Vac_BlowOnOffFail" xml:space="preserve">
+    <value>Blow on/off failed</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_025" xml:space="preserve">
+    <value>Vacuum timeout</value>
+  </data>
+  <data name="AlarmDesc_Vac_TimeoutEcode" xml:space="preserve">
+    <value>Vacuum timeout</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_026" xml:space="preserve">
+    <value>IO stepper forward failed</value>
+  </data>
+  <data name="AlarmDesc_IO_Stepper_ForwardFail" xml:space="preserve">
+    <value>IO stepper forward failed</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_027" xml:space="preserve">
+    <value>IO stepper reverse failed</value>
+  </data>
+  <data name="AlarmDesc_IO_Stepper_ReverseFail" xml:space="preserve">
+    <value>IO stepper reverse failed</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_028" xml:space="preserve">
+    <value>IO stepper stop failed</value>
+  </data>
+  <data name="AlarmDesc_IO_Stepper_StopFail" xml:space="preserve">
+    <value>IO stepper stop failed</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_029" xml:space="preserve">
+    <value>IO stepper alarm reset failed</value>
+  </data>
+  <data name="AlarmDesc_IO_Stepper_AlarmResetFail" xml:space="preserve">
+    <value>IO stepper alarm reset failed</value>
+  </data>
+  <data name="Alarm_TEAL_MASTER_030" xml:space="preserve">
+    <value>Robot mode error</value>
+  </data>
+  <data name="AlarmDesc_Robot_Mode_Error" xml:space="preserve">
+    <value>Robot mode error</value>
+  </data>
+  <data name="AlarmType_Motion_Error" xml:space="preserve">
+    <value>Motion Error</value>
+  </data>
+  <data name="AlarmType_Vision_Error" xml:space="preserve">
+    <value>Vision Error</value>
+  </data>
+  <data name="AlarmType_Glue_Error" xml:space="preserve">
+    <value>Glue Error</value>
+  </data>
+  <data name="AlarmType_Sensor_Error" xml:space="preserve">
+    <value>Sensor Error</value>
+  </data>
+  <data name="AlarmType_Software_Error" xml:space="preserve">
+    <value>Software Error</value>
+  </data>
+  <data name="AlarmType_Hardware_Error" xml:space="preserve">
+    <value>Hardware Error</value>
+  </data>
+  <data name="AlarmType_Material_Error" xml:space="preserve">
+    <value>Material Error</value>
+  </data>
+  <data name="AlarmType_Safety_Error" xml:space="preserve">
+    <value>Safety Error</value>
+  </data>
+  <data name="AlarmType_Communication_Error" xml:space="preserve">
+    <value>Communication Error</value>
+  </data>
+  <data name="AlarmType_Pneumatic_Error" xml:space="preserve">
+    <value>Pneumatic Error</value>
+  </data>
+  <data name="AlarmType_Electrical_Error" xml:space="preserve">
+    <value>Electrical Error</value>
+  </data>
+  <data name="AlarmType_Mechanical_Error" xml:space="preserve">
+    <value>Mechanical Error</value>
+  </data>
+  <data name="AlarmType_Process_Error" xml:space="preserve">
+    <value>Process Error</value>
+  </data>
+  <data name="AlarmType_Others" xml:space="preserve">
+    <value>Others</value>
+  </data>
+  <data name="AlarmType_Unclassified" xml:space="preserve">
+    <value>Unclassified</value>
+  </data>
+  <data name="Txt_AddRepairAction" xml:space="preserve">
+    <value>&lt;Add repair action&gt;</value>
+  </data>
+  <data name="Txt_Adjusted" xml:space="preserve">
+    <value>Adjusted</value>
+  </data>
+  <data name="Txt_Calibrated" xml:space="preserve">
+    <value>Calibrated</value>
+  </data>
+  <data name="Txt_Checked" xml:space="preserve">
+    <value>Checked</value>
+  </data>
+  <data name="Txt_Cleaned" xml:space="preserve">
+    <value>Cleaned</value>
+  </data>
+  <data name="Txt_Erased" xml:space="preserve">
+    <value>Erased</value>
+  </data>
+  <data name="Txt_Filled" xml:space="preserve">
+    <value>Filled</value>
+  </data>
+  <data name="Txt_Fixed" xml:space="preserve">
+    <value>Fixed</value>
+  </data>
+  <data name="Txt_Lubricated" xml:space="preserve">
+    <value>Lubricated</value>
+  </data>
+  <data name="Txt_Replaced" xml:space="preserve">
+    <value>Replaced</value>
+  </data>
+  <data name="Txt_Restored" xml:space="preserve">
+    <value>Restored</value>
+  </data>
+  <data name="Txt_Stretched" xml:space="preserve">
+    <value>Stretched</value>
+  </data>
+  <data name="Txt_Tightened" xml:space="preserve">
+    <value>Tightened</value>
+  </data>
+  <data name="Txt_Trained" xml:space="preserve">
+    <value>Trained</value>
+  </data>
+  <data name="Txt_Tuned" xml:space="preserve">
+    <value>Tuned</value>
+  </data>
+  <data name="Txt_0AlarmS1MinOfDowntime" xml:space="preserve">
+    <value>{0} alarm(s), {1} min of downtime</value>
+  </data>
+  <data name="Txt_0DebugUnitsHaveBeenRunIn" xml:space="preserve">
+    <value>{0} debug units have been run in Tuning/Debug Material Run (PD-17). Switch the HIVE state to Running before the next unit.</value>
+  </data>
+  <data name="Txt_0DebugUnitsHaveBeenRunUnder" xml:space="preserve">
+    <value>{0} debug units have been run under {1}. No more debug units may be used under this error code.</value>
+  </data>
+  <data name="Txt_0RoundComplete" xml:space="preserve">
+    <value>{0} - round complete</value>
+  </data>
+  <data name="Txt_0ContinueTest" xml:space="preserve">
+    <value>{0}. Continue test?</value>
+  </data>
+  <data name="Txt_NextOperatorOperatorID0" xml:space="preserve">
+    <value>Next operator (Operator_ID {0})</value>
+  </data>
+  <data name="Txt_TheHIVEStateWasNotChanged0" xml:space="preserve">
+    <value>The HIVE state was not changed. {0}</value>
+  </data>
+  <data name="Txt_PlannedDowntime01" xml:space="preserve">
+    <value>Planned downtime - {0} ({1})</value>
+  </data>
+  <data name="Txt_UnplannedDowntime01" xml:space="preserve">
+    <value>Unplanned downtime - {0} ({1})</value>
+  </data>
+  <data name="Txt_TheBadgeCouldNotBeChecked0" xml:space="preserve">
+    <value>The badge could not be checked: {0}</value>
+  </data>
+  <data name="Txt_0IsLevel1ThisNeedsLevel" xml:space="preserve">
+    <value>{0} is Level {1}. This needs Level {2} or higher - please swipe another ID card.</value>
+  </data>
+  <data name="Txt_0IsLevel1ThisNeedsLevel_2" xml:space="preserve">
+    <value>{0} is Level {1}. This needs Level {2} or higher.</value>
+  </data>
+  <data name="Txt_0Level1PressOK" xml:space="preserve">
+    <value>{0} (Level {1}). Press OK.</value>
+  </data>
+  <data name="Txt_0Level1ScanTheSN" xml:space="preserve">
+    <value>{0} (Level {1}). Scan the SN.</value>
+  </data>
+  <data name="Txt_ValveSN_3" xml:space="preserve">
+    <value>valve SN</value>
+  </data>
+  <data name="Txt_NozzleSN_2" xml:space="preserve">
+    <value>nozzle SN</value>
+  </data>
+  <data name="Txt_0GlueSN" xml:space="preserve">
+    <value>{0} glue SN</value>
+  </data>
+  <data name="Txt_GlueChange0" xml:space="preserve">
+    <value>Glue change: {0}</value>
+  </data>
+  <data name="Txt_MaterialReplacement0" xml:space="preserve">
+    <value>Material replacement: {0}</value>
+  </data>
+  <data name="Txt_MESCouldNotGiveTheStandardValve" xml:space="preserve">
+    <value>MES could not give the standard valve SN: {0}</value>
+  </data>
+  <data name="Txt_MESCouldNotGiveTheValveS" xml:space="preserve">
+    <value>MES could not give the valve's usage: {0}</value>
+  </data>
+  <data name="Txt_MESCheckNGTheNozzleWasNot" xml:space="preserve">
+    <value>MES check NG - the nozzle was not linked to the valve: {0}</value>
+  </data>
+  <data name="Txt_MESCheckNG0" xml:space="preserve">
+    <value>MES check NG: {0}</value>
+  </data>
+  <data name="Txt_MESCheckOK0" xml:space="preserve">
+    <value>MES check OK: {0}</value>
+  </data>
+  <data name="Txt_01MachineWillSwitchToAudit" xml:space="preserve">
+    <value>{0}: {1} - machine will switch to audit mode</value>
+  </data>
+  <data name="Txt_NoValveModelIsSetForThe" xml:space="preserve">
+    <value>No valve model is set for the {0} gantry. Choose it on Setting &gt; Valve Model (Level 3) first.</value>
+  </data>
+  <data name="Txt_ValveModel0ScanTheValveS" xml:space="preserve">
+    <value>Valve model: {0} - scan the valve's internal SN; MES returns its standard SN.</value>
+  </data>
+  <data name="Txt_NoValveSNIsRecordedForThe" xml:space="preserve">
+    <value>No valve SN is recorded for the {0} gantry, so the nozzle cannot be linked. Do a Valve Change (PD-04) first.</value>
+  </data>
+  <data name="Txt_ValveSNToLinkTheNozzleTo" xml:space="preserve">
+    <value>Valve SN to link the nozzle to: {0}</value>
+  </data>
+  <data name="Txt_0NeedsTheConsumablesFileWhichIs" xml:space="preserve">
+    <value>{0} needs the consumables file, which is not available.</value>
+  </data>
+  <data name="Txt_24hrDryRun" xml:space="preserve">
+    <value>24hr Dry Run</value>
+  </data>
+  <data name="Txt_HIVE" xml:space="preserve">
+    <value>HIVE</value>
+  </data>
+  <data name="Txt_HIVEIsLineCriticalDisableHIVEBecause" xml:space="preserve">
+    <value>HIVE is line critical. Disable HIVE because "{0}"?
+
+Prior approval must be obtained from CM/BUD. A second approver swipes their badge next.</value>
+  </data>
+  <data name="Txt_SignedInAs01ClickTo" xml:space="preserve">
+    <value>Signed in as {0} ({1}) - click to switch user, right-click to log out</value>
+  </data>
+  <data name="Txt_HIVEIsNotRunningOnThisMachine" xml:space="preserve">
+    <value>HIVE is not running on this machine, so the state cannot be changed. The chip shows the machine's own state only.</value>
+  </data>
+  <data name="Txt_Search" xml:space="preserve">
+    <value>Search:</value>
+  </data>
+  <data name="Txt_DescriptionOf" xml:space="preserve">
+    <value>Description of:</value>
+  </data>
+  <data name="Txt_Type" xml:space="preserve">
+    <value>Type:</value>
+  </data>
+  <data name="Txt_Type_2" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="Txt_SearchByNameIOAddressOr" xml:space="preserve">
+    <value>Search by name, I/O address or description</value>
+  </data>
+  <data name="Txt_OnlyRowsWithoutADescription" xml:space="preserve">
+    <value>Only rows without a description</value>
+  </data>
+  <data name="Txt_IOAddress" xml:space="preserve">
+    <value>I/O Address</value>
+  </data>
+  <data name="Txt_ARowWithoutADescriptionInThe" xml:space="preserve">
+    <value>A row without a description in the selected language shows its English description, and without either its name. Level 3 can change them; a saved change shows on screen at once.</value>
+  </data>
+  <data name="Txt_ConfigDescription" xml:space="preserve">
+    <value>Config Description</value>
+  </data>
+  <data name="Txt_IOPoints" xml:space="preserve">
+    <value>I/O Points</value>
+  </data>
+  <data name="Txt_DescriptionsSaved" xml:space="preserve">
+    <value>Descriptions saved.</value>
+  </data>
+  <data name="Txt_TheDescriptionsCouldNotBeSaved0" xml:space="preserve">
+    <value>The descriptions could not be saved: {0}</value>
+  </data>
+  <data name="Txt_TheDescriptionsCouldNotBeRead0" xml:space="preserve">
+    <value>The descriptions could not be read: {0}</value>
+  </data>
+  <data name="Txt_0Of1RowsShown2Without" xml:space="preserve">
+    <value>{0} of {1} rows shown · {2} without a description</value>
+  </data>
+  <data name="Txt_OnlyALevel3UserCanChange_2" xml:space="preserve">
+    <value>Only a Level 3 user can change these descriptions.</value>
+  </data>
+  <data name="Txt_Input" xml:space="preserve">
+    <value>Input</value>
+  </data>
+  <data name="Txt_Output" xml:space="preserve">
+    <value>Output</value>
+  </data>
+  <data name="Txt_All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Txt_Production" xml:space="preserve">
+    <value>Production</value>
+  </data>
+  <data name="Txt_CPK" xml:space="preserve">
+    <value>CPK</value>
+  </data>
+  <data name="Txt_GRR" xml:space="preserve">
+    <value>GRR</value>
+  </data>
+  <data name="Txt_Main" xml:space="preserve">
+    <value>Main</value>
+  </data>
+  <data name="Txt_IODiagnostics" xml:space="preserve">
+    <value>I/O Diagnostics</value>
+  </data>
+  <data name="Txt_DigitalIO" xml:space="preserve">
+    <value>Digital I/O</value>
+  </data>
+  <data name="Txt_AxisParameters" xml:space="preserve">
+    <value>Axis Parameters</value>
+  </data>
+  <data name="Txt_TCPIPSettings" xml:space="preserve">
+    <value>TCP IP Settings</value>
+  </data>
+  <data name="Txt_VisionSettings" xml:space="preserve">
+    <value>Vision Settings</value>
+  </data>
+  <data name="Txt_AELimitsCPK_2" xml:space="preserve">
+    <value>AE Limits (CPK)</value>
+  </data>
+  <data name="Txt_AELimitsGRR_2" xml:space="preserve">
+    <value>AE Limits (GRR)</value>
+  </data>
+  <data name="Txt_AELimitsProduction" xml:space="preserve">
+    <value>AE Limits (Production)</value>
+  </data>
+  <data name="Txt_PARAMETER" xml:space="preserve">
+    <value>PARAMETER</value>
+  </data>
+  <data name="Txt_MINIMUMLIMIT" xml:space="preserve">
+    <value>MINIMUM LIMIT</value>
+  </data>
+  <data name="Txt_MAXIMUMLIMIT" xml:space="preserve">
+    <value>MAXIMUM LIMIT</value>
+  </data>
+  <data name="Txt_UNIT" xml:space="preserve">
+    <value>UNIT</value>
+  </data>
+  <data name="Txt_CARDID" xml:space="preserve">
+    <value>CARD ID</value>
+  </data>
+  <data name="Txt_AXISID" xml:space="preserve">
+    <value>AXIS ID</value>
+  </data>
+  <data name="Txt_AXISNAME" xml:space="preserve">
+    <value>AXIS NAME</value>
+  </data>
+  <data name="Txt_PITCH" xml:space="preserve">
+    <value>PITCH</value>
+  </data>
+  <data name="Txt_PULSESMM" xml:space="preserve">
+    <value>PULSES/MM</value>
+  </data>
+  <data name="Txt_PPR" xml:space="preserve">
+    <value>PPR</value>
+  </data>
+  <data name="Txt_HOMINGACC" xml:space="preserve">
+    <value>HOMING ACC</value>
+  </data>
+  <data name="Txt_HOMINGDEACC" xml:space="preserve">
+    <value>HOMING DE-ACC</value>
+  </data>
+  <data name="Txt_HOMINGSPEED" xml:space="preserve">
+    <value>HOMING SPEED</value>
+  </data>
+  <data name="Txt_Parity" xml:space="preserve">
+    <value>Parity</value>
+  </data>
+  <data name="Txt_StopBits" xml:space="preserve">
+    <value>Stop Bits</value>
+  </data>
+  <data name="Txt_Handshake" xml:space="preserve">
+    <value>Handshake</value>
+  </data>
+  <data name="Txt_Colour" xml:space="preserve">
+    <value>Colour</value>
+  </data>
+  <data name="Txt_OptID" xml:space="preserve">
+    <value>Opt ID</value>
+  </data>
+  <data name="Txt_CameraID" xml:space="preserve">
+    <value>Camera ID</value>
+  </data>
+  <data name="Txt_RobotAuto" xml:space="preserve">
+    <value>Robot_Auto</value>
+  </data>
+  <data name="Txt_RobotError" xml:space="preserve">
+    <value>Robot_Error</value>
+  </data>
+  <data name="Txt_BarcodeScanner" xml:space="preserve">
+    <value>Barcode_Scanner</value>
+  </data>
+  <data name="Txt_SFCPDCA_2" xml:space="preserve">
+    <value>SFC_PDCA</value>
+  </data>
+  <data name="Txt_Point01" xml:space="preserve">
+    <value>Point {0} {1}</value>
+  </data>
+  <data name="Txt_0Tossed" xml:space="preserve">
+    <value>{0} tossed</value>
+  </data>
+  <data name="Txt_0Output" xml:space="preserve">
+    <value>{0} output</value>
+  </data>
+  <data name="Txt_QueryFailed" xml:space="preserve">
+    <value>Query failed:</value>
+  </data>
+  <data name="Txt_CouldNotSave" xml:space="preserve">
+    <value>Could not save:</value>
+  </data>
+  <data name="Txt_StateHistoryCouldNotBeRead" xml:space="preserve">
+    <value>State history could not be read:</value>
+  </data>
+  <data name="Txt_AlarmHistoryCouldNotBeRead" xml:space="preserve">
+    <value>Alarm history could not be read:</value>
+  </data>
+  <data name="Txt_ProductionRecordCouldNotBeRead" xml:space="preserve">
+    <value>Production record could not be read:</value>
+  </data>
+  <data name="Txt_SpecLimitsCouldNotBeRead" xml:space="preserve">
+    <value>Spec limits could not be read:</value>
+  </data>
+  <data name="Txt_ParameterValuesCouldNotBeRead" xml:space="preserve">
+    <value>Parameter values could not be read:</value>
+  </data>
+  <data name="Txt_TheSpecLimitsCouldNotBeSaved" xml:space="preserve">
+    <value>The spec limits could not be saved:</value>
+  </data>
+  <data name="Txt_TheSettingsCouldNotBeSaved" xml:space="preserve">
+    <value>The settings could not be saved:</value>
+  </data>
+  <data name="Txt_TheHardwareConfigurationCouldNotBeSaved" xml:space="preserve">
+    <value>The hardware configuration could not be saved:</value>
+  </data>
+  <data name="Txt_TheParametersCouldNotBeSaved" xml:space="preserve">
+    <value>The parameters could not be saved:</value>
+  </data>
+  <data name="Txt_TheAccessListCouldNotBeExported" xml:space="preserve">
+    <value>The access list could not be exported:</value>
+  </data>
+  <data name="Txt_TheHashKeysCouldNotBeExported" xml:space="preserve">
+    <value>The hash keys could not be exported:</value>
+  </data>
+  <data name="Txt_HomingCouldNotBeStarted" xml:space="preserve">
+    <value>Homing could not be started:</value>
+  </data>
+  <data name="Txt_CoordinateDataCouldNotBeRead" xml:space="preserve">
+    <value>Coordinate data could not be read:</value>
+  </data>
+  <data name="Txt_GlueWeighingSettingsChanged" xml:space="preserve">
+    <value>Glue weighing settings changed:</value>
+  </data>
+  <data name="Txt_GlueControlSettingsChanged" xml:space="preserve">
+    <value>Glue control settings changed:</value>
+  </data>
+  <data name="Txt_TheRequestCouldNotBeSent" xml:space="preserve">
+    <value>The request could not be sent:</value>
+  </data>
+  <data name="Txt_SensorDisabled" xml:space="preserve">
+    <value>Sensor disabled:</value>
+  </data>
+  <data name="Txt_SensorEnabled" xml:space="preserve">
+    <value>Sensor enabled:</value>
+  </data>
+  <data name="Txt_ModeChangedTo" xml:space="preserve">
+    <value>Mode changed to</value>
+  </data>
+  <data name="Txt_YouNeedToStartAgainForSelected" xml:space="preserve">
+    <value>You need to start again for selected mode:</value>
+  </data>
+  <data name="Txt_SWVersion_2" xml:space="preserve">
+    <value>SW version:</value>
+  </data>
+  <data name="Txt_MCVersion" xml:space="preserve">
+    <value>MC version:</value>
+  </data>
+  <data name="Txt_RemoteQualification_2" xml:space="preserve">
+    <value>Remote Qualification:</value>
+  </data>
+  <data name="Txt_ModeChangedTo0" xml:space="preserve">
+    <value>Mode changed to {0}</value>
+  </data>
+  <data name="Txt_LogInAtLevel2Or3" xml:space="preserve">
+    <value>Log in at Level 2 or 3 to edit the parameters and run a calibration.</value>
+  </data>
+  <data name="Txt_LogInAtLevel2Or3_2" xml:space="preserve">
+    <value>Log in at Level 2 or 3 to edit the parameters.</value>
+  </data>
+  <data name="Txt_LogInAtLevel2Or3_3" xml:space="preserve">
+    <value>Log in at Level 2 or 3 to run a calibration.</value>
+  </data>
+  <data name="Txt_WithinTheLimitsTheOffsetIsStored" xml:space="preserve">
+    <value>Within the limits, the offset is stored and applied to every later dispense.</value>
+  </data>
+  <data name="Txt_XYZAndTAreStored" xml:space="preserve">
+    <value>X, Y, Z and T are stored as the template every later needle is compared with.</value>
+  </data>
+  <data name="Txt_WithinTheLimitsTheDeviationIsStored" xml:space="preserve">
+    <value>Within the limits the deviation is stored as the needle offset; otherwise adjust or change the needle.</value>
+  </data>
+  <data name="Txt_NotMapped" xml:space="preserve">
+    <value>Not mapped</value>
+  </data>
+  <data name="AlarmType_Cylinder_Error" xml:space="preserve">
+    <value>Cylinder Error</value>
+  </data>
+  <data name="AlarmType_Scanning_Error" xml:space="preserve">
+    <value>Scanning Error</value>
+  </data>
+  <data name="AlarmType_Traceability_Error" xml:space="preserve">
+    <value>Traceability Error</value>
+  </data>
+  <data name="AlarmDesc_Station_1_Y_axis_move_timeout" xml:space="preserve">
+    <value>Station 1 Y axis move timeout</value>
+  </data>
+  <data name="AlarmDesc_Station_2_dispensing_Z_axis_not_in_position" xml:space="preserve">
+    <value>Station 2 dispensing Z axis not in position</value>
+  </data>
+  <data name="AlarmDesc_UC_loading_lifter_did_not_reach_the_down_position" xml:space="preserve">
+    <value>UC loading lifter did not reach the down position</value>
+  </data>
+  <data name="AlarmDesc_Transfer_conveyor_stopper_did_not_reach_the_up_position" xml:space="preserve">
+    <value>Transfer conveyor stopper did not reach the up position</value>
+  </data>
+  <data name="AlarmDesc_UC_in_place_sensor_not_detected_at_the_scanning_position" xml:space="preserve">
+    <value>UC in-place sensor not detected at the scanning position</value>
+  </data>
+  <data name="AlarmDesc_CCD1_pre_check_unable_to_find_pattern" xml:space="preserve">
+    <value>CCD1 pre-check unable to find pattern</value>
+  </data>
+  <data name="AlarmDesc_CCD2_post_check_unable_to_find_pattern" xml:space="preserve">
+    <value>CCD2 post-check unable to find pattern</value>
+  </data>
+  <data name="AlarmDesc_Transfer_conveyor_barcode_scan_failed" xml:space="preserve">
+    <value>Transfer conveyor barcode scan failed</value>
+  </data>
+  <data name="AlarmDesc_Automatic_glue_weight_out_of_spec" xml:space="preserve">
+    <value>Automatic glue weight out of spec</value>
+  </data>
+  <data name="AlarmDesc_Front_door_opened_during_auto_run" xml:space="preserve">
+    <value>Front door opened during auto run</value>
+  </data>
+  <data name="AlarmDesc_No_answer_from_MES_for_the_carrier_SN" xml:space="preserve">
+    <value>No answer from MES for the carrier SN</value>
+  </data>
+  <data name="Txt_SELECTCHANNEL" xml:space="preserve">
+    <value>SELECT CHANNEL</value>
+  </data>
+  <data name="Txt_AxisJog" xml:space="preserve">
+    <value>Axis Jog</value>
+  </data>
+  <data name="Txt_LINEAR" xml:space="preserve">
+    <value>LINEAR</value>
+  </data>
+  <data name="Txt_ROTATIONAL" xml:space="preserve">
+    <value>ROTATIONAL</value>
+  </data>
+  <data name="Txt_JOGSPEED" xml:space="preserve">
+    <value>JOG SPEED</value>
+  </data>
+  <data name="Txt_LivePosition" xml:space="preserve">
+    <value>Live Position</value>
+  </data>
+  <data name="Txt_ActiveAlarms" xml:space="preserve">
+    <value>Active Alarms</value>
+  </data>
+  <data name="Txt_NoActiveAlarms" xml:space="preserve">
+    <value>No active alarms.</value>
+  </data>
+  <data name="Txt_Log" xml:space="preserve">
+    <value>Log</value>
+  </data>
+  <data name="Txt_EnablePictureQuantityCheck" xml:space="preserve">
+    <value>Enable Picture Quantity Check</value>
+  </data>
+  <data name="Txt_EarlyWarningTest" xml:space="preserve">
+    <value>Early warning for common defect factors - test</value>
+  </data>
+  <data name="Txt_TerminalNameLabel" xml:space="preserve">
+    <value>Terminal Name:</value>
+  </data>
+  <data name="Txt_SerialNumberLabel" xml:space="preserve">
+    <value>Serial Number:</value>
+  </data>
+  <data name="Txt_ResetFields" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="Txt_RunTest" xml:space="preserve">
+    <value>Test</value>
+  </data>
+  <data name="Txt_RequestBody" xml:space="preserve">
+    <value>Request body</value>
+  </data>
+  <data name="Txt_ResponseBody" xml:space="preserve">
+    <value>Response body</value>
+  </data>
+  <data name="Txt_DisableEarlyWarning" xml:space="preserve">
+    <value>!!! Disable the early warning for common defect factors</value>
+  </data>
+  <data name="Txt_BackToFixtures" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="Txt_Maintenance" xml:space="preserve">
+    <value>Maintenance</value>
+  </data>
+  <data name="Txt_AddNewItem" xml:space="preserve">
+    <value>Add New Item</value>
+  </data>
+  <data name="Txt_Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="Txt_MaintAdd" xml:space="preserve">
+    <value>Maint. / Add</value>
+  </data>
+  <data name="Txt_Active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="Txt_LineType" xml:space="preserve">
+    <value>Line type</value>
+  </data>
+  <data name="Txt_HeadId" xml:space="preserve">
+    <value>Head ID</value>
+  </data>
+  <data name="Txt_MaintItem" xml:space="preserve">
+    <value>Maint. Item</value>
+  </data>
+  <data name="Txt_MaintPeriod" xml:space="preserve">
+    <value>Maint. Period (h)</value>
+  </data>
+  <data name="Txt_MaintCountdown" xml:space="preserve">
+    <value>Maint. Countdown (h)</value>
+  </data>
+  <data name="Txt_AlarmThreshold" xml:space="preserve">
+    <value>Alarm-triggering Threshold (h)</value>
+  </data>
+  <data name="Txt_LatestMaintRecord" xml:space="preserve">
+    <value>Latest maintenance record</value>
+  </data>
+  <data name="Txt_ScheduledMaintTime" xml:space="preserve">
+    <value>Scheduled Maint. Time</value>
+  </data>
+  <data name="Txt_HealthStatus" xml:space="preserve">
+    <value>Health Status</value>
+  </data>
+</root>

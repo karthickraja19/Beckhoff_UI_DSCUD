@@ -10,16 +10,6 @@
     <Grid>
         <TabControl ItemsSource="{Binding Tabs}" SelectedItem="{Binding SelectedTab}">
             <TabControl.Resources>
-                <DataTemplate DataType="{x:Type settingsVm:SettingsTabViewModel}">
-                    <local:SettingsFormView/>
-                </DataTemplate>
-                <!-- Calibration sub-tabs have dedicated layouts. -->
-                <DataTemplate DataType="{x:Type settingsVm:CalibrationCameraViewModel}">
-                    <local:CalibrationCameraView/>
-                </DataTemplate>
-                <DataTemplate DataType="{x:Type settingsVm:CalibrationRobotViewModel}">
-                    <local:CalibrationRobotView/>
-                </DataTemplate>
                 <!-- SFC & PDCA AE-limit grids. -->
                 <DataTemplate DataType="{x:Type settingsVm:AeLimitsViewModel}">
                     <local:AeLimitsView/>

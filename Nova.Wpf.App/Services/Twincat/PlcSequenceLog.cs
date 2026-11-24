@@ -10,12 +10,12 @@ using Teal.Library.Log;
 namespace Nova.Wpf.App.Services.Twincat
 {
     /// <summary>
-    /// The PLC sequences' logs, in the running log. Each sequence object in the PLC
-    /// (LoadingConveyor, UnloadingConveyor, ...) writes its last log entry into its own
-    /// <see cref="ST_Sequence"/>; App.config's PlcSequenceLogSymbols lists where they are.
+    /// The PLC sequences' logs, in the running log. Each module's sequence writes its last
+    /// log entry into its own <see cref="ST_SeqLog"/>; the symbol map (SequenceLog.Entries)
+    /// lists where they are.
     /// Each is an ADS notification through the shared <see cref="PlcSubscriptions"/>, watched
-    /// for the life of the HMI, and every new entry goes through <see cref="Logger.WriteLog"/>:
-    /// into the running-log panel, and into the SequenceLog files, one folder per station.
+    /// for the life of the HMI, and every new entry goes through <see cref="Logger.WriteLog"/>
+    /// (LogType.RunningLog): into the running-log panel and the RunningLog CSV files.
     /// </summary>
     /// <remarks>
     /// The PLC keeps only the last entry, so the HMI sees an entry only if it stays at least
@@ -36,10 +36,10 @@ namespace Nova.Wpf.App.Services.Twincat
         private readonly object _sync = new object();
 
         /// <summary>The last entry seen for each symbol. Kept while the PLC is away, so a reconnect does not log it again.</summary>
-        private readonly Dictionary<string, ST_Sequence> _last = new Dictionary<string, ST_Sequence>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, ST_SeqLog> _last = new Dictionary<string, ST_SeqLog>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>New entries, written in order off the ADS thread: writing a log file is slow.</summary>
-        private readonly ConcurrentQueue<ST_Sequence> _pending = new ConcurrentQueue<ST_Sequence>();
+        private readonly ConcurrentQueue<ST_SeqLog> _pending = new ConcurrentQueue<ST_SeqLog>();
 
         private int _writing;   // 1 while a worker is writing the pending entries
         private bool _started;
@@ -67,7 +67,7 @@ namespace Nova.Wpf.App.Services.Twincat
             _subscriptions.ValueChanged += OnValueChanged;
             _subscriptions.LiveChanged += OnLiveChanged;
             foreach (string symbol in _symbols)
-                _subscriptions.Watch(symbol, typeof(ST_Sequence), CheckEvery);
+                _subscriptions.Watch(symbol, typeof(ST_SeqLog), CheckEvery);
 
             ReportAll();
         }
@@ -117,13 +117,13 @@ namespace Nova.Wpf.App.Services.Twincat
 
         private void Report(string symbol)
         {
-            ST_Sequence entry;
+            ST_SeqLog entry;
             if (!_subscriptions.TryGet(symbol, out entry))
                 return;
 
             lock (_sync)
             {
-                ST_Sequence last;
+                ST_SeqLog last;
                 if (!_started || (_last.TryGetValue(symbol, out last) && last.SameAs(entry)))
                     return;
 
@@ -145,7 +145,7 @@ namespace Nova.Wpf.App.Services.Twincat
         {
             while (true)
             {
-                ST_Sequence entry;
+                ST_SeqLog entry;
                 while (_pending.TryDequeue(out entry))
                     Write(entry);
 
@@ -158,11 +158,11 @@ namespace Nova.Wpf.App.Services.Twincat
         }
 
         /// <summary>
-        /// One entry, as "[time] | Running | station | sequence | Step n - message" in the
-        /// running log. In the SequenceLog file the function and line columns hold the
-        /// sequence name and step number.
+        /// One entry, as "[time] | RunningLog | station | sequence | Step n - message" in the
+        /// running log. In the CSV file the function and line columns hold the sequence name
+        /// and step number.
         /// </summary>
-        private static void Write(ST_Sequence entry)
+        private static void Write(ST_SeqLog entry)
         {
             try
             {
@@ -170,10 +170,10 @@ namespace Nova.Wpf.App.Services.Twincat
                 string sequence = (entry.SequenceName ?? "").Trim();
                 string text = "Step " + entry.StepNumber + " - " + (entry.Message ?? "").Trim();
 
-                // The library names the log file's logger after this "file"; NLog.config sends
-                // loggers named Sequence_* to the SequenceLog files.
-                Logger.WriteLog(LogType.Running, station, sequence, text, "", DateTime.Now,
-                    sequence, entry.StepNumber, "Sequence_" + FileSafe(station));
+                // The library sends a RunningLog entry to NLog's RunningLogger (NLog.config); the
+                // function column holds the sequence name, the "file" column the station.
+                Logger.WriteLog(LogType.RunningLog, station, sequence, text, "", DateTime.Now,
+                    sequence, "Sequence_" + FileSafe(station), entry.StepNumber);
             }
             catch (Exception ex)
             {

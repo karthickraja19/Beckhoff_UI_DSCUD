@@ -20,6 +20,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Nova.Abstractions\Nova.Abstractions.csproj" />
     <ProjectReference Include="..\Nova.Alarm\Nova.Alarm.csproj" />
+    <!-- Dual language: {loc:Tr} in the dialogs and LocalizationSource for code-behind text. -->
+    <ProjectReference Include="..\Nova.Wpf.UI\Nova.Wpf.UI.csproj" />
   </ItemGroup>
   <ItemGroup>
     <!-- Only for Logger.WriteLog, so HIVE errors land in the same log files as the rest of the HMI. -->

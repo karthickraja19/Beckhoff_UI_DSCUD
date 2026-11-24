@@ -163,16 +163,29 @@ namespace Nova.Core.Services
 
         public Task<MesResult> UploadToMesAsync(string approverId)
         {
+            return SendKeysAsync(SaveCommand, approverId);
+        }
+
+        public Task<MesResult> CheckWithMesAsync()
+        {
+            return SendKeysAsync(CheckCommand, string.Empty);
+        }
+
+        /// <summary>CHECK_AUDIO_INFO: MES compares this station's keys with its database (S3.6).</summary>
+        public const string CheckCommand = "CHECK_AUDIO_INFO";
+
+        private Task<MesResult> SendKeysAsync(string command, string approverId)
+        {
             List<HashKeyReading> keys = ReadAll().Where(r => r.Value != null).ToList();
             if (keys.Count == 0)
-                return Task.FromResult(MesResult.NotReached("No hash key could be read, so there is nothing to upload."));
+                return Task.FromResult(MesResult.NotReached("No hash key could be read, so there is nothing to send to MES."));
 
             // S3.6: results is key=NAME$value=HASH, comma separated with no comma after the last.
             string results = string.Join(",", keys.Select(k => "key=" + k.Key + "$value=" + k.Value));
             string testData = "site=" + Safe(_site) + "$project=" + Safe(_project) + "$approver_id=" + (approverId ?? string.Empty);
 
             // serial_Number may not be empty; S3.6 says to send the text "SN".
-            return _mes.GetCmdResultAsync(SaveCommand, "SN", testData, results);
+            return _mes.GetCmdResultAsync(command, "SN", testData, results);
         }
 
         private HashKeyReading Read(string key, string path)

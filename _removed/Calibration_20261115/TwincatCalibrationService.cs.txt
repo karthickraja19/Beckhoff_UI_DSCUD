@@ -1,0 +1,904 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Nova.Abstractions.Services;
+using Nova.Alarm;
+using Nova.Wpf.App.Services.Twincat.Mapping;
+using Teal.Library.Log;
+
+namespace Nova.Wpf.App.Services.Twincat
+{
+    /// <summary>
+    /// <see cref="ICalibrationService"/> on the PLC's calibration programs. The PLC runs every
+    /// calibration; the HMI writes the routine's settings, presses its buttons and shows what
+    /// the PLC reports. Where each routine's variables are comes from the symbol map
+    /// (<c>Data\PlcSymbols.json</c>, section Calibration).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Today the PLC has one routine: the 9 point vision calibration, one program per station
+    /// (NinePointCalibration_StationN) with <c>settings</c>, <c>buttons</c>, <c>points</c> and
+    /// <c>status</c>. A routine with no entry in the map reports itself as not available -
+    /// nothing is sent and nothing is shown in its place.
+    /// </para>
+    /// <para>
+    /// The buttons are request / acknowledge pairs, not edges: the HMI sets the request TRUE,
+    /// waits for the PLC's acknowledge, then clears the request. A dropped connection can
+    /// therefore never fire a command twice. The PLC checks every start condition itself
+    /// (first point taught, AUTO_RUNNING, run mode CALIBRATION, vision connected, axes
+    /// referenced) and reports the one that is not met in its status - the HMI does not
+    /// second-guess them.
+    /// </para>
+    /// <para>
+    /// The writes are made one at a time, in order, on a worker thread. The status and the
+    /// points are ADS notifications, followed only while the Calibration tab is on screen.
+    /// The parameters are the HMI's: saved per station and routine in
+    /// Data\Settings\CalibrationParameters.json.
+    /// </para>
+    /// </remarks>
+    public sealed class TwincatCalibrationService : ICalibrationService
+    {
+        /// <summary>The routine key of the 9 point calibration on the Calibration tab.</summary>
+        public const string NinePointKey = "NinePoint";
+
+        /// <summary>How long the PLC gets to acknowledge a button.</summary>
+        private static readonly TimeSpan AcknowledgeTimeout = TimeSpan.FromSeconds(3);
+
+        private readonly TwincatPlcConnection _plc;
+        private readonly PlcSubscriptions _subscriptions;
+        private readonly NinePointSymbols _ninePoint;
+        private readonly string _parameterFile;
+        private readonly string _historyFile;
+
+        /// <summary>Every routine but the 9 point one: its PLC block per station (symbol map: Calibration.Routines).</summary>
+        private readonly Dictionary<string, RoutineBlock> _blocks = new Dictionary<string, RoutineBlock>(StringComparer.OrdinalIgnoreCase);
+        private readonly object _sync = new object();
+        private readonly object _fileLock = new object();
+
+        private Task _writes = Task.CompletedTask;   // the PLC writes waiting to be made, in order
+        private int _station = 1;
+        private string _routineKey = NinePointKey;
+        private int _routineNumber = 1;
+        private int _followers;
+        private IDisposable _following;
+
+        public event EventHandler StatusChanged;
+
+        public TwincatCalibrationService(
+            TwincatPlcConnection plc, PlcSubscriptions subscriptions, CalibrationSymbols symbols, string dataDirectory)
+        {
+            _plc = plc ?? throw new ArgumentNullException(nameof(plc));
+            _subscriptions = subscriptions ?? throw new ArgumentNullException(nameof(subscriptions));
+            _ninePoint = (symbols ?? new CalibrationSymbols()).NinePoint ?? new NinePointSymbols();
+            _parameterFile = Path.Combine(dataDirectory ?? string.Empty, "Settings", "CalibrationParameters.json");
+            _historyFile = Path.Combine(dataDirectory ?? string.Empty, "Settings", "CalibrationHistory.json");
+
+            foreach (var routine in (symbols ?? new CalibrationSymbols()).Routines ?? new Dictionary<string, DeviceBlockSymbols>())
+            {
+                if (routine.Value == null || !routine.Value.MappedInstances.Any())
+                    continue;
+
+                var block = new RoutineBlock(routine.Value, new TwincatPlcDeviceService(plc, subscriptions, routine.Value, "calibration " + routine.Key));
+                block.Device.Changed += (sender, e) => RaiseStatusChanged();
+                _blocks[routine.Key] = block;
+            }
+
+            _subscriptions.ValueChanged += OnValueChanged;
+            _subscriptions.LiveChanged += (sender, e) => RaiseStatusChanged();
+        }
+
+        // ==================================================================
+        // Which routine, on which station
+        // ==================================================================
+
+        public void Select(int station, string routineKey, int routineNumber)
+        {
+            lock (_sync)
+            {
+                if (_station == station && string.Equals(_routineKey, routineKey, StringComparison.OrdinalIgnoreCase))
+                    return;
+
+                _station = station;
+                _routineKey = routineKey ?? string.Empty;
+                _routineNumber = routineNumber;
+
+                // Followed already: let the old station go and follow the new one.
+                if (_followers > 0)
+                {
+                    _following?.Dispose();
+                    _following = Follow();
+                }
+            }
+
+            RaiseStatusChanged();
+        }
+
+        /// <summary>The selected station's PLC interface, or null when the selection has none.</summary>
+        private NinePointStationSymbols Target()
+        {
+            int station;
+            string routine;
+            lock (_sync)
+            {
+                station = _station;
+                routine = _routineKey;
+            }
+
+            if (!string.Equals(routine, NinePointKey, StringComparison.OrdinalIgnoreCase))
+                return null;
+
+            NinePointStationSymbols target = _ninePoint.Station(station);
+            return target != null && target.IsComplete ? target : null;
+        }
+
+        /// <summary>The selected routine's own PLC block, or null: the 9 point routine has its own interface.</summary>
+        private RoutineBlock Block(out int device)
+        {
+            string routine;
+            lock (_sync)
+            {
+                routine = _routineKey;
+                device = _station - 1;
+            }
+
+            RoutineBlock block;
+            return _blocks.TryGetValue(routine ?? string.Empty, out block) && device >= 0 && device < block.Device.Devices.Count
+                ? block
+                : null;
+        }
+
+        public bool IsAvailable
+        {
+            get
+            {
+                int device;
+                return Target() != null || Block(out device) != null;
+            }
+        }
+
+        public string UnavailableReason
+        {
+            get
+            {
+                if (IsAvailable)
+                    return string.Empty;
+
+                string routine;
+                int station;
+                lock (_sync)
+                {
+                    routine = _routineKey;
+                    station = _station;
+                }
+
+                return string.Equals(routine, NinePointKey, StringComparison.OrdinalIgnoreCase)
+                    ? "Station " + station + " has no 9 point calibration mapped (Calibration.NinePoint.Stations in "
+                        + PlcSymbolMap.FileName + ")."
+                    : "The PLC has no program for this calibration on station " + station + " yet (Calibration.Routines in "
+                        + PlcSymbolMap.FileName + "), so it cannot be run from here.";
+            }
+        }
+
+        public bool SupportsTeach => Supports("Teach");
+
+        /// <summary>The 9 point program has no pause of its own (the machine's PAUSE holds it); another routine has one when its block does.</summary>
+        public bool SupportsPause
+        {
+            get
+            {
+                int device;
+                RoutineBlock block = Block(out device);
+                return block != null && block.Device.Has("Pause");
+            }
+        }
+
+        public bool SupportsClear => Supports("Clear");
+
+        private bool Supports(string button)
+        {
+            int device;
+            RoutineBlock block = Block(out device);
+            if (block != null)
+                return block.Device.Has(button);
+
+            return Target() != null && Button(button) != null;
+        }
+
+        private RequestAckSymbols Button(string name)
+        {
+            RequestAckSymbols button;
+            return _ninePoint.ButtonMembers != null
+                && _ninePoint.ButtonMembers.TryGetValue(name, out button)
+                && button != null
+                && PlcSymbolMap.Has(button.Request)
+                && PlcSymbolMap.Has(button.Acknowledge)
+                ? button
+                : null;
+        }
+
+        // ==================================================================
+        // Status
+        // ==================================================================
+
+        public CalibrationStatus Status
+        {
+            get
+            {
+                int device;
+                RoutineBlock block = Block(out device);
+                if (block != null)
+                    return BlockStatus(block, device);
+
+                NinePointStationSymbols target = Target();
+                if (target == null)
+                    return new CalibrationStatus { NotLiveReason = UnavailableReason };
+
+                if (!_subscriptions.IsLive)
+                    return new CalibrationStatus { NotLiveReason = _subscriptions.NotLiveReason ?? "PLC not connected" };
+
+                string statusSymbol = target.Status.Trim();
+                if (_subscriptions.IsMissing(statusSymbol))
+                {
+                    return new CalibrationStatus
+                    {
+                        NotLiveReason = statusSymbol + " is not in the PLC, or its size differs from ST_NinePointStatus.",
+                    };
+                }
+
+                ST_NinePointStatus raw;
+                if (!_subscriptions.TryGet(statusSymbol, out raw))
+                    return new CalibrationStatus { NotLiveReason = "Waiting for the PLC's calibration status" };
+
+                int station;
+                int routine;
+                lock (_sync)
+                {
+                    station = _station;
+                    routine = _routineNumber;
+                }
+
+                CalibrationState state = raw.bBusy ? CalibrationState.Running
+                    : raw.bFailed ? CalibrationState.Failed
+                    : raw.bDone ? CalibrationState.Done
+                    : CalibrationState.Idle;
+
+                return new CalibrationStatus
+                {
+                    IsLive = true,
+                    State = state,
+                    Station = station,
+                    Routine = routine,
+                    Step = raw.nStepNo,
+                    StepText = raw.bFailed && !string.IsNullOrEmpty(raw.sFailReason)
+                        ? raw.sFailReason
+                        : raw.sState ?? string.Empty,
+                    ResultOk = raw.bDone,
+                    IsTaught = raw.bFirstPointTaught,
+                    TaughtPoint = raw.bFirstPointTaught ? ReadTaughtPoint(target) : new KeyValuePair<string, double>[0],
+                    Results = ReadPoints(target.Points.Trim(), raw),
+                };
+            }
+        }
+
+        /// <summary>The taught first point as the PLC holds it (Calibration.NinePoint.TaughtMembers).</summary>
+        private IReadOnlyList<KeyValuePair<string, double>> ReadTaughtPoint(NinePointStationSymbols target)
+        {
+            var point = new List<KeyValuePair<string, double>>();
+            if (_ninePoint.TaughtMembers == null)
+                return point;
+
+            foreach (KeyValuePair<string, string> member in _ninePoint.TaughtMembers)
+            {
+                double value;
+                if (PlcSymbolMap.Has(member.Value)
+                    && _subscriptions.TryGet(target.Settings.Trim() + "." + member.Value.Trim(), out value))
+                {
+                    point.Add(new KeyValuePair<string, double>(member.Key, value));
+                }
+            }
+
+            return point;
+        }
+
+        /// <summary>
+        /// The nine points as the routine's result table, row by row: commanded X, commanded
+        /// Y, actual X, actual Y, triggered, vision OK. A value the PLC has not produced yet
+        /// is NaN, shown as "-".
+        /// </summary>
+        private IReadOnlyList<double> ReadPoints(string pointsSymbol, ST_NinePointStatus status)
+        {
+            ST_NinePointPoints raw;
+            if (!_subscriptions.TryGet(pointsSymbol, out raw) || raw.Points == null)
+                return new double[0];
+
+            var values = new List<double>(raw.Points.Length * 6);
+            for (int i = 0; i < raw.Points.Length; i++)
+            {
+                ST_NinePointPoint point = raw.Points[i];
+                // A point is reached once the sequence is on it, or it was triggered in the last run.
+                bool reached = point.bTriggerSent || (status.bBusy && i + 1 <= status.nCurrentPoint);
+                values.Add(reached ? point.rCommandedX : double.NaN);
+                values.Add(reached ? point.rCommandedY : double.NaN);
+                values.Add(point.bTriggerSent ? point.rActualX : double.NaN);
+                values.Add(point.bTriggerSent ? point.rActualY : double.NaN);
+                values.Add(reached ? (point.bTriggerSent ? 1 : 0) : double.NaN);
+                values.Add(point.bTriggerSent ? (point.bVisionOk ? 1 : 0) : double.NaN);
+            }
+
+            return values;
+        }
+
+        /// <summary>The status of a routine that is a generic PLC block, from its members by key.</summary>
+        private CalibrationStatus BlockStatus(RoutineBlock block, int device)
+        {
+            IPlcDeviceService plc = block.Device;
+            if (!plc.IsLive)
+                return new CalibrationStatus { NotLiveReason = plc.NotLiveReason };
+
+            int station;
+            int routine;
+            lock (_sync)
+            {
+                station = _station;
+                routine = _routineNumber;
+            }
+
+            bool busy = Flag(plc, device, "Busy");
+            bool paused = Flag(plc, device, "Paused");
+            bool waiting = Flag(plc, device, "WaitingOperator");
+            bool failed = Flag(plc, device, "Failed");
+            bool done = Flag(plc, device, "Done");
+
+            CalibrationState state = waiting ? CalibrationState.WaitingOperator
+                : paused ? CalibrationState.Paused
+                : busy ? CalibrationState.Running
+                : failed ? CalibrationState.Failed
+                : done ? CalibrationState.Done
+                : CalibrationState.Idle;
+
+            double step;
+            plc.TryGetNumber(device, "StepNo", out step);
+            string text;
+            string reason;
+            string prompt;
+            plc.TryGetText(device, "StateText", out text);
+            plc.TryGetText(device, "FailReason", out reason);
+            plc.TryGetText(device, "Prompt", out prompt);
+
+            // The results are the members R.1, R.2, ... as far as the map names them.
+            var results = new List<double>();
+            for (int i = 1; plc.Has("R." + i); i++)
+            {
+                double value;
+                results.Add(plc.TryGetNumber(device, "R." + i, out value) ? value : double.NaN);
+            }
+
+            return new CalibrationStatus
+            {
+                IsLive = true,
+                State = state,
+                Station = station,
+                Routine = routine,
+                Step = (int)step,
+                StepText = failed && !string.IsNullOrWhiteSpace(reason) ? reason : text ?? string.Empty,
+                Prompt = prompt ?? string.Empty,
+                // A routine that reports no verdict of its own passed when it finished.
+                ResultOk = plc.Has("ResultOk") ? Flag(plc, device, "ResultOk") : done,
+                IsTaught = Flag(plc, device, "Taught"),
+                Results = results,
+            };
+        }
+
+        private static bool Flag(IPlcDeviceService plc, int device, string key)
+        {
+            bool value;
+            return plc.TryGetFlag(device, key, out value) && value;
+        }
+
+        public IDisposable FollowStatus()
+        {
+            lock (_sync)
+            {
+                if (_followers++ == 0)
+                    _following = Follow();
+            }
+
+            RaiseStatusChanged();
+            return new Following(this);
+        }
+
+        /// <summary>Called under <see cref="_sync"/>.</summary>
+        private IDisposable Follow()
+        {
+            int device;
+            RoutineBlock block = Block(out device);
+            if (block != null)
+                return block.Device.Follow(device);
+
+            NinePointStationSymbols target = Target();
+            if (target == null)
+                return null;
+
+            var followed = new List<KeyValuePair<string, Type>>
+            {
+                new KeyValuePair<string, Type>(target.Status.Trim(), typeof(ST_NinePointStatus)),
+                new KeyValuePair<string, Type>(target.Points.Trim(), typeof(ST_NinePointPoints)),
+            };
+
+            if (_ninePoint.TaughtMembers != null)
+            {
+                foreach (string member in _ninePoint.TaughtMembers.Values)
+                {
+                    if (PlcSymbolMap.Has(member))
+                        followed.Add(new KeyValuePair<string, Type>(target.Settings.Trim() + "." + member.Trim(), typeof(double)));
+                }
+            }
+
+            return _subscriptions.Follow(followed);
+        }
+
+        private void Release()
+        {
+            lock (_sync)
+            {
+                if (--_followers > 0)
+                    return;
+
+                _followers = 0;
+                _following?.Dispose();
+                _following = null;
+            }
+        }
+
+        // ==================================================================
+        // Parameters: the HMI's copy, per station and routine
+        // ==================================================================
+
+        public CalibrationParameterSet LoadParameters(int station, string routineKey)
+        {
+            Dictionary<string, Dictionary<string, CalibrationParameterSet>> all = ReadFile();
+            Dictionary<string, CalibrationParameterSet> routines;
+            CalibrationParameterSet saved;
+            if (all.TryGetValue(StationKey(station), out routines)
+                && routines != null
+                && routines.TryGetValue(routineKey ?? string.Empty, out saved)
+                && saved != null)
+            {
+                return saved;
+            }
+
+            return null;
+        }
+
+        public void SaveParameters(int station, string routineKey, IDictionary<string, double> values, string savedBy)
+        {
+            lock (_fileLock)
+            {
+                Dictionary<string, Dictionary<string, CalibrationParameterSet>> all = ReadFile();
+                Dictionary<string, CalibrationParameterSet> routines;
+                if (!all.TryGetValue(StationKey(station), out routines) || routines == null)
+                    all[StationKey(station)] = routines = new Dictionary<string, CalibrationParameterSet>(StringComparer.OrdinalIgnoreCase);
+
+                routines[routineKey] = new CalibrationParameterSet
+                {
+                    Values = new Dictionary<string, double>(values ?? new Dictionary<string, double>()),
+                    SavedBy = savedBy ?? string.Empty,
+                    SavedAt = DateTime.Now,
+                };
+
+                Directory.CreateDirectory(Path.GetDirectoryName(_parameterFile));
+                string temp = _parameterFile + ".tmp";
+                File.WriteAllText(temp, JsonConvert.SerializeObject(all, Formatting.Indented));
+                if (File.Exists(_parameterFile))
+                    File.Replace(temp, _parameterFile, null);
+                else
+                    File.Move(temp, _parameterFile);
+            }
+        }
+
+        private Dictionary<string, Dictionary<string, CalibrationParameterSet>> ReadFile()
+        {
+            lock (_fileLock)
+            {
+                try
+                {
+                    if (File.Exists(_parameterFile))
+                    {
+                        var read = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, CalibrationParameterSet>>>(
+                            File.ReadAllText(_parameterFile));
+                        if (read != null)
+                        {
+                            return new Dictionary<string, Dictionary<string, CalibrationParameterSet>>(read, StringComparer.OrdinalIgnoreCase);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.WriteLog(LogType.Error, "Calibration", "Parameters",
+                        "Could not read " + _parameterFile + ": " + ex.Message, ex.ToString());
+                }
+
+                return new Dictionary<string, Dictionary<string, CalibrationParameterSet>>(StringComparer.OrdinalIgnoreCase);
+            }
+        }
+
+        private static string StationKey(int station)
+        {
+            return "Station" + station;
+        }
+
+        // ==================================================================
+        // Commands
+        // ==================================================================
+
+        /// <summary>Writes each parameter to its member of the settings struct, then requests Start.</summary>
+        public Task StartAsync(IReadOnlyDictionary<string, double> parameters)
+        {
+            int device;
+            RoutineBlock block = Block(out device);
+            if (block != null)
+            {
+                // Each parameter goes to the member "P.<key>"; one the block does not have is refused.
+                var writes = new Dictionary<string, double>();
+                foreach (var parameter in parameters ?? new Dictionary<string, double>())
+                {
+                    if (!block.Device.Has("P." + parameter.Key))
+                    {
+                        return Failed(new InvalidOperationException("parameter " + parameter.Key + " has no PLC variable "
+                            + "(P." + parameter.Key + " under Calibration.Routines in " + PlcSymbolMap.FileName + ")"));
+                    }
+
+                    writes["P." + parameter.Key] = parameter.Value;
+                }
+
+                return BlockCommand(block, device, "Start", writes);
+            }
+
+            NinePointStationSymbols target = RequireTarget();
+            var values = new Dictionary<string, double>(
+                (parameters ?? new Dictionary<string, double>()).ToDictionary(p => p.Key, p => p.Value),
+                StringComparer.OrdinalIgnoreCase);
+
+            return QueueWrite(() =>
+            {
+                foreach (var value in values)
+                {
+                    ParameterSymbol member;
+                    if (_ninePoint.SettingMembers == null
+                        || !_ninePoint.SettingMembers.TryGetValue(value.Key, out member)
+                        || member == null
+                        || !PlcSymbolMap.Has(member.Symbol))
+                    {
+                        throw new InvalidOperationException("parameter " + value.Key + " has no PLC variable "
+                            + "(Calibration.NinePoint.SettingMembers in " + PlcSymbolMap.FileName + ")");
+                    }
+
+                    Write(target.Settings.Trim() + "." + member.Symbol.Trim(), ToPlc(value.Value, member.Type, value.Key));
+                }
+
+                Request(target, "Start");
+            });
+        }
+
+        public Task TeachAsync()
+        {
+            int device;
+            RoutineBlock block = Block(out device);
+            if (block != null)
+                return BlockCommand(block, device, "Teach", null);
+
+            NinePointStationSymbols target = RequireTarget();
+            return QueueWrite(() => Request(target, "Teach"));
+        }
+
+        public Task ClearAsync()
+        {
+            int device;
+            RoutineBlock block = Block(out device);
+            if (block != null)
+                return BlockCommand(block, device, "Clear", null);
+
+            NinePointStationSymbols target = RequireTarget();
+            return QueueWrite(() => Request(target, "Clear"));
+        }
+
+        public Task StopAsync()
+        {
+            int device;
+            RoutineBlock block = Block(out device);
+            if (block != null)
+                return BlockCommand(block, device, "Stop", null);
+
+            NinePointStationSymbols target = RequireTarget();
+            return QueueWrite(() => Request(target, "Abort"));
+        }
+
+        public Task ResumeAsync()
+        {
+            int device;
+            RoutineBlock block = Block(out device);
+            if (block != null)
+                return BlockCommand(block, device, block.Device.Has("Resume") ? "Resume" : "Start", null);
+
+            return NotSupported("The PLC's calibration has no pause of its own; press Start on the indicator bar to continue.");
+        }
+
+        public Task PauseAsync()
+        {
+            int device;
+            RoutineBlock block = Block(out device);
+            if (block != null)
+                return BlockCommand(block, device, "Pause", null);
+
+            return NotSupported("The PLC's calibration has no pause of its own; use Pause on the indicator bar.");
+        }
+
+        public Task AnswerPromptAsync(bool accepted)
+        {
+            int device;
+            RoutineBlock block = Block(out device);
+            if (block != null)
+                return BlockCommand(block, device, accepted ? "ConfirmOk" : "ConfirmNg", null);
+
+            return NotSupported("This PLC routine asks for no operator check.");
+        }
+
+        private static Task NotSupported(string why)
+        {
+            return Failed(new NotSupportedException(why));
+        }
+
+        private static Task Failed(Exception why)
+        {
+            var failed = new TaskCompletionSource<bool>();
+            failed.SetException(why);
+            return failed.Task;
+        }
+
+        /// <summary>Writes the values (when any), then presses the button of a routine's PLC block.</summary>
+        private static async Task BlockCommand(RoutineBlock block, int device, string button, IReadOnlyDictionary<string, double> values)
+        {
+            if (!block.Device.Has(button))
+            {
+                throw new NotSupportedException("the PLC block of this routine has no " + button + " ("
+                    + button + " under Calibration.Routines in " + PlcSymbolMap.FileName + ")");
+            }
+
+            if (values != null && values.Count > 0)
+                await block.Device.WriteAsync(device, values).ConfigureAwait(false);
+
+            await block.Device.PulseAsync(device, button).ConfigureAwait(false);
+        }
+
+        // ==================================================================
+        // History: when each routine last ran on each station, and how it ended
+        // ==================================================================
+
+        /// <summary>How many runs are kept for one routine on one station.</summary>
+        private const int HistoryPerRoutine = 30;
+
+        public IReadOnlyList<CalibrationRunRecord> GetHistory(int station, string routineKey)
+        {
+            lock (_fileLock)
+            {
+                return ReadHistory()
+                    .Where(r => r.Station == station && string.Equals(r.RoutineKey, routineKey, StringComparison.OrdinalIgnoreCase))
+                    .OrderByDescending(r => r.Time)
+                    .ToList();
+            }
+        }
+
+        public void RecordRun(CalibrationRunRecord run)
+        {
+            if (run == null)
+                return;
+
+            lock (_fileLock)
+            {
+                try
+                {
+                    List<CalibrationRunRecord> all = ReadHistory();
+                    all.Add(run);
+
+                    // The newest runs of each routine on each station are kept.
+                    all = all.GroupBy(r => r.Station + "/" + (r.RoutineKey ?? string.Empty).ToUpperInvariant())
+                        .SelectMany(g => g.OrderByDescending(r => r.Time).Take(HistoryPerRoutine))
+                        .OrderBy(r => r.Time)
+                        .ToList();
+
+                    Directory.CreateDirectory(Path.GetDirectoryName(_historyFile));
+                    string temp = _historyFile + ".tmp";
+                    File.WriteAllText(temp, JsonConvert.SerializeObject(all, Formatting.Indented));
+                    if (File.Exists(_historyFile))
+                        File.Replace(temp, _historyFile, null);
+                    else
+                        File.Move(temp, _historyFile);
+                }
+                catch (Exception ex)
+                {
+                    Logger.WriteLog(LogType.Error, "Calibration", "History",
+                        "The calibration run could not be saved to " + _historyFile + ": " + ex.Message, ex.ToString());
+                }
+            }
+        }
+
+        private List<CalibrationRunRecord> ReadHistory()
+        {
+            try
+            {
+                if (File.Exists(_historyFile))
+                    return JsonConvert.DeserializeObject<List<CalibrationRunRecord>>(File.ReadAllText(_historyFile)) ?? new List<CalibrationRunRecord>();
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteLog(LogType.Error, "Calibration", "History", "Could not read " + _historyFile + ": " + ex.Message, ex.ToString());
+            }
+
+            return new List<CalibrationRunRecord>();
+        }
+
+        /// <summary>One routine's PLC block and the service that reads and writes it.</summary>
+        private sealed class RoutineBlock
+        {
+            public RoutineBlock(DeviceBlockSymbols symbols, TwincatPlcDeviceService device)
+            {
+                Symbols = symbols;
+                Device = device;
+            }
+
+            public DeviceBlockSymbols Symbols { get; }
+
+            public TwincatPlcDeviceService Device { get; }
+        }
+
+        private NinePointStationSymbols RequireTarget()
+        {
+            NinePointStationSymbols target = Target();
+            if (target == null)
+                throw new InvalidOperationException(UnavailableReason);
+
+            return target;
+        }
+
+        /// <summary>The value as the PLC type the map gives the member.</summary>
+        private static object ToPlc(double value, string plcType, string key)
+        {
+            switch ((plcType ?? "LREAL").Trim().ToUpperInvariant())
+            {
+                case "LREAL": return value;
+                case "REAL": return (float)value;
+                case "BOOL": return value != 0;
+                case "INT": return (short)Math.Round(value);
+                case "DINT": return (int)Math.Round(value);
+                case "UINT": return (ushort)Math.Round(value);
+                case "UDINT": return (uint)Math.Round(value);
+                // A TIME is a 32 bit count of milliseconds; the parameter is entered in ms.
+                case "TIME": return (uint)Math.Max(0, Math.Round(value));
+                default:
+                    throw new InvalidOperationException("parameter " + key + " has PLC type \"" + plcType
+                        + "\" in " + PlcSymbolMap.FileName + "; use LREAL, REAL, BOOL, INT, DINT, UINT, UDINT or TIME");
+            }
+        }
+
+        /// <summary>
+        /// One request / acknowledge exchange: request TRUE, wait for the PLC's acknowledge,
+        /// request FALSE. Throws when the PLC does not acknowledge - the request is still
+        /// cleared, so nothing is left latched.
+        /// </summary>
+        private void Request(NinePointStationSymbols target, string buttonName)
+        {
+            RequestAckSymbols button = Button(buttonName);
+            if (button == null)
+            {
+                throw new InvalidOperationException(buttonName + " has no request / acknowledge pair "
+                    + "(Calibration.NinePoint.ButtonMembers in " + PlcSymbolMap.FileName + ")");
+            }
+
+            string request = target.Buttons.Trim() + "." + button.Request.Trim();
+            string acknowledge = target.Buttons.Trim() + "." + button.Acknowledge.Trim();
+
+            Write(request, true);
+            bool acknowledged = false;
+            try
+            {
+                DateTime deadline = DateTime.UtcNow + AcknowledgeTimeout;
+                while (DateTime.UtcNow < deadline)
+                {
+                    if (Convert.ToBoolean(_plc.ReadSymbol(acknowledge)))
+                    {
+                        acknowledged = true;
+                        break;
+                    }
+
+                    Thread.Sleep(20);
+                }
+            }
+            finally
+            {
+                Write(request, false);
+            }
+
+            if (!acknowledged)
+                throw new TimeoutException("the PLC did not acknowledge " + buttonName + " within "
+                    + AcknowledgeTimeout.TotalSeconds.ToString("0") + " s (" + acknowledge + ")");
+        }
+
+        private void Write(string symbol, object value)
+        {
+            if (!_plc.IsConnected)
+                throw new InvalidOperationException("the PLC at " + _plc.Address + " is not reachable or not in Run");
+
+            _plc.WriteSymbol(symbol, value);
+        }
+
+        /// <summary>Runs the write after every write queued before it, on a worker thread; the task faults when it fails.</summary>
+        private Task QueueWrite(Action write)
+        {
+            lock (_sync)
+            {
+                Task queued = _writes.ContinueWith(_ =>
+                {
+                    try
+                    {
+                        write();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.WriteLog(LogType.Error, "PLC", "Calibration",
+                            "A calibration command could not be sent to the PLC: " + ex.Message, ex.ToString());
+                        throw;
+                    }
+                }, TaskScheduler.Default);
+
+                // A failed write must not stop the ones queued after it.
+                _writes = queued.ContinueWith(_ => { }, TaskScheduler.Default);
+                return queued;
+            }
+        }
+
+        /// <summary>Runs on the ADS thread: no ADS calls, and nothing slow.</summary>
+        private void OnValueChanged(object sender, string symbol)
+        {
+            NinePointStationSymbols target = Target();
+            if (target != null
+                && (string.Equals(symbol, target.Status.Trim(), StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(symbol, target.Points.Trim(), StringComparison.OrdinalIgnoreCase)))
+            {
+                RaiseStatusChanged();
+            }
+        }
+
+        private void RaiseStatusChanged()
+        {
+            try
+            {
+                StatusChanged?.Invoke(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                // Raised on the ADS or a worker thread: a faulty screen must not take it down.
+                System.Diagnostics.Debug.WriteLine("A calibration status handler failed: " + ex.Message);
+            }
+        }
+
+        private sealed class Following : IDisposable
+        {
+            private TwincatCalibrationService _owner;
+
+            public Following(TwincatCalibrationService owner)
+            {
+                _owner = owner;
+            }
+
+            public void Dispose()
+            {
+                TwincatCalibrationService owner = Interlocked.Exchange(ref _owner, null);
+                owner?.Release();
+            }
+        }
+    }
+}

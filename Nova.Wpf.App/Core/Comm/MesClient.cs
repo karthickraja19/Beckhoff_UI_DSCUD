@@ -29,10 +29,58 @@ namespace Nova.Core.Comm
         /// The GetCmdResult address, e.g. "http://10.32.16.114/api/Assy/GetCmdResult". A bare
         /// host ("http://10.32.16.114") has the path added. Blank leaves MES unconfigured.
         /// </param>
-        public MesClient(string url, string terminalName)
+        /// <param name="stateUrl">
+        /// The machine-state address; blank uses the host of <paramref name="url"/> with
+        /// "/api/machine/collmachinestatefromcard".
+        /// </param>
+        public MesClient(string url, string terminalName, string stateUrl = null)
         {
             _url = Normalise(url);
             TerminalName = (terminalName ?? string.Empty).Trim();
+            _stateUrl = StateUrl(stateUrl, _url);
+        }
+
+        private readonly string _stateUrl;
+
+        public async Task<MesResult> PostMachineStateAsync(string json)
+        {
+            if (_stateUrl == null)
+                return MesResult.NotReached("MES is not configured on this machine (MesUrl in App.config).");
+
+            Log("MES state " + _stateUrl + ": " + json);
+
+            try
+            {
+                using (var content = new StringContent(json ?? string.Empty, Encoding.UTF8, "application/json"))
+                using (HttpResponseMessage response = await _http.PostAsync(_stateUrl, content).ConfigureAwait(false))
+                {
+                    string answer = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    Log("MES state answer (" + (int)response.StatusCode + "): " + answer);
+
+                    if (!response.IsSuccessStatusCode)
+                        return MesResult.NotReached("MES answered HTTP " + (int)response.StatusCode + ".");
+
+                    return Parse(answer);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log("MES state report failed: " + ex.Message);
+                return MesResult.NotReached("MES could not be reached: " + ex.Message);
+            }
+        }
+
+        private static string StateUrl(string configured, string cmdUrl)
+        {
+            if (!string.IsNullOrWhiteSpace(configured))
+                return configured.Trim();
+            if (cmdUrl == null)
+                return null;
+
+            Uri uri;
+            return Uri.TryCreate(cmdUrl, UriKind.Absolute, out uri)
+                ? uri.GetLeftPart(UriPartial.Authority) + "/api/machine/collmachinestatefromcard"
+                : null;
         }
 
         public bool IsConfigured
@@ -42,7 +90,7 @@ namespace Nova.Core.Comm
 
         public string TerminalName { get; }
 
-        public async Task<MesResult> GetCmdResultAsync(string command, string serialNumber, string testData = "", string results = "", string empNo = "")
+        public async Task<MesResult> GetCmdResultAsync(string command, string serialNumber, string testData = "", string results = "", string empNo = "", string terminalName = null)
         {
             if (_url == null)
                 return MesResult.NotReached("MES is not configured on this machine (MesUrl in App.config).");
@@ -50,7 +98,7 @@ namespace Nova.Core.Comm
             var body = new JObject
             {
                 ["empNo"] = empNo ?? "",
-                ["terminalName"] = TerminalName,
+                ["terminalName"] = string.IsNullOrWhiteSpace(terminalName) ? TerminalName : terminalName.Trim(),
                 ["serial_Number"] = serialNumber ?? "",
                 ["machine"] = "",
                 ["toolingNo"] = "",

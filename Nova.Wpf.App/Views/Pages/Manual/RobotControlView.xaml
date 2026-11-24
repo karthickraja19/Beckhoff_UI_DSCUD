@@ -1,5 +1,6 @@
 <UserControl
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:loc="clr-namespace:Nova.Wpf.UI.Localization;assembly=Nova.Wpf.UI"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
              xmlns:ui="clr-namespace:Nova.Wpf.UI.Components;assembly=Nova.Wpf.UI"
@@ -32,8 +33,8 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="{Binding Name}" FontSize="{DynamicResource Nova.FontSize.Body}" VerticalAlignment="Center"
-                               TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"
+                    <TextBlock Text="{loc:TrBinding Name}" FontSize="{DynamicResource Nova.FontSize.Body}" VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis" ToolTip="{loc:TrBinding Name}"
                                Foreground="{DynamicResource PrimaryTextBrush}"/>
                     <ui:StatusIndicator Grid.Column="1" IsActive="{Binding IsOn}"/>
                 </Grid>
@@ -49,8 +50,8 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="{Binding Name}" FontSize="{DynamicResource Nova.FontSize.Body}" VerticalAlignment="Center"
-                               TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"
+                    <TextBlock Text="{loc:TrBinding Name}" FontSize="{DynamicResource Nova.FontSize.Body}" VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis" ToolTip="{loc:TrBinding Name}"
                                Foreground="{DynamicResource PrimaryTextBrush}"/>
                     <ToggleButton Grid.Column="1" Style="{StaticResource ToggleButtonSwitch}" VerticalAlignment="Center" Margin="10,0,0,0"
                                   Command="{Binding DataContext.ToggleOutputCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
@@ -68,8 +69,8 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="{Binding Name}" FontSize="{DynamicResource Nova.FontSize.Body}" VerticalAlignment="Center"
-                               TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"
+                    <TextBlock Text="{loc:TrBinding Name}" FontSize="{DynamicResource Nova.FontSize.Body}" VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis" ToolTip="{loc:TrBinding Name}"
                                Foreground="{DynamicResource PrimaryTextBrush}"/>
                     <TextBlock Grid.Column="1" Text="{Binding Value}" Margin="10,0,0,0" VerticalAlignment="Center"
                                FontFamily="Consolas, Cascadia Mono, monospace" FontSize="{DynamicResource Nova.FontSize.Body}"
@@ -87,7 +88,7 @@
 
         <!-- ============ Robot selector + connection ============ -->
         <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,12">
-            <TextBlock Text="Select Robot Unit" Style="{StaticResource Caption}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <TextBlock Text="{loc:Tr Txt_SelectRobotUnit}" Style="{StaticResource Caption}" VerticalAlignment="Center" Margin="0,0,10,0"/>
             <Border CornerRadius="8" Height="{DynamicResource Nova.Field.Height}" Width="300"
                     Background="{DynamicResource RegionBrush}"
                     BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
@@ -104,8 +105,8 @@
                 </Grid>
             </Border>
 
-            <TextBlock Text="STATUS" Style="{StaticResource Caption}" VerticalAlignment="Center" Margin="24,0,10,0"/>
-            <TextBlock Text="{Binding StatusText}" FontSize="{DynamicResource Nova.FontSize.Body}" FontWeight="SemiBold" VerticalAlignment="Center">
+            <TextBlock Text="{loc:Tr Txt_STATUS}" Style="{StaticResource Caption}" VerticalAlignment="Center" Margin="24,0,10,0"/>
+            <TextBlock Text="{loc:TrBinding StatusText}" FontSize="{DynamicResource Nova.FontSize.Body}" FontWeight="SemiBold" VerticalAlignment="Center">
                 <TextBlock.Style>
                     <Style TargetType="{x:Type TextBlock}">
                         <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
@@ -147,16 +148,16 @@
                         <StackPanel Orientation="Horizontal">
                             <iconPacks:PackIconLucide Kind="ArrowDownToLine" Width="16" Height="16" VerticalAlignment="Center"
                                                       Margin="0,0,8,0" Foreground="{DynamicResource PrimaryBrush}"/>
-                            <TextBlock Text="Inputs" Style="{StaticResource CardHeaderText}"/>
+                            <TextBlock Text="{loc:Tr Txt_Inputs}" Style="{StaticResource CardHeaderText}"/>
                         </StackPanel>
-                        <TextBlock Text="STATUS" Style="{StaticResource Caption}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        <TextBlock Text="{loc:Tr Txt_STATUS}" Style="{StaticResource Caption}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                     </Grid>
                     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                         <StackPanel>
                             <ItemsControl ItemsSource="{Binding DigitalInputs}" ItemTemplate="{StaticResource InputRowTemplate}"/>
                             <Grid Margin="0,16,0,4">
-                                <TextBlock Text="VALUES" Style="{StaticResource Caption}"/>
-                                <TextBlock Text="VALUE" Style="{StaticResource Caption}" HorizontalAlignment="Right"/>
+                                <TextBlock Text="{loc:Tr Txt_VALUES}" Style="{StaticResource Caption}"/>
+                                <TextBlock Text="{loc:Tr Txt_VALUE}" Style="{StaticResource Caption}" HorizontalAlignment="Right"/>
                             </Grid>
                             <ItemsControl ItemsSource="{Binding InputValues}" ItemTemplate="{StaticResource ValueRowTemplate}"/>
                         </StackPanel>
@@ -171,16 +172,16 @@
                         <StackPanel Orientation="Horizontal">
                             <iconPacks:PackIconLucide Kind="ArrowUpFromLine" Width="16" Height="16" VerticalAlignment="Center"
                                                       Margin="0,0,8,0" Foreground="{DynamicResource PrimaryBrush}"/>
-                            <TextBlock Text="Outputs" Style="{StaticResource CardHeaderText}"/>
+                            <TextBlock Text="{loc:Tr Txt_Outputs}" Style="{StaticResource CardHeaderText}"/>
                         </StackPanel>
-                        <TextBlock Text="ON/OFF" Style="{StaticResource Caption}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        <TextBlock Text="{loc:Tr Txt_ONOFF}" Style="{StaticResource Caption}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                     </Grid>
                     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                         <StackPanel>
                             <ItemsControl ItemsSource="{Binding DigitalOutputs}" ItemTemplate="{StaticResource OutputRowTemplate}"/>
                             <Grid Margin="0,16,0,4">
-                                <TextBlock Text="VALUES" Style="{StaticResource Caption}"/>
-                                <TextBlock Text="VALUE" Style="{StaticResource Caption}" HorizontalAlignment="Right"/>
+                                <TextBlock Text="{loc:Tr Txt_VALUES}" Style="{StaticResource Caption}"/>
+                                <TextBlock Text="{loc:Tr Txt_VALUE}" Style="{StaticResource Caption}" HorizontalAlignment="Right"/>
                             </Grid>
                             <ItemsControl ItemsSource="{Binding OutputValues}" ItemTemplate="{StaticResource ValueRowTemplate}"/>
                         </StackPanel>

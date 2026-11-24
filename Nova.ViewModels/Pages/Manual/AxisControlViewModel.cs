@@ -63,6 +63,28 @@ namespace Nova.ViewModels.Pages.Manual
             "Please enter Iteration count greater than 0 Less than " +
             MaxIterations.ToString(CultureInfo.InvariantCulture);
 
+        /// <summary>
+        /// Largest position magnitude (mm) Move and point-to-point accept, either side of
+        /// home — the SQT fix in V3's btnPTP_Move_Click (-99999 to +99999). App.config
+        /// ManualPositionLimit, handed over by the host like the limits above.
+        /// </summary>
+        public static double MaxPosition { get; set; } = 99999;
+
+        /// <summary>
+        /// Longest point-to-point dwell, in seconds — V3's App.config PtpWaitingTime,
+        /// which its MovePTP checks before cycling.
+        /// </summary>
+        public static int MaxWaitSeconds { get; set; } = 120;
+
+        private static string PositionRangeMessage =>
+            "Enter the valid position. Position must be between -" +
+            MaxPosition.ToString("0.###", CultureInfo.InvariantCulture) + " and +" +
+            MaxPosition.ToString("0.###", CultureInfo.InvariantCulture) + ".";
+
+        private static string WaitRangeMessage =>
+            "Please enter Waiting time greater than 0 Less than " +
+            MaxWaitSeconds.ToString(CultureInfo.InvariantCulture) + " seconds";
+
         private CancellationTokenSource _ptpCts;
         private bool _syncingFromHardware;
 
@@ -243,12 +265,12 @@ namespace Nova.ViewModels.Pages.Manual
         /// Configured parameters of the selected axis, shown read-only beside the
         /// controls. Operators had to leave Manual for Settings > Axis Parameters to see
         /// what pitch or homing speed an axis was set up with. Read from the same
-        /// Axis_Parameters.xml the Settings table edits, so there is one source of truth.
+        /// Servos.json the Settings table edits, so there is one source of truth.
         /// </summary>
         public ObservableCollection<AxisParameterDetail> AxisParameters { get; } =
             new ObservableCollection<AxisParameterDetail>();
 
-        /// <summary>True when the selected axis has a row in Axis_Parameters.xml.</summary>
+        /// <summary>True when the selected axis is in Servos.json.</summary>
         [ObservableProperty]
         private bool _hasAxisParameters;
 
@@ -260,8 +282,10 @@ namespace Nova.ViewModels.Pages.Manual
 
             // Same reason as in the constructor: the newly selected axis may not change
             // again for a long time.
+            IsAxisMoving = false;
             ShowStatus(CurrentAxis?.ReadStatus());
             RefreshAxisParameters();
+            ClearInputs();
         }
 
         public void Activate()
@@ -282,6 +306,11 @@ namespace Nova.ViewModels.Pages.Manual
             _isActive = false;
             _following?.Dispose();
             _following = null;
+
+            // The tab left the screen: nothing it started is followed any more, so the
+            // selector must not stay locked by a jog whose release was never seen.
+            IsJogging = false;
+            IsAxisMoving = false;
         }
 
         /// <summary>
@@ -335,13 +364,15 @@ namespace Nova.ViewModels.Pages.Manual
                     return;
                 }
 
-                AxisParameters.Add(new AxisParameterDetail("Card / Axis", match.CardId + " / " + match.AxisId));
-                AxisParameters.Add(new AxisParameterDetail("Pitch (mm)", match.Pitch));
-                AxisParameters.Add(new AxisParameterDetail("Pulses / mm", match.Pulses));
-                AxisParameters.Add(new AxisParameterDetail("PPR", match.Ppr));
-                AxisParameters.Add(new AxisParameterDetail("Homing velocity", match.HomingSpeed));
-                AxisParameters.Add(new AxisParameterDetail("Homing acc", match.HomingAcc));
-                AxisParameters.Add(new AxisParameterDetail("Homing de-acc", match.HomingDeAcc));
+                AxisParameters.Add(new AxisParameterDetail("Axis ID", match.AxisId));
+                AxisParameters.Add(new AxisParameterDetail("Type", match.Type));
+                AxisParameters.Add(new AxisParameterDetail("Pulse", match.Pulse));
+                AxisParameters.Add(new AxisParameterDetail("Velocity", match.Velocity));
+                AxisParameters.Add(new AxisParameterDetail("Acceleration", match.Acceleration));
+                AxisParameters.Add(new AxisParameterDetail("Deceleration", match.Deceleration));
+                AxisParameters.Add(new AxisParameterDetail("Positive limit", match.PositiveLimit));
+                AxisParameters.Add(new AxisParameterDetail("Negative limit", match.NegativeLimit));
+                AxisParameters.Add(new AxisParameterDetail("Timeout (ms)", match.Timeout));
                 HasAxisParameters = true;
             }
             catch (Exception ex)
@@ -379,6 +410,7 @@ namespace Nova.ViewModels.Pages.Manual
             _homeSensorStatus.IsActive    = s.AtHomeSensor;
             _homedStatus.IsActive         = s.IsHomed;
             _runningStatus.IsActive       = s.IsMoving;
+            IsAxisMoving                  = s.IsMoving;
         }
 
         /// <summary>Enable toggle: commands the drive unless the change came from read-back.</summary>
@@ -425,18 +457,70 @@ namespace Nova.ViewModels.Pages.Manual
         {
             var axis = CurrentAxis;
             if (axis == null || !axis.SupportsPositioning) return;
-            if (!TryReadPosition(Position, out double target)) return;
+            if (!TryReadPosition(Position, "Please enter the position.", out double target)) return;
             if (!TryReadSpeed(Speed, out double speed)) return;
-            await axis.MoveAbsAsync(target, speed);
+            await RunMotion(() => axis.MoveAbsAsync(target, speed));
         }
 
         [RelayCommand]
         private async Task Stop()
         {
             CancelPointToPoint();
+            IsJogging = false;
             var axis = CurrentAxis;
             if (axis == null) return;
             await axis.StopAsync();
+        }
+
+        // ---- One axis at a time (FAM 2 Bug_Id_033) ----------------------------
+
+        /// <summary>A move, home or point-to-point on the selected axis is in progress.</summary>
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(CanChangeAxis))]
+        private bool _isMotionActive;
+
+        /// <summary>A jog or continuous motion was started and not stopped yet.</summary>
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(CanChangeAxis))]
+        private bool _isJogging;
+
+        /// <summary>The PLC reports the selected axis moving.</summary>
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(CanChangeAxis))]
+        private bool _isAxisMoving;
+
+        /// <summary>
+        /// The axis selector is locked while the selected axis moves: switching to another
+        /// axis and moving it too let two axes of one servo run at once.
+        /// </summary>
+        public bool CanChangeAxis => !IsMotionActive && !IsJogging && !IsAxisMoving;
+
+        private async Task<bool> RunMotion(Func<Task<bool>> motion)
+        {
+            IsMotionActive = true;
+            try
+            {
+                return await motion();
+            }
+            finally
+            {
+                IsMotionActive = false;
+            }
+        }
+
+        /// <summary>FAM 2 MS_08: what was typed for one axis is not left in the boxes for the next.</summary>
+        private void ClearInputs()
+        {
+            Position = string.Empty;
+            Speed = string.Empty;
+            HomeVelocity = string.Empty;
+            StartPosition = string.Empty;
+            EndPosition = string.Empty;
+            PointToPointSpeed = string.Empty;
+            Wait = string.Empty;
+            Iterations = string.Empty;
+            JogSpeed = string.Empty;
+            ContinuousSpeed = string.Empty;
         }
 
         [RelayCommand]
@@ -451,12 +535,12 @@ namespace Nova.ViewModels.Pages.Manual
             // its own configured speed — so the entered value looked simply ignored.
             if (string.IsNullOrWhiteSpace(HomeVelocity))
             {
-                ShowMessage("Please Enter the Velocity for Homing");
+                ShowMessage("Please Enter the Velocity for Homing" + MaxSpeedSuffix);
                 return;
             }
 
             if (!TryReadSpeed(HomeVelocity, out double velocity)) return;
-            await axis.HomeAsync(velocity);
+            await RunMotion(() => axis.HomeAsync(velocity));
         }
 
         [RelayCommand]
@@ -477,10 +561,10 @@ private async Task PointToPointMove()
             // Start and end positions must be different.
             // Compare the actual numeric values rather than the raw strings,
             // so values such as "10" and "10.0" are also treated as equal.
-            if (!TryReadPosition(StartPosition, out double start))
+            if (!TryReadPosition(StartPosition, "Please enter a start position.", out double start))
                 return;
 
-            if (!TryReadPosition(EndPosition, out double end))
+            if (!TryReadPosition(EndPosition, "Please enter an end position.", out double end))
                 return;
 
             if (start == end)
@@ -499,19 +583,19 @@ private async Task PointToPointMove()
             if (!TryReadIterations(Iterations, out int iterations))
                 return;
 
-            int.TryParse(
-                Wait,
-                NumberStyles.Integer,
-                CultureInfo.InvariantCulture,
-                out int waitMs);
+            if (!TryReadWait(Wait, out int waitMs))
+                return;
 
             CancelPointToPoint();
             _ptpCts = new CancellationTokenSource();
             var token = _ptpCts.Token;
 
+            bool completed = false;
+            IsMotionActive = true;
             try
             {
-                for (int i = 0; i < iterations && !token.IsCancellationRequested; i++)
+                int done = 0;
+                for (; done < iterations && !token.IsCancellationRequested; done++)
                 {
                     if (!await axis.MoveAbsAsync(end, speed))
                         break;
@@ -528,11 +612,22 @@ private async Task PointToPointMove()
                     if (waitMs > 0)
                         await Task.Delay(waitMs, token);
                 }
+
+                completed = done == iterations && !token.IsCancellationRequested;
             }
             catch (OperationCanceledException)
             {
                 // Operator pressed Stop mid-cycle.
             }
+            finally
+            {
+                IsMotionActive = false;
+            }
+
+            // FAM 2 Bug_Id_034: say when the cycles have all been run.
+            if (completed && _dialog != null)
+                _dialog.ShowInfo("Point to point completed: " +
+                    iterations.ToString(CultureInfo.InvariantCulture) + " iteration(s).", DialogTitle);
         }
 
 
@@ -556,6 +651,7 @@ private async Task PointToPointMove()
         [RelayCommand]
         private async Task JogStop()
         {
+            IsJogging = false;
             var axis = CurrentAxis;
             if (axis == null) return;
             await axis.JogStopAsync();
@@ -571,6 +667,7 @@ private async Task PointToPointMove()
         [RelayCommand]
         private async Task ContinuousStop()
         {
+            IsJogging = false;
             var axis = CurrentAxis;
             if (axis == null) return;
             await axis.JogStopAsync();
@@ -581,8 +678,14 @@ private async Task PointToPointMove()
             var axis = CurrentAxis;
             if (axis == null) return;
             if (!TryReadSpeed(speedText, out double speed)) return;
+            IsJogging = true;
             await axis.JogStartAsync(forward, speed);
         }
+
+        /// <summary>" (max N mm/s)." when the axis has a speed limit, so every speed message names it (FAM 2 Bug_Id_030).</summary>
+        private string MaxSpeedSuffix => SpeedLimit > 0
+            ? " (max " + SpeedLimit.ToString("0.##", CultureInfo.InvariantCulture) + " mm/s)."
+            : ".";
 
         /// <summary>
         /// Reads an operator-entered speed and gates it on 0 &lt; speed &lt;= the axis
@@ -593,17 +696,24 @@ private async Task PointToPointMove()
         /// </summary>
         private bool TryReadSpeed(string text, out double speed)
         {
+            // FAM 2 MS_02 / MS_04 / MS_06: an empty box asks for the velocity.
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                speed = 0;
+                ShowMessage("Please enter the velocity" + MaxSpeedSuffix);
+                return false;
+            }
+
             if (!TryParseNumber(text, out speed) || speed <= 0)
             {
-                ShowMessage(SpeedRangeMessage);
+                ShowMessage(SpeedRangeMessage + MaxSpeedSuffix);
                 return false;
             }
 
             double limit = SpeedLimit;
             if (limit > 0 && speed > limit)
             {
-                ShowMessage(SpeedRangeMessage + " (" +
-                    limit.ToString("0.##", CultureInfo.InvariantCulture) + " mm/s).");
+                ShowMessage(SpeedRangeMessage + MaxSpeedSuffix);
                 speed = 0;
                 return false;
             }
@@ -619,6 +729,14 @@ private async Task PointToPointMove()
         /// </summary>
         private bool TryReadIterations(string text, out int iterations)
         {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                iterations = 0;
+                ShowMessage("Please enter the iteration count (1 to " +
+                    MaxIterations.ToString(CultureInfo.InvariantCulture) + ").");
+                return false;
+            }
+
             if (!int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out iterations)
                 || iterations <= 0
                 || iterations > MaxIterations)
@@ -631,12 +749,55 @@ private async Task PointToPointMove()
             return true;
         }
 
-        /// <summary>A position is signed and may legitimately be zero.</summary>
-        private bool TryReadPosition(string text, out double position)
+        /// <summary>
+        /// Reads the point-to-point dwell. The box says "Wait (sec)", so the entry is
+        /// seconds (V3's MovePTP waits waittime * 1000 ms); 0 means no dwell. A blank box
+        /// asks for the wait (FAM 2 MS_05), and text that is not a number, a negative value,
+        /// or more than PtpWaitingTime is refused rather than quietly run as no dwell.
+        /// Returns milliseconds.
+        /// </summary>
+        private bool TryReadWait(string text, out int waitMs)
         {
+            waitMs = 0;
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                ShowMessage("Please enter the wait time in seconds (0 to " +
+                    MaxWaitSeconds.ToString(CultureInfo.InvariantCulture) + ").");
+                return false;
+            }
+
+            if (!TryParseNumber(text, out double seconds) || seconds < 0 || seconds > MaxWaitSeconds)
+            {
+                ShowMessage(WaitRangeMessage);
+                return false;
+            }
+
+            waitMs = (int)Math.Round(seconds * 1000);
+            return true;
+        }
+
+        /// <summary>A position is signed and may legitimately be zero, but no further
+        /// from home than MaxPosition (V3's SQT range check).</summary>
+        private bool TryReadPosition(string text, string emptyMessage, out double position)
+        {
+            // FAM 2 MS_02 / MS_07: an empty box asks for that position by name.
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                position = 0;
+                ShowMessage(emptyMessage);
+                return false;
+            }
+
             if (!TryParseNumber(text, out position))
             {
                 ShowMessage("Please enter a valid position.");
+                return false;
+            }
+
+            if (Math.Abs(position) > MaxPosition)
+            {
+                ShowMessage(PositionRangeMessage);
+                position = 0;
                 return false;
             }
 

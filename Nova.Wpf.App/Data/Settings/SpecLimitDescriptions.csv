@@ -1,0 +1,8 @@
+Parameter,Limits,Description_English,Description_zh-CN,Description_vi
+Active_Energy_cummulative,Production,Active energy (cumulative),有功电能（累计）,Điện năng tác dụng (tích lũy)
+Active_energy_current_unit,Production,Active energy (current unit),有功电能（当前产品）,Điện năng tác dụng (sản phẩm hiện tại)
+Angle_sp_weight_I,Production,Angle SP weight I,角度设定点权重 I,Trọng số điểm đặt góc I
+Angle_sp_weight_P,Production,Angle SP weight P,角度设定点权重 P,Trọng số điểm đặt góc P
+Arm_Length,Production,Arm length,臂长,Chiều dài tay
+Displacement_Limit,Production,Displacement limit,位移限值,Giới hạn dịch chuyển
+Peak_Force_Limit,Production,Peak force limit,峰值力限值,Giới hạn lực đỉnh

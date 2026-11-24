@@ -1,5 +1,6 @@
 <UserControl x:Class="Nova.Wpf.App.Views.Pages.Audio.AudioHomeView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:loc="clr-namespace:Nova.Wpf.UI.Localization;assembly=Nova.Wpf.UI"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:hc="https://handyorg.github.io/handycontrol"
              xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
@@ -40,32 +41,11 @@
     </UserControl.Resources>
 
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>   <!-- 0  Main | Vendor -->
-            <RowDefinition Height="*"/>      <!-- 1  dashboard -->
-        </Grid.RowDefinitions>
-
-        <!-- ============================================================== -->
-        <!-- MAIN | VENDOR  (slides 54 and 57) -->
-        <!-- ============================================================== -->
-        <Grid Grid.Row="0" Margin="4,0,4,6">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-
-            <ListBox Grid.Column="0"
-                     Style="{StaticResource Audio.SegmentedControl}"
-                     ItemsSource="{Binding Tabs}"
-                     SelectedItem="{Binding SelectedTab, Mode=TwoWay}"
-                     AutomationProperties.Name="Dashboard view"/>
-        </Grid>
 
         <!-- ============================================================== -->
         <!-- MAIN TAB -->
         <!-- ============================================================== -->
-        <Grid Grid.Row="1"
+        <Grid
               Visibility="{Binding IsDashboardVisible, Converter={StaticResource BoolToVisibility}}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="2*"/>   <!-- slide 43: 2/3 width -->
@@ -89,22 +69,22 @@
                         </Grid.RowDefinitions>
 
                         <Grid Grid.Row="0">
-                            <TextBlock Style="{StaticResource CardTitle}" Text="State Changes"/>
+                            <TextBlock Style="{StaticResource CardTitle}" Text="{loc:Tr Txt_StateChanges}"/>
                             <TextBlock Style="{StaticResource Home.Note}" HorizontalAlignment="Right"
                                        VerticalAlignment="Center" Margin="0,8,16,0"
-                                       Text="Share of each day in each HIVE state"/>
+                                       Text="{loc:Tr Txt_ShareOfEachDayInEachHIVE}"/>
                         </Grid>
 
                         <lvc:CartesianChart Grid.Row="1"
                                             Margin="12,0,16,0"
-                                            Series="{Binding StateChangeSeries}"
-                                            XAxes="{Binding StateChangeXAxes}"
-                                            YAxes="{Binding StateChangeYAxes}"
+                                            Series="{loc:TrBinding StateChangeSeries, Chart=True}"
+                                            XAxes="{loc:TrBinding StateChangeXAxes, Chart=True}"
+                                            YAxes="{loc:TrBinding StateChangeYAxes, Chart=True}"
                                             TooltipPosition="Top"
                                             LegendPosition="Hidden"/>
 
                         <TextBlock Grid.Row="1" Style="{StaticResource Audio.EmptyState}"
-                                   Text="{Binding StateChangeNote}" Margin="40,0"
+                                   Text="{loc:TrBinding StateChangeNote}" Margin="40,0"
                                    Visibility="{Binding StateChangeNote, Converter={StaticResource String2VisibilityConverter}}"/>
 
                         <!-- The chart's own legend is hidden and replaced with this
@@ -116,25 +96,25 @@
                                 <Rectangle Width="12" Height="12" RadiusX="2" RadiusY="2"
                                            Fill="{DynamicResource Audio.State.RunningBrush}"
                                            Stroke="{DynamicResource Audio.SeparatorBrush}" StrokeThickness="1"/>
-                                <TextBlock Style="{StaticResource Audio.Footnote}" Text="Running" Margin="6,0,0,0"/>
+                                <TextBlock Style="{StaticResource Audio.Footnote}" Text="{loc:Tr Txt_Running}" Margin="6,0,0,0"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,16,0">
                                 <Rectangle Width="12" Height="12" RadiusX="2" RadiusY="2"
                                            Fill="{DynamicResource Audio.State.IdleBrush}"
                                            Stroke="{DynamicResource Audio.SeparatorBrush}" StrokeThickness="1"/>
-                                <TextBlock Style="{StaticResource Audio.Footnote}" Text="Idle" Margin="6,0,0,0"/>
+                                <TextBlock Style="{StaticResource Audio.Footnote}" Text="{loc:Tr Txt_Idle}" Margin="6,0,0,0"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,0,16,0">
                                 <Rectangle Width="12" Height="12" RadiusX="2" RadiusY="2"
                                            Fill="{DynamicResource Audio.State.DowntimeBrush}"
                                            Stroke="{DynamicResource Audio.SeparatorBrush}" StrokeThickness="1"/>
-                                <TextBlock Style="{StaticResource Audio.Footnote}" Text="Downtime" Margin="6,0,0,0"/>
+                                <TextBlock Style="{StaticResource Audio.Footnote}" Text="{loc:Tr Txt_Downtime}" Margin="6,0,0,0"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal">
                                 <Rectangle Width="12" Height="12" RadiusX="2" RadiusY="2"
                                            Fill="{DynamicResource Audio.System.Gray5Brush}"
                                            Stroke="{DynamicResource Audio.SeparatorBrush}" StrokeThickness="1"/>
-                                <TextBlock Style="{StaticResource Audio.Footnote}" Text="No record" Margin="6,0,0,0"/>
+                                <TextBlock Style="{StaticResource Audio.Footnote}" Text="{loc:Tr Txt_NoRecord}" Margin="6,0,0,0"/>
                             </StackPanel>
                         </StackPanel>
                     </Grid>
@@ -150,11 +130,11 @@
                         </Grid.RowDefinitions>
 
                         <Grid Grid.Row="0">
-                            <TextBlock Style="{StaticResource CardTitle}" Text="Error Statistics"/>
+                            <TextBlock Style="{StaticResource CardTitle}" Text="{loc:Tr Txt_ErrorStatistics}"/>
                             <!-- Slide 54: "Click space areas to jump to error tab". -->
                             <Button Style="{StaticResource Audio.PlainButton}" HorizontalAlignment="Right"
                                     VerticalAlignment="Center" Margin="0,8,8,0" Height="26"
-                                    Content="Open Alarm page ›"
+                                    Content="{loc:Tr Txt_OpenAlarmPage}"
                                     Command="{Binding ShowAlarmPageCommand}"/>
                         </Grid>
 
@@ -178,7 +158,7 @@
                                             SmallChange="1" LargeChange="24"
                                             IsSnapToTickEnabled="True" TickFrequency="1"
                                             AutomationProperties.Name="Error statistics time window"
-                                            ToolTip="Drag the handles to choose the window within the last seven days"/>
+                                            ToolTip="{loc:Tr Txt_DragTheHandlesToChooseTheWindow}"/>
                             <Border Grid.Column="2" Background="{DynamicResource Audio.Surface.RecessedBrush}"
                                     CornerRadius="{DynamicResource Audio.Radius.Small}" Padding="8,3" VerticalAlignment="Center">
                                 <TextBlock Style="{StaticResource Audio.Caption1}"
@@ -190,11 +170,11 @@
                         <Button Grid.Row="2" Style="{StaticResource Audio.CardButton}"
                                 Margin="0" BorderThickness="0" Background="Transparent"
                                 Command="{Binding ShowAlarmPageCommand}"
-                                ToolTip="Open the Alarm page"
+                                ToolTip="{loc:Tr Txt_OpenTheAlarmPage}"
                                 AutomationProperties.Name="Error statistics - open the Alarm page">
                             <Grid>
                                 <TextBlock Style="{StaticResource Audio.EmptyState}"
-                                           Text="{Binding ErrorStatisticsNote}"
+                                           Text="{loc:TrBinding ErrorStatisticsNote}"
                                            Visibility="{Binding ErrorStatisticsNote, Converter={StaticResource String2VisibilityConverter}}"/>
 
                                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
@@ -202,7 +182,7 @@
                                                   Margin="16,0,16,12" VerticalAlignment="Center">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <Grid Margin="0,3" ToolTip="{Binding Detail}" Background="Transparent">
+                                                <Grid Margin="0,3" ToolTip="{loc:TrBinding Detail, Alarm=True}" Background="Transparent">
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="140"/>  <!-- category -->
                                                         <ColumnDefinition Width="*"/>    <!-- bar -->
@@ -210,7 +190,7 @@
 
                                                     <TextBlock Grid.Column="0"
                                                                Style="{StaticResource Audio.Footnote}"
-                                                               Text="{Binding Label}"
+                                                               Text="{loc:TrBinding Label, Alarm=True}"
                                                                TextAlignment="Right"
                                                                TextTrimming="CharacterEllipsis"
                                                                Margin="0,0,10,0"/>
@@ -259,7 +239,7 @@
                 <Button Grid.Row="0"
                         Style="{StaticResource Audio.CardButton}"
                         Command="{Binding ShowDataPageCommand}"
-                        ToolTip="Open the Data page"
+                        ToolTip="{loc:Tr Txt_OpenTheDataPage}"
                         AutomationProperties.Name="I/O summary - open the Data page">
                     <!-- Tight spacing on purpose: the card is a third of the column by
                          spec and has to hold the banner and all five rows at 125 %. -->
@@ -279,7 +259,7 @@
                                                      Converter={StaticResource BoolToBrushKey},
                                                      ConverterParameter='Audio.UnitSn.PassBrush|Audio.UnitSn.FailBrush'}">
                             <TextBlock Style="{StaticResource Audio.Title3}"
-                                       Text="{Binding LastUnitSn}"
+                                       Text="{loc:TrBinding LastUnitSn}"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"
                                        TextTrimming="CharacterEllipsis"
                                        Foreground="{Binding LastUnitPassed,
@@ -289,11 +269,11 @@
 
                         <!-- Slide 43: the statistics update hourly, so the headline row
                              says when they last did; the window is in the tooltip. -->
-                        <Grid Grid.Row="1" Margin="0,6,0,2" ToolTip="{Binding IoSummaryCaption}" Background="Transparent">
+                        <Grid Grid.Row="1" Margin="0,6,0,2" ToolTip="{loc:TrBinding IoSummaryCaption}" Background="Transparent">
                             <TextBlock Style="{StaticResource Audio.Headline}"
-                                       Text="I/O Summary" HorizontalAlignment="Center"/>
+                                       Text="{loc:Tr Txt_IOSummary}" HorizontalAlignment="Center"/>
                             <TextBlock Style="{StaticResource Home.Note}" HorizontalAlignment="Right"
-                                       VerticalAlignment="Center" Text="{Binding IoSummaryUpdated}"/>
+                                       VerticalAlignment="Center" Text="{loc:TrBinding IoSummaryUpdated}"/>
                         </Grid>
 
                         <!-- Scrolled, not just laid out: this card is one third of the
@@ -310,7 +290,7 @@
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
                                             <TextBlock Grid.Column="0" Style="{StaticResource Audio.Footnote}"
-                                                       Text="{Binding Label}"/>
+                                                       Text="{loc:TrBinding Label}"/>
                                             <TextBlock Grid.Column="1" Style="{StaticResource Audio.CalloutMono}"
                                                        Text="{Binding Value}"/>
                                         </Grid>
@@ -333,7 +313,7 @@
                         </Grid.RowDefinitions>
 
                         <TextBlock Grid.Row="0" Style="{StaticResource CardTitle}"
-                                   Text="Parameter Dashboard" HorizontalAlignment="Center"/>
+                                   Text="{loc:Tr Txt_ParameterDashboard}" HorizontalAlignment="Center"/>
 
                         <!-- Column header. Four columns shared with the rows below;
                              the widths are repeated rather than shared because a
@@ -347,8 +327,8 @@
                                     <ColumnDefinition Width="56"/>
                                     <ColumnDefinition Width="56"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Style="{StaticResource Audio.TableHeaderText}" Text="Key Name"/>
-                                <TextBlock Grid.Column="1" Style="{StaticResource Audio.TableHeaderText}" Text="Value" TextAlignment="Right"/>
+                                <TextBlock Grid.Column="0" Style="{StaticResource Audio.TableHeaderText}" Text="{loc:Tr Txt_KeyName}"/>
+                                <TextBlock Grid.Column="1" Style="{StaticResource Audio.TableHeaderText}" Text="{loc:Tr Txt_Value}" TextAlignment="Right"/>
                                 <TextBlock Grid.Column="2" Style="{StaticResource Audio.TableHeaderText}" Text="LSL" TextAlignment="Right"/>
                                 <TextBlock Grid.Column="3" Style="{StaticResource Audio.TableHeaderText}" Text="USL" TextAlignment="Right"/>
                             </Grid>
@@ -381,15 +361,15 @@
                                                     <ColumnDefinition Width="56"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBlock Grid.Column="0" Style="{StaticResource Audio.Callout}"
-                                                           Text="{Binding KeyName}" TextTrimming="CharacterEllipsis"
-                                                           ToolTip="{Binding KeyName}"/>
+                                                           Text="{loc:TrBinding KeyName}" TextTrimming="CharacterEllipsis"
+                                                           ToolTip="{loc:TrBinding KeyName}"/>
                                                 <TextBlock Grid.Column="1" Style="{StaticResource Audio.CalloutMono}"
                                                            Text="{Binding Value}" TextAlignment="Right"
-                                                           TextTrimming="CharacterEllipsis" ToolTip="{Binding Value}"/>
+                                                           TextTrimming="CharacterEllipsis" ToolTip="{loc:TrBinding Value}"/>
                                                 <TextBlock Grid.Column="2" Style="{StaticResource Audio.CalloutMono}"
-                                                           Text="{Binding LowerLimitText}" TextAlignment="Right"/>
+                                                           Text="{loc:TrBinding LowerLimitText}" TextAlignment="Right"/>
                                                 <TextBlock Grid.Column="3" Style="{StaticResource Audio.CalloutMono}"
-                                                           Text="{Binding UpperLimitText}" TextAlignment="Right"/>
+                                                           Text="{loc:TrBinding UpperLimitText}" TextAlignment="Right"/>
                                             </Grid>
                                         </Border>
                                     </DataTemplate>
@@ -398,7 +378,7 @@
                         </ScrollViewer>
 
                         <TextBlock Grid.Row="3" Style="{StaticResource Home.Note}" Margin="12,4,12,8"
-                                   Text="{Binding ParameterNote}"/>
+                                   Text="{loc:TrBinding ParameterNote}"/>
                     </Grid>
                 </Border>
 
@@ -427,7 +407,7 @@
                         </Grid.RowDefinitions>
 
                         <TextBlock Grid.Row="0" Style="{StaticResource Audio.Title3}"
-                                   Text="{Binding StationTitle}" HorizontalAlignment="Center"/>
+                                   Text="{loc:TrBinding StationTitle}" HorizontalAlignment="Center"/>
 
                         <StackPanel Grid.Row="1" Margin="0,8,0,0">
                             <Grid Margin="0,1">
@@ -436,47 +416,47 @@
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0" Orientation="Horizontal">
-                                    <TextBlock Style="{StaticResource Audio.FieldLabel}" Text="Site:"/>
+                                    <TextBlock Style="{StaticResource Audio.FieldLabel}" Text="{loc:Tr Txt_Site}"/>
                                     <TextBlock Style="{StaticResource Audio.Footnote}"
                                                Foreground="{DynamicResource Audio.Text.PrimaryBrush}"
-                                               Text="{Binding Site}" Margin="6,0,0,0"/>
+                                               Text="{loc:TrBinding Site}" Margin="6,0,0,0"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                    <TextBlock Style="{StaticResource Audio.FieldLabel}" Text="Vendor:"/>
+                                    <TextBlock Style="{StaticResource Audio.FieldLabel}" Text="{loc:Tr Txt_Vendor}"/>
                                     <TextBlock Style="{StaticResource Audio.Footnote}"
                                                Foreground="{DynamicResource Audio.Text.PrimaryBrush}"
-                                               Text="{Binding Vendor}" Margin="6,0,0,0"/>
+                                               Text="{loc:TrBinding Vendor}" Margin="6,0,0,0"/>
                                 </StackPanel>
                             </Grid>
 
                             <StackPanel Orientation="Horizontal" Margin="0,1">
-                                <TextBlock Style="{StaticResource Audio.FieldLabel}" Text="SW Version:"/>
+                                <TextBlock Style="{StaticResource Audio.FieldLabel}" Text="{loc:Tr Txt_SWVersion}"/>
                                 <TextBlock Style="{StaticResource Audio.Caption1Mono}"
                                            Foreground="{DynamicResource Audio.Text.PrimaryBrush}"
-                                           Text="{Binding SoftwareVersion}" Margin="6,0,0,0"/>
+                                           Text="{loc:TrBinding SoftwareVersion}" Margin="6,0,0,0"/>
                             </StackPanel>
 
                             <!-- Slide 43: "click to open the path". -->
                             <StackPanel Orientation="Horizontal" Margin="0,1">
-                                <TextBlock Style="{StaticResource Audio.FieldLabel}" Text="Main SW Path:"/>
+                                <TextBlock Style="{StaticResource Audio.FieldLabel}" Text="{loc:Tr Txt_MainSWPath}"/>
                                 <Button Style="{StaticResource Audio.PlainButton}"
                                         Height="18" Padding="6,0" Margin="2,0,0,0"
                                         Command="{Binding OpenMainSoftwarePathCommand}"
-                                        ToolTip="{Binding MainSoftwarePath}">
+                                        ToolTip="{loc:TrBinding MainSoftwarePath}">
                                     <TextBlock Style="{StaticResource Audio.Caption1Mono}"
                                                Foreground="{DynamicResource Audio.System.BlueBrush}"
-                                               Text="{Binding MainSoftwarePath}"
+                                               Text="{loc:TrBinding MainSoftwarePath}"
                                                MaxWidth="200" TextTrimming="CharacterEllipsis"/>
                                 </Button>
                             </StackPanel>
 
                             <StackPanel Orientation="Horizontal" Margin="0,1">
-                                <TextBlock Style="{StaticResource Audio.FieldLabel}" Text="MS_Hash:"/>
+                                <TextBlock Style="{StaticResource Audio.FieldLabel}" Text="{loc:Tr Txt_MSHash}"/>
                                 <TextBlock Style="{StaticResource Audio.Caption1Mono}"
                                            Foreground="{DynamicResource Audio.Text.PrimaryBrush}"
-                                           Text="{Binding MainSoftwareHash}" Margin="6,0,0,0"
+                                           Text="{loc:TrBinding MainSoftwareHash}" Margin="6,0,0,0"
                                            MaxWidth="220" TextTrimming="CharacterEllipsis"
-                                           ToolTip="{Binding MainSoftwareHash}"/>
+                                           ToolTip="{loc:TrBinding MainSoftwareHash}"/>
                             </StackPanel>
                         </StackPanel>
 
@@ -491,10 +471,10 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <TextBlock Style="{StaticResource Audio.Caption1}"
-                                               Text="{Binding StatusText}"
+                                               Text="{loc:TrBinding StatusText}"
                                                HorizontalAlignment="Center"
                                                FontWeight="SemiBold"
-                                               ToolTip="{Binding Detail}"
+                                               ToolTip="{loc:TrBinding Detail}"
                                                Foreground="{Binding IsConnected,
                                                                     Converter={StaticResource BoolToBrushKey},
                                                                     ConverterParameter='Audio.Link.ConnectedBrush|Audio.Link.DisconnectedBrush'}"/>
@@ -509,15 +489,15 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <Button Grid.Column="0" Style="{StaticResource Audio.LogButton}"
-                                    Content="Machine Log" Command="{Binding OpenMachineLogCommand}"/>
+                                    Content="{loc:Tr Txt_MachineLog}" Command="{Binding OpenMachineLogCommand}"/>
                             <Button Grid.Column="2" Style="{StaticResource Audio.LogButton}"
-                                    Content="HIVE Log" Command="{Binding OpenHiveLogCommand}"/>
+                                    Content="{loc:Tr Txt_HIVELog}" Command="{Binding OpenHiveLogCommand}"/>
                         </Grid>
 
                         <!-- Slide 54: "Show sensor connection button after login". -->
                         <Button Grid.Row="4" Style="{StaticResource Audio.PlainButton}"
                                 HorizontalAlignment="Left" Margin="0,8,0,0" Height="26"
-                                Content="Sensor Connection ›"
+                                Content="{loc:Tr Txt_SensorConnection}"
                                 Command="{Binding OpenSensorDashboardCommand}"
                                 Visibility="{Binding IsLoggedIn, Converter={StaticResource BoolToVisibility}}"
                                 AutomationProperties.Name="Sensor Connection"/>
@@ -531,7 +511,7 @@
         <!-- Opened from the station card after login. Level 1 views only; -->
         <!-- Level 2/3 can disable non-critical sensors. -->
         <!-- ============================================================== -->
-        <Border Grid.Row="1" Style="{StaticResource Audio.Card}"
+        <Border Style="{StaticResource Audio.Card}"
                 Visibility="{Binding IsSensorDashboardVisible, Converter={StaticResource BoolToVisibility}}">
             <Grid Margin="16,12">
                 <Grid.RowDefinitions>
@@ -541,9 +521,9 @@
                 </Grid.RowDefinitions>
 
                 <Grid Grid.Row="0">
-                    <TextBlock Style="{StaticResource Audio.Title3}" Text="Sensor Connection Dashboard"/>
+                    <TextBlock Style="{StaticResource Audio.Title3}" Text="{loc:Tr Txt_SensorConnectionDashboard}"/>
                     <Button Style="{StaticResource Audio.Button}" HorizontalAlignment="Right"
-                            Content="‹ Back to Home" Command="{Binding CloseSensorDashboardCommand}"/>
+                            Content="{loc:Tr Txt_BackToHome}" Command="{Binding CloseSensorDashboardCommand}"/>
                 </Grid>
 
                 <Grid Grid.Row="1" Margin="0,6,0,10">
@@ -552,17 +532,17 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Style="{StaticResource Home.Note}" VerticalAlignment="Center"
-                               Text="{Binding SensorAccessNote}"/>
+                               Text="{loc:TrBinding SensorAccessNote}"/>
                     <!-- The four sensor states of slide 55. -->
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                         <Ellipse Width="10" Height="10" Fill="{DynamicResource Audio.System.GreenBrush}"/>
-                        <TextBlock Style="{StaticResource Audio.Footnote}" Text="Activated" Margin="6,0,16,0"/>
+                        <TextBlock Style="{StaticResource Audio.Footnote}" Text="{loc:Tr Txt_Activated}" Margin="6,0,16,0"/>
                         <Ellipse Width="10" Height="10" Fill="{DynamicResource Audio.System.GrayBrush}"/>
-                        <TextBlock Style="{StaticResource Audio.Footnote}" Text="Idle" Margin="6,0,16,0"/>
+                        <TextBlock Style="{StaticResource Audio.Footnote}" Text="{loc:Tr Txt_Idle}" Margin="6,0,16,0"/>
                         <Ellipse Width="10" Height="10" Fill="{DynamicResource Audio.System.OrangeBrush}"/>
-                        <TextBlock Style="{StaticResource Audio.Footnote}" Text="Manually disabled" Margin="6,0,16,0"/>
+                        <TextBlock Style="{StaticResource Audio.Footnote}" Text="{loc:Tr Txt_ManuallyDisabled}" Margin="6,0,16,0"/>
                         <Ellipse Width="10" Height="10" Fill="{DynamicResource Audio.System.RedBrush}"/>
-                        <TextBlock Style="{StaticResource Audio.Footnote}" Text="Signal lost" Margin="6,0,0,0"/>
+                        <TextBlock Style="{StaticResource Audio.Footnote}" Text="{loc:Tr Txt_SignalLost}" Margin="6,0,0,0"/>
                     </StackPanel>
                 </Grid>
 
@@ -578,7 +558,7 @@
                             CornerRadius="{DynamicResource Audio.Radius.Field}" Padding="12,8">
                         <Grid>
                             <TextBlock Style="{StaticResource Audio.EmptyState}" MaxWidth="520"
-                                       Text="Sensor states are not linked to this dashboard yet - they come from the PLC's inputs. The device connections on the right are live."
+                                       Text="{loc:Tr Txt_SensorStatesAreNotLinkedToThis}"
                                        Visibility="{Binding HasSensorService, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"/>
 
                             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
@@ -586,7 +566,7 @@
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <StackPanel Margin="0,4,0,8">
-                                                <TextBlock Style="{StaticResource Audio.Headline}" Text="{Binding Location}" Margin="2,0,0,4"/>
+                                                <TextBlock Style="{StaticResource Audio.Headline}" Text="{loc:TrBinding Location}" Margin="2,0,0,4"/>
                                                 <ItemsControl ItemsSource="{Binding Sensors}">
                                                     <ItemsControl.ItemsPanel>
                                                         <ItemsPanelTemplate>
@@ -601,7 +581,7 @@
                                                                     Command="{Binding DataContext.ToggleSensorCommand,
                                                                               RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                                     CommandParameter="{Binding}"
-                                                                    ToolTip="{Binding ToolTip}"
+                                                                    ToolTip="{loc:TrBinding ToolTip}"
                                                                     AutomationProperties.Name="{Binding Id, StringFormat='Sensor {0}'}">
                                                                 <Grid Margin="10,6">
                                                                     <Grid.ColumnDefinitions>
@@ -612,17 +592,17 @@
                                                                             Background="{Binding Level, Converter={StaticResource HealthLevelToBrush}}"/>
                                                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                                                         <StackPanel Orientation="Horizontal">
-                                                                            <TextBlock Style="{StaticResource Audio.CalloutMono}" Text="{Binding Id}" FontWeight="SemiBold"/>
+                                                                            <TextBlock Style="{StaticResource Audio.CalloutMono}" Text="{loc:TrBinding Id}" FontWeight="SemiBold"/>
                                                                             <Border Background="{DynamicResource Audio.System.Gray5Brush}"
                                                                                     CornerRadius="{DynamicResource Audio.Radius.Small}"
                                                                                     Padding="5,0" Margin="8,0,0,0" VerticalAlignment="Center"
                                                                                     Visibility="{Binding IsCritical, Converter={StaticResource BoolToVisibility}}">
-                                                                                <TextBlock Style="{StaticResource Audio.Caption1}" Text="Critical"/>
+                                                                                <TextBlock Style="{StaticResource Audio.Caption1}" Text="{loc:Tr Txt_Critical}"/>
                                                                             </Border>
                                                                         </StackPanel>
-                                                                        <TextBlock Style="{StaticResource Audio.Caption1}" Text="{Binding Name}"
+                                                                        <TextBlock Style="{StaticResource Audio.Caption1}" Text="{loc:TrBinding Name}"
                                                                                    TextTrimming="CharacterEllipsis"/>
-                                                                        <TextBlock Style="{StaticResource Audio.Caption1}" Text="{Binding StateText}"
+                                                                        <TextBlock Style="{StaticResource Audio.Caption1}" Text="{loc:TrBinding StateText}"
                                                                                    Foreground="{Binding Level, Converter={StaticResource HealthLevelToBrush}}"/>
                                                                     </StackPanel>
                                                                 </Grid>
@@ -641,7 +621,7 @@
                     <!-- Unit positions and device connections -->
                     <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                         <StackPanel>
-                            <TextBlock Style="{StaticResource Audio.Headline}" Text="Units on the machine" Margin="0,0,0,6"
+                            <TextBlock Style="{StaticResource Audio.Headline}" Text="{loc:Tr Txt_UnitsOnTheMachine}" Margin="0,0,0,6"
                                        Visibility="{Binding HasSensorService, Converter={StaticResource BoolToVisibility}}"/>
                             <ItemsControl ItemsSource="{Binding UnitLocations}" Margin="0,0,0,14">
                                 <ItemsControl.ItemTemplate>
@@ -661,13 +641,13 @@
                                                     </Style>
                                                 </Border.Style>
                                             </Border>
-                                            <TextBlock Style="{StaticResource Audio.Footnote}" Text="{Binding StateText}" Margin="8,0,0,0"/>
+                                            <TextBlock Style="{StaticResource Audio.Footnote}" Text="{loc:TrBinding StateText}" Margin="8,0,0,0"/>
                                         </StackPanel>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
 
-                            <TextBlock Style="{StaticResource Audio.Headline}" Text="Device connections" Margin="0,0,0,6"/>
+                            <TextBlock Style="{StaticResource Audio.Headline}" Text="{loc:Tr Txt_DeviceConnections}" Margin="0,0,0,6"/>
                             <ItemsControl ItemsSource="{Binding Devices}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -676,7 +656,7 @@
                                                      Fill="{Binding IsConnected,
                                                                     Converter={StaticResource BoolToBrushKey},
                                                                     ConverterParameter='Audio.System.GreenBrush|Audio.System.RedBrush'}"/>
-                                            <TextBlock Style="{StaticResource Audio.Footnote}" Text="{Binding StatusText}" Margin="8,0,0,0"/>
+                                            <TextBlock Style="{StaticResource Audio.Footnote}" Text="{loc:TrBinding StatusText}" Margin="8,0,0,0"/>
                                         </StackPanel>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
@@ -686,13 +666,5 @@
                 </Grid>
             </Grid>
         </Border>
-
-        <!-- ============================================================== -->
-        <!-- VENDOR TAB  (slide 57)                                          -->
-        <!-- Empty: the manual-operation GUI, the Homing button and the      -->
-        <!-- running log are on the Setting page's Manual tab.               -->
-        <!-- ============================================================== -->
-        <Grid Grid.Row="1"
-              Visibility="{Binding IsMainTab, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}"/>
     </Grid>
 </UserControl>

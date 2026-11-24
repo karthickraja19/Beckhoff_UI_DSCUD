@@ -17,8 +17,9 @@ namespace Nova.Abstractions.Services
     }
 
     /// <summary>
-    /// The HIVE state changes the machine has made, for the Home page's State Changes
-    /// chart (Audio SW DFM v5.4 slide 43: "shows past 7 days' state data").
+    /// The state changes the machine has made, for the Home page's State Changes chart
+    /// (Audio SW DFM v5.4 slide 43: "shows past 7 days' state data"). Implemented over
+    /// [HealthData] (Master.Repository's HealthStateHistory); state 0 is a time with no record.
     /// </summary>
     public interface IHiveStateHistory
     {

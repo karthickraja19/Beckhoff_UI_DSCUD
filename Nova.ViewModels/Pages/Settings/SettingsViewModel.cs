@@ -77,10 +77,12 @@ namespace Nova.ViewModels.Pages.Settings
             IMachineSettingsService machineSettingsService,
             IDigitalIOService digitalIoService,
             IMachineContext machineContext,
-            // Needed by Device Settings: a mode change stops the sequence first.
+            // Needed by Device Settings: the mode is not changed while the machine runs.
             Nova.Abstractions.Machine.Interfaces.IMachineOrchestrator orchestrator,
             // SFC & PDCA: the AE-limit tabs export their table to CSV.
-            ICsvExportService csv = null)
+            ICsvExportService csv = null,
+            // Device Settings: the PLC's run mode, bypasses and maintenance stations.
+            IMachineModeLink machineModeLink = null)
         {
             if (dialogService == null) throw new System.ArgumentNullException(nameof(dialogService));
             if (machineSettingsService == null) throw new System.ArgumentNullException(nameof(machineSettingsService));
@@ -96,15 +98,11 @@ namespace Nova.ViewModels.Pages.Settings
                 new TabItemViewModel("AE limits (CPK)", "", new AeLimitsViewModel("AE limits (CPK)", AeLimitKind.Cpk, machineSettingsService, dialogService, csv)),
                 new TabItemViewModel("AE limits (GRR)", "", new AeLimitsViewModel("AE limits (GRR)", AeLimitKind.Grr, machineSettingsService, dialogService, csv)));
 
-            var calibrationGroup = new SettingsGroupViewModel("Calibration",
-                new TabItemViewModel("Camera", "Camera", new CalibrationCameraViewModel()),
-                new TabItemViewModel("Robot", "Bot", new CalibrationRobotViewModel()));
-
             // Shift settings (General), Analog I/O and Vision Settings were V3 tabs this
             // machine does not use, and are not offered.
             Tabs = new ObservableCollection<TabItemViewModel>
             {
-                new TabItemViewModel("Device Settings", "Cpu", new DeviceSettingsViewModel(machineContext, orchestrator, dialogService)),
+                new TabItemViewModel("Device Settings", "Cpu", new DeviceSettingsViewModel(machineContext, orchestrator, dialogService, machineModeLink)),
 
                 new TabItemViewModel("I/O Diagnostics", "Activity", new DigitalIoViewModel(digitalIoService)),
 
@@ -112,7 +110,8 @@ namespace Nova.ViewModels.Pages.Settings
 
                 new TabItemViewModel("SFC & PDCA Settings", "ClipboardList", sfcGroup),
 
-                new TabItemViewModel("Calibration", "Crosshair", calibrationGroup),
+                // Calibration is not here: the PLC's calibration routines are run from the
+                // Setting page's Calibration tab.
             };
 
             SelectedTab = Tabs[0];

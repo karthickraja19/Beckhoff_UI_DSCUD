@@ -6,6 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Xml.Linq;
 using Newtonsoft.Json;
+using Master.Configuration;
+using Master.Configuration.Model;
 using Nova.Abstractions.Data.Models;
 using Nova.Abstractions.Services;
 
@@ -14,7 +16,6 @@ namespace Nova.Core.Services
     public sealed class JsonMachineSettingsService : IMachineSettingsService
     {
         private const string SettingsFolder = "Settings";
-        private const string AxisParametersJsonFile = "AxisParameters.json";
         private const string TcpSettingsJsonFile = "TcpSettings.json";
         private const string SerialSettingsJsonFile = "SerialSettings.json";
         private const string VisionSettingsJsonFile = "VisionSettings.json";
@@ -22,7 +23,6 @@ namespace Nova.Core.Services
         private const string AeCpkJsonFile = "AeLimits_CPK.json";
         private const string AeGrrJsonFile = "AeLimits_GRR.json";
 
-        private const string AxisParametersXmlFile = "Axis_Parameters.xml";
         private const string TcpSettingsXmlFile = "TCPIP_Settings.xml";
         private const string SerialSettingsXmlFile = "SerialComm_Settings.xml";
         private const string VisionSettingsXmlFile = "Vision_Settings.xml";
@@ -96,88 +96,98 @@ namespace Nova.Core.Services
             return null;
         }
 
+        // ==================================================================
+        // Axis Configuration: Data\Servos.json
+        //
+        // The table is the servos of Servos.json, the same entries the Recipe page's Gantry
+        // tab teaches positions into. Nothing is kept apart from it: a load reads the file as
+        // it is on disk now, and a save changes only the parameter fields of the servos shown,
+        // leaving every other field - above all ConfiguredPositions - as the file has it. So a
+        // position saved on the Recipe page and a parameter saved here never overwrite each other.
+        // ==================================================================
+
+        private const string AxisKeyName = "EnumName";
+        private const string AxisKeyId = "Id";
+        private const string AxisKeyType = "Type";
+        private const string AxisKeyPulse = "Pulse";
+        private const string AxisKeyVelocity = "Velocity";
+        private const string AxisKeyAcceleration = "Acceleration";
+        private const string AxisKeyDeceleration = "Deceleration";
+        private const string AxisKeyPositiveLimit = "PositiveLimit";
+        private const string AxisKeyNegativeLimit = "NegativeLimit";
+        private const string AxisKeyTimeout = "Timeout";
+
+        private static string FormatNumber(double value) => value.ToString("0.######", CultureInfo.InvariantCulture);
+
+        /// <summary>The Axis Configuration table's columns: the identity of the servo, then the parameters Servos.json holds for it.</summary>
+        private static List<DynamicColumnSchema> ServoColumns()
+        {
+            return new List<DynamicColumnSchema>
+            {
+                new DynamicColumnSchema { Key = AxisKeyName, Title = "AXIS NAME", IsReadOnly = true, IsIdentifier = true },
+                new DynamicColumnSchema { Key = AxisKeyId, Title = "AXIS ID", IsReadOnly = true, IsIdentifier = true },
+                new DynamicColumnSchema { Key = AxisKeyType, Title = "TYPE", IsReadOnly = true },
+                new DynamicColumnSchema { Key = AxisKeyPulse, Title = "PULSE", DataType = ColumnDataType.NonNegative },
+                new DynamicColumnSchema { Key = AxisKeyVelocity, Title = "VELOCITY", DataType = ColumnDataType.NonNegative },
+                new DynamicColumnSchema { Key = AxisKeyAcceleration, Title = "ACCELERATION", DataType = ColumnDataType.NonNegative },
+                new DynamicColumnSchema { Key = AxisKeyDeceleration, Title = "DECELERATION", DataType = ColumnDataType.NonNegative },
+                new DynamicColumnSchema { Key = AxisKeyPositiveLimit, Title = "POSITIVE LIMIT", DataType = ColumnDataType.Numeric },
+                new DynamicColumnSchema { Key = AxisKeyNegativeLimit, Title = "NEGATIVE LIMIT", DataType = ColumnDataType.Numeric },
+                new DynamicColumnSchema { Key = AxisKeyTimeout, Title = "TIMEOUT (MS)", DataType = ColumnDataType.NonNegative },
+            };
+        }
+
+        private static Dictionary<string, string> ServoRow(ServoConfiguration servo)
+        {
+            return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                [AxisKeyName] = servo.EnumName ?? string.Empty,
+                [AxisKeyId] = servo.Id.ToString(CultureInfo.InvariantCulture),
+                [AxisKeyType] = servo.Type.ToString(),
+                [AxisKeyPulse] = FormatNumber(servo.Pulse),
+                [AxisKeyVelocity] = FormatNumber(servo.Velocity),
+                [AxisKeyAcceleration] = FormatNumber(servo.Acceleration),
+                [AxisKeyDeceleration] = FormatNumber(servo.Deceleration),
+                [AxisKeyPositiveLimit] = FormatNumber(servo.PositiveLimit),
+                [AxisKeyNegativeLimit] = FormatNumber(servo.NegativeLimit),
+                [AxisKeyTimeout] = servo.Timeout.ToString(CultureInfo.InvariantCulture),
+            };
+        }
+
         public DynamicTableDocument LoadAxisParametersDynamic()
         {
-            string jsonPath = GetSettingsPath(AxisParametersJsonFile);
-            if (File.Exists(jsonPath))
+            var servos = MachineConfiguration.ReadServos(_dataDirectory) ?? new List<ServoConfiguration>();
+
+            return new DynamicTableDocument
             {
-                try
-                {
-                    string content = File.ReadAllText(jsonPath, Encoding.UTF8);
-                    var doc = ParseDynamicJson(content, "Axis Parameters", new[] { "CardId", "AxisId", "AxisName" });
-                    if (doc != null && doc.Columns.Count > 0 && doc.Rows.Count > 0)
-                    {
-                        return doc;
-                    }
-                }
-                catch
-                {
-                    // Fallback to XML
-                }
-            }
-
-            // Fallback to XML
-            string xmlPath = GetSettingsPath(AxisParametersXmlFile);
-            if (File.Exists(xmlPath))
-            {
-                var doc = XDocument.Load(xmlPath);
-                var records = LoadAxisParametersFromXml(doc);
-                var columns = new List<DynamicColumnSchema>
-                {
-                    new DynamicColumnSchema { Key = "CardId", Title = "CARD ID", IsReadOnly = true, IsIdentifier = true },
-                    new DynamicColumnSchema { Key = "AxisId", Title = "AXIS ID", IsReadOnly = true, IsIdentifier = true },
-                    new DynamicColumnSchema { Key = "AxisName", Title = "AXIS NAME", IsReadOnly = true, IsIdentifier = true },
-                    new DynamicColumnSchema { Key = "Pitch", Title = "PITCH", IsReadOnly = false },
-                    new DynamicColumnSchema { Key = "Pulses", Title = "PULSES/MM", IsReadOnly = false },
-                    new DynamicColumnSchema { Key = "PPR", Title = "PPR", IsReadOnly = false },
-                    new DynamicColumnSchema { Key = "HomingAcc", Title = "HOMING ACC", IsReadOnly = false },
-                    new DynamicColumnSchema { Key = "HomingDeAcc", Title = "HOMING DE-ACC", IsReadOnly = false },
-                    new DynamicColumnSchema { Key = "HomingSpeed", Title = "HOMING SPEED", IsReadOnly = false },
-                };
-                var rows = records.Select(r => new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-                {
-                    ["CardId"] = r.CardId,
-                    ["AxisId"] = r.AxisId,
-                    ["AxisName"] = r.AxisName,
-                    ["Pitch"] = r.Pitch,
-                    ["Pulses"] = r.Pulses,
-                    ["PPR"] = r.Ppr,
-                    ["HomingAcc"] = r.HomingAcc,
-                    ["HomingDeAcc"] = r.HomingDeAcc,
-                    ["HomingSpeed"] = r.HomingSpeed,
-                }).ToList();
-
-                return new DynamicTableDocument
-                {
-                    Title = "Axis Parameters",
-                    Columns = columns,
-                    Rows = rows
-                };
-            }
-
-            return new DynamicTableDocument { Title = "Axis Parameters" };
+                Title = "Axis Configuration",
+                Columns = ServoColumns(),
+                Rows = servos
+                    .Where(s => s != null && !string.IsNullOrWhiteSpace(s.EnumName))
+                    .Select(ServoRow)
+                    .ToList(),
+            };
         }
 
         public IReadOnlyList<AxisParameterRecord> LoadAxisParameters()
         {
-            var doc = LoadAxisParametersDynamic();
-            var list = new List<AxisParameterRecord>(doc.Rows.Count);
-            foreach (var r in doc.Rows)
-            {
-                list.Add(new AxisParameterRecord
+            var servos = MachineConfiguration.ReadServos(_dataDirectory) ?? new List<ServoConfiguration>();
+            return servos
+                .Where(s => s != null && !string.IsNullOrWhiteSpace(s.EnumName))
+                .Select(s => new AxisParameterRecord
                 {
-                    CardId = r.TryGetValue("CardId", out var cid) ? cid : string.Empty,
-                    AxisId = r.TryGetValue("AxisId", out var aid) ? aid : string.Empty,
-                    AxisName = r.TryGetValue("AxisName", out var an) ? an : string.Empty,
-                    Pitch = r.TryGetValue("Pitch", out var p) ? p : string.Empty,
-                    Pulses = r.TryGetValue("Pulses", out var pul) ? pul : string.Empty,
-                    Ppr = r.TryGetValue("PPR", out var ppr) ? ppr : string.Empty,
-                    HomingAcc = r.TryGetValue("HomingAcc", out var ha) ? ha : string.Empty,
-                    HomingDeAcc = r.TryGetValue("HomingDeAcc", out var hda) ? hda : string.Empty,
-                    HomingSpeed = r.TryGetValue("HomingSpeed", out var hs) ? hs : string.Empty,
-                });
-            }
-            return list;
+                    AxisName = s.EnumName,
+                    AxisId = s.Id.ToString(CultureInfo.InvariantCulture),
+                    Type = s.Type.ToString(),
+                    Pulse = FormatNumber(s.Pulse),
+                    Velocity = FormatNumber(s.Velocity),
+                    Acceleration = FormatNumber(s.Acceleration),
+                    Deceleration = FormatNumber(s.Deceleration),
+                    PositiveLimit = FormatNumber(s.PositiveLimit),
+                    NegativeLimit = FormatNumber(s.NegativeLimit),
+                    Timeout = s.Timeout.ToString(CultureInfo.InvariantCulture),
+                })
+                .ToList();
         }
 
         public RecipeSaveResult SaveAxisParametersDynamic(DynamicTableDocument document)
@@ -187,72 +197,113 @@ namespace Nova.Core.Services
                 throw new ArgumentNullException(nameof(document));
             }
 
-            var oldDoc = LoadAxisParametersDynamic();
-            string jsonPath = GetSettingsPath(AxisParametersJsonFile);
-
-            var jArray = new Newtonsoft.Json.Linq.JArray();
-            foreach (var row in document.Rows)
+            var servos = MachineConfiguration.ReadServos(_dataDirectory);
+            if (servos == null || servos.Count == 0)
             {
-                var jObj = new Newtonsoft.Json.Linq.JObject();
-                foreach (var col in document.Columns)
-                {
-                    jObj[col.Key] = row.TryGetValue(col.Key, out var val) ? val : string.Empty;
-                }
-                jArray.Add(jObj);
+                throw new InvalidOperationException("Data\\" + MachineConfiguration.ServosFile + " is missing or cannot be read.");
             }
 
-            string newJson = jArray.ToString(Formatting.Indented);
-            string oldJson = File.Exists(jsonPath) ? File.ReadAllText(jsonPath, Encoding.UTF8) : string.Empty;
+            var oldDoc = LoadAxisParametersDynamic();
 
-            if (!string.IsNullOrEmpty(oldJson) && Normalize(oldJson).Equals(Normalize(newJson), StringComparison.Ordinal))
+            // Every cell is checked before anything changes, so a bad cell saves nothing.
+            var edits = new List<KeyValuePair<ServoConfiguration, Dictionary<string, double>>>();
+            var unknown = new List<string>();
+            foreach (var row in document.Rows)
+            {
+                string name = AxisCell(row, AxisKeyName);
+                if (name.Length == 0)
+                {
+                    continue;
+                }
+
+                var servo = servos.FirstOrDefault(s => s != null && string.Equals((s.EnumName ?? string.Empty).Trim(), name, StringComparison.OrdinalIgnoreCase));
+                if (servo == null)
+                {
+                    unknown.Add(name);
+                    continue;
+                }
+
+                edits.Add(new KeyValuePair<ServoConfiguration, Dictionary<string, double>>(servo, new Dictionary<string, double>
+                {
+                    [AxisKeyPulse] = AxisNumber(name, row, AxisKeyPulse),
+                    [AxisKeyVelocity] = AxisNumber(name, row, AxisKeyVelocity),
+                    [AxisKeyAcceleration] = AxisNumber(name, row, AxisKeyAcceleration),
+                    [AxisKeyDeceleration] = AxisNumber(name, row, AxisKeyDeceleration),
+                    [AxisKeyPositiveLimit] = AxisNumber(name, row, AxisKeyPositiveLimit),
+                    [AxisKeyNegativeLimit] = AxisNumber(name, row, AxisKeyNegativeLimit),
+                    [AxisKeyTimeout] = AxisNumber(name, row, AxisKeyTimeout),
+                }));
+            }
+
+            if (unknown.Count > 0)
+            {
+                throw new InvalidOperationException("Not a servo in Data\\" + MachineConfiguration.ServosFile + ": " + string.Join(", ", unknown) + ". Nothing was saved.");
+            }
+
+            bool modified = false;
+            foreach (var edit in edits)
+            {
+                var servo = edit.Key;
+                var v = edit.Value;
+                int timeout = (int)v[AxisKeyTimeout];
+
+                if (servo.Pulse != v[AxisKeyPulse] || servo.Velocity != v[AxisKeyVelocity]
+                    || servo.Acceleration != v[AxisKeyAcceleration] || servo.Deceleration != v[AxisKeyDeceleration]
+                    || servo.PositiveLimit != v[AxisKeyPositiveLimit] || servo.NegativeLimit != v[AxisKeyNegativeLimit]
+                    || servo.Timeout != timeout)
+                {
+                    servo.Pulse = v[AxisKeyPulse];
+                    servo.Velocity = v[AxisKeyVelocity];
+                    servo.Acceleration = v[AxisKeyAcceleration];
+                    servo.Deceleration = v[AxisKeyDeceleration];
+                    servo.PositiveLimit = v[AxisKeyPositiveLimit];
+                    servo.NegativeLimit = v[AxisKeyNegativeLimit];
+                    servo.Timeout = timeout;
+                    modified = true;
+                }
+            }
+
+            if (!modified)
             {
                 return RecipeSaveResult.NoChanges("No data modified !");
             }
 
-            EnsureSettingsDirectoryExists();
-            WriteTextDual(jsonPath, AxisParametersJsonFile, newJson);
+            // ConfiguredPositions and any other field of an entry ride along untouched.
+            MachineConfiguration.SaveServos(_dataDirectory, servos);
+            SettingsChanged?.Invoke(this, EventArgs.Empty);
 
-            string[] headers = document.Columns.Select(c => c.Title).ToArray();
-            var oldRowArray = oldDoc.Rows.Select(r => document.Columns.Select(c => r.TryGetValue(c.Key, out var val) ? val : string.Empty).ToArray()).ToList();
-            var newRowArray = document.Rows.Select(r => document.Columns.Select(c => r.TryGetValue(c.Key, out var val) ? val : string.Empty).ToArray()).ToList();
+            var columns = oldDoc.Columns;
+            string[] headers = columns.Select(c => c.Title).ToArray();
+            var oldRowArray = oldDoc.Rows.Select(r => columns.Select(c => r.TryGetValue(c.Key, out var val) ? val : string.Empty).ToArray()).ToList();
+            var newRowArray = document.Rows.Select(r => columns.Select(c => r.TryGetValue(c.Key, out var val) ? val : string.Empty).ToArray()).ToList();
+            AppendEditLog(MachineConfiguration.ServosFile, headers, oldRowArray, newRowArray);
 
-            AppendEditLog(AxisParametersJsonFile, headers, oldRowArray, newRowArray);
-            return RecipeSaveResult.Saved("Axis parameters saved successfully.");
+            return RecipeSaveResult.Saved("Axis configuration saved successfully.");
         }
 
-        public RecipeSaveResult SaveAxisParameters(IReadOnlyList<AxisParameterRecord> rows)
+        private static string AxisCell(Dictionary<string, string> row, string key)
         {
-            if (rows == null)
-            {
-                throw new ArgumentNullException(nameof(rows));
-            }
-
-            var doc = LoadAxisParametersDynamic();
-            var rowDicts = new List<Dictionary<string, string>>(rows.Count);
-            for (int i = 0; i < rows.Count; i++)
-            {
-                var dict = i < doc.Rows.Count ? new Dictionary<string, string>(doc.Rows[i], StringComparer.OrdinalIgnoreCase) : new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                dict["CardId"] = rows[i].CardId;
-                dict["AxisId"] = rows[i].AxisId;
-                dict["AxisName"] = rows[i].AxisName;
-                dict["Pitch"] = rows[i].Pitch;
-                dict["Pulses"] = rows[i].Pulses;
-                dict["PPR"] = rows[i].Ppr;
-                dict["HomingAcc"] = rows[i].HomingAcc;
-                dict["HomingDeAcc"] = rows[i].HomingDeAcc;
-                dict["HomingSpeed"] = rows[i].HomingSpeed;
-                rowDicts.Add(dict);
-            }
-
-            var newDoc = new DynamicTableDocument
-            {
-                Title = doc.Title,
-                Columns = doc.Columns,
-                Rows = rowDicts
-            };
-
-            return SaveAxisParametersDynamic(newDoc);
+            return row != null && row.TryGetValue(key, out var value) && value != null ? value.Trim() : string.Empty;
         }
+
+        /// <summary>The cell as a number; a blank cell is 0. Throws for anything else that is not a number.</summary>
+        private static double AxisNumber(string axis, Dictionary<string, string> row, string key)
+        {
+            string raw = AxisCell(row, key);
+            if (raw.Length == 0)
+            {
+                return 0d;
+            }
+
+            if (double.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out double value)
+                && !double.IsNaN(value) && !double.IsInfinity(value))
+            {
+                return value;
+            }
+
+            throw new InvalidOperationException(axis + ": '" + raw + "' is not a number (" + key + "). Nothing was saved.");
+        }
+
 
         private static bool MatchesCategory(string name, string category)
         {
@@ -298,8 +349,8 @@ namespace Nova.Core.Services
                     var columns = new List<DynamicColumnSchema>
                     {
                         new DynamicColumnSchema { Key = "Name", Title = "Name", IsReadOnly = true, IsIdentifier = true },
-                        new DynamicColumnSchema { Key = "IpAddress", Title = "IP Address", IsReadOnly = false },
-                        new DynamicColumnSchema { Key = "Port", Title = "Port", IsReadOnly = false },
+                        new DynamicColumnSchema { Key = "IpAddress", Title = "IP Address", IsReadOnly = false, DataType = ColumnDataType.IpAddress },
+                        new DynamicColumnSchema { Key = "Port", Title = "Port", IsReadOnly = false, DataType = ColumnDataType.Integer },
                     };
                     var rows = new List<Dictionary<string, string>>();
                     foreach (var node in root.Elements("Server"))
@@ -811,7 +862,7 @@ namespace Nova.Core.Services
             // every load after that warns that the schema is missing. A file that has
             // already lost its schema gets the standard AE columns back.
             IReadOnlyList<DynamicColumnSchema> columns = oldDoc.HasMissingColumnSchema || document.Columns == null || document.Columns.Count == 0
-                ? WithStandardAeColumns(document.Columns)
+                ? WithStandardColumns(StandardAeColumns(), document.Columns)
                 : document.Columns;
 
             var jArray = new Newtonsoft.Json.Linq.JArray();
@@ -869,12 +920,11 @@ namespace Nova.Core.Services
         }
 
         /// <summary>
-        /// The standard AE columns, plus any other column the caller had, so a file
+        /// The standard columns, plus any other column the caller had, so a file
         /// with an extra column keeps it.
         /// </summary>
-        private static List<DynamicColumnSchema> WithStandardAeColumns(IReadOnlyList<DynamicColumnSchema> existing)
+        private static List<DynamicColumnSchema> WithStandardColumns(List<DynamicColumnSchema> columns, IReadOnlyList<DynamicColumnSchema> existing)
         {
-            var columns = StandardAeColumns();
             if (existing != null)
             {
                 foreach (var col in existing)
@@ -1089,34 +1139,6 @@ namespace Nova.Core.Services
             {
                 Directory.CreateDirectory(dir);
             }
-        }
-
-        private static List<AxisParameterRecord> LoadAxisParametersFromXml(XDocument doc)
-        {
-            var result = new List<AxisParameterRecord>();
-            var root = doc.Root;
-            if (root == null)
-            {
-                return result;
-            }
-
-            foreach (var node in root.Elements("Axis_Parameters"))
-            {
-                result.Add(new AxisParameterRecord
-                {
-                    CardId = ReadElement(node, "Card_ID"),
-                    AxisId = ReadElement(node, "Axis_ID"),
-                    AxisName = ReadElement(node, "Axis_Name"),
-                    Pitch = ReadElement(node, "Pitch"),
-                    Pulses = ReadElement(node, "Pulses"),
-                    Ppr = ReadElement(node, "PPR"),
-                    HomingAcc = ReadElement(node, "Homing_Acc"),
-                    HomingDeAcc = ReadElement(node, "Homing_DeAcc"),
-                    HomingSpeed = ReadElement(node, "Homing_Speed"),
-                });
-            }
-
-            return result;
         }
 
         private static string GetAeJsonFileName(AeLimitKind kind)

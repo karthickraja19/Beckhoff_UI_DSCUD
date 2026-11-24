@@ -1,5 +1,6 @@
 <UserControl x:Class="Nova.Wpf.App.Views.Pages.Audio.AudioVisionView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:loc="clr-namespace:Nova.Wpf.UI.Localization;assembly=Nova.Wpf.UI"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:converters="clr-namespace:Nova.Wpf.App.Converters"
              FontFamily="{DynamicResource Audio.FontFamily}"
@@ -20,17 +21,17 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>   <!-- where the frames come from -->
-            <RowDefinition Height="*"/>      <!-- 3x2 grid -->
+            <RowDefinition Height="*"/>      <!-- one tile per camera -->
             <RowDefinition Height="Auto"/>   <!-- detail, once a tile is chosen -->
         </Grid.RowDefinitions>
 
         <TextBlock Grid.Row="0" Style="{StaticResource Audio.Footnote}" Margin="16,6,16,0"
-                   Text="{Binding SourceText}" TextTrimming="CharacterEllipsis" ToolTip="{Binding SourceText}"/>
+                   Text="{loc:TrBinding SourceText}" TextTrimming="CharacterEllipsis" ToolTip="{loc:TrBinding SourceText}"/>
 
         <ItemsControl Grid.Row="1" ItemsSource="{Binding Tiles}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <UniformGrid Rows="2" Columns="3"/>
+                    <UniformGrid Columns="{Binding TileColumns}"/>
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
@@ -50,8 +51,8 @@
                                 <Image Grid.Row="0" Margin="6,6,6,2" Stretch="Uniform"
                                        Source="{Binding ImagePath, Converter={StaticResource PathToImage}, ConverterParameter=640}"/>
                                 <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,6">
-                                    <TextBlock Style="{StaticResource Audio.Footnote}" FontWeight="SemiBold" Text="{Binding Name}" Margin="0,0,10,0"/>
-                                    <TextBlock Style="{StaticResource Audio.Footnote}" Text="{Binding Caption}"/>
+                                    <TextBlock Style="{StaticResource Audio.Footnote}" FontWeight="SemiBold" Text="{loc:TrBinding Name}" Margin="0,0,10,0"/>
+                                    <TextBlock Style="{StaticResource Audio.Footnote}" Text="{loc:TrBinding Caption}"/>
                                 </StackPanel>
                                 <Border Grid.RowSpan="2" BorderBrush="{DynamicResource Audio.System.RedBrush}" BorderThickness="3"
                                         CornerRadius="{DynamicResource Audio.Radius.Card}" IsHitTestVisible="False"
@@ -65,9 +66,9 @@
                                         Visibility="{Binding HasImage, Converter={StaticResource BoolToVisibility},
                                                              ConverterParameter=invert}">
                                 <TextBlock Style="{StaticResource Audio.Title3}"
-                                           Text="{Binding Name}" HorizontalAlignment="Center"/>
+                                           Text="{loc:TrBinding Name}" HorizontalAlignment="Center"/>
                                 <TextBlock Style="{StaticResource Audio.Caption1}"
-                                           Text="no frame captured" HorizontalAlignment="Center"
+                                           Text="{loc:Tr Txt_NoFrameCaptured}" HorizontalAlignment="Center"
                                            Margin="0,4,0,0"/>
                             </StackPanel>
 
@@ -100,7 +101,7 @@
                     </Grid.RowDefinitions>
 
                     <TextBlock Grid.Row="0" Style="{StaticResource Audio.Headline}"
-                               Text="Information" Margin="0,0,0,8"/>
+                               Text="{loc:Tr Txt_Information}" Margin="0,0,0,8"/>
 
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                         <ItemsControl ItemsSource="{Binding SelectedTile.Information}">
@@ -112,7 +113,7 @@
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Grid.Column="0" Style="{StaticResource Audio.Footnote}"
-                                                   Text="{Binding Label}"/>
+                                                   Text="{loc:TrBinding Label}"/>
                                         <TextBlock Grid.Column="1" Style="{StaticResource Audio.Caption1Mono}"
                                                    Foreground="{DynamicResource Audio.Text.PrimaryBrush}"
                                                    Text="{Binding Value}" Margin="12,0,0,0"/>
@@ -135,9 +136,9 @@
                         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="460"
                                     Visibility="{Binding SelectedTile.HasImage, Converter={StaticResource BoolToVisibility}, ConverterParameter=invert}">
                             <TextBlock Style="{StaticResource Audio.Title3}"
-                                       Text="{Binding SelectedTile.Name}" HorizontalAlignment="Center"/>
+                                       Text="{loc:TrBinding SelectedTile.Name}" HorizontalAlignment="Center"/>
                             <TextBlock Style="{StaticResource Audio.EmptyState}" Margin="0,8,0,0" TextWrapping="Wrap"
-                                       Text="This camera has no capture yet."/>
+                                       Text="{loc:Tr Txt_ThisCameraHasNoCaptureYet}"/>
                         </StackPanel>
                     </Grid>
                 </Border>

@@ -49,6 +49,10 @@ namespace Nova.Hive
                 data["MS_SHA1"] = settings.MainSoftwareHash;
             }
 
+            // S4.1: the 24-hour dry run's id from UMSID.dll.
+            if (!string.IsNullOrWhiteSpace(change.UniqueMachineStateId))
+                data["unique_machine_state_id"] = change.UniqueMachineStateId;
+
             // The DFM allows error information on state 5 payloads only.
             if (change.Error != null)
             {
@@ -67,6 +71,72 @@ namespace Nova.Hive
                 ["state_change_time"] = Time(change.Time),
                 ["data"] = data,
             };
+
+            return payload.ToString(Formatting.None);
+        }
+
+        /// <summary>
+        /// The machine_data payload for one finished unit (PayloadSpec 5.6, "parametric /
+        /// attribute / limit data"): sent as the <c>jsondata</c> form of a multipart request.
+        /// </summary>
+        /// <remarks>
+        /// "pass" is a string in the spec ("true" / "false"), not a JSON boolean. "blobs" is
+        /// always there - an empty list when no file goes with the unit; an empty file name
+        /// makes Insight refuse the upload (DFM slide 19).
+        /// </remarks>
+        public static string MachineData(HiveUnitData unit)
+        {
+            var serials = new JObject();
+            foreach (var pair in unit.Serials)
+            {
+                if (!string.IsNullOrWhiteSpace(pair.Key) && !string.IsNullOrWhiteSpace(pair.Value))
+                    serials[pair.Key] = pair.Value;
+            }
+
+            var data = new JObject();
+            foreach (var pair in unit.Data)
+            {
+                if (!string.IsNullOrWhiteSpace(pair.Key) && pair.Value != null)
+                    data[pair.Key] = JToken.FromObject(pair.Value);
+            }
+
+            var payload = new JObject
+            {
+                ["unit_sn"] = unit.UnitSn,
+                ["serials"] = serials,
+                ["pass"] = unit.Pass ? "true" : "false",
+                ["input_time"] = Time(unit.InputTime),
+                ["output_time"] = Time(unit.OutputTime),
+                ["data"] = data,
+            };
+
+            // A limit only for a key that is really in data ("All keys in limit section
+            // must match keys in data section").
+            var limits = new JObject();
+            foreach (var pair in unit.Limits)
+            {
+                if (pair.Value == null || data[pair.Key] == null || (!pair.Value.Lower.HasValue && !pair.Value.Upper.HasValue))
+                    continue;
+
+                var limit = new JObject();
+                if (pair.Value.Upper.HasValue)
+                    limit["upper_limit"] = pair.Value.Upper.Value;
+                if (pair.Value.Lower.HasValue)
+                    limit["lower_limit"] = pair.Value.Lower.Value;
+                limits[pair.Key] = limit;
+            }
+
+            if (limits.Count > 0)
+                payload["limit"] = limits;
+
+            var blobs = new JArray();
+            foreach (string file in unit.BlobFiles)
+            {
+                if (!string.IsNullOrWhiteSpace(file))
+                    blobs.Add(new JObject { ["file_name"] = System.IO.Path.GetFileName(file) });
+            }
+
+            payload["blobs"] = blobs;
 
             return payload.ToString(Formatting.None);
         }

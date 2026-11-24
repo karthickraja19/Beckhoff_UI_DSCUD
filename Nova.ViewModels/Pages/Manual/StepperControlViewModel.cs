@@ -37,8 +37,14 @@ namespace Nova.ViewModels.Pages.Manual
         private string _selectedMotor;
 
         // ---- Motion parameters --------------------------------------------
+        // The manual jog velocity, % of the drive's speed range (the PLC's par.fMvelocity).
+        // Filled from the PLC when a motor is shown; written to it on Forward / Reverse.
         [ObservableProperty]
         private string _speed;
+
+        /// <summary>Highest velocity the selected motor takes (100 % for an IO stepper).</summary>
+        [ObservableProperty]
+        private double _maxSpeed = 100;
 
         // ---- Live read-back values ----------------------------------------
         [ObservableProperty]
@@ -160,6 +166,43 @@ namespace Nova.ViewModels.Pages.Manual
             IDisposable previous = _following;
             _following = (CurrentStepper as ILiveStatus)?.FollowStatus();
             previous?.Dispose();
+
+            _ = LoadSpeedAsync();
+        }
+
+        /// <summary>
+        /// Shows the velocity the PLC has for the selected motor, so the box starts from what
+        /// the stepper actually runs at. Left blank when it cannot be read.
+        /// </summary>
+        private async Task LoadSpeedAsync()
+        {
+            var stepper = CurrentStepper;
+            string motor = SelectedMotor;
+            if (stepper == null)
+            {
+                Speed = null;
+                return;
+            }
+
+            MaxSpeed = stepper.MaxSpeed;
+
+            double? velocity = null;
+            try
+            {
+                velocity = await stepper.ReadSpeedAsync();
+            }
+            catch (Exception)
+            {
+                // Left blank: Forward / Reverse then keep the PLC's velocity.
+            }
+
+            // The selection may have moved on while the PLC was read.
+            if (motor != SelectedMotor || !_isActive)
+                return;
+
+            Speed = velocity.HasValue
+                ? Math.Round(velocity.Value, 2).ToString(CultureInfo.InvariantCulture)
+                : null;
         }
 
         // ---- Commands -----------------------------------------------------
@@ -169,9 +212,9 @@ namespace Nova.ViewModels.Pages.Manual
         {
             var stepper = CurrentStepper;
             if (stepper == null) return;
-            if (!TryReadSpeed(out double speed)) return;
+            if (!TryReadSpeed(stepper, out double speed)) return;
             await stepper.EnableAsync();
-            await stepper.ForwardAsync(speed);
+            ReportIfNotStarted(await stepper.ForwardAsync(speed), speed);
         }
 
         [RelayCommand]
@@ -179,9 +222,20 @@ namespace Nova.ViewModels.Pages.Manual
         {
             var stepper = CurrentStepper;
             if (stepper == null) return;
-            if (!TryReadSpeed(out double speed)) return;
+            if (!TryReadSpeed(stepper, out double speed)) return;
             await stepper.EnableAsync();
-            await stepper.ReverseAsync(speed);
+            ReportIfNotStarted(await stepper.ReverseAsync(speed), speed);
+        }
+
+        private void ReportIfNotStarted(bool started, double speed)
+        {
+            if (started || _dialog == null)
+                return;
+
+            _dialog.ShowError(speed > 0
+                    ? "The stepper was not started: the PLC did not take the velocity (is it connected?)."
+                    : "The stepper was not started: the PLC is not connected.",
+                "Manual Screen");
         }
 
         [RelayCommand]
@@ -194,25 +248,28 @@ namespace Nova.ViewModels.Pages.Manual
         }
 
         /// <summary>
-        /// A blank speed box means "use the configured default" (-1), which is what
-        /// IStepper documents. Anything typed must still be a positive number — letters
-        /// used to fall through TryParse as 0 and then be turned into -1, so a typo ran
-        /// the conveyor at its default speed with no warning.
+        /// A blank velocity box means "keep the velocity the PLC has" (-1), which is what
+        /// IStepper documents. Anything typed must be a number above 0 and up to the motor's
+        /// maximum (100 %) — letters used to fall through TryParse as 0 and then be turned
+        /// into -1, so a typo ran the conveyor at its default speed with no warning.
         /// </summary>
-        private bool TryReadSpeed(out double speed)
+        private bool TryReadSpeed(IStepper stepper, out double speed)
         {
             speed = -1;
             if (string.IsNullOrWhiteSpace(Speed))
                 return true;
 
+            double max = stepper.MaxSpeed;
             double entered;
             bool parsed = double.TryParse(Speed, NumberStyles.Float, CultureInfo.InvariantCulture, out entered)
                 || double.TryParse(Speed, NumberStyles.Float, CultureInfo.CurrentCulture, out entered);
 
-            if (!parsed || entered <= 0)
+            if (!parsed || entered <= 0 || entered > max)
             {
                 if (_dialog != null)
-                    _dialog.ShowError("Please enter a speed greater than 0, or leave it blank to use the configured speed.", "Manual Screen");
+                    _dialog.ShowError(
+                        "Please enter a velocity greater than 0 and up to " + max.ToString(CultureInfo.InvariantCulture)
+                        + " %, or leave it blank to keep the PLC's velocity.", "Manual Screen");
                 return false;
             }
 

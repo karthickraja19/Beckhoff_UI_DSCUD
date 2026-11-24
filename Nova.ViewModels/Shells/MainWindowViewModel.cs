@@ -15,6 +15,7 @@ namespace Nova.ViewModels.Shells
         private readonly AudioShellViewModel _audioShell;
         private readonly INavigationService _navigationService;
         private readonly IStationProfileService _profile;
+        private readonly IHomingService _homing;
 
         [ObservableProperty]
         private ViewModelBase? _currentView;
@@ -33,8 +34,10 @@ namespace Nova.ViewModels.Shells
             AuthShellViewModel authShell,
             AudioShellViewModel audioShell,
             INavigationService navigationService,
-            IStationProfileService profile = null)
+            IStationProfileService profile = null,
+            IHomingService homing = null)
         {
+            _homing = homing;
             _session = session;
             _authShell = authShell;
             _audioShell = audioShell;
@@ -72,6 +75,11 @@ namespace Nova.ViewModels.Shells
                 // a usable read-only GUI (slide 42: "Home, alert, data and vision
                 // buttons are enabled") rather than a locked screen.
                 ShowShell();
+
+                // FAM 2 LG_03: a successful login always lands on Home. Not while homing:
+                // leaving the Manual tab then would release manual mode and stop it.
+                if (_session.IsLoggedIn && (_homing == null || !_homing.IsHoming))
+                    _navigationService.NavigateTo(AppPageNames.Home);
             }
         }
 
@@ -79,10 +87,9 @@ namespace Nova.ViewModels.Shells
         /// Shows the indicator bar, and makes sure a page is loaded under it.
         /// </summary>
         /// <remarks>
-        /// Navigation is only forced when nothing is loaded yet. Re-navigating to Home
-        /// on every sign-in and sign-out would throw away the page the operator was on
-        /// just because someone badged in, which the DFM never asks for - the access
-        /// level changes what the page allows, not which page is open.
+        /// Navigation is only forced here when nothing is loaded yet; signing in goes to
+        /// Home (FAM 2 LG_03, in <see cref="OnSessionPropertyChanged"/>), signing out
+        /// leaves the operator where they are.
         /// </remarks>
         private void ShowShell()
         {

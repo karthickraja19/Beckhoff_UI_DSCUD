@@ -58,5 +58,18 @@
     "CardUid": "3002",
     "Function": "ICT DFx",
     "Organization": "CM"
+  },
+  {
+    "Site": "ITKS",
+    "Project": "H37",
+    "StationId": "FT200",
+    "TerminalName": "ITKS_E03-4FT-01B_1_STATION59",
+    "Name": "karthi",
+    "AccessLevel": 3,
+    "SoftwareType": "Main",
+    "CardUid": "0067026379",
+    "Function": "ICT DFx",
+    "Organization": "CM"
   }
+
 ]

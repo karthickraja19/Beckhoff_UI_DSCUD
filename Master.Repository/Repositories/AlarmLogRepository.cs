@@ -10,7 +10,7 @@ namespace Master.Repository
     /// <summary>
     /// <see cref="IAlarmLogRepository"/> backed by the V3 data access layer
     /// (IDataAccess). Writes are a no-op because Nova.Alarm's
-    /// AlarmDatabase already saves every PLC alarm; reads query the same [Alarms]
+    /// AlarmMonitor already saves every PLC alarm (AlarmHistoryRepository); reads query the same [Alarms]
     /// table the V3 report used, so alarm history is identical to V3.
     /// </summary>
     public sealed class AlarmLogRepository : IAlarmLogRepository
@@ -24,7 +24,7 @@ namespace Master.Repository
 
         public Task AppendAsync(NovaAlarmData alarm)
         {
-            // Nova.Alarm's AlarmDatabase already saves every alarm; writing here
+            // Nova.Alarm already saves every alarm through AlarmHistoryRepository; writing here
             // would duplicate every row.
             return Task.CompletedTask;
         }

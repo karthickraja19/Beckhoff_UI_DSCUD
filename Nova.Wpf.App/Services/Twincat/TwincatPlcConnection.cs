@@ -142,6 +142,35 @@ namespace Nova.Wpf.App.Services.Twincat
             }
         }
 
+        /// <summary>The PLC type the symbol is declared with (e.g. BYTE, INT, LREAL), or null when it does not declare it.</summary>
+        public string SymbolTypeName(string symbolPath)
+        {
+            lock (SyncRoot)
+            {
+                try
+                {
+                    return Card.Client.ReadSymbol(symbolPath).TypeName;
+                }
+                catch (Exception)
+                {
+                    return null;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Reads one PLC variable by name, once - to read back a value the HMI has just
+        /// written. Live values a screen follows go through the subscriptions instead.
+        /// Throws when the read fails.
+        /// </summary>
+        public object ReadSymbol(string symbolPath)
+        {
+            lock (SyncRoot)
+            {
+                return Card.Client.ReadValue(symbolPath);
+            }
+        }
+
         /// <summary>
         /// Writes one PLC variable by name - for the few HMI-owned values the PLC reads
         /// (e.g. the picture check's dispensing control). Throws when the write fails.
@@ -151,6 +180,29 @@ namespace Nova.Wpf.App.Services.Twincat
             lock (SyncRoot)
             {
                 Card.Client.WriteValue(symbolPath, value);
+            }
+        }
+
+        /// <summary>
+        /// Reads a whole PLC variable - an array or struct - as its raw bytes, in one ADS
+        /// read. <paramref name="size"/> is its size in the PLC (<see cref="SymbolSize"/>).
+        /// Throws when the read fails.
+        /// </summary>
+        public byte[] ReadBytes(string symbolPath, int size)
+        {
+            lock (SyncRoot)
+            {
+                uint handle = Card.Client.CreateVariableHandle(symbolPath);
+                try
+                {
+                    var data = new byte[size];
+                    Card.Client.Read(handle, new Memory<byte>(data));
+                    return data;
+                }
+                finally
+                {
+                    Card.Client.DeleteVariableHandle(handle);
+                }
             }
         }
 

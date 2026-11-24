@@ -7,6 +7,8 @@
                     xmlns:manualViews="clr-namespace:Nova.Wpf.App.Views.Pages.Manual"
                     xmlns:settingsViews="clr-namespace:Nova.Wpf.App.Views.Pages.Settings"
                     xmlns:recipeViews="clr-namespace:Nova.Wpf.App.Views.Pages.Recipe"
+                    xmlns:calibrationVm="clr-namespace:Nova.ViewModels.Pages.Calibration;assembly=Nova.ViewModels"
+                    xmlns:calibrationViews="clr-namespace:Nova.Wpf.App.Views.Pages.Calibration"
                     xmlns:shellsViews="clr-namespace:Nova.Wpf.App.Views.Shells"
                     xmlns:authVm="clr-namespace:Nova.ViewModels.Auth;assembly=Nova.ViewModels"
                     xmlns:authViews="clr-namespace:Nova.Wpf.App.Views.Auth"
@@ -44,18 +46,13 @@
         <audioViews:AudioSettingsView />
     </DataTemplate>
 
-    <!-- Kept for any tab added to the bar ahead of its page. Nothing routes to it
-         now that all six are built. -->
-    <DataTemplate DataType="{x:Type audioVm:AudioPlaceholderViewModel}">
-        <audioViews:AudioPlaceholderView />
-    </DataTemplate>
     <DataTemplate DataType="{x:Type authVm:LoginViewModel}">
         <authViews:LoginView />
     </DataTemplate>
 
     <!-- Hosted screens. None of these is navigated to: Manual is the content of the
          Setting page's Manual tab, and the machine-configuration tree and
-         Recipe are the two sections of the Config page's Machine Configs area
+         Recipe and Calibration are the sections of the Config page's Machine Configs area
          (slide 58). They are mapped here so the ContentControl that hosts each one
          resolves its view. -->
     <DataTemplate DataType="{x:Type manualVm:ManualViewModel}">
@@ -66,6 +63,9 @@
     </DataTemplate>
     <DataTemplate DataType="{x:Type recipeVm:RecipeViewModel}">
         <recipeViews:RecipeView />
+    </DataTemplate>
+    <DataTemplate DataType="{x:Type calibrationVm:CalibrationViewModel}">
+        <calibrationViews:CalibrationView />
     </DataTemplate>
 
 </ResourceDictionary>

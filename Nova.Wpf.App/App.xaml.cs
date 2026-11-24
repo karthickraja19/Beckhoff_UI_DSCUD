@@ -14,6 +14,7 @@ using Nova.Core.Services;
 using Nova.ViewModels.Auth;
 using Nova.ViewModels.Common;
 using Nova.ViewModels.Pages.Audio;
+using Nova.ViewModels.Pages.Calibration;
 using Nova.ViewModels.Pages.Manual;
 using Nova.ViewModels.Pages.Recipe;
 using Nova.ViewModels.Pages.Settings;
@@ -21,6 +22,7 @@ using Nova.ViewModels.Shells;
 using Nova.Wpf.App.Services;
 using Nova.Wpf.App.Services.Twincat;
 using Nova.Wpf.App.Services.Twincat.HmiDisplay;
+using Nova.Wpf.App.Services.Twincat.Mapping;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -41,6 +43,9 @@ namespace Nova.Wpf.App
         /// IDialogService itself.
         /// </summary>
         private static readonly List<string> _startupWarnings = new List<string>();
+
+        // TEAL_Master, kept for Master.Scheduler, which is started once the window is up.
+        private static Master.Repository.MasterDatabase _database;
 
         protected override void OnStartup(StartupEventArgs e)
         {
@@ -108,6 +113,10 @@ namespace Nova.Wpf.App
                 try
                 {
                     NLog.LogManager.LoadConfiguration("NLog.config");
+
+                    // The log files' names carry ${gdc:ShiftName}: "Default" until Master.Scheduler
+                    // (ScheduleJobs.Start) reads the shift and GlobalClass.CurrentShift sets it.
+                    Master.SharedUtilities.GlobalClass.CurrentShift = null;
                 }
                 catch (Exception logEx)
                 {
@@ -118,6 +127,24 @@ namespace Nova.Wpf.App
                 ConfigureServices(services);
                 _serviceProvider = services.BuildServiceProvider();
 
+                // Every {loc:Tr} and {loc:TrBinding} in XAML reads through this. Attached
+                // before the first window is built, so no screen opens in the wrong language.
+                Nova.Wpf.UI.Localization.LocalizationSource.Instance.Attach(
+                    _serviceProvider.GetRequiredService<ILocalizationService>());
+                // Chart names and the HIVE alarm pop-up reach it through UiLanguage.
+                UiLanguage.Service = _serviceProvider.GetRequiredService<ILocalizationService>();
+                UiLanguage.Descriptions = _serviceProvider.GetRequiredService<IDescriptionService>();
+
+                // Without the language files every screen stays English whatever is chosen;
+                // say where they were looked for rather than failing silently.
+                if (Teal.Library.Localization.LanguageManager.Available.Count == 0)
+                {
+                    _startupWarnings.Add("No language files were found, so the application can only show English. "
+                        + "Expected Strings.resx, Strings.zh-CN.resx and Strings.vi.resx in: "
+                        + Teal.Library.Localization.LocalizationPaths.ResourceDirectory
+                        + ". Rebuild Nova.Wpf.App, which copies them from its Localization folder.");
+                }
+
                 var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
                 mainWindow.Show();
 
@@ -125,7 +152,23 @@ namespace Nova.Wpf.App
                 // machine state, the TCP devices' connections - is subscribed from here on; a
                 // device's own status only while a screen showing it follows it.
                 _serviceProvider.GetRequiredService<PlcSubscriptions>().Start();
+
+                // Every PLC variable of Data\PlcSymbols.json is looked up once the PLC is
+                // live; the ones the PLC does not have are reported, not silently ignored.
+                var symbolCheck = _serviceProvider.GetRequiredService<PlcSymbolCheck>();
+                symbolCheck.Completed += (sender, args) =>
+                {
+                    string summary = symbolCheck.Summary();
+                    if (summary != null)
+                    {
+                        Dispatcher.BeginInvoke(new Action(() =>
+                            _serviceProvider.GetRequiredService<IDialogService>().ShowWarning(summary, "PLC symbol map")));
+                    }
+                };
+                symbolCheck.Start();
+
                 _serviceProvider.GetRequiredService<PlcSequenceLog>().Start();
+                _serviceProvider.GetRequiredService<PlcCustomLogBridge>().Start();
                 _serviceProvider.GetRequiredService<TwincatRecipeService>().Start();
                 _serviceProvider.GetRequiredService<IAxisMonitorService>().Start();
                 _serviceProvider.GetRequiredService<IDigitalIOService>().Start();
@@ -135,12 +178,28 @@ namespace Nova.Wpf.App
                 _serviceProvider.GetRequiredService<IConnectionStatusService>().Start();
                 _serviceProvider.GetRequiredService<IHomingService>().Start();
                 _serviceProvider.GetRequiredService<TwincatMachineOrchestrator>().Start();
+                _serviceProvider.GetRequiredService<TwincatMachineModeLink>().Start();
 
                 // HIVE reporting and the alarm pop-up. HIVE Control first: it applies the
                 // HIVE Control tab's saved on/off choice before anything can be sent.
                 _serviceProvider.GetRequiredService<IHiveControl>();
-                _serviceProvider.GetRequiredService<HiveService>().Start();
+                HiveService hiveService = _serviceProvider.GetRequiredService<HiveService>();
+                hiveService.Start();
+
+                // HIVE is off while a screen drives the machine by hand (Manual, Calibration,
+                // Recipe > Gantry / CNC): no state change, no red bar, no stop request.
+                _serviceProvider.GetRequiredService<TwincatMachineOrchestrator>().ManualModeHeldChanged +=
+                    hiveService.SetManualScreenActive;
+
+                _serviceProvider.GetRequiredService<UnitUploadNgSignal>().Start();
+                _serviceProvider.GetRequiredService<HashKeyGuard>().Start();
+                _serviceProvider.GetRequiredService<NozzleHealthGuard>().Start();
+                _serviceProvider.GetRequiredService<ValveSerialMonitor>().Start();
+                _serviceProvider.GetRequiredService<MesStateReporter>().Start();
                 _serviceProvider.GetRequiredService<AlarmPopupHost>().Start();
+                _serviceProvider.GetRequiredService<NgStatistics>().Start();
+                _serviceProvider.GetRequiredService<AuditResultWatcher>().Start();
+                _serviceProvider.GetRequiredService<PlcUnitDoneWatcher>().Start();
 
                 // Slide 39's five-minute idle sign-out for Levels 2 and 3. Started
                 // after the window exists: it watches InputManager, which needs a
@@ -149,6 +208,28 @@ namespace Nova.Wpf.App
 
                 // Glue and nozzle warnings (S2.4.4.4); idle when there is no glue data source.
                 _serviceProvider.GetRequiredService<GlueWarningMonitor>().Start();
+                _serviceProvider.GetService<TwincatDispenserDataService>()?.Start();
+
+                // Master.Scheduler (Quartz): the CSV clean-up under LogFilePath, the shift
+                // status / OEE refresh and the nightly database purge. Without a database only
+                // the CSV clean-up does anything.
+                var schedulerDataAccess = _database != null && _database.IsAvailable ? _database.DataAccess : null;
+                System.Threading.Tasks.Task.Run(async () =>
+                {
+                    try
+                    {
+                        await Master.Scheduler.ScheduleJobs.Start(schedulerDataAccess);
+
+                        // After the scheduler: it gives ShiftStatusHelper its data access and shift.
+                        if (schedulerDataAccess != null)
+                            _serviceProvider.GetRequiredService<MachineHealthRecorder>().Start();
+                    }
+                    catch (Exception ex)
+                    {
+                        Teal.Library.Log.Logger.WriteLog(Teal.Library.Log.LogType.Error, "Scheduler", "Start",
+                            "The scheduled jobs could not be started: " + ex.Message, ex.ToString());
+                    }
+                });
 
                 if (_startupWarnings.Count > 0)
                 {
@@ -220,6 +301,43 @@ namespace Nova.Wpf.App
         ///   * both Current* and DefaultThreadCurrent*, so background threads (the axis
         ///     and IO monitors, the report queries) parse and format identically.
         /// </summary>
+        /// <summary>
+        /// Every spec limit parameter of the AE limit files (Production, CPK, GRR), for the
+        /// Config Description tab to offer. Read with Newtonsoft rather than through the
+        /// settings service so a malformed file only shortens the list.
+        /// </summary>
+        private static IEnumerable<KeyValuePair<string, string>> SpecLimitParameters(string dataDirectory)
+        {
+            var found = new List<KeyValuePair<string, string>>();
+            foreach (string kind in new[] { "Production", "CPK", "GRR" })
+            {
+                try
+                {
+                    string path = Path.Combine(dataDirectory, "Settings", "AeLimits_" + kind + ".json");
+                    if (!File.Exists(path))
+                        continue;
+
+                    var document = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(path));
+                    var rows = document["Rows"] as Newtonsoft.Json.Linq.JArray;
+                    if (rows == null)
+                        continue;
+
+                    foreach (var row in rows)
+                    {
+                        string parameter = (string)row["Parameter"];
+                        if (!string.IsNullOrWhiteSpace(parameter))
+                            found.Add(new KeyValuePair<string, string>(parameter.Trim(), kind));
+                    }
+                }
+                catch (Exception)
+                {
+                    // Skip a file that cannot be read.
+                }
+            }
+
+            return found;
+        }
+
         private static void ApplyUiCulture()
         {
             try
@@ -255,18 +373,78 @@ namespace Nova.Wpf.App
                 apply(value);
         }
 
+        /// <summary>Where the machine's data lives when App.config TealDataDirectory is blank - V3's folder.</summary>
+        private const string DefaultDataDirectory = @"C:\TEAL\Data";
+
+        /// <summary>
+        /// The folder the machine's configuration, recipes and settings are read from and saved
+        /// to: App.config TealDataDirectory, C:\TEAL\Data when blank (as V3). The Data folder
+        /// next to the exe holds the shipped defaults: any of them the folder does not have yet
+        /// is copied in, never over a file that is already there, so what was saved on the
+        /// machine survives a new build or install. A folder that cannot be created or written
+        /// is reported at startup, and the exe's Data folder is used instead.
+        /// </summary>
+        private static string ResolveDataDirectory()
+        {
+            string shipped = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
+            string configured = ConfigurationManager.AppSettings["TealDataDirectory"];
+            string target = string.IsNullOrWhiteSpace(configured)
+                ? DefaultDataDirectory
+                : Environment.ExpandEnvironmentVariables(configured.Trim());
+
+            try
+            {
+                target = Path.GetFullPath(target);
+                if (string.Equals(target.TrimEnd('\\'), shipped.TrimEnd('\\'), StringComparison.OrdinalIgnoreCase))
+                    return shipped;
+
+                Directory.CreateDirectory(target);
+                var copied = new List<string>();
+                if (Directory.Exists(shipped))
+                {
+                    foreach (string file in Directory.GetFiles(shipped, "*", SearchOption.AllDirectories))
+                    {
+                        string relative = file.Substring(shipped.Length).TrimStart('\\');
+                        string destination = Path.Combine(target, relative);
+                        if (File.Exists(destination))
+                            continue;
+
+                        Directory.CreateDirectory(Path.GetDirectoryName(destination));
+                        File.Copy(file, destination);
+                        copied.Add(relative);
+                    }
+                }
+
+                if (copied.Count > 0)
+                {
+                    Teal.Library.Log.Logger.WriteLog(Teal.Library.Log.LogType.Info, "Data", "Seed",
+                        "Copied the shipped defaults " + target + " did not have: " + string.Join(", ", copied), string.Empty);
+                }
+
+                return target;
+            }
+            catch (Exception ex)
+            {
+                _startupWarnings.Add("The data folder " + target + " (App.config TealDataDirectory) cannot be used: "
+                    + ex.Message + ". The machine's settings are read from and saved to " + shipped + " instead.");
+                return shipped;
+            }
+        }
+
         /// <summary>
         /// Builds the container. Sections: 1 core services, 2 data access, 3 machine
         /// control and devices, 4 shells, 5 pages, 6 page factory, 7 the window.
         /// </summary>
         private static void ConfigureServices(IServiceCollection services)
         {
-            string dataDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Data");
+            string dataDirectory = ResolveDataDirectory();
 
             // Manual > Axis point-to-point limits. Nova.ViewModels is netstandard and cannot
             // reach ConfigurationManager, so the host hands them over.
             ApplyPositiveIntSetting("PtpIterationCount", v => AxisControlViewModel.MaxIterations = v);
             ApplyPositiveIntSetting("PPCIterationLen", v => AxisControlViewModel.MaxIterationDigits = v);
+            ApplyPositiveIntSetting("PtpWaitingTime", v => AxisControlViewModel.MaxWaitSeconds = v);
+            ApplyPositiveIntSetting("ManualPositionLimit", v => AxisControlViewModel.MaxPosition = v);
 
             // Data > Yield target line. Blank or out of range draws no line.
             double targetYield;
@@ -298,7 +476,8 @@ namespace Nova.Wpf.App
             // Access Control V5.1). MES is only offered when MesUrl is set.
             string terminalName = SettingOrDefault("TerminalName", string.Empty);
             string softwareType = SettingOrDefault("SoftwareType", "Main");
-            var mesClient = new MesClient(SettingOrDefault("MesUrl", string.Empty), terminalName);
+            var mesClient = new MesClient(SettingOrDefault("MesUrl", string.Empty), terminalName,
+                SettingOrDefault("MesStateUrl", string.Empty));
             services.AddSingleton<IMesClient>(mesClient);
             services.AddSingleton<IAccessControlAdmin>(sp => new AccessControlAdmin(
                 dataDirectory,
@@ -330,6 +509,8 @@ namespace Nova.Wpf.App
             services.AddSingleton<IDialogService, WpfDialogService>();
             services.AddSingleton<INavigationService, WpfNavigationService>();
             services.AddSingleton<ILogFolderService, WindowsLogFolderService>();
+            // Recipe > CNC: starts Beckhoff's CNC HMI from where it is installed on this machine.
+            services.AddSingleton<ICncHmiLauncher>(sp => new CncHmiLauncher(ConfigurationManager.AppSettings["CncHmiExe"], dataDirectory));
             // Save on the Alarm page (DFM slide 56) and Export on the Data page
             // (slides 59/60). Both view models take this as an optional dependency and
             // disable their button when it is absent, so leaving it unregistered left
@@ -341,17 +522,34 @@ namespace Nova.Wpf.App
                 new JsonRecipeService(dataDirectory, sp.GetRequiredService<IAppSession>()));
             services.AddSingleton<IMachineSettingsService>(sp =>
                 new JsonMachineSettingsService(dataDirectory, sp.GetRequiredService<IAppSession>()));
-            // Machine name / version for the title bar, read from Data\config.txt.
-            services.AddSingleton<IMachineIdentityService, ConfigFileMachineIdentityService>();
+            // Machine name / version for the title bar, read from Data\config.txt. Built now,
+            // not on first use: it also sets NLog's MachineName for the log rows.
+            services.AddSingleton<IMachineIdentityService>(new ConfigFileMachineIdentityService(dataDirectory));
             // Site / line / station / product type for the Audio indicator bar, station
             // card and Settings page (Audio SW DFM v5.4 slides 42, 43, 62). Writable,
             // unlike the read-only identity profile above, so it has its own JSON file.
             services.AddSingleton<IStationProfileService>(sp => new JsonStationProfileService(dataDirectory));
 
+            // Dual language - English, Chinese, Vietnamese. The language is the station
+            // profile's, chosen on Setting > General; the strings are Localization\Strings*.resx
+            // beside the exe, which Setting > Localization Editor maintains.
+            services.AddSingleton<ILocalizationService>(sp => new WpfLocalizationService(sp.GetRequiredService<IStationProfileService>()));
+            services.AddSingleton<ILocalizationEditorService, WpfLocalizationEditorService>();
+
+            // Setting > Config Description: I/O point names (Data\Config.csv) and spec limit
+            // names (Data\Settings\SpecLimitDescriptions.csv) per language, as Odyssey.Master_V3.
+            services.AddSingleton<IDescriptionService>(sp => new WpfDescriptionService(
+                dataDirectory,
+                sp.GetRequiredService<ILocalizationService>(),
+                () => SpecLimitParameters(dataDirectory)));
+
             // What each gantry is fitted with (valve model and SNs, nozzle, glue, material),
             // recorded by the planned-downtime procedures; and the hash keys of the PD-15
             // page, which HIVE gets with every machine_state payload.
             services.AddSingleton<IConsumableStore>(sp => new JsonConsumableStore(dataDirectory));
+
+            // S11.3 Maintenance Tracking: the maintenance items of each fixture (front / rear gantry).
+            services.AddSingleton<IMaintenanceStore>(sp => new JsonMaintenanceStore(dataDirectory));
 
             // PLC alarm codes to DFM codes (Data\HiveErrorCodes.csv) for the Alarm page and
             // Home's Error Statistics - the same codes HIVE is given.
@@ -379,19 +577,36 @@ namespace Nova.Wpf.App
                 return context;
             });
 
-            // 2. Data access to TEAL_Master: SQL when a connection string is configured,
-            //    otherwise the CSV fallback.
-            string connectionString = ConfigurationManager.AppSettings["connectionString"];
-            Master.Repository.IDataAccess dataAccess = string.IsNullOrWhiteSpace(connectionString)
-                ? (Master.Repository.IDataAccess)new Master.Repository.CsvDataAccess(dataDirectory)
-                : new Master.Repository.SQLDataAccess(connectionString);
-            services.AddSingleton(dataAccess);
-            services.AddSingleton<IShiftSettingsRepository>(new Master.Repository.ShiftSettingsRepository(dataAccess));
-            services.AddSingleton<IAlarmLogRepository>(new Master.Repository.AlarmLogRepository(dataAccess));
-            services.AddSingleton<IProductionRepository>(new Master.Repository.ProductionRepository(dataAccess));
-            // Machine Status / Machine Health report tabs (SP_GetMachineStatusReport /
-            // SP_GetMachineHealthReport).
-            services.AddSingleton<IReportRepository>(new Master.Repository.ReportRepository(dataAccess));
+            // 2. TEAL_Master. Every database operation is in Master.Repository; the rest of
+            //    the HMI sees only the Nova.Abstractions repository contracts. Without a
+            //    connection string there is no database: nothing is registered, and every
+            //    page that reads one says its data is not available.
+            var database = new Master.Repository.MasterDatabase(ConfigurationManager.AppSettings["connectionString"]);
+            if (database.IsAvailable)
+            {
+                services.AddSingleton(database.ShiftSettings);
+                services.AddSingleton(database.AlarmLog);
+                services.AddSingleton(database.Production);
+                services.AddSingleton(database.ProductionRecorder);
+                services.AddSingleton(database.Reports);
+            }
+            else
+            {
+                _startupWarnings.Add("No connectionString in App.config, so there is no database: alarms are shown but not "
+                    + "saved, and the Home, Alarm and Data pages have no history.");
+            }
+
+            // The machine's event records kept as files (glue weighings, measured coordinates).
+            string recordFolder = Path.Combine(SettingOrDefault("LogFilePath", @"C:\TEAL_Log_Data"), "MachineData");
+            var weighingRecords = new MachineRecordStore(recordFolder, TwincatDispenserDataService.WeighingKind,
+                TwincatDispenserDataService.WeighingColumns);
+            var coordinateRecords = new MachineRecordStore(recordFolder, PlcUnitDoneWatcher.CoordinateKind,
+                PlcUnitDoneWatcher.CoordinateColumns);
+            services.AddSingleton(new CurrentShift(database.ShiftSettings));
+
+            // Old records are deleted by Master.Scheduler (started in OnStartup): these CSV
+            // files with every other CSV under LogFilePath, the database rows by RetentionDaysFor*.
+            _database = database;
 
             // 3. Machine control, alarms and devices, all on the PLC: the devices go through
             //    the Beckhoff library over ADS, and the alarms are the PLC's alarm list
@@ -410,8 +625,10 @@ namespace Nova.Wpf.App
             }
             _startupWarnings.AddRange(configurationProblems);
 
-            // The run state behind the shell's Start / Pause / Stop buttons, held in the HMI
-            // until the orchestrator that writes the PLC's machine command bits is written.
+            // Every PLC variable name the HMI uses is in Data\PlcSymbols.json; each service
+            // below is handed the part of the map it needs. Nothing else names a PLC variable.
+            PlcSymbolMap plcMap = PlcSymbolMap.Load(Path.Combine(dataDirectory, PlcSymbolMap.FileName), _startupWarnings);
+            services.AddSingleton(plcMap);
 
             // The IO points are the Data\Config.csv list; it also gives the cylinder and vacuum
             // boards the wiring address of each valve and sensor.
@@ -434,12 +651,17 @@ namespace Nova.Wpf.App
                 return enumName;
             }
 
+            bool IsIoPoint(string name, bool isOutput)
+            {
+                foreach (var point in isOutput ? outputPoints : inputPoints)
+                    if (string.Equals(point.Name, name, StringComparison.OrdinalIgnoreCase))
+                        return true;
+                return false;
+            }
+
             // The load cells are wired as digital inputs until their analog values are.
             services.AddSingleton<ILoadCellMonitorService>(sp =>
                 new DigitalInputLoadCellMonitorService(sp.GetRequiredService<IDigitalIOService>()));
-
-            // There is no light controller driver yet, so the Light Control tab lists none.
-            services.AddSingleton<ILightService>(new LightService(new List<ILightController>()));
 
             var stepperConfigs = ConfigGlobalClass.StepperConfigurations;
             var plc = ConnectPlc();
@@ -449,22 +671,26 @@ namespace Nova.Wpf.App
             // connection: each adapter registers its symbols here, and nothing polls the PLC.
             var subscriptions = new PlcSubscriptions(plc);
             services.AddSingleton(subscriptions);
+            services.AddSingleton(new PlcSymbolCheck(plc, subscriptions, plcMap));
+
+            // [HealthData]'s run, down and idle time, from E_MachineState.
+            services.AddSingleton(new MachineHealthRecorder(subscriptions, PlcSymbolMap.Of(plcMap.Status.MachineState)));
 
             // Master.Configuration creates the library object for every device in the
             // Data\*.json files, on the same card as the connection above; the adapters
             // below put them behind the Nova contracts.
-            _startupWarnings.AddRange(DeviceObjects.Create(SettingOrDefault("PlcIoGvl", "")));
+            _startupWarnings.AddRange(DeviceObjects.Create());
 
             // When a screen opens a device the library reads its current status; after that
             // its live status is its HMI display struct: the library says where it is, and
             // App.config names the struct's PLC type for each kind of device - the C#
             // struct of the same name reads it.
-            Type servoDisplay = DisplayType<IAxisHmiDisplay>("ServoHmiDisplayType");
-            Type ioStepperDisplay = DisplayType<IAxisHmiDisplay>("IOStepperHmiDisplayType");
-            Type cylinderDisplay = DisplayType<ICylinderHmiDisplay>("CylinderHmiDisplayType");
-            Type vacuumDisplay = DisplayType<IVacuumHmiDisplay>("VacuumHmiDisplayType");
-            Type visionDisplay = DisplayType<INetworkHmiDisplay>("VisionHmiDisplayType");
-            Type scannerDisplay = DisplayType<INetworkHmiDisplay>("ScannerHmiDisplayType");
+            Type servoDisplay = DisplayType<IAxisHmiDisplay>(plcMap, "Servo");
+            Type ioStepperDisplay = DisplayType<IAxisHmiDisplay>(plcMap, "IoStepper");
+            Type cylinderDisplay = DisplayType<ICylinderHmiDisplay>(plcMap, "Cylinder");
+            Type vacuumDisplay = DisplayType<IVacuumHmiDisplay>(plcMap, "Vacuum");
+            Type visionDisplay = DisplayType<INetworkHmiDisplay>(plcMap, "Vision");
+            Type scannerDisplay = DisplayType<INetworkHmiDisplay>(plcMap, "Scanner");
 
             // The Stepper tab drives the steppers, all of them I/O steppers; a stepper driven as
             // an NC axis is a servo in Data\Servos.json, on the Axis tab.
@@ -479,6 +705,7 @@ namespace Nova.Wpf.App
                 CylinderObjects.CylinderObjs,
                 cylinderDisplay,
                 ResolveAddress,
+                IsIoPoint,
                 _startupWarnings);
             services.AddSingleton<ICylinderService>(new CylinderService(cylinders));
 
@@ -489,6 +716,7 @@ namespace Nova.Wpf.App
                 VacuumObjects.VacuumObjs,
                 vacuumDisplay,
                 ResolveAddress,
+                IsIoPoint,
                 _startupWarnings);
             services.AddSingleton<IVacuumService>(new VacuumService(vacuums));
 
@@ -503,7 +731,12 @@ namespace Nova.Wpf.App
             services.AddSingleton<IAxisService>(new AxisService(axes));
 
             // Axes and steppers publish when the PLC pushes one of their values.
-            services.AddSingleton<IAxisMonitorService>(new TwincatAxisMonitorService(subscriptions, axes, steppers));
+            // The CNC channels' axes (the two dispensing stations): jogged and taught on the
+            // Recipe page's CNC tab, through the channel interface named in the symbol map.
+            var cncAxes = new TwincatCncAxisProvider(plc, subscriptions, plcMap.Cnc, Nova.Abstractions.Data.Models.CncChannelRecipe.AxisNames);
+            services.AddSingleton<ICncAxisProvider>(cncAxes);
+
+            services.AddSingleton<IAxisMonitorService>(new TwincatAxisMonitorService(subscriptions, axes.Concat(cncAxes.Axes), steppers));
 
             // The IO points are the Config.csv list; their state is read through the
             // library's card, only while the I/O Diagnostics page is on screen. The
@@ -531,30 +764,47 @@ namespace Nova.Wpf.App
                 ConfigGlobalClass.ScannerConfigurations, ScannerObjects.Scanners, scannerDisplay);
             services.AddSingleton<ICommDeviceService>(new CommDeviceService(commDevices));
 
+            // Manual > Dispenser, Weighing and Vibration: the third-party devices the PLC drives
+            // over RS-232 / RS-485, each a PLC data block named in the symbol map.
+            services.AddSingleton<IThirdPartyDevices>(new TwincatThirdPartyDevices(plc, subscriptions, plcMap.ThirdPartyDevices));
+
             // The Home page's Homing button: sets the PLC's home command bit TRUE and
             // waits for the PLC's homing-done bit. The PLC owns the homing sequence.
             services.AddSingleton<IHomingService>(new TwincatHomingService(
                 plc,
                 subscriptions,
-                SettingOrDefault("PlcHomingCommandSymbol", ""),
-                SettingOrDefault("PlcHomingDoneSymbol", "")));
+                plcMap.Commands.HomingStart,
+                plcMap.Status.HomingDone));
 
-            // The Setting page's Calibration tab: the PLC runs each calibration routine; the
-            // HMI keeps the parameters per station, writes them, and presses Start / Pause / Stop.
+            // The Config page's Calibration section: the HMI keeps the taught positions of every
+            // calibration (Data\Calibration\*.json) and writes them into the PLC's teach tables;
+            // the PLC's calibration manager runs each calibration on Start.
             services.AddSingleton<ICalibrationService>(new TwincatCalibrationService(
                 plc,
                 subscriptions,
-                SettingOrDefault("PlcCalibrationCommandSymbol", ""),
-                SettingOrDefault("PlcCalibrationStatusSymbol", ""),
+                plcMap.Calibration,
                 dataDirectory));
 
-            // The Recipe page's gantry recipes: the PLC drives every taught move from its own
-            // copy, one per gantry. Written on Save, and again each time the PLC comes back.
+            // Calibration > Static & Dynamic: the PLC's Static_Seq / Dynamic_Seq (GVL_StaticDynamic). The
+            // HMI picks the mode, camera and iteration count and presses Start / End / Stop.
+            services.AddSingleton<IStaticDynamicService>(new TwincatStaticDynamicService(
+                plc,
+                subscriptions,
+                plcMap.Calibration));
+
+            // The Recipe page's gantry recipes, robot values and CNC positions: the PLC drives every
+            // taught move from its own copy, one per gantry, and each robot with the values in its
+            // FB_RobotSD block. Written on Save, and again each time the PLC comes back.
             services.AddSingleton(sp => new TwincatRecipeService(
                 plc,
                 subscriptions,
                 sp.GetRequiredService<IRecipeService>(),
-                SettingOrDefault("PlcRecipeSymbol", "")));
+                PlcSymbolMap.Of(plcMap.Recipe.Gantry),
+                MachineConfiguration.Configured<Robots, RobotConfiguration>(ConfigGlobalClass.RobotConfigurations, c => c.EnumName)
+                    .Select(r => r.Value.Id)
+                    .ToList(),
+                PlcSymbolMap.Of(plcMap.Recipe.Robot),
+                plcMap.Cnc));
             services.AddSingleton<IPlcRecipeService>(sp => sp.GetRequiredService<TwincatRecipeService>());
 
             // The indicator bar's Start / Pause / Stop pulse the PLC's mode buttons and follow
@@ -564,17 +814,35 @@ namespace Nova.Wpf.App
                 subscriptions,
                 sp.GetRequiredService<IDialogService>(),
                 sp.GetRequiredService<IHomingService>(),
-                SettingOrDefault("PlcMachineStateSymbol", ""),
-                SettingOrDefault("PlcStartSymbol", ""),
-                SettingOrDefault("PlcPauseSymbol", ""),
-                SettingOrDefault("PlcStopSymbol", ""),
-                SettingOrDefault("PlcManualModeSymbol", "")));
+                plcMap.Status.MachineState,
+                plcMap.Commands));
             services.AddSingleton<IMachineOrchestrator>(sp => sp.GetRequiredService<TwincatMachineOrchestrator>());
+
+            // Config > Device Settings: the PLC's run mode, bypass selections and maintenance
+            // stations. Saved to the PLC and read back; the tab shows what the PLC reports.
+            var machineModeLink = new TwincatMachineModeLink(plc, subscriptions, plcMap.RunMode, plcMap.Bypass, _startupWarnings);
+            services.AddSingleton(machineModeLink);
+            services.AddSingleton<IMachineModeLink>(machineModeLink);
 
             // The PLC sequences' logs, into the running log - watched whatever is on screen.
             services.AddSingleton(new PlcSequenceLog(
                 subscriptions,
-                SettingOrDefault("PlcSequenceLogSymbols", "").Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)));
+                plcMap.SequenceLog.Entries));
+
+            // The PLC's custom logs: each row the PLC logs is written by its CustomLogs entry.
+            // The production log's rows are also saved in [ProductionData] (ProductionLogRecorder);
+            // without a database the rows only go to the CSV.
+            bool productionLogFeedsDatabase = plcMap.CustomLog.Logs != null
+                && plcMap.CustomLog.Logs.Any(l => string.Equals(l.Key, ProductionLogRecorder.LogKey, StringComparison.OrdinalIgnoreCase)
+                    && PlcSymbolMap.Has(l.Value));
+            services.AddSingleton(sp =>
+            {
+                IProductionRecorder recorder = sp.GetService<IProductionRecorder>();
+                Action<string, object> rowHandler = recorder == null
+                    ? (Action<string, object>)null
+                    : new ProductionLogRecorder(recorder).OnRow;
+                return new PlcCustomLogBridge(plc, subscriptions, CustomLogs.All, plcMap.CustomLog.Logs, rowHandler);
+            });
 
             // Connected = subscribed with the PLC in Run, which the subscriptions track
             // from the PLC's own state notification rather than by asking.
@@ -582,20 +850,14 @@ namespace Nova.Wpf.App
                 sp.GetRequiredService<ICommDeviceService>(), "TwinCAT " + plc.Address, () => subscriptions.IsLive));
 
             // Alarms: read from the PLC's alarm list and saved to the [Alarms] table.
-            AlarmDatabase alarmDatabase = null;
-            if (string.IsNullOrWhiteSpace(connectionString))
-                _startupWarnings.Add("No connectionString in App.config - alarms are shown but not saved.");
-            else
-                alarmDatabase = new AlarmDatabase(dataAccess);
-
-            services.AddSingleton(sp => new AlarmMonitor(new PlcAlarmReader(plc), alarmDatabase));
+            services.AddSingleton(sp => new AlarmMonitor(new PlcAlarmReader(plc, plcMap.Alarms.List), database.AlarmHistory));
             services.AddSingleton<IActiveAlarmService>(sp => sp.GetRequiredService<AlarmMonitor>());
 
             // HIVE: the alarms above decide the HIVE machine state, and the alarm
             // pop-up asks the operator to badge in before it closes.
             services.AddSingleton(sp =>
             {
-                HiveSettings hiveSettings = BuildHiveSettings(dataDirectory, sp.GetRequiredService<IStationProfileService>());
+                HiveSettings hiveSettings = BuildHiveSettings(dataDirectory, sp.GetRequiredService<IStationProfileService>(), plcMap);
 
                 // Every hash key of the PD-15 page, read live on each state change
                 // (slides 12 and 43), and the remote qualification log while the
@@ -606,19 +868,202 @@ namespace Nova.Wpf.App
                 hiveSettings.RemoteQualification = () => stationProfile.Current.RemoteQualification;
                 return hiveSettings;
             });
-            services.AddSingleton(sp => new HiveService(
-                sp.GetRequiredService<HiveSettings>(),
-                sp.GetRequiredService<AlarmMonitor>(),
-                subscriptions));
+            services.AddSingleton(sp =>
+            {
+                var hive = new HiveService(
+                    sp.GetRequiredService<HiveSettings>(),
+                    sp.GetRequiredService<AlarmMonitor>(),
+                    subscriptions);
+
+                // PD-17 follows PD-10 only after a manual weighing: asked of the PLC when chosen.
+                if (PlcSymbolMap.Has(plcMap.Glue.Weighing.IsManual?.Symbol))
+                    hive.LastGlueWeighingManual = () => PlcValues.Flag(plc, plcMap.Glue.Weighing.IsManual);
+
+                // A downtime the HMI raised itself (hash key error, HIVE upload not confirmed)
+                // is also a stop request to the PLC, held until HIVE leaves downtime.
+                Action<bool> stopRequest = PlcBoolWriter(plc, plcMap.Process.HmiStopRequest);
+                if (stopRequest != null)
+                {
+                    hive.HmiStopChanged += (s, on) =>
+                    {
+                        try
+                        {
+                            stopRequest(on);
+                        }
+                        catch (Exception ex)
+                        {
+                            Teal.Library.Log.Logger.WriteLog(Teal.Library.Log.LogType.Error, "Hive", "Stop",
+                                "The stop request could not be written to the PLC: " + ex.Message, ex.ToString());
+                        }
+                    };
+                }
+                else
+                {
+                    _startupWarnings.Add("Process.HmiStopRequest is blank in Data\\" + PlcSymbolMap.FileName
+                        + ", so a downtime the HMI raises itself (hash key error, HIVE upload not confirmed) does not stop the machine.");
+                }
+
+                return hive;
+            });
+            // S12: a unit HIVE failed or did not confirm goes to the NG conveyor - the PLC is told.
+            services.AddSingleton(sp => new UnitUploadNgSignal(
+                plc, sp.GetRequiredService<HiveService>(), plcMap.Process, plcMap.Commands.PulseMilliseconds));
+            if (!PlcSymbolMap.Has(plcMap.Process.UnitUploadNg))
+            {
+                _startupWarnings.Add("Process.UnitUploadNg is blank in Data\\" + PlcSymbolMap.FileName
+                    + ", so a unit HIVE fails or does not confirm is not sent to the NG conveyor.");
+            }
+
+            // Every switch to Running asks MES whether the hash keys are still the approved
+            // ones (S3.6); a false answer puts HIVE into downtime.
+            services.AddSingleton(sp => new HashKeyGuard(
+                sp.GetRequiredService<HiveService>(),
+                sp.GetRequiredService<IHashKeyService>(),
+                sp.GetRequiredService<IMesClient>(),
+                !string.Equals(SettingOrDefault("HiveHashCheckOnMesError", "downtime"), "ignore", StringComparison.OrdinalIgnoreCase)));
+
+            // Every HIVE state change is also reported to MES (S1.1.2).
+            services.AddSingleton(sp =>
+            {
+                IStationProfileService profile = sp.GetRequiredService<IStationProfileService>();
+                string machineName = SettingOrDefault("MesMachineName", string.Empty);
+                string line = SettingOrDefault("MesLineName", string.Empty);
+                return new MesStateReporter(
+                    sp.GetRequiredService<HiveService>(),
+                    sp.GetRequiredService<IMesClient>(),
+                    () => machineName.Length > 0 ? machineName : profile.Current.Station,
+                    () => profile.Current.Vendor,
+                    () => line.Length > 0 ? line : profile.Current.Line);
+            });
+
+            // Finished units, from the PLC's counter: the production row, the measured
+            // coordinates, and HIVE's debug-unit and audit counts.
+            // Each finished unit's machine_data payload for HIVE (DFM S1.2): what the PLC
+            // holds for the unit, the process parameters, the consumables and the limits.
+            services.AddSingleton(sp =>
+            {
+                var unitData = new HiveUnitDataBuilder(
+                    plc, plcMap, sp.GetRequiredService<HiveSettings>(),
+                    sp.GetRequiredService<IMachineSettingsService>(),
+                    sp.GetRequiredService<IConsumableStore>(),
+                    sp.GetService<IDispenserDataService>(),
+                    terminalName,
+                    SettingOrDefault("HiveLimitsVersion", string.Empty));
+
+                // With no finished-unit counter at all, the warning below already says so.
+                if (unitData.UnavailableReason != null)
+                {
+                    if (PlcSymbolMap.Has(plcMap.Status.UnitDoneCount))
+                        _startupWarnings.Add(unitData.UnavailableReason);
+                }
+                else
+                    _startupWarnings.AddRange(unitData.SettingWarnings());
+
+                return unitData;
+            });
+            // T6: 3 NG in a row or 5 in total puts the machine down; an NG below that is a
+            // pop-up and the buzzer. Per gantry for single-glue dispensing (App.config HiveNgScope).
+            services.AddSingleton(sp =>
+            {
+                var ng = new NgStatistics(
+                    sp.GetRequiredService<HiveService>(),
+                    Path.Combine(dataDirectory, "Settings", "NgStatistics.json"),
+                    !string.Equals(SettingOrDefault("HiveNgScope", "gantry"), "machine", StringComparison.OrdinalIgnoreCase),
+                    IntSetting("HiveNgConsecutiveLimit"),
+                    IntSetting("HiveNgTotalLimit"));
+
+                var buzzer = new PlcPulse(plc, plcMap.Process.NgWarningBuzzer, plcMap.Commands.PulseMilliseconds, "The NG warning buzzer");
+                ng.Warning += (s, message) =>
+                {
+                    buzzer.Fire();
+                    Current?.Dispatcher.BeginInvoke(new Action(() =>
+                        sp.GetRequiredService<IDialogService>().ShowWarning(message, "NG unit")));
+                };
+                return ng;
+            });
+
+            // T5: a finished unit's AOI images are counted and zipped for Insight.
+            services.AddSingleton(sp => new UnitImagePackager(
+                SettingOrDefault("UnitImageFolder", string.Empty),
+                SettingOrDefault("UnitImageZipFolder", string.Empty),
+                sp.GetRequiredService<IPictureQuantityCheck>(),
+                sp.GetRequiredService<IStationProfileService>(),
+                () => sp.GetRequiredService<IAccessControlAdmin>().Settings.ProjectCode));
+
+            // S17: after each unit MES is asked for a common-defect early warning.
+            services.AddSingleton(sp => new EarlyWarningService(
+                sp.GetRequiredService<IMesClient>(),
+                sp.GetRequiredService<INavigationService>(),
+                !string.Equals(SettingOrDefault("EarlyWarningClose", "card"), "confirm", StringComparison.OrdinalIgnoreCase),
+                PlcBoolWriter(plc, plcMap.Process.EarlyWarningLamp),
+                PlcBoolWriter(plc, plcMap.Process.EarlyWarningBuzzer)));
+            services.AddSingleton<IEarlyWarning>(sp => sp.GetRequiredService<EarlyWarningService>());
+
+            services.AddSingleton(sp =>
+            {
+                UnitImagePackager images = sp.GetRequiredService<UnitImagePackager>();
+                if (images.UnavailableReason != null && PlcSymbolMap.Has(plcMap.Status.UnitDoneCount))
+                    _startupWarnings.Add(images.UnavailableReason);
+
+                EarlyWarningService earlyWarning = sp.GetRequiredService<EarlyWarningService>();
+                return new PlcUnitDoneWatcher(
+                    plc, subscriptions, sp.GetRequiredService<HiveService>(), plcMap,
+                    // The production custom log already saves each unit's row: not twice.
+                    productionLogFeedsDatabase ? null : sp.GetService<IProductionRecorder>(), coordinateRecords,
+                    sp.GetRequiredService<HiveUnitDataBuilder>(),
+                    sp.GetRequiredService<NgStatistics>(),
+                    images.Attach,
+                    (serial, pass) => earlyWarning.UnitPassed(serial));
+            });
+            // PD-13 capture deltas and PD-14 calibration results, uploaded while their audit is on.
+            services.AddSingleton(sp =>
+            {
+                var audits = new AuditResultWatcher(plc, subscriptions, sp.GetRequiredService<HiveService>(),
+                    sp.GetRequiredService<HiveUnitDataBuilder>(), plcMap);
+                audits.Message += (s, message) => Current?.Dispatcher.BeginInvoke(new Action(() =>
+                    sp.GetRequiredService<IDialogService>().ShowWarning(message, "Dispensing Pose Calibration (PD-14)")));
+                return audits;
+            });
+            if (!plcMap.Calibration.Repeatability.IsMapped)
+            {
+                _startupWarnings.Add("Calibration.Repeatability is blank in Data\\" + PlcSymbolMap.FileName
+                    + ", so CCD Repeatability Testing (PD-13) only changes the HIVE state: no capture is read and no delta is uploaded.");
+            }
+            if (!plcMap.Calibration.Pose.IsMapped)
+            {
+                _startupWarnings.Add("Calibration.Pose is blank in Data\\" + PlcSymbolMap.FileName
+                    + ", so Dispensing Pose Calibration (PD-14) only changes the HIVE state: no result is checked or uploaded.");
+            }
+
+            if (!PlcSymbolMap.Has(plcMap.Status.UnitDoneCount))
+            {
+                _startupWarnings.Add("The PLC reports no finished units (Status.UnitDoneCount is blank in Data\\" + PlcSymbolMap.FileName
+                    + "), so no production rows or coordinates are recorded, no unit data (machine_data) is sent to HIVE, "
+                    + "and HIVE's debug-unit limits and audit rounds do not count.");
+            }
+
+            // Data > Axis: the coordinates recorded above, when the PLC measures any.
+            if (plcMap.Coordinates.IsMapped)
+                services.AddSingleton<ICoordinateDataSource>(new RecordedCoordinateDataSource(coordinateRecords));
+
+            // Data > Glue and Health, Home's glue panel and the glue warnings, when the PLC
+            // gives any glue figure. With none, those panels say they are not connected.
+            if (plcMap.Glue.IsMapped)
+            {
+                services.AddSingleton(sp => new TwincatDispenserDataService(
+                    plc, subscriptions, plcMap.Glue, sp.GetRequiredService<IConsumableStore>(), weighingRecords, dataDirectory,
+                    sp.GetRequiredService<CurrentShift>().Name));
+                services.AddSingleton<IDispenserDataService>(sp => sp.GetRequiredService<TwincatDispenserDataService>());
+            }
+
             services.AddSingleton(sp => new AlarmPopupHost(
-                sp.GetRequiredService<AlarmMonitor>(),
                 sp.GetRequiredService<HiveService>(),
                 sp.GetRequiredService<INavigationService>(),
                 sp.GetRequiredService<IAccessControlService>(),
                 SettingOrDefault("AlarmPopupCloseLevel", "1") == "2" ? AccessLevel.Level2
                     : SettingOrDefault("AlarmPopupCloseLevel", "1") == "3" ? AccessLevel.Level3
                     : AccessLevel.Level1,
-                !string.Equals(SettingOrDefault("AlarmPopupCloseButton", "true"), "false", StringComparison.OrdinalIgnoreCase)));
+                string.Equals(SettingOrDefault("AlarmPopupClosable", "false"), "true", StringComparison.OrdinalIgnoreCase)));
 
             // The HIVE chip's state-change pop-ups (DFM slides 47 and 49).
             // The badge for a state change is checked against the access list: Level 2/3 only (slide 49).
@@ -630,19 +1075,63 @@ namespace Nova.Wpf.App
                 sp.GetRequiredService<IConsumableStore>(),
                 sp.GetRequiredService<IMesClient>(),
                 sp.GetRequiredService<HiveService>()));
+            // S3.1: a valve with an internal SN is read back from its controller every 5 minutes
+            // and compared with the recorded one. The controller's SN is the dispenser block's
+            // SerialNumber member; the gantries are the dispensers in the same order.
+            services.AddSingleton(sp =>
+            {
+                DeviceBlockSymbols dispensers = plcMap.ThirdPartyDevices.Dispenser ?? new DeviceBlockSymbols();
+                DeviceMemberSymbol serialMember = dispensers.Member("SerialNumber");
+                List<DeviceInstanceSymbol> instances = dispensers.MappedInstances.ToList();
+
+                Func<int, string> readSerial = null;
+                if (serialMember != null && instances.Count > 0)
+                {
+                    readSerial = gantryIndex =>
+                    {
+                        if (gantryIndex < 0 || gantryIndex >= instances.Count)
+                            throw new InvalidOperationException("no dispenser is mapped for gantry " + (gantryIndex + 1));
+
+                        object value = plc.ReadSymbol(instances[gantryIndex].Path.Trim() + "." + serialMember.Symbol.Trim());
+                        return Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture);
+                    };
+                }
+
+                var monitor = new ValveSerialMonitor(
+                    sp.GetRequiredService<HiveService>(),
+                    sp.GetRequiredService<IConsumableStore>(),
+                    readSerial,
+                    IntSetting("ValveSnCheckMinutes"));
+
+                if (readSerial == null && monitor.CheckedGantries.Count > 0)
+                {
+                    _startupWarnings.Add("The valve SN check every 5 minutes (PD-04) is not available: the dispenser block has no "
+                        + "SerialNumber member in Data\\" + PlcSymbolMap.FileName + " (ThirdPartyDevices.Dispenser.Members), but the "
+                        + string.Join(" and ", monitor.CheckedGantries) + " valve model has an internal SN.");
+                }
+
+                return monitor;
+            });
+
+            // S3.3: the first unit after a nozzle change runs only after MES passed the nozzle's health.
+            services.AddSingleton(sp => new NozzleHealthGuard(
+                sp.GetRequiredService<HiveService>(),
+                sp.GetRequiredService<PlannedDowntimeProcedures>()));
             services.AddSingleton<IHiveStatePrompt>(sp => new HiveStatePrompt(
                 sp.GetRequiredService<HiveService>(),
                 sp.GetRequiredService<IAccessControlService>(),
                 sp.GetRequiredService<PlannedDowntimeProcedures>(),
                 sp.GetRequiredService<IAppSession>()));
 
-            // Home page: the State Changes chart reads the HIVE log back, and the
-            // station card's HIVE link checks the gateway (slide 43).
-            services.AddSingleton<IHiveStateHistory>(sp => new HiveLogStateHistory(sp.GetRequiredService<HiveSettings>().LogFolder));
+            // Home page: the State Changes chart reads the run / idle / down time from
+            // [HealthData] (MachineHealthRecorder), with the segment under way up to now.
+            // Without a database it is not registered and the chart says so.
+            if (_database != null && _database.IsAvailable)
+                services.AddSingleton(_database.CreateStateHistory(Master.SharedUtilities.ShiftStatusHelper.OpenHealthSegment));
             // Home: the Parameter Dashboard's live values and the Sensor Connection
             // Dashboard, from the PLC (Data\Settings\ParameterSymbols.json, Sensors.json).
             services.AddSingleton<IParameterValueSource>(new TwincatParameterValueSource(
-                subscriptions, Path.Combine(dataDirectory, "Settings", "ParameterSymbols.json"), _startupWarnings));
+                subscriptions, plcMap.Parameters, _startupWarnings));
             string sensorFile = Path.Combine(dataDirectory, "Settings", "Sensors.json");
             if (File.Exists(sensorFile))
             {
@@ -650,7 +1139,7 @@ namespace Nova.Wpf.App
                 {
                     try
                     {
-                        return new TwincatSensorService(sp.GetRequiredService<IDigitalIOService>(), subscriptions, plc, sensorFile);
+                        return new TwincatSensorService(sp.GetRequiredService<IDigitalIOService>(), subscriptions, plc, sensorFile, plcMap.SensorDisable);
                     }
                     catch (Exception ex)
                     {
@@ -682,7 +1171,7 @@ namespace Nova.Wpf.App
                     Severity = "error",
                     StopsMachine = true,
                 }),
-                PlcBoolWriter(plc, "PictureDispensingSymbol")));
+                PlcBoolWriter(plc, plcMap.Process.PictureDispensingStop)));
 
             // 4. Shell ViewModels. AudioShellViewModel is the shell the window shows -
             //    this application drives one Audio machine and has one GUI, the DFM's.
@@ -691,38 +1180,20 @@ namespace Nova.Wpf.App
             services.AddSingleton<AudioShellViewModel>();
             services.AddSingleton<LoginViewModel>();
 
-            // 5. Page ViewModels - the six Audio tabs of the indicator bar.
-            //    SampleData=true gives the Alarm and Data pages generated alarms, units, glue
-            //    data and coordinates instead of what the machine recorded, to show the pages
-            //    before the machine has a history. Both pages label it as sample data.
-            bool sampleData;
-            if (bool.TryParse(ConfigurationManager.AppSettings["SampleData"], out sampleData) && sampleData)
-            {
-                services.AddSingleton(sp => new AudioAlarmViewModel(
-                    sp.GetRequiredService<IAppSession>(),
-                    alarms: new SampleAlarmLogRepository(),
-                    csv: sp.GetService<ICsvExportService>(),
-                    dialog: sp.GetService<IDialogService>()));
-                services.AddSingleton(sp => new AudioDataViewModel(
-                    sp.GetRequiredService<IAppSession>(),
-                    production: new SampleProductionRepository(),
-                    csv: sp.GetService<ICsvExportService>(),
-                    dialog: sp.GetService<IDialogService>(),
-                    dispenser: new SampleDispenserDataService(dataDirectory),
-                    accessLog: sp.GetService<IAccessLog>(),
-                    coordinates: new SampleCoordinateDataSource()));
-            }
-            else
-            {
-                services.AddSingleton<AudioAlarmViewModel>();
-                services.AddSingleton<AudioDataViewModel>();
-            }
-            // Vision page: the newest image of each camera, from the folder the vision
-            // software saves to (VisionImageFolder, one sub-folder per camera).
+            // 5. Page ViewModels - the six Audio tabs of the indicator bar. Every figure is
+            //    what the machine recorded; a source that is not there is passed as null and
+            //    its panel says so.
+            services.AddSingleton<AudioAlarmViewModel>();
+            services.AddSingleton<AudioDataViewModel>();
+            // Vision page: the newest images the vision software saved, from one folder
+            // (VisionImageFolder; no sub-folder per camera is needed), newest first.
+            // VisionImageCount is how many are shown.
             string visionFolder = SettingOrDefault("VisionImageFolder", string.Empty);
             if (visionFolder.Length > 0)
-                services.AddSingleton<ICcdImageSource>(new FolderCcdImageSource(visionFolder, new[] { "CCD1", "CCD2", "CCD3" }));
-            services.AddSingleton<AudioVisionViewModel>();
+                services.AddSingleton<ICcdImageSource>(new FolderCcdImageSource(visionFolder));
+            services.AddSingleton(sp => new AudioVisionViewModel(
+                sp.GetRequiredService<IAppSession>(), sp.GetService<ICcdImageSource>(),
+                IntSetting("VisionImageCount") > 0 ? IntSetting("VisionImageCount") : AudioVisionViewModel.DefaultTileCount));
             // PDATA Mapping tab of the Setting page: the field catalogue, the machine
             // profiles and the query template under PDATA\ beside the exe.
             services.AddSingleton<IPdataMappingService>(sp => new JsonPdataMappingService(
@@ -734,7 +1205,7 @@ namespace Nova.Wpf.App
             //    manual mode while it is on screen.
             services.AddSingleton<AudioSettingsViewModel>();
 
-            //    Home: its Vendor pane is empty - the manual GUI is on the Setting page.
+            //    Home: the manual GUI is on the Setting page's Manual tab.
             //    A source that is not registered is passed as null, and its panel says
             //    it is not available rather than showing anything made up.
             services.AddSingleton(sp => new AudioHomeViewModel(
@@ -754,22 +1225,32 @@ namespace Nova.Wpf.App
                 links: sp.GetServices<IServiceLinkStatus>(),
                 sensors: sp.GetService<ISensorService>(),
                 accessLog: sp.GetService<IAccessLog>(),
-                errorCodes: sp.GetService<IErrorCodeCatalog>()));
+                errorCodes: sp.GetService<IErrorCodeCatalog>(),
+                consumables: sp.GetService<IConsumableStore>(),
+                pictures: sp.GetService<IPictureQuantityCheck>()));
 
-            //    Config hosts the machine-configuration tree and the taught recipe as
-            //    the two sections of its Machine Configs area (slide 58).
+            //    Config hosts the machine-configuration tree, the taught recipe and the
+            //    calibration positions as the sections of its Machine Configs area (slide 58).
             services.AddSingleton(sp => new AudioConfigViewModel(
                 sp.GetRequiredService<IAppSession>(),
                 sp.GetRequiredService<IMachineSettingsService>(),
                 sp.GetRequiredService<IDialogService>(),
                 sp.GetRequiredService<SettingsViewModel>(),
-                sp.GetRequiredService<RecipeViewModel>()));
+                sp.GetRequiredService<RecipeViewModel>(),
+                sp.GetRequiredService<CalibrationViewModel>()));
 
             //    The hosted screens themselves. None is routable; each is reached
             //    through the page that hosts it.
             services.AddSingleton<ManualViewModel>();
             services.AddSingleton<SettingsViewModel>();
             services.AddSingleton<RecipeViewModel>();
+            services.AddSingleton(sp => new CalibrationViewModel(
+                sp.GetRequiredService<ICalibrationService>(),
+                sp.GetRequiredService<IDialogService>(),
+                sp.GetService<IMachineOrchestrator>(),
+                sp.GetService<IConnectionStatusService>(),
+                sp.GetService<IRobotIOService>(),
+                sp.GetService<IStaticDynamicService>()));
 
             // 6. Compile-time safe page factory - the six Audio tabs, in indicator-bar
             //    order (DFM v5.4 slide 42). Nothing else is navigable.
@@ -792,7 +1273,7 @@ namespace Nova.Wpf.App
 
                     default:
                         throw new ArgumentOutOfRangeException(nameof(pageName), pageName,
-                            "Not a navigable page. Manual, MachineConfig and Recipe are hosted "
+                            "Not a navigable page. Manual, MachineConfig, Recipe and Calibration are hosted "
                             + "inside Setting and Config rather than routed to.");
                 }
             });
@@ -819,8 +1300,8 @@ namespace Nova.Wpf.App
                         Severity = "error",
                         StopsMachine = true,
                     }),
-                    PlcIntWriter(plcConnection, "GlueAlertLevelSymbol"),
-                    PlcBoolWriter(plcConnection, "GlueBuzzerMuteSymbol"));
+                    PlcIntWriter(plcConnection, plcMap.Process.GlueAlertLevel),
+                    PlcBoolWriter(plcConnection, plcMap.Process.GlueBuzzerMute));
             });
 
             // 8. Main window
@@ -851,9 +1332,9 @@ namespace Nova.Wpf.App
         /// PLC type App.config gives under <paramref name="settingKey"/>. Null, reported in the
         /// startup warnings, when there is none - those devices then show no live status.
         /// </summary>
-        private static Type DisplayType<TDisplay>(string settingKey)
+        private static Type DisplayType<TDisplay>(PlcSymbolMap map, string kind)
         {
-            return HmiDisplays.Resolve<TDisplay>(settingKey, SettingOrDefault(settingKey, ""), _startupWarnings);
+            return HmiDisplays.Resolve<TDisplay>("Devices.HmiDisplayTypes." + kind, map.Devices.HmiDisplayType(kind), _startupWarnings);
         }
 
         /// <summary>
@@ -880,7 +1361,7 @@ namespace Nova.Wpf.App
         /// HIVE reporting settings: the gateway and machine type come from App.config, the
         /// software version, its hash and the log folder from the station profile.
         /// </summary>
-        private static HiveSettings BuildHiveSettings(string dataDirectory, IStationProfileService profile)
+        private static HiveSettings BuildHiveSettings(string dataDirectory, IStationProfileService profile, PlcSymbolMap plcMap)
         {
             int sequence;
             if (!int.TryParse(ConfigurationManager.AppSettings["HiveSequence"], out sequence) || sequence < 0)
@@ -906,11 +1387,14 @@ namespace Nova.Wpf.App
                 ErrorCodeFile = Path.Combine(dataDirectory, "HiveErrorCodes.csv"),
                 // The PLC says what state the machine is in; the HIVE state is worked
                 // out from it. Read over the HMI's shared ADS connection.
-                MachineStateSymbol = SettingOrDefault("PlcMachineStateSymbol", "GVL_Module.eStationState"),
-                UnitEnteredSymbol = SettingOrDefault("PlcUnitEnteredSymbol", ""),
-                UnitEnteredIsCounter = string.Equals(SettingOrDefault("PlcUnitEnteredIsCounter", "false"), "true",
-                    StringComparison.OrdinalIgnoreCase),
+                MachineStateSymbol = PlcSymbolMap.Of(plcMap.Status.MachineState),
+                UnitEnteredSymbol = PlcSymbolMap.Of(plcMap.Status.UnitEntered),
+                UnitEnteredIsCounter = plcMap.Status.UnitEnteredIsCounter,
                 PendingFile = SettingOrDefault("HivePendingFile", ""),
+                UnitTimeout = TimeSpan.FromMilliseconds(Math.Max(500, IntSetting("HiveUnitTimeoutMs") > 0 ? IntSetting("HiveUnitTimeoutMs") : 2000)),
+                UnitAttempts = IntSetting("HiveUnitAttempts") > 0 ? IntSetting("HiveUnitAttempts") : 3,
+                // S4.1: the SI code UUID.dll and UMSID.dll are called with in the 24-hour dry run.
+                DryRunSiCode = SettingOrDefault("HiveDryRunSiCode", ""),
                 SoftwareVersion = profile.Current.SoftwareVersion ?? "",
                 MainSoftwareHash = profile.ComputeMainSoftwareHash() ?? "",
                 LogFolder = string.IsNullOrWhiteSpace(profile.Current.HiveLogPath)
@@ -920,12 +1404,12 @@ namespace Nova.Wpf.App
         }
 
         /// <summary>
-        /// Writes an HMI-owned BOOL to the PLC variable named by an App.config key, or null
-        /// when the key is blank (nothing is written then).
+        /// Writes an HMI-owned BOOL to a PLC variable of the symbol map, or null when the map
+        /// leaves it blank (nothing is written then).
         /// </summary>
-        private static Action<bool> PlcBoolWriter(TwincatPlcConnection plc, string settingKey)
+        private static Action<bool> PlcBoolWriter(TwincatPlcConnection plc, string mappedSymbol)
         {
-            string symbol = SettingOrDefault(settingKey, string.Empty);
+            string symbol = PlcSymbolMap.Of(mappedSymbol);
             if (symbol.Length == 0 || plc == null)
                 return null;
 
@@ -933,13 +1417,20 @@ namespace Nova.Wpf.App
         }
 
         /// <summary>As <see cref="PlcBoolWriter"/>, for an HMI-owned INT (16 bit).</summary>
-        private static Action<int> PlcIntWriter(TwincatPlcConnection plc, string settingKey)
+        private static Action<int> PlcIntWriter(TwincatPlcConnection plc, string mappedSymbol)
         {
-            string symbol = SettingOrDefault(settingKey, string.Empty);
+            string symbol = PlcSymbolMap.Of(mappedSymbol);
             if (symbol.Length == 0 || plc == null)
                 return null;
 
             return value => plc.WriteSymbol(symbol, (short)value);
+        }
+
+        /// <summary>A whole-number App.config setting; 0 when blank or not a number.</summary>
+        private static int IntSetting(string key)
+        {
+            int value;
+            return int.TryParse(SettingOrDefault(key, "0"), out value) ? value : 0;
         }
 
         private static string SettingOrDefault(string key, string fallback)
@@ -1008,6 +1499,7 @@ namespace Nova.Wpf.App
             _serviceProvider.GetService<ILoadCellMonitorService>()?.Stop();
             _serviceProvider.GetService<IDigitalIOService>()?.Stop();
             _serviceProvider.GetService<PlcSequenceLog>()?.Stop();
+            _serviceProvider.GetService<PlcCustomLogBridge>()?.Stop();
             _serviceProvider.GetService<IRunningLogService>()?.Stop();
             _serviceProvider.GetService<AlarmPopupHost>()?.Stop();
             _serviceProvider.GetService<HiveService>()?.Stop();
@@ -1015,6 +1507,9 @@ namespace Nova.Wpf.App
             _serviceProvider.GetService<IConnectionStatusService>()?.Stop();
             _serviceProvider.GetService<IdleLogoutService>()?.Dispose();
             _serviceProvider.GetService<GlueWarningMonitor>()?.Stop();
+            _serviceProvider.GetService<ValveSerialMonitor>()?.Dispose();
+            _serviceProvider.GetService<MachineHealthRecorder>()?.Stop();   // writes the segment under way
+            Master.Scheduler.ScheduleJobs.Shutdown();
 
             var stepperService = _serviceProvider.GetService<IStepperService>();
             if (stepperService != null)

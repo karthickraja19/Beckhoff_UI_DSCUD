@@ -61,9 +61,8 @@ namespace Nova.Hive
         }
 
         /// <summary>
-        /// The list in slide 49's order, with the codes slide 31 adds after PD-15. Others
-        /// stays PD-101 as slide 49 prints it; slide 31 calls it PD-99 and AME has not
-        /// said which is right yet.
+        /// The list in slide 49's order, with the codes slide 31 adds after PD-15. Others is
+        /// PD-99 (slide 31), confirmed by AME; slide 49's PD-101 is out of date.
         /// </summary>
         public static IReadOnlyList<PlannedDowntimeReason> All { get; } = new List<PlannedDowntimeReason>
         {
@@ -84,8 +83,8 @@ namespace Nova.Hive
             new PlannedDowntimeReason("Uploaded Hash keys to MES", "PD-15"),
             new PlannedDowntimeReason("24hr Dry Run", "PD-16"),
             new PlannedDowntimeReason("Tuning/Debug Material Run", DebugRunCode),
+            new PlannedDowntimeReason("Others", "PD-99", needsDetails: true),
             new PlannedDowntimeReason("Offline Processing", "PD-100", needsDetails: true),
-            new PlannedDowntimeReason("Others", "PD-101", needsDetails: true),
         };
 
         /// <summary>The reason with this code, or null.</summary>
@@ -164,9 +163,9 @@ namespace Nova.Hive
             Reason = ((PlannedDowntimeOption)((RadioButton)sender).Tag).Reason;
 
             DetailsPanel.Visibility = Reason.NeedsDetails ? Visibility.Visible : Visibility.Collapsed;
-            DetailsLabel.Text = Reason.Code == "PD-100"
+            DetailsLabel.Text = HiveText.T(Reason.Code == "PD-100"
                 ? "DOE details (needs Apple AME approval before use):"
-                : "Details of the planned work:";
+                : "Details of the planned work:");
 
             UpdateOk();
 

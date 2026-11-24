@@ -3,21 +3,19 @@ using System.Collections.Generic;
 
 namespace Nova.Abstractions.Services
 {
-    /// <summary>One capture of one camera, for the Vision page (slide 61).</summary>
+    /// <summary>One image the vision software saved, for the Vision page (slide 61).</summary>
     public sealed class CcdCapture
     {
-        /// <summary>The camera, e.g. "CCD1".</summary>
-        public string Camera { get; set; }
-
         /// <summary>Full path of the image file.</summary>
         public string ImagePath { get; set; }
 
+        /// <summary>When the image was taken: from its file name when it carries a time, otherwise when the file was written.</summary>
         public DateTime Time { get; set; }
 
-        /// <summary>The unit the capture belongs to, when known.</summary>
+        /// <summary>The unit the capture belongs to, when its file name says.</summary>
         public string UnitSn { get; set; }
 
-        /// <summary>"OK" / "NG" when known.</summary>
+        /// <summary>"OK" / "NG" when its file name says.</summary>
         public string Result { get; set; }
 
         /// <summary>
@@ -28,21 +26,19 @@ namespace Nova.Abstractions.Services
     }
 
     /// <summary>
-    /// The newest capture of each camera, for the Vision page: "shows all CCD images for
-    /// current running units" (slide 61).
+    /// The images the vision software is saving, for the Vision page: "shows all CCD images
+    /// for current running units" (slide 61). The images are in one folder; the source does
+    /// not need to know which camera took which.
     /// </summary>
     public interface ICcdImageSource
     {
-        /// <summary>The cameras, in the order the page shows them.</summary>
-        IReadOnlyList<string> Cameras { get; }
-
         /// <summary>Where the images come from, for the page to say.</summary>
         string Description { get; }
 
-        /// <summary>The newest capture of a camera, or null.</summary>
-        CcdCapture Latest(string camera);
+        /// <summary>The newest images, newest first; fewer when there are fewer.</summary>
+        IReadOnlyList<CcdCapture> Newest(int count);
 
-        /// <summary>Raised with the camera's name when it has a new capture. May be raised on any thread.</summary>
-        event EventHandler<string> CaptureChanged;
+        /// <summary>Raised when the newest images changed. May be raised on any thread.</summary>
+        event EventHandler ImagesChanged;
     }
 }

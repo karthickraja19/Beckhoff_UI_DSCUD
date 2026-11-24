@@ -1,7 +1,8 @@
 <Application x:Class="Nova.Wpf.App.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:converters="clr-namespace:Nova.Wpf.App.Converters">
+             xmlns:converters="clr-namespace:Nova.Wpf.App.Converters"
+             xmlns:loc="clr-namespace:Nova.Wpf.UI.Localization;assembly=Nova.Wpf.UI">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -51,6 +52,16 @@
             <converters:Boolean2DoubleConverter x:Key="Boolean2DoubleConverter"/>
             <converters:Boolean2VisibilityReValueConverter x:Key="Boolean2VisibilityReValueConverter"/>
             <converters:String2VisibilityConverter x:Key="String2VisibilityConverter"/>
+
+            <!-- Dual language: list items that are English strings (tab titles, view names)
+                 shown in the selected language. The item itself stays English - it is what
+                 the view models compare - only its display is translated. -->
+            <DataTemplate x:Key="Loc.ItemText">
+                <TextBlock Text="{loc:TrBinding}"/>
+            </DataTemplate>
+            <DataTemplate x:Key="Loc.ItemTitle">
+                <TextBlock Text="{loc:TrBinding Title}"/>
+            </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

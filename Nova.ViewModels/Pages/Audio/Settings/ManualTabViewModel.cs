@@ -1,15 +1,18 @@
 using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Nova.Abstractions.Machine.Enums;
 using Nova.Abstractions.Machine.Interfaces;
 using Nova.Abstractions.Services;
 using Nova.ViewModels.Common;
+using Nova.ViewModels.Pages.Manual;
 
 namespace Nova.ViewModels.Pages.Audio
 {
     /// <summary>
     /// The Setting page's Manual tab: the manual-operation GUI (the Manual screens' device
-    /// tabs), with the Homing button and the running log beside it.
+    /// tabs, and its Log tab with the Homing and reset buttons, the running log and the
+    /// alarms). The buttons' commands are here; the Log tab shows them.
     /// </summary>
     /// <remarks>
     /// The machine is in manual mode while this tab is on screen - the PLC acts on the HMI's
@@ -35,15 +38,8 @@ namespace Nova.ViewModels.Pages.Audio
         /// <summary>Whether there is a manual GUI to show.</summary>
         public bool HasGui => Gui != null;
 
-        /// <summary>
-        /// Live running log beside the manual GUI, so an operator driving the station by
-        /// hand can see what the machine just did.
-        /// </summary>
-        public RunningLogViewModel RunningLog { get; }
-
         public ManualTabViewModel(
             PageViewModel gui = null,
-            IRunningLogService runningLog = null,
             IHomingService homing = null,
             IMachineOrchestrator orchestrator = null,
             IDialogService dialog = null,
@@ -51,8 +47,12 @@ namespace Nova.ViewModels.Pages.Audio
             IAccessLog accessLog = null)
         {
             Gui = gui;
-            RunningLog = new RunningLogViewModel(runningLog);
             _homing = homing;
+
+            // The Homing and reset buttons are drawn on the GUI's Log tab.
+            var manualGui = gui as ManualViewModel;
+            if (manualGui != null)
+                manualGui.Log.MachineControls = this;
             _orchestrator = orchestrator;
             _dialog = dialog;
             _session = session;
@@ -94,7 +94,7 @@ namespace Nova.ViewModels.Pages.Audio
 
 
         // ==================================================================
-        // Homing button (above the Running Log)
+        // Homing button (top of the Log tab)
         // ==================================================================
 
         /// <summary>Whether there is a homing service behind the button.</summary>
@@ -120,6 +120,21 @@ namespace Nova.ViewModels.Pages.Audio
         [RelayCommand]
         private void HomeMachine()
         {
+            // FAM 2 Bug_Id_006: homing in an E-stop or with an alarm standing was accepted,
+            // and its "homing done" came after the E-stop was released. Refuse it here, in
+            // the words QA asked for; the PLC still has the last word.
+            if (_orchestrator != null && _orchestrator.CurrentStatus == MachineStatus.Alarm)
+            {
+                _dialog?.ShowWarning("Machine is in alarm state. Clear the alarm (Reset) before homing.", "Homing");
+                return;
+            }
+
+            if (_orchestrator != null && _orchestrator.IsAutoRunning)
+            {
+                _dialog?.ShowWarning("Homing cannot be started while the auto sequence is running.", "Homing");
+                return;
+            }
+
             try
             {
                 _homing.StartHoming();
@@ -128,6 +143,28 @@ namespace Nova.ViewModels.Pages.Audio
             catch (Exception ex)
             {
                 _dialog?.ShowError("Homing could not be started: " + ex.Message, "Homing");
+            }
+        }
+
+        // ==================================================================
+        // Reset button (the small unlabelled one beside Homing, on the Log tab)
+        // ==================================================================
+
+        /// <summary>Whether there is a machine orchestrator behind the button.</summary>
+        public bool HasReset => _orchestrator != null;
+
+        /// <summary>Pulses the PLC's RESET: the PLC acknowledges its alarms and leaves ALARM / STOP.</summary>
+        [RelayCommand]
+        private void ResetMachine()
+        {
+            try
+            {
+                _orchestrator.ResetAlarms();
+                LogAction("Reset pressed");
+            }
+            catch (Exception ex)
+            {
+                _dialog?.ShowError("The PLC could not be reset: " + ex.Message, "Manual");
             }
         }
 
@@ -163,8 +200,6 @@ namespace Nova.ViewModels.Pages.Audio
                 _homing.StateChanged -= OnHomingStateChanged;
                 _homing.HomingCompleted -= OnHomingCompleted;
             }
-
-            RunningLog.Dispose();
         }
     }
 }

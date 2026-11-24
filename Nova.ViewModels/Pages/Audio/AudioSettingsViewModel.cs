@@ -43,6 +43,10 @@ namespace Nova.ViewModels.Pages.Audio
         private readonly IStationProfileService _profile;
         private readonly IMachineIdentityService _identity;
         private readonly IDialogService _dialog;
+        private readonly IMachineOrchestrator _orchestrator;
+
+        // True while a refused tab is being put back, so the change hooks do not run twice.
+        private bool _revertingTab;
 
         // True while the profile is being copied into the bound properties, so the
         // per-property change hooks do not treat that as an operator edit.
@@ -377,16 +381,23 @@ namespace Nova.ViewModels.Pages.Audio
         }
 
         /// <summary>
-        /// Coming back to the page on the Manual or Calibration tab puts the machine back in
-        /// manual mode (and the Calibration tab follows the PLC's calibration status). The other tabs re-read what they show when they are selected, as before.
+        /// Coming back to the page on the Manual tab puts the machine back in manual mode.
+        /// The other tabs re-read what they show when they are selected, as before.
         /// </summary>
         public override void OnNavigatedTo()
         {
             base.OnNavigatedTo();
+
+            // The machine started while the operator was elsewhere: do not go back into Manual.
+            if (IsManualTab && ManualBlocked)
+            {
+                SelectedTab = GeneralTab;
+                if (_dialog != null)
+                    _dialog.ShowWarning(ManualBlockedMessage, "Manual");
+            }
+
             if (IsManualTab)
                 Manual.OnShown();
-            else if (IsCalibrationTab)
-                Calibration.OnShown();
         }
 
         /// <summary>Leaving the page abandons an open Hardware Setting dialog.</summary>
@@ -401,7 +412,7 @@ namespace Nova.ViewModels.Pages.Audio
 
 
         // ==================================================================
-        // Tabs: General, Manual, Calibration, Access Control, Valve Model, HIVE Control, Picture Qty.
+        // Tabs: General, Manual, Access Control, Valve Model, HIVE Control, Picture Qty.
         // Check, PDATA Mapping (Level 3) and Hash Key. Which are offered depends on the level (and, for Hash
         // Key, on the HIVE state), so the list is rebuilt when either changes.
         // ==================================================================
@@ -413,25 +424,27 @@ namespace Nova.ViewModels.Pages.Audio
         public ObservableCollection<string> Tabs { get; } = new ObservableCollection<string>();
 
         [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(IsGeneralTab), nameof(IsManualTab), nameof(IsCalibrationTab), nameof(IsAccessControlTab), nameof(IsValveModelTab),
-            nameof(IsHiveControlTab), nameof(IsPictureQtyTab), nameof(IsHashKeyTab), nameof(IsPdataMappingTab))]
+        [NotifyPropertyChangedFor(nameof(IsGeneralTab), nameof(IsManualTab), nameof(IsAccessControlTab), nameof(IsValveModelTab),
+            nameof(IsHiveControlTab), nameof(IsPictureQtyTab), nameof(IsHashKeyTab), nameof(IsPdataMappingTab), nameof(IsLocalizationTab), nameof(IsConfigDescriptionTab),
+            nameof(IsEarlyWarningTab), nameof(IsMaintenanceTab))]
         private string _selectedTab = GeneralTab;
 
         public bool IsGeneralTab => SelectedTab == GeneralTab;
         public bool IsManualTab => Manual != null && SelectedTab == Manual.Title;
-        public bool IsCalibrationTab => Calibration != null && SelectedTab == Calibration.Title;
         public bool IsAccessControlTab => AccessControl != null && SelectedTab == AccessControl.Title;
         public bool IsValveModelTab => ValveModel != null && SelectedTab == ValveModel.Title;
         public bool IsHiveControlTab => HiveControl != null && SelectedTab == HiveControl.Title;
         public bool IsPictureQtyTab => PictureQty != null && SelectedTab == PictureQty.Title;
         public bool IsHashKeyTab => HashKey != null && SelectedTab == HashKey.Title;
         public bool IsPdataMappingTab => PdataMapping != null && SelectedTab == PdataMapping.Title;
+        public bool IsLocalizationTab => Localization != null && SelectedTab == Localization.Title;
+        public bool IsConfigDescriptionTab => ConfigDescription != null && SelectedTab == ConfigDescription.Title;
+        public bool IsEarlyWarningTab => EarlyWarning != null && SelectedTab == EarlyWarning.Title;
+        public bool IsMaintenanceTab => Maintenance != null && SelectedTab == Maintenance.Title;
 
         /// <summary>The manual-operation GUI, with the Homing button and the running log.</summary>
         public ManualTabViewModel Manual { get; }
 
-        /// <summary>The PLC calibration routines, per station: parameters, Start / Pause / Stop and results.</summary>
-        public CalibrationTabViewModel Calibration { get; }
         public AccessControlTabViewModel AccessControl { get; }
         public ValveModelTabViewModel ValveModel { get; }
         public HiveControlTabViewModel HiveControl { get; }
@@ -439,14 +452,86 @@ namespace Nova.ViewModels.Pages.Audio
         public HashKeyTabViewModel HashKey { get; }
         public PdataMappingTabViewModel PdataMapping { get; }
 
+        /// <summary>S17: the early warning's test box and its enable / disable switch.</summary>
+        public EarlyWarningTabViewModel EarlyWarning { get; }
+
+        /// <summary>S11.3: the maintenance items of each fixture, with their countdown and health.</summary>
+        public MaintenanceTabViewModel Maintenance { get; }
+
+        /// <summary>The English, Chinese and Vietnamese wording of every string on screen.</summary>
+        public LocalizationEditorTabViewModel Localization { get; }
+
+        /// <summary>The I/O point and spec limit names per language (as Odyssey.Master_V3).</summary>
+        public ConfigDescriptionTabViewModel ConfigDescription { get; }
+
+        /// <summary>
+        /// True while the auto sequence is running (or paused part-way): the Manual screen
+        /// cannot be opened then, because manual mode would take the PLC out of the sequence.
+        /// </summary>
+        private bool ManualBlocked => _orchestrator != null && _orchestrator.IsAutoRunning;
+
+        /// <summary>The PLC is homing, or the Homing button was pressed and the PLC has not finished.</summary>
+        private bool IsHomingInProgress =>
+            (Manual != null && Manual.IsHoming)
+            || (_orchestrator != null && _orchestrator.CurrentStatus == Nova.Abstractions.Machine.Enums.MachineStatus.Homing);
+
+        private const string ManualBlockedMessage =
+            "The Manual screen cannot be opened while the auto sequence is running. Stop the machine first.";
+
+        /// <summary>The auto sequence started while the Manual tab was open: leave it, which releases manual mode.</summary>
+        private void OnMachineStatusChanged(Nova.Abstractions.Machine.Enums.MachineStatus status)
+        {
+            if (IsManualTab && ManualBlocked)
+                SelectedTab = GeneralTab;
+        }
+
         partial void OnSelectedTabChanged(string oldValue, string newValue)
         {
+            // A refused tab was put back: nothing changed, so there is nothing to show or hide.
+            if (_revertingTab)
+                return;
+
+            // FAM 2 Bug_Id_004: leaving the Manual tab releases manual mode, which stops a
+            // homing in progress. Stay on it until the homing ends.
+            if (Manual != null && oldValue == Manual.Title && newValue != Manual.Title && IsHomingInProgress)
+            {
+                _revertingTab = true;
+                try
+                {
+                    SelectedTab = oldValue;
+                }
+                finally
+                {
+                    _revertingTab = false;
+                }
+
+                if (_dialog != null)
+                    _dialog.ShowWarning("Homing is in progress. Wait for it to finish before leaving this screen.", "Homing");
+                return;
+            }
+
+            if (Manual != null && newValue == Manual.Title && ManualBlocked)
+            {
+                _revertingTab = true;
+                try
+                {
+                    SelectedTab = string.IsNullOrEmpty(oldValue) ? GeneralTab : oldValue;
+                }
+                finally
+                {
+                    _revertingTab = false;
+                }
+
+                if (_dialog != null)
+                    _dialog.ShowWarning(ManualBlockedMessage, "Manual");
+                return;
+            }
+
             // The Hardware Setting pop-up belongs to General.
             if (newValue != GeneralTab)
                 IsHardwareDialogOpen = false;
 
-            // The new tab first: going from Manual to Calibration (or back) the machine must
-            // stay in manual mode throughout - leaving it sends the PLC to IDLE, homing required.
+            // The new tab first, so a tab that holds manual mode takes it before the old one lets go.
             SettingsTabBase after = TabFor(newValue);
             if (after != null)
                 after.OnShown();
@@ -461,26 +546,32 @@ namespace Nova.ViewModels.Pages.Audio
             if (title == null || AccessControl == null)
                 return null;
             if (title == Manual.Title) return Manual;
-            if (title == Calibration.Title) return Calibration;
             if (title == AccessControl.Title) return AccessControl;
             if (title == ValveModel.Title) return ValveModel;
             if (title == HiveControl.Title) return HiveControl;
             if (title == PictureQty.Title) return PictureQty;
             if (title == HashKey.Title) return HashKey;
             if (title == PdataMapping.Title) return PdataMapping;
+            if (title == Localization.Title) return Localization;
+            if (title == ConfigDescription.Title) return ConfigDescription;
+            if (title == EarlyWarning.Title) return EarlyWarning;
+            if (title == Maintenance.Title) return Maintenance;
             return null;
         }
 
         private void ApplyLevelToTabs()
         {
             Manual.Level = AccessLevel;
-            Calibration.Level = AccessLevel;
             AccessControl.Level = AccessLevel;
             ValveModel.Level = AccessLevel;
             HiveControl.Level = AccessLevel;
             PictureQty.Level = AccessLevel;
             HashKey.Level = AccessLevel;
             PdataMapping.Level = AccessLevel;
+            Localization.Level = AccessLevel;
+            ConfigDescription.Level = AccessLevel;
+            EarlyWarning.Level = AccessLevel;
+            Maintenance.Level = AccessLevel;
         }
 
         /// <summary>
@@ -491,7 +582,7 @@ namespace Nova.ViewModels.Pages.Audio
         /// </summary>
         private void BuildTabs()
         {
-            var wanted = new List<string> { GeneralTab, Manual.Title, Calibration.Title };
+            var wanted = new List<string> { GeneralTab, Manual.Title };
             if (IsLoggedIn)
                 wanted.Add(AccessControl.Title);
             wanted.Add(ValveModel.Title);
@@ -499,11 +590,22 @@ namespace Nova.ViewModels.Pages.Audio
                 wanted.Add(HiveControl.Title);
             if (CanEdit)
                 wanted.Add(PictureQty.Title);
+            // S11.3: "Level 2 / Level 3 user logs in, click to activate this page".
+            if (CanEdit && Maintenance.IsAvailable)
+                wanted.Add(Maintenance.Title);
+            // S17: the test box and the switch; the switch itself asks for the CM's card.
+            if (CanEdit && EarlyWarning.IsPresent)
+                wanted.Add(EarlyWarning.Title);
             if (CanEditCritical)
                 wanted.Add(PdataMapping.Title);
             if (CanEditCritical && (_hive == null || !_hive.IsAvailable
                                     || string.Equals(_hive.CurrentDowntimeCode, "PD-15", StringComparison.OrdinalIgnoreCase)))
                 wanted.Add(HashKey.Title);
+            // Anyone signed in can see the wording; only Level 3 can change it.
+            if (IsLoggedIn && ConfigDescription.IsAvailable)
+                wanted.Add(ConfigDescription.Title);
+            if (IsLoggedIn && Localization.IsAvailable)
+                wanted.Add(Localization.Title);
 
             if (Tabs.SequenceEqual(wanted))
                 return;
@@ -539,32 +641,46 @@ namespace Nova.ViewModels.Pages.Audio
             IHashKeyService hashes = null,
             IMesClient mes = null,
             IPdataMappingService pdata = null,
-            // The Manual tab: the manual-operation GUI, the Homing button, the running
-            // log, and the machine's manual mode while the tab is on screen.
+            // The Manual tab: the manual-operation GUI (its Log tab has the running log),
+            // the Homing button, and the machine's manual mode while the tab is on screen.
             ManualViewModel manual = null,
-            IRunningLogService runningLog = null,
             IHomingService homing = null,
             IMachineOrchestrator orchestrator = null,
-            // The Calibration tab: the PLC calibration routines, per station.
-            ICalibrationService calibration = null)
+            // The Localization Editor tab: the language files behind the dual language.
+            ILocalizationEditorService localizationEditor = null,
+            ILocalizationService localization = null,
+            // The Config Description tab: I/O point and spec limit names per language.
+            IDescriptionService descriptions = null,
+            // The Early Warning tab (S17) and the Maintenance tab (S11.3).
+            IEarlyWarning earlyWarning = null,
+            IMaintenanceStore maintenance = null,
+            ICsvExportService csvExport = null)
             : base(session, AccessBypass.ConfigAndSettings)
         {
             _profile = profile;
             _identity = identity;
             _dialog = dialog;
             _hive = hive;
+            _orchestrator = orchestrator;
 
-            Manual = new ManualTabViewModel(manual, runningLog, homing, orchestrator, dialog, session, accessLog);
-            Calibration = new CalibrationTabViewModel(calibration, homing, orchestrator, dialog, session, accessLog);
+            Manual = new ManualTabViewModel(manual, homing, orchestrator, dialog, session, accessLog);
             AccessControl = new AccessControlTabViewModel(accessAdmin, access, files, dialog, session, accessLog);
             ValveModel = new ValveModelTabViewModel(consumables, dialog, session, accessLog);
             HiveControl = new HiveControlTabViewModel(hive, badges, dialog, session, accessLog);
             PictureQty = new PictureQtyTabViewModel(pictures, badges, dialog, session, accessLog);
             HashKey = new HashKeyTabViewModel(hashes, mes, badges, files, dialog, session, accessLog);
             PdataMapping = new PdataMappingTabViewModel(pdata, dialog, session, accessLog);
+            Localization = new LocalizationEditorTabViewModel(localizationEditor, localization, dialog);
+            ConfigDescription = new ConfigDescriptionTabViewModel(descriptions, localization, dialog);
+            EarlyWarning = new EarlyWarningTabViewModel(earlyWarning, dialog, session, accessLog);
+            Maintenance = new MaintenanceTabViewModel(maintenance, mes, hive, csvExport, dialog, session, accessLog, profile,
+                () => accessAdmin != null && accessAdmin.Settings != null ? accessAdmin.Settings.ProjectCode : string.Empty);
 
             if (_hive != null)
                 _hive.Changed += OnHiveChanged;
+
+            if (_orchestrator != null)
+                _orchestrator.OnMachineStatusChanged += OnMachineStatusChanged;
 
             ApplyLevelToTabs();
             BuildTabs();
@@ -767,7 +883,7 @@ namespace Nova.ViewModels.Pages.Audio
             if (disposing)
             {
                 Manual.Dispose();
-                Calibration.Dispose();
+                Maintenance.Dispose();
             }
 
             base.Dispose(disposing);

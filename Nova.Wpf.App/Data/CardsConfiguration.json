@@ -1,13 +1,16 @@
 {
-  "ConnectionId": "127.0.0.1.1.1",
+  "ConnectionId": "10.24.125.229.1.1",
   "PortNo": 851,
   "DBName": "MAIN",
   "StepperDUTName": "steppercall",
   "ServoDUTName": "servocall",
   "CylinderDUTName": "cylindercall",
   "VacuumDUTName": "vaccumcall",
-  "InputCount": 98,
-  "OutputCount": 144,
+  "InputCount": 225,
+  "OutputCount": 188,
+  "InputArray": "GVL_Inputs.Inputs",
+  "OutputArray": "GVL_Outputs.Outputs",
+  "IOFirstIndex": 1,
   "VisionDUTName": "visioncall",
   "ScannerDUTName": "scannercall"
 }

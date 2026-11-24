@@ -83,6 +83,40 @@ namespace Nova.ViewModels.Pages.Audio
 
         public string LastChange => _check != null ? _check.LastChange : string.Empty;
 
+        /// <summary>
+        /// "Enable Picture Quantity Check" (T5): Level 3 only. Off, the counts are still
+        /// recorded but a wrong count neither stops dispensing nor puts the machine down.
+        /// </summary>
+        public bool IsCheckEnabled
+        {
+            get { return _check != null && _check.IsCheckEnabled; }
+            set
+            {
+                if (_check == null || !CanEditCritical || value == _check.IsCheckEnabled)
+                {
+                    OnPropertyChanged();
+                    return;
+                }
+
+                string operatorName = _session != null ? _session.UserName : string.Empty;
+                string error;
+                if (!_check.SetCheckEnabled(value, operatorName, out error))
+                    _dialog?.ShowError(error, "Picture Qty. Check");
+                else if (_log != null && _session != null)
+                    _log.Action(operatorName, (int)_session.Level, (value ? "enabled" : "disabled") + " the picture quantity check");
+
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(CheckEnabledText));
+            }
+        }
+
+        /// <summary>Level 3 may switch the check.</summary>
+        public bool CanSwitchCheck => IsAvailable && CanEditCritical;
+
+        public string CheckEnabledText => IsCheckEnabled
+            ? "Every unit's picture count is checked against the target."
+            : "The check is off: counts are recorded, but a wrong count does not stop the machine.";
+
         public string LimitsText => _check != null ? _check.LimitsText : "The picture check is not available on this machine.";
 
         public string RecordFolder => _check != null ? _check.RecordFolder : string.Empty;
@@ -113,6 +147,7 @@ namespace Nova.ViewModels.Pages.Audio
             if (!CanEdit && IsEditing)
                 StopEditing();
 
+            OnPropertyChanged(nameof(CanSwitchCheck));
             EditCommand.NotifyCanExecuteChanged();
         }
 
@@ -142,6 +177,8 @@ namespace Nova.ViewModels.Pages.Audio
             OnPropertyChanged(nameof(LastChange));
             OnPropertyChanged(nameof(LimitsText));
             OnPropertyChanged(nameof(HasRecords));
+            OnPropertyChanged(nameof(IsCheckEnabled));
+            OnPropertyChanged(nameof(CheckEnabledText));
             EditCommand.NotifyCanExecuteChanged();
         }
 

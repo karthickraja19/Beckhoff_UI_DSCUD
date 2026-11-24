@@ -11,7 +11,7 @@ namespace Nova.ViewModels.Pages.Manual
     /// <summary>
     /// ViewModel backing the "Cylinder" tab of the Manual screen — a data-driven
     /// pneumatic state board. Hydrates its <see cref="CylinderItemViewModel"/> cards
-    /// from <see cref="ICylinderService"/> (the machine's cylinders.xml catalogue)
+    /// from <see cref="ICylinderService"/> (Data\Cylinders.json)
     /// and refreshes every card each time the IO service reports a change. The board
     /// shows every cylinder at once, so every cylinder follows live status - while the
     /// tab is on screen, and not otherwise.

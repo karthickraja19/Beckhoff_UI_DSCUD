@@ -14,7 +14,9 @@ namespace Nova.Abstractions.Machine.Enums
         [Description("GRR Mode")] GRR,
         [Description("CPK Mode")] CPK,
         [Description("Static Test Mode")] Static,
-        [Description("Dynamic Test Mode")] Dynamic
+        [Description("Dynamic Test Mode")] Dynamic,
+        [Description("Maintenance Mode")] Maintenance,
+        [Description("Calibration Mode")] Calibration
     }
 }
 

@@ -1,5 +1,6 @@
 <UserControl x:Class="Nova.Wpf.App.Views.Auth.LoginView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:loc="clr-namespace:Nova.Wpf.UI.Localization;assembly=Nova.Wpf.UI"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
              xmlns:converters="clr-namespace:Nova.Wpf.App.Converters"
@@ -29,14 +30,14 @@
 
             <!-- Terminal being signed in to -->
             <TextBlock Style="{StaticResource Nova.PageTitle}"
-                       Text="Sign in" HorizontalAlignment="Center"/>
+                       Text="{loc:Tr Txt_SignIn}" HorizontalAlignment="Center"/>
             <TextBlock Style="{StaticResource Nova.PageSubtitle}"
                        HorizontalAlignment="Center" TextAlignment="Center"
                        Margin="0,4,0,0"
-                       Text="{Binding TerminalName, TargetNullValue='(terminal not configured)'}"/>
+                       Text="{loc:TrBinding TerminalName, TargetNullValue='(terminal not configured)'}"/>
             <TextBlock Style="{StaticResource Nova.PageSubtitle}"
                        HorizontalAlignment="Center" TextAlignment="Center"
-                       Text="{Binding SoftwareType, StringFormat='{}{0} software'}"/>
+                       Text="{loc:TrBinding SoftwareType, StringFormat='{}{0} software'}"/>
 
             <!-- Card prompt -->
             <Border Margin="0,24,0,0" Padding="24"
@@ -50,13 +51,13 @@
                                Style="{StaticResource Nova.BodyText}"
                                HorizontalAlignment="Center" TextAlignment="Center"
                                TextWrapping="Wrap"
-                               Text="{Binding Prompt}"/>
+                               Text="{loc:TrBinding Prompt}"/>
 
                     <!-- Reader activity -->
                     <TextBlock Margin="0,10,0,0"
                                Style="{StaticResource Nova.PageSubtitle}"
                                HorizontalAlignment="Center"
-                               Text="Checking access…"
+                               Text="{loc:Tr Txt_CheckingAccess}"
                                Visibility="{Binding IsBusy, Converter={StaticResource Boolean2VisibilityReValueConverter}}"/>
                 </StackPanel>
             </Border>
@@ -76,26 +77,26 @@
                 </Grid.RowDefinitions>
 
                 <TextBlock Grid.Row="0" Grid.Column="0" Style="{StaticResource Nova.FieldLabel}"
-                           Text="Name" Margin="0,0,16,6"/>
+                           Text="{loc:Tr Txt_Name}" Margin="0,0,16,6"/>
                 <TextBlock Grid.Row="0" Grid.Column="1" Style="{StaticResource Nova.BodyText}"
-                           Text="{Binding OperatorName}" Margin="0,0,0,6"/>
+                           Text="{loc:TrBinding OperatorName}" Margin="0,0,0,6"/>
 
                 <TextBlock Grid.Row="1" Grid.Column="0" Style="{StaticResource Nova.FieldLabel}"
-                           Text="Access" Margin="0,0,16,6"/>
+                           Text="{loc:Tr Txt_Access}" Margin="0,0,16,6"/>
                 <TextBlock Grid.Row="1" Grid.Column="1" Style="{StaticResource Nova.BodyText}"
-                           Text="{Binding AccessLevelText}" TextWrapping="Wrap" Margin="0,0,0,6"/>
+                           Text="{loc:TrBinding AccessLevelText}" TextWrapping="Wrap" Margin="0,0,0,6"/>
 
                 <TextBlock Grid.Row="2" Grid.Column="0" Style="{StaticResource Nova.FieldLabel}"
-                           Text="Team" Margin="0,0,16,0"/>
+                           Text="{loc:Tr Txt_Team}" Margin="0,0,16,0"/>
                 <TextBlock Grid.Row="2" Grid.Column="1" Style="{StaticResource Nova.BodyText}"
-                           Text="{Binding FunctionTeam}" TextWrapping="Wrap"/>
+                           Text="{loc:TrBinding FunctionTeam}" TextWrapping="Wrap"/>
             </Grid>
 
             <!-- Refusal / second-step problem -->
             <Border Margin="0,16,0,0" Padding="12" CornerRadius="8"
                     Background="{DynamicResource DangerBrush}"
                     Visibility="{Binding ErrorMessage, Converter={StaticResource String2Visibility}}">
-                <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap"
+                <TextBlock Text="{loc:TrBinding ErrorMessage}" TextWrapping="Wrap"
                            Foreground="{DynamicResource ReverseTextBrush}"
                            FontSize="{DynamicResource Nova.FontSize.Body}"/>
             </Border>
@@ -105,7 +106,7 @@
                  the action, per slide 44. -->
             <Button Margin="0,20,0,0" HorizontalAlignment="Center"
                     Style="{StaticResource Nova.ButtonSecondary}"
-                    Content="Cancel"
+                    Content="{loc:Tr Txt_Cancel}"
                     Command="{Binding CancelVerificationCommand}"
                     Visibility="{Binding IsAwaitingVerification, Converter={StaticResource Boolean2VisibilityReValueConverter}}"/>
         </StackPanel>

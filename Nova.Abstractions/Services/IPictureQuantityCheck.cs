@@ -34,6 +34,16 @@ namespace Nova.Abstractions.Services
         /// </summary>
         bool DispensingEnabled { get; }
 
+        /// <summary>
+        /// "Enable Picture Quantity Check" (T5, Level 3). While false every unit's count is
+        /// still written to Pic_Upload_Record, but a count outside the limits neither stops
+        /// dispensing nor puts the machine down.
+        /// </summary>
+        bool IsCheckEnabled { get; }
+
+        /// <summary>Switches the check on or off, and records who did.</summary>
+        bool SetCheckEnabled(bool enabled, string operatorName, out string error);
+
         /// <summary>Who set the value last, and when.</summary>
         string LastChange { get; }
 

@@ -4,86 +4,81 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Nova.Abstractions.Services;
 
 namespace Nova.Core.Services
 {
     /// <summary>
-    /// <see cref="ICcdImageSource"/> over the folders the vision software saves its images
-    /// to: one sub-folder per camera under a root (App.config VisionImageFolder), e.g.
-    /// <c>D:\Images\CCD1\FVMDJ20X6G_20260928101500_OK.jpg</c>.
+    /// <see cref="ICcdImageSource"/> over the folder the vision software saves its images
+    /// to (App.config VisionImageFolder): the newest image files in it, or in any folder
+    /// below it, newest first. It does not need a folder per camera.
     /// </summary>
     /// <remarks>
     /// <list type="bullet">
-    /// <item>The newest image file of each camera folder (or any folder below it) is the camera's capture.</item>
-    /// <item>Unit SN, time and OK/NG are read from a file name of the form SN_yyyyMMddHHmmss[_OK|_NG].</item>
+    /// <item>Unit SN, time and OK/NG are read from a file name of the form
+    /// <c>SN_yyyyMMddHHmmss[_OK|_NG]</c> when it has that form; otherwise the image's time is
+    /// when its file was written, and the unit and result are unknown.</item>
     /// <item>A text file next to the image with the same name (<c>.txt</c>) holding
     /// <c>key=value</c> lines gives the capture's information (Angle, X_Gap, T1_Exposure, ...).</item>
     /// </list>
-    /// The folders are watched, so the page follows the running units without polling.
+    /// The folder is watched, so the page follows the running units without polling. Only
+    /// the newest <see cref="Keep"/> images are held; the folder is scanned in the
+    /// background at start, so a large archive does not hold up the application.
     /// </remarks>
     public sealed class FolderCcdImageSource : ICcdImageSource, IDisposable
     {
+        /// <summary>How many of the newest images are held.</summary>
+        private const int Keep = 60;
+
         private static readonly string[] ImageExtensions = { ".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff" };
 
         private static readonly Regex NamePattern = new Regex(
             @"^(?<sn>[^_]+)_(?<time>\d{14})(?:_(?<result>OK|NG|PASS|FAIL))?", RegexOptions.IgnoreCase);
 
         private readonly string _root;
-        private readonly Dictionary<string, CcdCapture> _latest = new Dictionary<string, CcdCapture>(StringComparer.OrdinalIgnoreCase);
+        private readonly List<CcdCapture> _newest = new List<CcdCapture>();   // newest first
         private readonly object _gate = new object();
         private readonly FileSystemWatcher _watcher;
+        private int _scanning;
 
-        public FolderCcdImageSource(string root, IEnumerable<string> cameraNames)
+        public FolderCcdImageSource(string root)
         {
-            _root = root;
-            var cameras = new List<string>(cameraNames ?? new string[0]);
+            _root = root ?? string.Empty;
+            if (!Directory.Exists(_root))
+                return;
 
-            if (Directory.Exists(root))
+            _watcher = new FileSystemWatcher(_root)
             {
-                foreach (string folder in Directory.GetDirectories(root).Select(Path.GetFileName).OrderBy(n => n, StringComparer.OrdinalIgnoreCase))
-                {
-                    if (!cameras.Contains(folder, StringComparer.OrdinalIgnoreCase))
-                        cameras.Add(folder);
-                }
+                IncludeSubdirectories = true,
+                NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite,
+            };
+            _watcher.Created += OnFileChanged;
+            _watcher.Renamed += OnFileChanged;
+            _watcher.Changed += OnFileChanged;
+            _watcher.Deleted += OnFileDeleted;
+            _watcher.EnableRaisingEvents = true;
 
-                foreach (string camera in cameras)
-                    Rescan(camera);
-
-                _watcher = new FileSystemWatcher(root)
-                {
-                    IncludeSubdirectories = true,
-                    NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite,
-                };
-                _watcher.Created += OnFileChanged;
-                _watcher.Renamed += OnFileChanged;
-                _watcher.Changed += OnFileChanged;
-                _watcher.EnableRaisingEvents = true;
-            }
-
-            Cameras = cameras;
+            Rescan();
         }
 
-        public event EventHandler<string> CaptureChanged;
-
-        public IReadOnlyList<string> Cameras { get; }
+        public event EventHandler ImagesChanged;
 
         public string Description
         {
             get
             {
                 return Directory.Exists(_root)
-                    ? "Images from " + _root
+                    ? "Newest images from " + _root
                     : "The image folder " + _root + " does not exist (App.config VisionImageFolder).";
             }
         }
 
-        public CcdCapture Latest(string camera)
+        public IReadOnlyList<CcdCapture> Newest(int count)
         {
             lock (_gate)
             {
-                CcdCapture capture;
-                return _latest.TryGetValue(camera ?? string.Empty, out capture) ? capture : null;
+                return _newest.Take(Math.Max(0, count)).ToList();
             }
         }
 
@@ -93,12 +88,50 @@ namespace Nova.Core.Services
                 _watcher.Dispose();
         }
 
+        /// <summary>Reads the newest images of the folder, in the background.</summary>
+        private void Rescan()
+        {
+            if (System.Threading.Interlocked.Exchange(ref _scanning, 1) != 0)
+                return;
+
+            Task.Run(() =>
+            {
+                try
+                {
+                    List<CcdCapture> found = new DirectoryInfo(_root)
+                        .EnumerateFiles("*", SearchOption.AllDirectories)
+                        .Where(f => IsImage(f.FullName))
+                        .OrderByDescending(f => f.LastWriteTimeUtc)
+                        .Take(Keep)
+                        .Select(f => Read(f.FullName))
+                        .ToList();
+
+                    lock (_gate)
+                    {
+                        // Images that arrived while scanning are already held: keep them too.
+                        foreach (CcdCapture capture in found)
+                            Add(capture);
+                    }
+                }
+                catch (Exception)
+                {
+                    // A folder that cannot be read shows no images until the next file arrives.
+                }
+                finally
+                {
+                    System.Threading.Interlocked.Exchange(ref _scanning, 0);
+                }
+
+                Raise();
+            });
+        }
+
         private void OnFileChanged(object sender, FileSystemEventArgs e)
         {
             // On the watcher's thread: an exception here would end the application.
             try
             {
-                Take(e);
+                Take(e.FullPath);
             }
             catch (Exception)
             {
@@ -106,72 +139,79 @@ namespace Nova.Core.Services
             }
         }
 
-        private void Take(FileSystemEventArgs e)
-        {
-            if (!IsImage(e.FullPath) && !string.Equals(Path.GetExtension(e.FullPath), ".txt", StringComparison.OrdinalIgnoreCase))
-                return;
-
-            string camera = CameraOf(e.FullPath);
-            if (camera == null)
-                return;
-
-            string image = IsImage(e.FullPath) ? e.FullPath : ImageBeside(e.FullPath);
-            if (image == null || !WaitUntilReadable(image))
-                return;
-
-            CcdCapture capture = Read(camera, image);
-            lock (_gate)
-            {
-                CcdCapture current;
-                if (_latest.TryGetValue(camera, out current) && current.Time > capture.Time
-                    && !string.Equals(current.ImagePath, image, StringComparison.OrdinalIgnoreCase))
-                {
-                    return;
-                }
-
-                _latest[camera] = capture;
-            }
-
-            CaptureChanged?.Invoke(this, camera);
-        }
-
-        private void Rescan(string camera)
+        private void OnFileDeleted(object sender, FileSystemEventArgs e)
         {
             try
             {
-                string folder = Path.Combine(_root, camera);
-                if (!Directory.Exists(folder))
+                if (!IsImage(e.FullPath))
                     return;
 
-                FileInfo newest = new DirectoryInfo(folder)
-                    .EnumerateFiles("*", SearchOption.AllDirectories)
-                    .Where(f => IsImage(f.FullName))
-                    .OrderByDescending(f => f.LastWriteTimeUtc)
-                    .FirstOrDefault();
-
-                if (newest != null)
+                int left;
+                lock (_gate)
                 {
-                    lock (_gate)
-                    {
-                        _latest[camera] = Read(camera, newest.FullName);
-                    }
+                    _newest.RemoveAll(c => string.Equals(c.ImagePath, e.FullPath, StringComparison.OrdinalIgnoreCase));
+                    left = _newest.Count;
                 }
+
+                Raise();
+
+                // The software cleans up old images: look again for older ones to show.
+                if (left < Keep / 2)
+                    Rescan();
             }
             catch (Exception)
             {
-                // A folder that cannot be read shows its camera without a frame.
+                // Nothing to do: the list is corrected at the next change.
             }
         }
 
-        /// <summary>The camera a file belongs to: the first folder below the root.</summary>
-        private string CameraOf(string path)
+        private void Take(string path)
         {
-            string relative = path.Length > _root.Length ? path.Substring(_root.Length).TrimStart('\\', '/') : string.Empty;
-            int slash = relative.IndexOfAny(new[] { '\\', '/' });
-            return slash > 0 ? relative.Substring(0, slash) : null;
+            bool isImage = IsImage(path);
+            if (!isImage && !string.Equals(Path.GetExtension(path), ".txt", StringComparison.OrdinalIgnoreCase))
+                return;
+
+            string image = isImage ? path : ImageBeside(path);
+            if (image == null || !WaitUntilReadable(image))
+                return;
+
+            CcdCapture capture = Read(image);
+            lock (_gate)
+            {
+                Add(capture);
+            }
+
+            Raise();
         }
 
-        private static CcdCapture Read(string camera, string image)
+        /// <summary>Puts the capture in its place, replacing an earlier read of the same file. Call under the lock.</summary>
+        private void Add(CcdCapture capture)
+        {
+            _newest.RemoveAll(c => string.Equals(c.ImagePath, capture.ImagePath, StringComparison.OrdinalIgnoreCase));
+            _newest.Add(capture);
+            _newest.Sort((a, b) =>
+            {
+                int byTime = b.Time.CompareTo(a.Time);
+                return byTime != 0 ? byTime : string.Compare(b.ImagePath, a.ImagePath, StringComparison.OrdinalIgnoreCase);
+            });
+
+            if (_newest.Count > Keep)
+                _newest.RemoveRange(Keep, _newest.Count - Keep);
+        }
+
+        private void Raise()
+        {
+            try
+            {
+                ImagesChanged?.Invoke(this, EventArgs.Empty);
+            }
+            catch (Exception)
+            {
+                // A faulty screen must not stop the watcher.
+            }
+        }
+
+        private static CcdCapture Read(string image)
         {
             string name = Path.GetFileNameWithoutExtension(image) ?? string.Empty;
             Match match = NamePattern.Match(name);
@@ -185,7 +225,6 @@ namespace Nova.Core.Services
 
             return new CcdCapture
             {
-                Camera = camera,
                 ImagePath = image,
                 Time = time,
                 UnitSn = match.Success ? match.Groups["sn"].Value : null,

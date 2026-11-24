@@ -14,8 +14,8 @@ namespace Master.Configuration
     {
         public static readonly Dictionary<Vacuums, IVacuum> VacuumObjs = new Dictionary<Vacuums, IVacuum>();
 
-        /// <summary>As with the cylinders, the sensor and output names are PLC variable names under {ioGvl}.</summary>
-        internal static void Load(TwincatCard card, string ioGvl, List<string> problems)
+        /// <summary>As with the cylinders, the sensor and output names are Data\Config.csv points, kept for the labels.</summary>
+        internal static void Load(TwincatCard card, List<string> problems)
         {
             VacuumObjs.Clear();
 
@@ -29,9 +29,9 @@ namespace Master.Configuration
                         Name = config.Name,
                         EnumName = config.EnumName,
                         Id = config.Id,
-                        VacuumSense = DeviceObjects.Symbol(ioGvl, config.VacuumSense),
-                        VacuumOutput = DeviceObjects.Symbol(ioGvl, config.VacuumOutput),
-                        BlowOutput = DeviceObjects.Symbol(ioGvl, config.BlowOutput),
+                        VacuumSense = DeviceObjects.IoName(config.VacuumSense),
+                        VacuumOutput = DeviceObjects.IoName(config.VacuumOutput),
+                        BlowOutput = DeviceObjects.IoName(config.BlowOutput),
                     };
 
                     return new Vacuum(card, properties);

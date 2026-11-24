@@ -11,10 +11,11 @@ using Teal.Library.Log;
 namespace Nova.Wpf.App.Services.Twincat
 {
     /// <summary>
-    /// The IO service. The IO points are Data\Config.csv's; their
-    /// state is read from the PLC through the Beckhoff library's card, whose ReadAllInput and
-    /// ReadAllOutput return every input and every output as a bool[] indexed by the point's Id
-    /// (the PLC's GVL_IO.aInput and GVL_IO.aOutput), and an output is set with the card's WriteDO.
+    /// The IO service. The IO points are Data\Config.csv's. Their state is every input and
+    /// every output as a bool[] indexed by the point's Id, read through the Beckhoff
+    /// library's card (ReadAllInput / ReadAllOutput) and written with its WriteDO. Which PLC
+    /// arrays those are, and the index a point's Id counts from, is the card's
+    /// (Data\CardsConfiguration.json: InputArray, OutputArray, IOFirstIndex).
     /// </summary>
     /// <remarks>
     /// The IO is read every <see cref="PollMs"/> only while something follows it
@@ -98,7 +99,10 @@ namespace Nova.Wpf.App.Services.Twincat
                 : Task.FromResult(false);
         }
 
-        /// <summary>Sets the output through the library's WriteDO; the next read shows what the PLC made of it.</summary>
+        /// <summary>
+        /// Sets the output through the library's WriteDO, which reads it back; the next read
+        /// shows what the PLC made of it.
+        /// </summary>
         public Task<bool> WriteOutputAsync(int bit, bool on)
         {
             return Task.Run(() =>
@@ -270,7 +274,8 @@ namespace Nova.Wpf.App.Services.Twincat
             reported = true;
             Logger.WriteLog(LogType.Error, "IO", "PLC", "The library returned " + values.Length + " " + kind
                 + " but Data\\Config.csv has " + kind + " up to Id " + (needed - 1)
-                + ", so the rest read off. Check InputCount/OutputCount in Data\\CardsConfiguration.json.", "");
+                + ", so the rest read off. Check InputCount/OutputCount and the PLC's " + kind
+                + " array in Data\\CardsConfiguration.json.", "");
         }
 
         private void OnValueChanged(object sender, string symbol)

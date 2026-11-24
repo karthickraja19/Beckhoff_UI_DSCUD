@@ -4,7 +4,8 @@
 #   powershell -ExecutionPolicy Bypass -File References\Beckhoff\Update-BeckhoffLibrary.ps1
 
 param(
-    [string]$LibraryRoot = 'D:\BeckhOffLibrary\BeckhOffLibrary',
+    # The main library source (Master.sln). D:\BeckhOffLibrary\BeckhOffLibrary is the older copy.
+    [string]$LibraryRoot = 'D:\Beckhoff_Karthi\Latest - Beckhoff\Beckhoff_Lib-class-implementation-m\Beckhoff_Lib-class-implementation-m',
     [string]$Configuration = 'Debug'
 )
 
@@ -19,7 +20,9 @@ if (-not $msbuild) { throw 'MSBuild not found - Visual Studio with the .NET desk
 $devices = 'Cylinder', 'Servo', 'Stepper', 'TcpIp', 'Vacuum'
 foreach ($device in $devices) {
     $project = Join-Path $LibraryRoot "Teal.Library.$device\Teal.Library.$device.csproj"
-    & $msbuild $project /t:Build "/p:Configuration=$Configuration" /v:minimal /nologo
+    # SolutionDir: the projects' post-build step copies each DLL to $(SolutionDir)Library.
+    # (two backslashes: one alone before the closing quote would escape it on the command line)
+    & $msbuild $project /t:Build "/p:Configuration=$Configuration" "/p:SolutionDir=$LibraryRoot\\" /v:minimal /nologo
     if ($LASTEXITCODE -ne 0) { throw "Library build failed for $device (MSBuild exit $LASTEXITCODE)." }
 }
 

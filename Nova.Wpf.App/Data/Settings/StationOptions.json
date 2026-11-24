@@ -2,7 +2,7 @@
   "Sites": [ "ICT KS", "ICT SZ", "PEGA KS", "LUXSHARE", "CHENNAI"],
   "Lines": [ "Line1", "Line2", "Line3", "Line4" ],
   "Stations": [ "FT200", "FT300", "FT400", "BE010", "BE020", "CP0100" ],
-  "Languages": [ "English", "简体中文" ],
+  "Languages": [ "English", "简体中文", "Tiếng Việt" ],
   "MachineNumbers": [ 1, 2, 3, 4, 5, 6, 7, 8 ],
   "Hardware": [
     { "Subsystem": "PLC", "Types": [ "Type A", "Type B", "Type C" ] },

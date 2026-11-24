@@ -12,9 +12,8 @@
     <PackageReference Include="Beckhoff.TwinCAT.Ads" Version="7.0.317" />
   </ItemGroup>
   <ItemGroup>
+    <!-- IAlarmHistoryRepository: the [Alarms] table is written through it (Master.Repository implements it). -->
     <ProjectReference Include="..\Nova.Abstractions\Nova.Abstractions.csproj" />
-    <!-- IDataAccess: the [Alarms] table is written through it. -->
-    <ProjectReference Include="..\Master.Repository\Master.Repository.csproj" />
   </ItemGroup>
   <ItemGroup>
     <!-- Only for Logger.WriteLog, so alarm errors land in the same log files as the rest of the HMI. -->

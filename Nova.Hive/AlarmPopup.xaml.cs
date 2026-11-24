@@ -11,14 +11,14 @@ namespace Nova.Hive
     /// <summary>
     /// The alarm pop-up of Audio SW DFM v5.4, slide 50. It shows the alarm that stopped
     /// the machine, offers a repair action and a replacement error detail, and can only
-    /// be left by pressing Confirm and swiping a badge in <see cref="OperatorDialog"/>,
-    /// or by the Close button when that is enabled.
+    /// be left by pressing Confirm and swiping a badge in <see cref="OperatorDialog"/>.
+    /// There is no Close button.
     /// </summary>
     public partial class AlarmPopup : Window
     {
         private readonly string _definedDetail;
         private bool _acknowledged;
-        private bool _closeRequested;
+        private bool _closable;
 
         /// <summary>Checks the closing badge; null accepts any badge from the reader.</summary>
         public IAccessControlService CloseAccess { get; set; }
@@ -26,14 +26,25 @@ namespace Nova.Hive
         /// <summary>The lowest level whose badge may close the pop-up (Level 1 = any operator).</summary>
         public AccessLevel CloseLevel { get; set; } = AccessLevel.Level1;
 
-        /// <summary>Shows the title bar's Close button, which dismisses the pop-up without a badge.</summary>
-        public bool AllowClose
+        /// <summary>
+        /// True shows the X in the title bar and lets the pop-up be closed without Confirm
+        /// (nothing is reported to HIVE then); false (default) has no X and the pop-up can
+        /// only be left with Confirm and a badge.
+        /// </summary>
+        public bool Closable
         {
-            get { return CloseWindowButton.Visibility == Visibility.Visible; }
-            set { CloseWindowButton.Visibility = value ? Visibility.Visible : Visibility.Collapsed; }
+            get { return _closable; }
+            set { _closable = value; }
         }
 
-        public AlarmPopup(string startTime, string errorCode, string errorMessage, string errorDetail)
+        /// <summary>What the X button's Visibility is bound to: Visible when closable, else Collapsed.</summary>
+        public Visibility CloseButtonVisibility
+        {
+            get { return _closable ? Visibility.Visible : Visibility.Collapsed; }
+        }
+
+        public AlarmPopup(string startTime, string errorCode, string errorMessage, string errorDetail,
+            string shownMessage = null, string shownDetail = null)
         {
             InitializeComponent();
 
@@ -41,8 +52,9 @@ namespace Nova.Hive
 
             StartTimeText.Text = startTime;
             ErrorCodeText.Text = errorCode;
-            ErrorMessageText.Text = errorMessage;
-            ErrorDetailText.Text = errorDetail;
+            // The selected language on screen; _definedDetail (English) is what HIVE gets.
+            ErrorMessageText.Text = shownMessage ?? errorMessage;
+            ErrorDetailText.Text = shownDetail ?? errorDetail;
 
             RepairActionBox.ItemsSource = RepairAction.All;
             RepairActionBox.SelectedIndex = 0;
@@ -110,17 +122,16 @@ namespace Nova.Hive
             DialogResult = true;
         }
 
-        /// <summary>Closes the window without a badge: nothing is sent to HIVE for this alarm.</summary>
-        private void CloseWindowButton_Click(object sender, RoutedEventArgs e)
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
-            _closeRequested = true;
-            DialogResult = false;
+            // Only reachable when Closable; closes without an acknowledgement.
+            Close();
         }
 
-        /// <summary>The window stays on the screen until a badge has been swiped or Close is pressed.</summary>
+        /// <summary>The window stays on the screen until a badge has been swiped, unless it is closable.</summary>
         protected override void OnClosing(CancelEventArgs e)
         {
-            e.Cancel = !_acknowledged && !_closeRequested;
+            e.Cancel = !_acknowledged && !_closable;
             base.OnClosing(e);
         }
     }

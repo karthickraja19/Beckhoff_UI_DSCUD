@@ -44,6 +44,33 @@ namespace Nova.Wpf.UI.Behaviors
             /// <summary>As <see cref="Decimal"/> plus a leading minus — positions, which
             /// are signed on every axis with travel either side of home.</summary>
             SignedDecimal,
+
+            /// <summary>An IPv4 address: digits and dots only, at most four groups of three
+            /// digits (FAM 2 SET_05).</summary>
+            IpAddress,
+        }
+
+        /// <summary>
+        /// The most digits the box may hold, sign and decimal point not counted; 0 = no limit.
+        /// FAM 2 MS_01 / RC_05: the Manual and Recipe boxes take up to 8 digits.
+        /// </summary>
+        public static readonly DependencyProperty MaxDigitsProperty =
+            DependencyProperty.RegisterAttached(
+                "MaxDigits",
+                typeof(int),
+                typeof(NumericInput),
+                new PropertyMetadata(0));
+
+        public static int GetMaxDigits(DependencyObject element)
+        {
+            if (element == null) throw new ArgumentNullException(nameof(element));
+            return (int)element.GetValue(MaxDigitsProperty);
+        }
+
+        public static void SetMaxDigits(DependencyObject element, int value)
+        {
+            if (element == null) throw new ArgumentNullException(nameof(element));
+            element.SetValue(MaxDigitsProperty, value);
         }
 
         public static readonly DependencyProperty ModeProperty =
@@ -138,7 +165,24 @@ namespace Nova.Wpf.UI.Behaviors
                 + insert
                 + current.Substring(start + length);
 
-            return IsCandidateValid(candidate, mode);
+            if (!IsCandidateValid(candidate, mode))
+                return false;
+
+            int maxDigits = GetMaxDigits(box);
+            if (maxDigits > 0)
+            {
+                int digits = 0;
+                foreach (char c in candidate)
+                {
+                    if (char.IsDigit(c))
+                        digits++;
+                }
+
+                if (digits > maxDigits)
+                    return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -161,6 +205,9 @@ namespace Nova.Wpf.UI.Behaviors
 
                 case NumericMode.SignedDecimal:
                     return Regex.IsMatch(candidate, @"^-?[0-9]*(\.[0-9]*)?$");
+
+                case NumericMode.IpAddress:
+                    return Regex.IsMatch(candidate, @"^[0-9]{0,3}(\.[0-9]{0,3}){0,3}$");
 
                 default:
                     return true;

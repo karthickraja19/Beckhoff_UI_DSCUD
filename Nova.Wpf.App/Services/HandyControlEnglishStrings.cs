@@ -113,6 +113,19 @@ namespace Nova.Wpf.App.Services
             }
         }
 
+        private static bool IsChinese()
+        {
+            try
+            {
+                string culture = Teal.Library.Localization.LanguageManager.CurrentCulture;
+                return culture != null && culture.StartsWith("zh", StringComparison.OrdinalIgnoreCase);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
         private sealed class EnglishResourceManager : ResourceManager
         {
             private readonly ResourceManager _fallback;
@@ -129,8 +142,12 @@ namespace Nova.Wpf.App.Services
 
             public override string GetString(string name, CultureInfo culture)
             {
+                // HandyControl's own table is Chinese, so it is right as it is while the
+                // application shows Chinese. For English and Vietnamese (HandyControl has no
+                // Vietnamese) the English below is used. Checked on every read, so it follows
+                // a language switch.
                 string value;
-                if (name != null && English.TryGetValue(name, out value))
+                if (name != null && !IsChinese() && English.TryGetValue(name, out value))
                     return value;
 
                 return _fallback == null ? null : _fallback.GetString(name, culture);

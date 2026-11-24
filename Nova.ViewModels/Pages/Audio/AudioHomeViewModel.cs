@@ -16,7 +16,9 @@ namespace Nova.ViewModels.Pages.Audio
 {
     /// <summary>
     /// The Home page - Audio SW DFM v5.4 slides 43 ("Home Page Formatting"), 54 ("Home
-    /// Page"), 55 ("Sensor Dashboard") and 57 (Vendor window).
+    /// Page"), 55 ("Sensor Dashboard"). The Vendor window (slide 57) is not built:
+    /// the manual-operation GUI, the Homing button and the running log are on the Setting
+    /// page's Manual tab.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -25,7 +27,8 @@ namespace Nova.ViewModels.Pages.Audio
     /// thirds - I/O Summary, Parameter Dashboard, station card.
     /// </para>
     /// <para>
-    /// Where the data comes from: State Changes from the HIVE state history, Error
+    /// Where the data comes from: State Changes from the run / idle / down time in the
+    /// database ([HealthData]), Error
     /// Statistics from the alarm log, the I/O summary and last unit from the production
     /// record, the Parameter Dashboard from the Config page's production spec limits and
     /// the live parameter values, the station card from the station profile, the links
@@ -56,31 +59,13 @@ namespace Nova.ViewModels.Pages.Audio
         private readonly IMachineSettingsService _settings;
         private readonly IParameterValueSource _parameterValues;
         private readonly IDispenserDataService _dispenser;
+        private readonly IConsumableStore _consumables;
+        private readonly IPictureQuantityCheck _pictures;
         private readonly ISensorService _sensors;
         private readonly IAccessLog _accessLog;
         private readonly IReadOnlyList<IServiceLinkStatus> _linkSources;
 
         private CancellationTokenSource _refreshLoop;
-
-
-        // ==================================================================
-        // Main | Vendor  (slide 54 / 57)
-        // ==================================================================
-
-        /// <summary>
-        /// Slide 57: the Vendor tab is "for semi-auto stations only (require OP
-        /// loading/scanning)". Both segments always exist so the control does not
-        /// appear and disappear. The Vendor pane is empty: the manual-operation GUI, the
-        /// Homing button and the running log are on the Setting page's Manual tab.
-        /// </summary>
-        public ObservableCollection<string> Tabs { get; } =
-            new ObservableCollection<string> { "Main", "Vendor" };
-
-        [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(IsMainTab), nameof(IsDashboardVisible))]
-        private string _selectedTab = "Main";
-
-        public bool IsMainTab => SelectedTab == "Main";
 
 
         // ==================================================================
@@ -203,9 +188,15 @@ namespace Nova.ViewModels.Pages.Audio
             IEnumerable<IServiceLinkStatus> links = null,
             ISensorService sensors = null,
             IAccessLog accessLog = null,
-            IErrorCodeCatalog errorCodes = null)
+            IErrorCodeCatalog errorCodes = null,
+            // Parameter Dashboard: the nozzle health of each gantry (S3.3) and the last
+            // unit's picture count (T5).
+            IConsumableStore consumables = null,
+            IPictureQuantityCheck pictures = null)
             : base(session, AccessBypass.ConfigAndSettings)
         {
+            _consumables = consumables;
+            _pictures = pictures;
             _session = session;
             _profile = profile;
             _connections = connections;
@@ -303,9 +294,12 @@ namespace Nova.ViewModels.Pages.Audio
                         nextStats = NextHour(now);
                     }
 
+                    // The State Changes chart follows the machine, so it is redrawn on every
+                    // pass (its open segment is read from memory, the rest is one small query).
+                    await RefreshStateChartAsync();
+
                     if (now >= nextCharts)
                     {
-                        await RefreshStateChartAsync();
                         await RefreshErrorStatisticsAsync(followNow: true);
                         nextCharts = now + ChartRefresh;
                     }

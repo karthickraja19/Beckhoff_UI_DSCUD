@@ -45,6 +45,7 @@
   <ItemGroup>
     <Compile Include="CardManager.cs" />
     <Compile Include="DeviceObjects.cs" />
+    <Compile Include="Enum\ESensor.cs" />
     <Compile Include="MachineConfiguration.cs" />
     <Compile Include="Enum\Cards.cs" />
     <Compile Include="Enum\CardType.cs" />

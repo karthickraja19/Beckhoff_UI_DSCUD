@@ -15,6 +15,13 @@ namespace Nova.ViewModels.Pages.Settings
        public string Name { get; }
        public string Address { get; }
 
+       /// <summary>
+       /// What the I/O Diagnostics grid shows: the point's description in the selected
+       /// language (Setting &gt; Config Description), or its name when it has none.
+       /// </summary>
+       [ObservableProperty]
+       private string _displayName;
+
        [ObservableProperty]
        private bool _isOn;
 
@@ -23,6 +30,7 @@ namespace Nova.ViewModels.Pages.Settings
            Bit = bit;
            Name = name;
            Address = address;
+           _displayName = UiLanguage.Point(name);
            _isOn = isOn;
        }
     }
@@ -83,6 +91,17 @@ namespace Nova.ViewModels.Pages.Settings
             RefreshInputs();
             RefreshOutputs();
             RecalculateCounts();
+
+            // A description saved on the Setting page, or a language change.
+            UiLanguage.DescriptionsChanged += (sender, e) => RefreshDisplayNames();
+        }
+
+        private void RefreshDisplayNames()
+        {
+            foreach (DigitalIoPointRow row in _allInputs)
+                row.DisplayName = UiLanguage.Point(row.Name);
+            foreach (DigitalIoPointRow row in _allOutputs)
+                row.DisplayName = UiLanguage.Point(row.Name);
         }
 
         public void Activate()
@@ -119,6 +138,7 @@ namespace Nova.ViewModels.Pages.Settings
         private static bool Matches(DigitalIoPointRow s, string search) =>
             string.IsNullOrWhiteSpace(search) ||
             s.Name.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0 ||
+            (s.DisplayName ?? string.Empty).IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0 ||
             s.Address.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0;
 
         private void OnIoChanged(object sender, EventArgs e)

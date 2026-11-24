@@ -25,8 +25,8 @@ namespace Nova.Abstractions.Services
     /// AlarmHelper.g_lstAlarmInfo.Where(a =&gt; alarmHappen) once a second.
     ///
     /// This is deliberately not history: entries appear when a fault latches and
-    /// disappear when it clears. Durable history is <see cref="IAlarmService.GetHistory"/>
-    /// and the [Alarms] table.
+    /// disappear when it clears. Durable history is the [Alarms] table,
+    /// read back through <see cref="Nova.Abstractions.Data.Repositories.IAlarmLogRepository"/>.
     ///
     /// <see cref="ActiveAlarmsChanged"/> is raised on the UI thread, and only when the
     /// set actually changes, so bound collections can be updated directly without

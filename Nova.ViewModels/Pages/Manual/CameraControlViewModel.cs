@@ -37,26 +37,31 @@ namespace Nova.ViewModels.Pages.Manual
         [ObservableProperty]
         private string _sendCommand;
 
-        public ObservableCollection<CameraConsoleLine> Console { get; }
+        /// <summary>Shown while no CCD is selected.</summary>
+        private readonly ObservableCollection<CameraConsoleLine> _noDevice = new ObservableCollection<CameraConsoleLine>();
+
+        /// <summary>The selected CCD's own Received Response history (FAM 2 Bug_Id_038 / MS_16).</summary>
+        public ObservableCollection<CameraConsoleLine> Console => SelectedDevice != null ? SelectedDevice.Console : _noDevice;
 
         public bool CanConnect => !IsConnected;
         public string StatusText => IsConnected ? "CONNECTED" : "DISCONNECTED";
+
+        private const string FallbackCommand = "AUTO_MODE, 1.0, Auto_mode_Selected, 999.999, 1, IN, END";
 
         public CameraControlViewModel(ICommDeviceService comm, IConnectionStatusService connectionStatus = null)
         {
             _connectionStatus = connectionStatus;
             Devices = new ObservableCollection<CcdDeviceViewModel>();
-            Console = new ObservableCollection<CameraConsoleLine>();
 
             var ccds = comm?.GetDevices(CommDeviceKind.Ccd);
-            _sendCommand = "AUTO_MODE, 1.0, Auto_mode_Selected, 999.999, 1, IN, END";
+            _sendCommand = FallbackCommand;
 
             if (ccds != null && ccds.Count > 0)
             {
                 foreach (var d in ccds)
-                    Devices.Add(new CcdDeviceViewModel(d.Name, d.Detail, d.Protocol));
+                    Devices.Add(new CcdDeviceViewModel(d.Name, d.Detail, d.Protocol, d.DefaultCommand ?? FallbackCommand));
                 _selectedDevice = Devices[0];
-                _sendCommand = ccds[0].DefaultCommand ?? _sendCommand;
+                _sendCommand = Devices[0].SendCommand;
             }
 
             RefreshConnection();
@@ -64,7 +69,22 @@ namespace Nova.ViewModels.Pages.Manual
 
         private INetworkProtocol ActiveProtocol => SelectedDevice?.Protocol;
 
-        partial void OnSelectedDeviceChanged(CcdDeviceViewModel value) => RefreshConnection();
+        /// <summary>The CCD being left keeps what was typed for it; the new one shows its own command and history.</summary>
+        partial void OnSelectedDeviceChanged(CcdDeviceViewModel oldValue, CcdDeviceViewModel newValue)
+        {
+            if (oldValue != null)
+                oldValue.SendCommand = SendCommand;
+
+            SendCommand = newValue != null ? newValue.SendCommand : string.Empty;
+            OnPropertyChanged(nameof(Console));
+            RefreshConnection();
+        }
+
+        partial void OnSendCommandChanged(string value)
+        {
+            if (SelectedDevice != null)
+                SelectedDevice.SendCommand = value;
+        }
 
         public void Activate()
         {
@@ -101,13 +121,17 @@ namespace Nova.ViewModels.Pages.Manual
         private async Task ConnectDevice()
         {
             if (IsConnected) return;
-            Console.Add(new CameraConsoleLine("CONNECT " + (SelectedDevice?.Name ?? "CCD") + "..."));
+            // The CCD's own history, captured now: the selection may change during the await.
+            var console = Console;
             var p = ActiveProtocol;
+            console.Add(new CameraConsoleLine("CONNECT " + (SelectedDevice?.Name ?? "CCD") + "..."));
             bool ok = p != null && await p.ConnectAsync();
             // The CCD's own status can arrive a moment after the connect returns; the
             // status change then confirms it.
-            IsConnected = ok || (p != null && p.IsConnected);
-            Console.Add(new CameraConsoleLine(ok ? "ACK LINK_ESTABLISHED" : "CONNECT_FAILED", isAck: ok));
+            RefreshConnection();
+            if (ok && ReferenceEquals(p, ActiveProtocol))
+                IsConnected = true;
+            console.Add(new CameraConsoleLine(ok ? "ACK LINK_ESTABLISHED" : "CONNECT_FAILED", isAck: ok));
         }
 
         [RelayCommand]
@@ -117,10 +141,19 @@ namespace Nova.ViewModels.Pages.Manual
             var p = ActiveProtocol;
             if (p == null)
                 return;
-            Console.Add(new CameraConsoleLine(SendCommand));
-            string response = await p.SendAndReceiveAsync(SendCommand);
-            Console.Add(new CameraConsoleLine(
-                string.IsNullOrEmpty(response) ? "(no response)" : response.Trim(),
+
+            var console = Console;
+            string command = SendCommand;
+            if (string.IsNullOrWhiteSpace(command))
+            {
+                console.Add(new CameraConsoleLine("Enter a command to send."));
+                return;
+            }
+
+            console.Add(new CameraConsoleLine(command));
+            string response = await p.SendAndReceiveAsync(command);
+            console.Add(new CameraConsoleLine(
+                string.IsNullOrEmpty(response) ? ConsoleDeviceViewModel.NoResponseText : response.Trim(),
                 isAck: !string.IsNullOrEmpty(response)));
         }
 
@@ -128,11 +161,12 @@ namespace Nova.ViewModels.Pages.Manual
         private async Task Disconnect()
         {
             if (!IsConnected) return;
+            var console = Console;
             ActiveProtocol?.Disconnect();
             // The PLC closes the link in the background, so the CCD can still report
             // connected here; the status change shows it closed.
             RefreshConnection();
-            Console.Add(new CameraConsoleLine("DISCONNECT"));
+            console.Add(new CameraConsoleLine("DISCONNECT"));
             await Task.CompletedTask;
         }
 

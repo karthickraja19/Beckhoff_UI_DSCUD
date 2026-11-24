@@ -18,7 +18,22 @@ namespace Nova.Abstractions.Hardware
 
         Task<bool> EnableAsync();
 
-        /// <summary>Runs until Stop. speed &lt;= 0 uses the configured default (IO steppers ignore it).</summary>
+        /// <summary>
+        /// Highest speed <see cref="ForwardAsync"/> / <see cref="ReverseAsync"/> take, in the
+        /// stepper's own unit (an IO stepper: % of its drive's speed range, so 100).
+        /// </summary>
+        double MaxSpeed { get; }
+
+        /// <summary>
+        /// The speed the stepper runs at in manual now, read from the device; null when it
+        /// cannot be read (device not connected).
+        /// </summary>
+        Task<double?> ReadSpeedAsync();
+
+        /// <summary>
+        /// Runs until Stop. A speed &gt; 0 is set first (false if it is not taken, and the
+        /// stepper is not started); speed &lt;= 0 keeps the speed the device has.
+        /// </summary>
         Task<bool> ForwardAsync(double speed);
         Task<bool> ReverseAsync(double speed);
         Task<bool> StopAsync();

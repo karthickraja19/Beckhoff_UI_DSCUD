@@ -1,0 +1,124 @@
+﻿{
+  "Channels": [
+    {
+      "Name": "Channel 1",
+      "PlcChannel": 1,
+      "Axes": [
+        {
+          "Axis": "X1",
+          "Servo": "CNC1_X1"
+        },
+        {
+          "Axis": "Y1",
+          "Servo": "CNC1_Y1"
+        },
+        {
+          "Axis": "Z1",
+          "Servo": "CNC1_Z1"
+        },
+        {
+          "Axis": "A",
+          "Servo": "CNC1_A"
+        },
+        {
+          "Axis": "R",
+          "Servo": "CNC1_R"
+        },
+        {
+          "Axis": "X2",
+          "Servo": "CNC1_X2"
+        },
+        {
+          "Axis": "Z2",
+          "Servo": "CNC1_Z2"
+        }
+      ],
+      "Positions": [
+        {
+          "Name": "Home",
+          "Values": {
+            "X1": 0.0,
+            "Y1": 0.0,
+            "Z1": 0.0,
+            "A": 0.0,
+            "R": 0.0,
+            "X2": 0.0,
+            "Z2": 0.0
+          }
+        },
+        {
+          "Name": "Work",
+          "Values": {
+            "X1": 0.0,
+            "Y1": 0.0,
+            "Z1": 0.0,
+            "A": 0.0,
+            "R": 0.0,
+            "X2": 0.0,
+            "Z2": 0.0
+          }
+        }
+      ]
+    },
+    {
+      "Name": "Channel 2",
+      "PlcChannel": 2,
+      "Axes": [
+        {
+          "Axis": "X1",
+          "Servo": "CNC2_X1"
+        },
+        {
+          "Axis": "Y1",
+          "Servo": "CNC2_Y1"
+        },
+        {
+          "Axis": "Z1",
+          "Servo": "CNC2_Z1"
+        },
+        {
+          "Axis": "A",
+          "Servo": "CNC2_A"
+        },
+        {
+          "Axis": "R",
+          "Servo": "CNC2_R"
+        },
+        {
+          "Axis": "X2",
+          "Servo": "CNC2_X2"
+        },
+        {
+          "Axis": "Z2",
+          "Servo": "CNC2_Z2"
+        }
+      ],
+      "Positions": [
+        {
+          "Name": "Home",
+          "Values": {
+            "X1": 0.0,
+            "Y1": 0.0,
+            "Z1": 0.0,
+            "A": 0.0,
+            "R": 0.0,
+            "X2": 0.0,
+            "Z2": 0.0
+          }
+        },
+        {
+          "Name": "Work",
+          "Values": {
+            "X1": 0.0,
+            "Y1": 0.0,
+            "Z1": 0.0,
+            "A": 0.0,
+            "R": 0.0,
+            "X2": 0.0,
+            "Z2": 0.0
+          }
+        }
+      ]
+    }
+  ]
+}

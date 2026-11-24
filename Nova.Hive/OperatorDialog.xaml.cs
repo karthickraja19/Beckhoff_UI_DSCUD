@@ -54,7 +54,7 @@ namespace Nova.Hive
         {
             InitializeComponent();
 
-            HeaderText.Text = header;
+            HeaderText.Text = HiveText.T(header);
             _access = access;
             _minimumLevel = minimumLevel;
             _extraCheck = extraCheck;
@@ -63,9 +63,9 @@ namespace Nova.Hive
             CardScan.BlockManualEntry(OperatorBox);
 
             if (!string.IsNullOrWhiteSpace(prompt))
-                MessageText.Text = prompt;
+                MessageText.Text = HiveText.T(prompt);
             else if (access != null && minimumLevel >= AccessLevel.Level2)
-                MessageText.Text = "Swipe a Level " + (int)minimumLevel + " or higher ID card.";
+                MessageText.Text = HiveText.T("Swipe a Level " + (int)minimumLevel + " or higher ID card.");
 
             Loaded += (sender, e) => OperatorBox.Focus();
         }
@@ -102,7 +102,7 @@ namespace Nova.Hive
             string badge = _scan.Finish(out refused);
             if (badge == null)
             {
-                MessageText.Text = refused ?? "Swipe your ID card.";
+                MessageText.Text = HiveText.T(refused ?? "Swipe your ID card.");
                 return;
             }
 
@@ -118,7 +118,7 @@ namespace Nova.Hive
         /// <summary>Slide 49: only a Level 2/3 badge from the access list may change the HIVE state.</summary>
         private async Task CheckBadgeAsync(string badge, int check)
         {
-            MessageText.Text = "Checking the badge...";
+            MessageText.Text = HiveText.T("Checking the badge...");
 
             AccessCheckResult result;
             try
@@ -138,7 +138,7 @@ namespace Nova.Hive
 
             if (result == null || !result.Granted)
             {
-                MessageText.Text = (result != null ? result.FailureReason : "Access denied.") + " Please swipe again.";
+                MessageText.Text = HiveText.T(result != null ? result.FailureReason : "Access denied.") + " " + HiveText.T("Please swipe again.");
                 return;
             }
 
@@ -152,7 +152,7 @@ namespace Nova.Hive
             string refusedByRule = _extraCheck != null ? _extraCheck(result) : null;
             if (refusedByRule != null)
             {
-                MessageText.Text = refusedByRule;
+                MessageText.Text = HiveText.T(refusedByRule);
                 return;
             }
 
@@ -164,7 +164,7 @@ namespace Nova.Hive
         {
             OperatorId = badge;
             OperatorBox.Text = badge;
-            MessageText.Text = message;
+            MessageText.Text = HiveText.T(message);
             OkButton.IsEnabled = true;
         }
 

@@ -86,6 +86,44 @@ namespace Nova.Core.Services
             }
         }
 
+        public bool IsCheckEnabled
+        {
+            get
+            {
+                lock (_gate)
+                {
+                    return !_state.CheckDisabled;
+                }
+            }
+        }
+
+        public bool SetCheckEnabled(bool enabled, string operatorName, out string error)
+        {
+            State next;
+            lock (_gate)
+            {
+                next = new State
+                {
+                    DispensingEnabled = _state.DispensingEnabled,
+                    LastChange = _state.LastChange,
+                    CheckDisabled = !enabled,
+                };
+            }
+
+            if (!WriteState(next, out error))
+                return false;
+
+            lock (_gate)
+            {
+                _state = next;
+            }
+
+            Logger.WriteLog(LogType.Info, "Vision", "PictureCheck",
+                "Picture quantity check " + (enabled ? "enabled" : "disabled") + " by " + operatorName + ".", "");
+            Changed?.Invoke(this, EventArgs.Empty);
+            return true;
+        }
+
         public string RecordFolder { get; }
 
         public string LimitsText
@@ -113,6 +151,7 @@ namespace Nova.Core.Services
 
             var next = new State
             {
+                CheckDisabled = !IsCheckEnabled,
                 DispensingEnabled = true,
                 LastChange = "Set to 1 on " + DateTime.Now.ToString("yyyy/MM/dd HH:mm") + " by " + operatorName + ", approved by " + approverName,
             };
@@ -155,11 +194,17 @@ namespace Nova.Core.Services
                     _recent.RemoveAt(_recent.Count - 1);
             }
 
-            if (!record.Match)
+            if (!record.Match && !IsCheckEnabled)
+            {
+                Logger.WriteLog(LogType.Error, "Vision", "PictureCheck", "[Error/Alert] SN:" + record.UnitSn + ". Picture quantity " + pictureQuantity
+                    + " pcs does not match the target. The picture quantity check is disabled, so the machine goes on.", "");
+            }
+            else if (!record.Match)
             {
                 string detail = "SN:" + record.UnitSn + ". Picture quantity " + pictureQuantity + " pcs does not match the target.";
                 var next = new State
                 {
+                    CheckDisabled = false,
                     DispensingEnabled = false,
                     LastChange = "Set to 0 on " + record.Time.ToString("yyyy/MM/dd HH:mm:ss") + ": " + detail,
                 };
@@ -345,6 +390,9 @@ namespace Nova.Core.Services
             public bool DispensingEnabled { get; set; }
 
             public string LastChange { get; set; }
+
+            /// <summary>True while a Level 3 user has switched the check off. Off is the exception, so absent means on.</summary>
+            public bool CheckDisabled { get; set; }
         }
     }
 }

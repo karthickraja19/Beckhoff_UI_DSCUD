@@ -35,12 +35,6 @@ namespace Nova.ViewModels.Audio
         /// <summary>State 5, Downtime. DFM: R 235 G 115 B 115.</summary>
         public static readonly SKColor Downtime = new SKColor(235, 115, 115);
 
-        /// <summary>Planned downtime, sampled from the DFM's HIVE_Plan_DT chip.</summary>
-        public static readonly SKColor PlannedDowntime = new SKColor(255, 215, 212);
-
-        /// <summary>Engineering time, sampled from the DFM's HIVE_Engineering chip.</summary>
-        public static readonly SKColor Engineering = new SKColor(204, 171, 216);
-
         /// <summary>
         /// Time with no recorded state (before the first HIVE record, or the future part
         /// of today). Not a DFM colour: HIG systemGray5, so it reads as "nothing here".

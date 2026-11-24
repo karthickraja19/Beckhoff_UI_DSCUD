@@ -1,7 +1,8 @@
 <Window x:Class="Nova.Hive.OperatorDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:loc="clr-namespace:Nova.Wpf.UI.Localization;assembly=Nova.Wpf.UI"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Dialog"
+        Title="{loc:Tr Txt_Dialog}"
         Width="420"
         SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
@@ -18,7 +19,7 @@
     <Border BorderBrush="#B0B0B0" BorderThickness="1" CornerRadius="6">
         <StackPanel>
             <Border Background="#ECECEC" CornerRadius="6,6,0,0" Padding="10,8">
-                <TextBlock Text="Dialog" FontWeight="Bold" Foreground="#3C3C3C" HorizontalAlignment="Center" />
+                <TextBlock Text="{loc:Tr Txt_Dialog}" FontWeight="Bold" Foreground="#3C3C3C" HorizontalAlignment="Center" />
             </Border>
 
             <Border Background="#F4F4F4" CornerRadius="0,0,6,6" Padding="18,14">
@@ -28,7 +29,7 @@
                     <TextBlock x:Name="HeaderText" Foreground="#E0342B" FontWeight="Bold" Margin="0,0,0,16" />
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <TextBlock Text="Operator:" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,10,0" />
+                        <TextBlock Text="{loc:Tr Txt_Operator}" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,10,0" />
                         <!-- The reader types into this box; it cannot be filled in by hand. -->
                         <TextBox x:Name="OperatorBox" Width="230" Padding="6,4" IsReadOnly="True"
                                  PreviewTextInput="OperatorBox_PreviewTextInput"
@@ -37,12 +38,12 @@
 
                     <TextBlock x:Name="MessageText" Margin="0,10,0,0" Foreground="#8A8A8A"
                                HorizontalAlignment="Center" TextWrapping="Wrap"
-                               Text="Swipe your ID card." />
+                               Text="{loc:Tr Txt_SwipeYourIDCard}" />
 
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
-                        <Button x:Name="CancelButton" Content="Cancel" MinWidth="92" Padding="14,6"
+                        <Button x:Name="CancelButton" Content="{loc:Tr Txt_Cancel}" MinWidth="92" Padding="14,6"
                                 Margin="0,0,10,0" Click="CancelButton_Click" />
-                        <Button x:Name="OkButton" Content="OK" MinWidth="92" Padding="14,6"
+                        <Button x:Name="OkButton" Content="{loc:Tr Txt_OK}" MinWidth="92" Padding="14,6"
                                 IsEnabled="False" Click="OkButton_Click"
                                 Background="#1E7BF0" Foreground="White" BorderBrush="#1968CC" />
                     </StackPanel>

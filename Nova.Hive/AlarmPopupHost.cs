@@ -18,21 +18,22 @@ namespace Nova.Hive
     /// </summary>
     /// <remarks>
     /// Pop-ups are only raised while HIVE is enabled (<see cref="HiveSettings.Enabled"/>:
-    /// App.config HiveEnabled, or the HIVE Control tab). Every alarm gets its own pop-up:
+    /// App.config HiveEnabled, or the HIVE Control tab), and only for the alarms HIVE takes
+    /// in (<see cref="HiveService.AlarmReported"/>) - none while the PLC is in manual; one
+    /// still active when it leaves manual pops up then. Every alarm gets its own pop-up:
     /// alarms that arrive while one is open are queued and shown one after another. The
-    /// pop-up also has a Close button (<c>allowClose</c>) that dismisses it without a badge;
-    /// that sends nothing to HIVE, so the alarm stays unconfirmed there.
+    /// pop-up has no Close button unless App.config AlarmPopupClosable is true; otherwise it
+    /// only goes away with Confirm and a badge.
     /// </remarks>
     public sealed class AlarmPopupHost : IDisposable
     {
-        private readonly AlarmMonitor _alarms;
         private readonly HiveService _hive;
         private readonly INavigationService _navigation;
         private readonly IAccessControlService _access;
         private readonly AccessLevel _closeLevel;
         private readonly Dispatcher _uiThread;
+        private readonly bool _closable;
 
-        private readonly bool _allowClose;
         private readonly Queue<AlarmRecord> _pending = new Queue<AlarmRecord>();
 
         private AlarmPopup _popup;
@@ -43,12 +44,11 @@ namespace Nova.Hive
         /// Who may close the pop-up: Level 1 is any operator (slide 50); Level 2 is the Alarm
         /// page spec's "Level 2 or Level 3 user" (App.config AlarmPopupCloseLevel).
         /// </param>
-        /// <param name="allowClose">Shows the Close button, which dismisses a pop-up without a badge.</param>
-        public AlarmPopupHost(AlarmMonitor alarms, HiveService hive, INavigationService navigation = null,
-            IAccessControlService access = null, AccessLevel closeLevel = AccessLevel.Level1, bool allowClose = true)
+        public AlarmPopupHost(HiveService hive, INavigationService navigation = null,
+            IAccessControlService access = null, AccessLevel closeLevel = AccessLevel.Level1,
+            bool closable = false)
         {
-            _allowClose = allowClose;
-            _alarms = alarms;
+            _closable = closable;
             _hive = hive;
             _navigation = navigation;
             _access = access;
@@ -58,12 +58,12 @@ namespace Nova.Hive
 
         public void Start()
         {
-            _alarms.AlarmStarted += OnAlarmStarted;
+            _hive.AlarmReported += OnAlarmStarted;
         }
 
         public void Stop()
         {
-            _alarms.AlarmStarted -= OnAlarmStarted;
+            _hive.AlarmReported -= OnAlarmStarted;
         }
 
         public void Dispose()
@@ -112,12 +112,16 @@ namespace Nova.Hive
                     alarm.StartTime.ToString("yyyy-MM-dd HH:mm:ss"),
                     error.Code,
                     error.Message,
-                    error.Detail)
+                    error.Detail,
+                    // Shown in the language chosen on the Setting page, from the description
+                    // of the alarm's code. HIVE is still sent the English above.
+                    UiLanguage.Alarm(error.Message),
+                    UiLanguage.Alarm(error.Detail, alarm.ErrorCode))
                 {
                     Owner = Application.Current.MainWindow,
                     CloseAccess = _access,
                     CloseLevel = _closeLevel,
-                    AllowClose = _allowClose,
+                    Closable = _closable,
                 };
 
                 // The pop-up first. Building the Alarm page (its charts and table) takes a

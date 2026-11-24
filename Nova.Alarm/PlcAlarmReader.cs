@@ -33,7 +33,10 @@ namespace Nova.Alarm
     /// </remarks>
     public sealed class PlcAlarmReader : IDisposable
     {
-        public const string AlarmListSymbol = "GVL_Alarm.fbAlarmManager.aAlarms";
+        public const string DefaultAlarmListSymbol = "GVL_Alarm.fbAlarmManager.aAlarms";
+
+        /// <summary>Where the PLC's alarm list is (the HMI's symbol map: Alarms.List).</summary>
+        public string AlarmListSymbol { get; }
 
         // ---- ST_Alarms layout: where each field starts inside one entry ----
         // A PLC STRING[n] takes n + 1 bytes: the text plus a closing zero byte.
@@ -74,8 +77,15 @@ namespace Nova.Alarm
         public event EventHandler<PlcAlarmList> AlarmsChanged;
 
         public PlcAlarmReader(IPlcConnection plc)
+            : this(plc, DefaultAlarmListSymbol)
+        {
+        }
+
+        /// <param name="alarmListSymbol">The PLC's alarm list; blank takes <see cref="DefaultAlarmListSymbol"/>.</param>
+        public PlcAlarmReader(IPlcConnection plc, string alarmListSymbol)
         {
             _plc = plc ?? throw new ArgumentNullException(nameof(plc));
+            AlarmListSymbol = string.IsNullOrWhiteSpace(alarmListSymbol) ? DefaultAlarmListSymbol : alarmListSymbol.Trim();
         }
 
         public void Start()
@@ -286,7 +296,7 @@ namespace Nova.Alarm
         /// Number of entries in the PLC array (MAX_ALARMS), worked out from the array's size.
         /// Also catches the common mistake of ST_Alarms being changed in the PLC but not here.
         /// </summary>
-        private static int ReadEntryCount(AdsClient client)
+        private int ReadEntryCount(AdsClient client)
         {
             int arraySize = client.ReadSymbol(AlarmListSymbol).ByteSize;
 

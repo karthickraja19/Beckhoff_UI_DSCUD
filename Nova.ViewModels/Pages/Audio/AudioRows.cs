@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Nova.Abstractions.Services;
 
 namespace Nova.ViewModels.Pages.Audio
 {
@@ -149,7 +150,9 @@ namespace Nova.ViewModels.Pages.Audio
             Index = index;
             Parameter = parameter ?? string.Empty;
             Unit = unit ?? string.Empty;
-            KeyName = (string.IsNullOrWhiteSpace(Parameter) ? "(unnamed)" : Parameter.Trim())
+            // The parameter's description in the selected language (Setting > Config
+            // Description), or the parameter itself. Parameter stays what is saved.
+            KeyName = (string.IsNullOrWhiteSpace(Parameter) ? "(unnamed)" : UiLanguage.SpecLimit(Parameter.Trim()))
                       + (string.IsNullOrWhiteSpace(Unit) ? string.Empty : " (" + Unit.Trim() + ")");
             _lowerLimit = ToStored(lowerLimit);
             _upperLimit = ToStored(upperLimit);
@@ -235,9 +238,8 @@ namespace Nova.ViewModels.Pages.Audio
     /// <remarks>
     /// <see cref="Value"/> is observable and the label is not, because these rows are
     /// built once and then updated in place.
-    /// <see cref="Nova.Abstractions.Services.IMachineTelemetryService.TelemetryUpdated"/>
-    /// is raised on a background thread, and its contract is explicit that a handler
-    /// may only set scalar INotifyPropertyChanged properties - WPF marshals those,
+    /// Live updates arrive on a background thread, and a handler there may only set
+    /// scalar INotifyPropertyChanged properties - WPF marshals those,
     /// but it does not marshal a change to a bound ObservableCollection. Clearing and
     /// refilling a collection from that handler throws
     /// NotSupportedException the moment the collection has a live binding, so the
@@ -385,7 +387,9 @@ namespace Nova.ViewModels.Pages.Audio
     /// </remarks>
     public partial class CcdTile : ObservableObject
     {
-        public string Name { get; }
+        /// <summary>The capture's title: its unit SN, or its file name.</summary>
+        [ObservableProperty]
+        private string _name;
 
         /// <summary>Capture metadata the detail pane lists under "Information".</summary>
         [ObservableProperty]
@@ -415,7 +419,7 @@ namespace Nova.ViewModels.Pages.Audio
 
         public CcdTile(string name, System.Collections.Generic.IReadOnlyList<SummaryRow> information)
         {
-            Name = name;
+            _name = name;
             _information = information;
         }
     }

@@ -11,6 +11,8 @@ namespace Master.Repository
         void UpdateShiftMasterData(string shiftName, DateTime startTime, DateTime endTime);
         void AddHealthData(HealthData healthRecord);
         List<HealthData> GetHealthData(DateTime date, string shift);
+        /// <summary>Every [HealthData] segment that overlaps start..end, oldest first.</summary>
+        List<HealthData> GetHealthDataBetween(DateTime start, DateTime end);
         void AddProductionData(ProductionData productionData);
         List<ProductionData> GetProductionData(DateTime StartTime, DateTime EndTime);
         ProductionData GetProductionData(String productCode);

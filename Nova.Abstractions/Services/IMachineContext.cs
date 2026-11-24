@@ -1,41 +1,24 @@
-using System.Threading;
+using System.Collections.Generic;
 using Nova.Abstractions.Machine.Enums;
 
 namespace Nova.Abstractions.Services
 {
     /// <summary>
-    /// Holds the global state of the machine, replacing the legacy static GlobalClass.
-    /// Injected as a Singleton so all sequences and UI components share the exact same state.
+    /// The operation mode, device bypasses and maintenance stations the Device Settings tab
+    /// edits, shared as a singleton. The PLC owns the machine's run state
+    /// (<see cref="Nova.Abstractions.Machine.Interfaces.IMachineOrchestrator"/> reads it back).
     /// </summary>
     public interface IMachineContext
     {
-        // --- Sequence Synchronization ---
-        ManualResetEventSlim PauseEvent { get; }
-        ManualResetEvent PauseHomingEvent { get; }
-
-        // --- Core Machine State ---
-        MachineStatus CurrentStatus { get; set; }
         OperationMode MachineMode { get; set; }
 
+        /// <summary>Controller family, from App.config's MasterCardType.</summary>
         string MasterCardType { get; set; }
 
-        bool IsHomingDone { get; set; }
-        bool IsHomingStopped { get; set; }
-        bool IsAppIdle { get; set; }
-        bool HasActiveAlarm { get; set; }
-        bool CardInitSuccess { get; set; }
-
-        // --- Hardware Bypass Toggles ---
-        bool SafetyDoorBypass { get; set; }
-        bool ScannerBypass { get; set; }
-        bool BuzzerBypass { get; set; }
-        bool SfcPdcaBypass { get; set; }
         bool GetBypass(DeviceBypassKind kind);
         void SetBypass(DeviceBypassKind kind, bool value);
 
-        // --- High-Level Control ---
-        void RequestPause();
-        void RequestResume();
-        void RequestStop();
+        /// <summary>The stations (1-based) under maintenance while MachineMode is Maintenance; empty otherwise.</summary>
+        IReadOnlyCollection<int> MaintenanceStations { get; set; }
     }
 }

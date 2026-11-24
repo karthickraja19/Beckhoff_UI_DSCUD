@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -15,14 +16,11 @@ namespace Nova.Core.Services
 {
     public sealed class JsonRecipeService : IRecipeService
     {
-        private const string GantryStructureFile = "GantryStructure.json";
-        private const string AxisParametersFile = "Axis_Parameters.xml";
         private const string SettingsFolder = "Settings";
 
         private const string RobotRecipeJsonFile = "RobotRecipe.json";
-        private const string LightRecipeJsonFile = "LightRecipe.json";
         private const string RobotRecipeCsvFile = "RoboReceipe_Param.csv";
-        private const string LightRecipeCsvFile = "LightControl_Param.csv";
+        private const string CncRecipeJsonFile = "CncRecipe.json";
         private const string EditLogFile = "Recipe_Edit_Log.csv";
 
         private readonly string _dataDirectory;
@@ -90,56 +88,78 @@ namespace Nova.Core.Services
         }
 
 
-        private class GantryPriorityConfig
-        {
-            public List<string> MovementPriority { get; set; }
-            public List<string> SafePositionPriority { get; set; }
+        // ==================================================================
+        // Gantry recipe, the V3 way
+        //
+        // Data\Gantry.json lists the gantry modules and the servos each is made of (with its
+        // type, X/Y/Z/R, and the order it moves in). A module's recipe is not a file of its
+        // own: it is the positions taught on its servos, each servo's ConfiguredPositions in
+        // Data\Servos.json. The table has a row per position name found on any of the
+        // module's servos (first-seen order) and a group of four columns per servo:
+        // {servo}_Value, {servo}_Speed, {servo}_Acc, {servo}_Dec. Save writes each group
+        // back into its servo's position of that name, adding it if the servo has none.
+        // ==================================================================
 
-            /// <summary>The PLC gantry (E_Recipe) the module's recipe is written to; 0 = none.</summary>
-            public int PlcGantry { get; set; }
+        /// <summary>The modules of Gantry.json, named; an empty list when there is no such file.</summary>
+        private List<GantryConfiguration> ReadGantryModules()
+        {
+            var root = MachineConfiguration.LoadGantry(_dataDirectory);
+            return (root?.Gantry ?? new List<GantryConfiguration>())
+                .Where(g => g != null && !string.IsNullOrWhiteSpace(g.Name))
+                .ToList();
         }
 
-        private Dictionary<string, GantryPriorityConfig> LoadGantryStructureConfig()
+        private GantryConfiguration FindGantryModule(string moduleName)
         {
-            string path = Path.Combine(_dataDirectory, GantryStructureFile);
-            if (!File.Exists(path))
+            string wanted = (moduleName ?? string.Empty).Trim();
+            return ReadGantryModules().FirstOrDefault(g => string.Equals(g.Name.Trim(), wanted, StringComparison.OrdinalIgnoreCase));
+        }
+
+        /// <summary>
+        /// The module's usable axes, in Gantry.json's order: a servo of Servos.json, typed X,
+        /// Y, Z or R, and the first such axis of each type (MachineConfiguration.Load reports
+        /// the rest at startup). The name is the servo's EnumName, its axis ComponentId.
+        /// </summary>
+        private static List<GantryAxisDefinition> UsableAxes(GantryConfiguration module, List<ServoConfiguration> servos)
+        {
+            var axes = new List<GantryAxisDefinition>();
+            foreach (var axis in module?.Axes ?? new List<_Axis>())
             {
-                return new Dictionary<string, GantryPriorityConfig>(StringComparer.OrdinalIgnoreCase);
+                string type = (axis?.Type ?? string.Empty).Trim().ToUpperInvariant();
+                var servo = axis == null || string.IsNullOrWhiteSpace(axis.Name) ? null : FindServo(servos, axis.Name.Trim());
+                if (servo == null
+                    || !MachineConfiguration.GantryAxisTypes.Contains(type)
+                    || axes.Any(a => a.Type == type))
+                {
+                    continue;
+                }
+
+                axes.Add(new GantryAxisDefinition
+                {
+                    Name = string.IsNullOrWhiteSpace(servo.EnumName) ? axis.Name.Trim() : servo.EnumName,
+                    Type = type,
+                    MovementPriority = axis.MovementPriority,
+                    SafePositionPriority = axis.SafePositionPriority,
+                });
             }
 
-            try
-            {
-                string content = File.ReadAllText(path, Encoding.UTF8);
-                var config = JsonConvert.DeserializeObject<Dictionary<string, GantryPriorityConfig>>(content);
-                return config ?? new Dictionary<string, GantryPriorityConfig>(StringComparer.OrdinalIgnoreCase);
-            }
-            catch
-            {
-                return new Dictionary<string, GantryPriorityConfig>(StringComparer.OrdinalIgnoreCase);
-            }
+            return axes;
+        }
+
+        /// <summary>Axis names by priority: 1 first, 0 (not given) after the numbered ones, ties in file order.</summary>
+        private static List<string> ByPriority(List<GantryAxisDefinition> axes, Func<GantryAxisDefinition, int> priority)
+        {
+            return axes
+                .Select((axis, index) => new { axis, index })
+                .OrderBy(x => priority(x.axis) > 0 ? priority(x.axis) : int.MaxValue)
+                .ThenBy(x => x.index)
+                .Select(x => x.axis.Name)
+                .ToList();
         }
 
         public IReadOnlyList<string> GetGantryModules()
         {
-            // Gantry.json is machine configuration, read through Master.Configuration.
-            var gantryRoot = MachineConfiguration.LoadGantry(_dataDirectory);
-            if (gantryRoot?.Gantry != null && gantryRoot.Gantry.Count > 0)
-            {
-                var modules = gantryRoot.Gantry
-                    .Where(g => g.Name != null)
-                    .Select(g => g.Name.Trim())
-                    .Where(n => !string.IsNullOrWhiteSpace(n) && !n.Equals("Select", StringComparison.OrdinalIgnoreCase))
-                    .ToList();
-                if (modules.Count > 0)
-                {
-                    return modules;
-                }
-            }
-
-            var config = LoadGantryStructureConfig();
-            return config.Keys
-                .Where(name => !string.IsNullOrWhiteSpace(name) && !name.Equals("Select", StringComparison.OrdinalIgnoreCase))
-                .ToList();
+            return ReadGantryModules().Select(g => g.Name.Trim()).ToList();
         }
 
         public GantryModuleDefinition GetGantryModuleDefinition(string moduleName)
@@ -149,59 +169,84 @@ namespace Nova.Core.Services
                 throw new ArgumentException("Module name is required.", nameof(moduleName));
             }
 
-            var config = LoadGantryStructureConfig();
-            if (config.TryGetValue(moduleName, out var priorities))
-            {
-                return new GantryModuleDefinition
-                {
-                    ModuleName = moduleName.Trim(),
-                    MovementPriority = priorities.MovementPriority ?? new List<string>(0),
-                    SafePositionPriority = priorities.SafePositionPriority ?? new List<string>(0),
-                    PlcGantry = priorities.PlcGantry,
-                };
-            }
-
+            var module = FindGantryModule(moduleName);
+            var axes = UsableAxes(module, MachineConfiguration.ReadServos(_dataDirectory) ?? new List<ServoConfiguration>());
             return new GantryModuleDefinition
             {
                 ModuleName = moduleName.Trim(),
-                MovementPriority = new List<string>(0),
-                SafePositionPriority = new List<string>(0)
+                Axes = axes,
+                MovementPriority = ByPriority(axes, a => a.MovementPriority),
+                SafePositionPriority = ByPriority(axes, a => a.SafePositionPriority),
+                PlcGantry = module?.PlcGantry ?? 0,
             };
         }
 
-        public IReadOnlyDictionary<string, double> GetAxisSpeedLimits()
+        /// <summary>The servo of Servos.json an axis names: by EnumName, else by Name (as V3 matches).</summary>
+        private static ServoConfiguration FindServo(List<ServoConfiguration> servos, string axisName)
         {
-            string axisPath = Path.Combine(_dataDirectory, SettingsFolder, AxisParametersFile);
-            if (!File.Exists(axisPath))
-            {
-                throw new FileNotFoundException("Axis parameter file not found.", axisPath);
-            }
-
-            var root = XDocument.Load(axisPath).Root;
-            if (root == null)
-            {
-                throw new InvalidDataException("Axis parameter XML has no root element.");
-            }
-
-            var result = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
-            foreach (var axisNode in root.Elements())
-            {
-                string axisName = ReadAxisName(axisNode);
-                if (string.IsNullOrWhiteSpace(axisName))
-                {
-                    continue;
-                }
-
-                if (!TryReadHomingSpeed(axisNode, out double speed))
-                {
-                    continue;
-                }
-
-                result[axisName] = speed;
-            }
-
-            return result;
+            return servos.FirstOrDefault(s => s != null && string.Equals(s.EnumName, axisName, StringComparison.OrdinalIgnoreCase))
+                ?? servos.FirstOrDefault(s => s != null && string.Equals(s.Name, axisName, StringComparison.OrdinalIgnoreCase));
         }
+
+        public IReadOnlyList<GantryPosition> LoadGantryPositions(string moduleName)
+        {
+            var definition = GetGantryModuleDefinition(moduleName);
+            var servos = MachineConfiguration.ReadServos(_dataDirectory) ?? new List<ServoConfiguration>();
+
+            var positions = new List<GantryPosition>();
+            foreach (var axis in definition.Axes)
+            {
+                var servo = FindServo(servos, axis.Name);
+                foreach (var taught in servo?.ConfiguredPositions ?? new List<AxisPosition>())
+                {
+                    string name = (taught?.Name ?? string.Empty).Trim();
+                    if (name.Length == 0)
+                    {
+                        continue;
+                    }
+
+                    var position = positions.FirstOrDefault(p => string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase));
+                    if (position == null)
+                    {
+                        position = new GantryPosition { Name = name };
+                        positions.Add(position);
+                    }
+
+                    if (!position.Axes.ContainsKey(axis.Name))
+                    {
+                        position.Axes[axis.Name] = new GantryAxisMove
+                        {
+                            Value = taught.Value,
+                            Speed = taught.Speed,
+                            Acceleration = taught.Acceleration,
+                            Deceleration = taught.Deceleration,
+                        };
+                    }
+                }
+            }
+
+            return positions;
+        }
+
+        private static List<DynamicColumnSchema> GantryColumns(GantryModuleDefinition definition)
+        {
+            var columns = new List<DynamicColumnSchema>
+            {
+                new DynamicColumnSchema { Key = GantryRecipeColumns.Position, Title = "Position", IsReadOnly = true, IsIdentifier = true, DataType = ColumnDataType.Text },
+            };
+
+            foreach (var axis in definition.Axes)
+            {
+                columns.Add(new DynamicColumnSchema { Key = GantryRecipeColumns.Value(axis.Name), Title = axis.Name + " Position", DataType = ColumnDataType.Numeric });
+                columns.Add(new DynamicColumnSchema { Key = GantryRecipeColumns.Speed(axis.Name), Title = axis.Name + " Speed", DataType = ColumnDataType.NonNegative });
+                columns.Add(new DynamicColumnSchema { Key = GantryRecipeColumns.Acc(axis.Name), Title = axis.Name + " Acc", DataType = ColumnDataType.NonNegative });
+                columns.Add(new DynamicColumnSchema { Key = GantryRecipeColumns.Dec(axis.Name), Title = axis.Name + " Dec", DataType = ColumnDataType.NonNegative });
+            }
+
+            return columns;
+        }
+
+        private static string Format(double value) => value.ToString("0.###", CultureInfo.InvariantCulture);
 
         public DynamicTableDocument LoadGantryRecipeDynamic(string moduleName)
         {
@@ -210,97 +255,35 @@ namespace Nova.Core.Services
                 throw new ArgumentException("Module name is required.", nameof(moduleName));
             }
 
-            string jsonPath = GetGantryJsonRecipePath(moduleName);
-            if (File.Exists(jsonPath))
+            var definition = GetGantryModuleDefinition(moduleName);
+            var rows = new List<Dictionary<string, string>>();
+            foreach (var position in LoadGantryPositions(moduleName))
             {
-                try
+                var row = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
                 {
-                    string jsonContent = File.ReadAllText(jsonPath, Encoding.UTF8);
-                    var doc = ParseDynamicJson(jsonContent, moduleName, new[] { "Position" });
-                    if (doc != null && doc.Columns.Count > 0 && doc.Rows.Count > 0)
-                    {
-                        return doc;
-                    }
-                }
-                catch
-                {
-                    // Fallback to legacy CSV reading
-                }
-            }
+                    [GantryRecipeColumns.Position] = position.Name,
+                };
 
-            // Fallback to legacy CSV reading
-            string csvPath = GetGantryCsvRecipePath(moduleName);
-            var rows = ReadCsvRows(csvPath);
-            var columns = new List<DynamicColumnSchema>
-            {
-                new DynamicColumnSchema { Key = "Position", Title = "Position", IsReadOnly = true, IsIdentifier = true },
-                new DynamicColumnSchema { Key = "X", Title = "X", IsReadOnly = false },
-                new DynamicColumnSchema { Key = "XVel", Title = "X-Vel (mm)", IsReadOnly = false },
-                new DynamicColumnSchema { Key = "XAcc", Title = "X-Axis Acc (mm/s)", IsReadOnly = false },
-                new DynamicColumnSchema { Key = "XDeAcc", Title = "X-Axis De-Acc", IsReadOnly = false },
-                new DynamicColumnSchema { Key = "Y", Title = "Y", IsReadOnly = false },
-                new DynamicColumnSchema { Key = "YVel", Title = "Y-Vel (mm)", IsReadOnly = false },
-                new DynamicColumnSchema { Key = "YAcc", Title = "Y-Axis Acc (mm/s)", IsReadOnly = false },
-                new DynamicColumnSchema { Key = "YDeAcc", Title = "Y-Axis De-acc", IsReadOnly = false },
-                new DynamicColumnSchema { Key = "Z", Title = "Z", IsReadOnly = false },
-                new DynamicColumnSchema { Key = "ZVel", Title = "Z-Vel (mm)", IsReadOnly = false },
-                new DynamicColumnSchema { Key = "ZAcc", Title = "Z-Axis Acc (mm/s)", IsReadOnly = false },
-                new DynamicColumnSchema { Key = "ZDeAcc", Title = "Z-Axis De-acc", IsReadOnly = false },
-            };
-            var rowDicts = new List<Dictionary<string, string>>(rows.Count);
-            foreach (var row in rows)
-            {
-                rowDicts.Add(new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                foreach (var axis in definition.Axes)
                 {
-                    ["Position"] = GetCell(row, 0),
-                    ["X"] = GetCell(row, 1),
-                    ["XVel"] = GetCell(row, 2),
-                    ["XAcc"] = GetCell(row, 3),
-                    ["XDeAcc"] = GetCell(row, 4),
-                    ["Y"] = GetCell(row, 5),
-                    ["YVel"] = GetCell(row, 6),
-                    ["YAcc"] = GetCell(row, 7),
-                    ["YDeAcc"] = GetCell(row, 8),
-                    ["Z"] = GetCell(row, 9),
-                    ["ZVel"] = GetCell(row, 10),
-                    ["ZAcc"] = GetCell(row, 11),
-                    ["ZDeAcc"] = GetCell(row, 12),
-                });
+                    // A servo that does not have this position yet shows zeros; Save adds it.
+                    position.Axes.TryGetValue(axis.Name, out var move);
+                    move = move ?? new GantryAxisMove();
+                    row[GantryRecipeColumns.Value(axis.Name)] = Format(move.Value);
+                    row[GantryRecipeColumns.Speed(axis.Name)] = Format(move.Speed);
+                    row[GantryRecipeColumns.Acc(axis.Name)] = Format(move.Acceleration);
+                    row[GantryRecipeColumns.Dec(axis.Name)] = Format(move.Deceleration);
+                }
+
+                rows.Add(row);
             }
 
             return new DynamicTableDocument
             {
-                Title = moduleName,
-                Columns = columns,
-                Rows = rowDicts
+                Title = moduleName.Trim(),
+                Columns = GantryColumns(definition),
+                Rows = rows,
             };
-        }
-
-        public IReadOnlyList<GantryPositionRecord> LoadGantryRecipe(string moduleName)
-        {
-            var doc = LoadGantryRecipeDynamic(moduleName);
-            var result = new List<GantryPositionRecord>(doc.Rows.Count);
-            foreach (var r in doc.Rows)
-            {
-                result.Add(new GantryPositionRecord
-                {
-                    Position = r.TryGetValue("Position", out var pos) ? pos : string.Empty,
-                    X = r.TryGetValue("X", out var x) ? x : string.Empty,
-                    XVel = r.TryGetValue("XVel", out var xv) ? xv : string.Empty,
-                    XAcc = r.TryGetValue("XAcc", out var xa) ? xa : string.Empty,
-                    XDeAcc = r.TryGetValue("XDeAcc", out var xda) ? xda : string.Empty,
-                    Y = r.TryGetValue("Y", out var y) ? y : string.Empty,
-                    YVel = r.TryGetValue("YVel", out var yv) ? yv : string.Empty,
-                    YAcc = r.TryGetValue("YAcc", out var ya) ? ya : string.Empty,
-                    YDeAcc = r.TryGetValue("YDeAcc", out var yda) ? yda : string.Empty,
-                    Z = r.TryGetValue("Z", out var z) ? z : string.Empty,
-                    ZVel = r.TryGetValue("ZVel", out var zv) ? zv : string.Empty,
-                    ZAcc = r.TryGetValue("ZAcc", out var za) ? za : string.Empty,
-                    ZDeAcc = r.TryGetValue("ZDeAcc", out var zda) ? zda : string.Empty,
-                });
-            }
-
-            return result;
         }
 
         public RecipeSaveResult SaveGantryRecipeDynamic(string moduleName, DynamicTableDocument document)
@@ -315,172 +298,153 @@ namespace Nova.Core.Services
                 throw new ArgumentNullException(nameof(document));
             }
 
-            var oldDoc = LoadGantryRecipeDynamic(moduleName);
-            string jsonPath = GetGantryJsonRecipePath(moduleName);
-
-            var jArray = new Newtonsoft.Json.Linq.JArray();
-            foreach (var row in document.Rows)
+            var definition = GetGantryModuleDefinition(moduleName);
+            if (definition.Axes.Count == 0)
             {
-                var jObj = new Newtonsoft.Json.Linq.JObject();
-                foreach (var col in document.Columns)
-                {
-                    jObj[col.Key] = row.TryGetValue(col.Key, out var val) ? val : string.Empty;
-                }
-                jArray.Add(jObj);
+                throw new InvalidOperationException(moduleName + " has no axes in Data\\" + MachineConfiguration.GantryFile + ".");
             }
 
-            string newJson = jArray.ToString(Formatting.Indented);
-            string oldJson = File.Exists(jsonPath) ? File.ReadAllText(jsonPath, Encoding.UTF8) : string.Empty;
+            var servos = MachineConfiguration.ReadServos(_dataDirectory);
+            if (servos == null || servos.Count == 0)
+            {
+                throw new InvalidOperationException("Data\\" + MachineConfiguration.ServosFile + " is missing or cannot be read.");
+            }
 
-            if (!string.IsNullOrEmpty(oldJson) && Normalize(oldJson).Equals(Normalize(newJson), StringComparison.Ordinal))
+            var oldDoc = LoadGantryRecipeDynamic(moduleName);
+
+            // Every cell is checked before anything changes, so a bad cell saves nothing.
+            var parsed = new List<KeyValuePair<string, Dictionary<string, GantryAxisMove>>>();
+            foreach (var row in document.Rows)
+            {
+                string name = Cell(row, GantryRecipeColumns.Position);
+                if (name.Length == 0)
+                {
+                    continue;
+                }
+
+                var moves = new Dictionary<string, GantryAxisMove>(StringComparer.OrdinalIgnoreCase);
+                foreach (var axis in definition.Axes)
+                {
+                    moves[axis.Name] = new GantryAxisMove
+                    {
+                        Value = GantryNumber(name, row, GantryRecipeColumns.Value(axis.Name)),
+                        Speed = GantryNumber(name, row, GantryRecipeColumns.Speed(axis.Name)),
+                        Acceleration = GantryNumber(name, row, GantryRecipeColumns.Acc(axis.Name)),
+                        Deceleration = GantryNumber(name, row, GantryRecipeColumns.Dec(axis.Name)),
+                    };
+                }
+
+                parsed.Add(new KeyValuePair<string, Dictionary<string, GantryAxisMove>>(name, moves));
+            }
+
+            bool modified = false;
+            var missingServos = new List<string>();
+            foreach (var axis in definition.Axes)
+            {
+                var servo = FindServo(servos, axis.Name);
+                if (servo == null)
+                {
+                    missingServos.Add(axis.Name);
+                    continue;
+                }
+
+                if (servo.ConfiguredPositions == null)
+                {
+                    servo.ConfiguredPositions = new List<AxisPosition>();
+                }
+
+                foreach (var entry in parsed)
+                {
+                    var move = entry.Value[axis.Name];
+                    var existing = servo.ConfiguredPositions.FirstOrDefault(p => string.Equals((p?.Name ?? string.Empty).Trim(), entry.Key, StringComparison.OrdinalIgnoreCase));
+                    if (existing == null)
+                    {
+                        servo.ConfiguredPositions.Add(new AxisPosition
+                        {
+                            Name = entry.Key,
+                            Value = move.Value,
+                            Speed = move.Speed,
+                            Acceleration = move.Acceleration,
+                            Deceleration = move.Deceleration,
+                        });
+                        modified = true;
+                    }
+                    else if (existing.Value != move.Value || existing.Speed != move.Speed
+                        || existing.Acceleration != move.Acceleration || existing.Deceleration != move.Deceleration)
+                    {
+                        existing.Value = move.Value;
+                        existing.Speed = move.Speed;
+                        existing.Acceleration = move.Acceleration;
+                        existing.Deceleration = move.Deceleration;
+                        modified = true;
+                    }
+                }
+            }
+
+            if (missingServos.Count > 0)
+            {
+                throw new InvalidOperationException(moduleName + " names axes that are not servos in Data\\" + MachineConfiguration.ServosFile
+                    + ": " + string.Join(", ", missingServos) + ". Nothing was saved.");
+            }
+
+            if (!modified)
             {
                 return RecipeSaveResult.NoChanges("No data modified !");
             }
 
-            WriteTextDual(jsonPath, string.Equals(moduleName, "Gantry", StringComparison.OrdinalIgnoreCase) ? MachineConfiguration.GantryFile : moduleName + "_Gantry.json", newJson);
+            MachineConfiguration.SaveServos(_dataDirectory, servos);
+            RecipeChanged?.Invoke(this, EventArgs.Empty);
 
-            // Sync with Servos.json if present
-            var legacyRecords = LoadGantryRecipe(moduleName);
-            SyncServosJsonIfPresent(moduleName, legacyRecords);
+            var columns = oldDoc.Columns;
+            string[] headers = columns.Select(c => c.Title).ToArray();
+            var oldRowArray = oldDoc.Rows.Select(r => columns.Select(c => r.TryGetValue(c.Key, out var val) ? val : string.Empty).ToArray()).ToList();
+            var newRowArray = document.Rows.Select(r => columns.Select(c => r.TryGetValue(c.Key, out var val) ? val : string.Empty).ToArray()).ToList();
+            AppendEditLog(MachineConfiguration.ServosFile + " (" + moduleName.Trim() + ")", headers, oldRowArray, newRowArray);
 
-            string[] headers = document.Columns.Select(c => c.Title).ToArray();
-            var oldRowArray = oldDoc.Rows.Select(r => document.Columns.Select(c => r.TryGetValue(c.Key, out var val) ? val : string.Empty).ToArray()).ToList();
-            var newRowArray = document.Rows.Select(r => document.Columns.Select(c => r.TryGetValue(c.Key, out var val) ? val : string.Empty).ToArray()).ToList();
-
-            AppendEditLog(Path.GetFileName(jsonPath), headers, oldRowArray, newRowArray);
             return RecipeSaveResult.Saved("Data saved successfully !");
         }
 
-        public DynamicTableDocument LoadLightRecipeDynamic()
+        private static string Cell(Dictionary<string, string> row, string key)
         {
-            string jsonPath = Path.Combine(_dataDirectory, LightRecipeJsonFile);
-            if (File.Exists(jsonPath))
-            {
-                try
-                {
-                    string jsonContent = File.ReadAllText(jsonPath, Encoding.UTF8);
-                    var doc = ParseDynamicJson(jsonContent, "Light Control", new[] { "ColourCode", "Colour", "ColourName" });
-                    if (doc != null && doc.Columns.Count > 0 && doc.Rows.Count > 0)
-                    {
-                        return doc;
-                    }
-                }
-                catch
-                {
-                    // Fallback to CSV
-                }
-            }
-
-            // Fallback to CSV
-            string csvPath = Path.Combine(_dataDirectory, LightRecipeCsvFile);
-            var rows = ReadCsvRows(csvPath);
-            var columns = new List<DynamicColumnSchema>
-            {
-                new DynamicColumnSchema { Key = "ColourCode", Title = "Colour Code", IsReadOnly = true, IsIdentifier = true },
-                new DynamicColumnSchema { Key = "ColourName", Title = "Colour", IsReadOnly = true, IsIdentifier = true },
-                new DynamicColumnSchema { Key = "Value", Title = "Value", IsReadOnly = false },
-            };
-            var rowDicts = new List<Dictionary<string, string>>(rows.Count);
-            foreach (var row in rows)
-            {
-                rowDicts.Add(new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-                {
-                    ["ColourCode"] = GetCell(row, 0),
-                    ["ColourName"] = GetCell(row, 1),
-                    ["Value"] = GetCell(row, 2),
-                });
-            }
-
-            return new DynamicTableDocument
-            {
-                Title = "Light Control",
-                Columns = columns,
-                Rows = rowDicts
-            };
+            return row != null && row.TryGetValue(key, out var value) && value != null ? value.Trim() : string.Empty;
         }
 
-        public IReadOnlyList<LightChannelRecord> LoadLightRecipe()
+        /// <summary>The cell as a number; a blank cell is 0. Throws for anything else that is not a number.</summary>
+        private static double GantryNumber(string position, Dictionary<string, string> row, string key)
         {
-            var doc = LoadLightRecipeDynamic();
-            var result = new List<LightChannelRecord>(doc.Rows.Count);
-            foreach (var r in doc.Rows)
+            string raw = Cell(row, key);
+            if (raw.Length == 0)
             {
-                result.Add(new LightChannelRecord
+                return 0d;
+            }
+
+            if (double.TryParse(raw, NumberStyles.Float, CultureInfo.InvariantCulture, out double value)
+                || double.TryParse(raw, NumberStyles.Float, CultureInfo.CurrentCulture, out value))
+            {
+                return value;
+            }
+
+            throw new InvalidOperationException("'" + position + "' " + key + " is '" + raw + "', not a number. Nothing was saved.");
+        }
+
+        /// <summary>
+        /// The speed ceiling of each servo, its Velocity in Data\Servos.json (the same value the
+        /// Manual axis tab limits to). A servo with no Velocity set has no entry, so it is not limited.
+        /// </summary>
+        public IReadOnlyDictionary<string, double> GetAxisSpeedLimits()
+        {
+            var result = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+            foreach (var servo in MachineConfiguration.ReadServos(_dataDirectory) ?? new List<ServoConfiguration>())
+            {
+                if (servo == null || string.IsNullOrWhiteSpace(servo.EnumName) || servo.Velocity <= 0)
                 {
-                    ColourCode = r.TryGetValue("ColourCode", out var cc) ? cc : string.Empty,
-                    Colour = r.TryGetValue("ColourName", out var cn) ? cn : (r.TryGetValue("Colour", out var c) ? c : string.Empty),
-                    Value = r.TryGetValue("Value", out var v) ? v : string.Empty,
-                });
+                    continue;
+                }
+
+                result[servo.EnumName.Trim()] = servo.Velocity;
             }
 
             return result;
-        }
-
-        public RecipeSaveResult SaveLightRecipeDynamic(DynamicTableDocument document)
-        {
-            if (document == null || document.Rows == null)
-            {
-                throw new ArgumentNullException(nameof(document));
-            }
-
-            var oldDoc = LoadLightRecipeDynamic();
-            string jsonPath = Path.Combine(_dataDirectory, LightRecipeJsonFile);
-
-            var jArray = new Newtonsoft.Json.Linq.JArray();
-            foreach (var row in document.Rows)
-            {
-                var jObj = new Newtonsoft.Json.Linq.JObject();
-                foreach (var col in document.Columns)
-                {
-                    jObj[col.Key] = row.TryGetValue(col.Key, out var val) ? val : string.Empty;
-                }
-                jArray.Add(jObj);
-            }
-
-            string newJson = jArray.ToString(Formatting.Indented);
-            string oldJson = File.Exists(jsonPath) ? File.ReadAllText(jsonPath, Encoding.UTF8) : string.Empty;
-
-            if (!string.IsNullOrEmpty(oldJson) && Normalize(oldJson).Equals(Normalize(newJson), StringComparison.Ordinal))
-            {
-                return RecipeSaveResult.NoChanges("No data modified !");
-            }
-
-            WriteTextDual(jsonPath, LightRecipeJsonFile, newJson);
-
-            string[] headers = document.Columns.Select(c => c.Title).ToArray();
-            var oldRowArray = oldDoc.Rows.Select(r => document.Columns.Select(c => r.TryGetValue(c.Key, out var val) ? val : string.Empty).ToArray()).ToList();
-            var newRowArray = document.Rows.Select(r => document.Columns.Select(c => r.TryGetValue(c.Key, out var val) ? val : string.Empty).ToArray()).ToList();
-
-            AppendEditLog(Path.GetFileName(jsonPath), headers, oldRowArray, newRowArray);
-            return RecipeSaveResult.Saved("Light recipe saved successfully.");
-        }
-
-        public RecipeSaveResult SaveLightRecipe(IReadOnlyList<LightChannelRecord> rows)
-        {
-            if (rows == null)
-            {
-                throw new ArgumentNullException(nameof(rows));
-            }
-
-            var doc = LoadLightRecipeDynamic();
-            var rowDicts = new List<Dictionary<string, string>>(rows.Count);
-            for (int i = 0; i < rows.Count; i++)
-            {
-                var dict = i < doc.Rows.Count ? new Dictionary<string, string>(doc.Rows[i], StringComparer.OrdinalIgnoreCase) : new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                dict["ColourCode"] = rows[i].ColourCode;
-                dict["ColourName"] = rows[i].Colour;
-                dict["Value"] = rows[i].Value;
-                rowDicts.Add(dict);
-            }
-
-            var newDoc = new DynamicTableDocument
-            {
-                Title = doc.Title,
-                Columns = doc.Columns,
-                Rows = rowDicts
-            };
-
-            return SaveLightRecipeDynamic(newDoc);
         }
 
         public DynamicTableDocument LoadRobotRecipeDynamic()
@@ -560,7 +524,22 @@ namespace Nova.Core.Services
             var oldDoc = LoadRobotRecipeDynamic();
             string jsonPath = Path.Combine(_dataDirectory, RobotRecipeJsonFile);
 
-            var jArray = new JArray();
+            // The grid hands back only the columns. A row's other properties - its PLC mapping
+            // (PlcMember, Min, Max), which TwincatRecipeService reads - are kept from the file,
+            // matched by the point name.
+            string pointKey = document.Columns.Count > 0 ? document.Columns[0].Key : "PointName";
+            var columnKeys = new HashSet<string>(document.Columns.Select(c => c.Key), StringComparer.OrdinalIgnoreCase);
+            var oldRows = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
+            foreach (var oldRow in oldDoc.Rows)
+            {
+                string point = oldRow.TryGetValue(pointKey, out var p) ? p : string.Empty;
+                if (!oldRows.ContainsKey(point))
+                {
+                    oldRows[point] = oldRow;
+                }
+            }
+
+            var jRows = new JArray();
             foreach (var row in document.Rows)
             {
                 var jObj = new JObject();
@@ -568,10 +547,48 @@ namespace Nova.Core.Services
                 {
                     jObj[col.Key] = row.TryGetValue(col.Key, out var val) ? val : string.Empty;
                 }
-                jArray.Add(jObj);
+
+                string point = row.TryGetValue(pointKey, out var id) ? id : string.Empty;
+                if (oldRows.TryGetValue(point, out var kept))
+                {
+                    foreach (var property in kept.Where(kvp => !columnKeys.Contains(kvp.Key)))
+                    {
+                        jObj[property.Key] = property.Value;
+                    }
+                }
+
+                jRows.Add(jObj);
             }
 
-            string newJson = jArray.ToString(Formatting.Indented);
+            // Written whole - Title, Columns and Rows - so the schema survives a save.
+            var jColumns = new JArray();
+            foreach (var col in document.Columns)
+            {
+                var jCol = new JObject { ["Key"] = col.Key, ["Title"] = col.Title };
+                if (col.IsReadOnly)
+                {
+                    jCol["IsReadOnly"] = true;
+                }
+                if (col.IsIdentifier)
+                {
+                    jCol["IsIdentifier"] = true;
+                }
+                jCol["DataType"] = col.DataType.ToString();
+                if (!col.ValidationEnabled)
+                {
+                    jCol["ValidationEnabled"] = false;
+                }
+                jColumns.Add(jCol);
+            }
+
+            var jDoc = new JObject
+            {
+                ["Title"] = document.Title,
+                ["Columns"] = jColumns,
+                ["Rows"] = jRows,
+            };
+
+            string newJson = jDoc.ToString(Formatting.Indented);
             string oldJson = File.Exists(jsonPath) ? File.ReadAllText(jsonPath, Encoding.UTF8) : string.Empty;
 
             if (!string.IsNullOrEmpty(oldJson) && Normalize(oldJson).Equals(Normalize(newJson), StringComparison.Ordinal))
@@ -617,6 +634,70 @@ namespace Nova.Core.Services
             };
 
             return SaveRobotRecipeDynamic(newDoc);
+        }
+
+        /// <summary>Data\CncRecipe.json: { "Channels": [ { Name, PlcChannel, Axes: [ { Axis, Servo, Position } ] } ] }.</summary>
+        private sealed class CncRecipeFile
+        {
+            public List<CncChannelRecipe> Channels { get; set; } = new List<CncChannelRecipe>();
+        }
+
+        /// <summary>Throws InvalidDataException for a file that is not a CNC recipe; no file is no channels.</summary>
+        public IReadOnlyList<CncChannelRecipe> LoadCncRecipe()
+        {
+            string jsonPath = Path.Combine(_dataDirectory, CncRecipeJsonFile);
+            if (!File.Exists(jsonPath))
+            {
+                return new CncChannelRecipe[0];
+            }
+
+            try
+            {
+                var file = JsonConvert.DeserializeObject<CncRecipeFile>(File.ReadAllText(jsonPath, Encoding.UTF8));
+                return (IReadOnlyList<CncChannelRecipe>)file?.Channels ?? new CncChannelRecipe[0];
+            }
+            catch (JsonException ex)
+            {
+                throw new InvalidDataException(CncRecipeJsonFile + " could not be read: " + ex.Message, ex);
+            }
+        }
+
+        public RecipeSaveResult SaveCncRecipe(IReadOnlyList<CncChannelRecipe> channels)
+        {
+            if (channels == null)
+            {
+                throw new ArgumentNullException(nameof(channels));
+            }
+
+            string jsonPath = Path.Combine(_dataDirectory, CncRecipeJsonFile);
+            string oldJson = File.Exists(jsonPath) ? File.ReadAllText(jsonPath, Encoding.UTF8) : string.Empty;
+            IReadOnlyList<CncChannelRecipe> oldChannels = LoadCncRecipe();
+
+            string newJson = JsonConvert.SerializeObject(new CncRecipeFile { Channels = channels.ToList() }, Formatting.Indented);
+            if (!string.IsNullOrEmpty(oldJson) && Normalize(oldJson).Equals(Normalize(newJson), StringComparison.Ordinal))
+            {
+                return RecipeSaveResult.NoChanges("No data modified !");
+            }
+
+            WriteTextDual(jsonPath, CncRecipeJsonFile, newJson);
+
+            // One edit-log row per channel position: "Channel 1.Home", then its value on each axis.
+            string[] headers = new[] { "Position" }.Concat(CncChannelRecipe.AxisNames).ToArray();
+            AppendEditLog(CncRecipeJsonFile, headers, CncLogRows(oldChannels), CncLogRows(channels));
+            return RecipeSaveResult.Saved("Data saved successfully !");
+        }
+
+        private static List<string[]> CncLogRows(IReadOnlyList<CncChannelRecipe> channels)
+        {
+            return channels
+                .SelectMany(channel => (channel.Positions ?? new List<CncPositionRecipe>()).Select(position =>
+                    new[] { channel.Name + "." + position.Name }
+                        .Concat(CncChannelRecipe.AxisNames.Select(axis =>
+                            position.Values != null && position.Values.TryGetValue(axis, out double value)
+                                ? value.ToString(CultureInfo.InvariantCulture)
+                                : string.Empty))
+                        .ToArray()))
+                .ToList();
         }
 
         private static DynamicTableDocument ParseDynamicJson(string jsonContent, string defaultTitle, string[] identifierKeys = null)
@@ -745,189 +826,6 @@ namespace Nova.Core.Services
                 Columns = columns,
                 Rows = rows
             };
-        }
-
-        public RecipeSaveResult SaveGantryRecipe(string moduleName, IReadOnlyList<GantryPositionRecord> rows)
-        {
-            if (string.IsNullOrWhiteSpace(moduleName))
-            {
-                throw new ArgumentException("Module name is required.", nameof(moduleName));
-            }
-
-            if (rows == null)
-            {
-                throw new ArgumentNullException(nameof(rows));
-            }
-
-            var doc = LoadGantryRecipeDynamic(moduleName);
-            var rowDicts = new List<Dictionary<string, string>>(rows.Count);
-            for (int i = 0; i < rows.Count; i++)
-            {
-                var dict = i < doc.Rows.Count ? new Dictionary<string, string>(doc.Rows[i], StringComparer.OrdinalIgnoreCase) : new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                dict["Position"] = rows[i].Position;
-                dict["X"] = rows[i].X;
-                dict["XVel"] = rows[i].XVel;
-                dict["XAcc"] = rows[i].XAcc;
-                dict["XDeAcc"] = rows[i].XDeAcc;
-                dict["Y"] = rows[i].Y;
-                dict["YVel"] = rows[i].YVel;
-                dict["YAcc"] = rows[i].YAcc;
-                dict["YDeAcc"] = rows[i].YDeAcc;
-                dict["Z"] = rows[i].Z;
-                dict["ZVel"] = rows[i].ZVel;
-                dict["ZAcc"] = rows[i].ZAcc;
-                dict["ZDeAcc"] = rows[i].ZDeAcc;
-                rowDicts.Add(dict);
-            }
-
-            var newDoc = new DynamicTableDocument
-            {
-                Title = doc.Title,
-                Columns = doc.Columns,
-                Rows = rowDicts
-            };
-
-            return SaveGantryRecipeDynamic(moduleName, newDoc);
-        }
-
-        /// <summary>
-        /// Copies the taught positions into Servos.json. Gantry.json and Servos.json are machine
-        /// configuration, so both are read and written through Master.Configuration.
-        /// </summary>
-        private void SyncServosJsonIfPresent(string moduleName, IReadOnlyList<GantryPositionRecord> rows)
-        {
-            try
-            {
-                var gantryRoot = MachineConfiguration.LoadGantry(_dataDirectory);
-                var module = gantryRoot?.Gantry?.FirstOrDefault(g => string.Equals(g.Name, moduleName, StringComparison.OrdinalIgnoreCase));
-                if (module?.Axes == null) return;
-
-                var servoList = MachineConfiguration.ReadServos(_dataDirectory);
-                if (servoList == null) return;
-
-                foreach (var axisRef in module.Axes)
-                {
-                    var servo = servoList.FirstOrDefault(s => s.Name.Equals(axisRef.Name, StringComparison.OrdinalIgnoreCase));
-                    if (servo == null) continue;
-
-                    if (servo.ConfiguredPositions == null)
-                    {
-                        servo.ConfiguredPositions = new List<AxisPosition>();
-                    }
-
-                    foreach (var record in rows)
-                    {
-                        var existing = servo.ConfiguredPositions.FirstOrDefault(p => p.Name.Equals(record.Position, StringComparison.OrdinalIgnoreCase));
-                        double val = 0;
-                        double acc = 0;
-                        double dec = 0;
-                        int speed = 0;
-
-                        string axisType = axisRef.Type?.ToUpperInvariant() ?? string.Empty;
-                        if (axisType.Contains("X"))
-                        {
-                            double.TryParse(record.X, out val);
-                            int.TryParse(record.XVel, out speed);
-                            double.TryParse(record.XAcc, out acc);
-                            double.TryParse(record.XDeAcc, out dec);
-                        }
-                        else if (axisType.Contains("Y"))
-                        {
-                            double.TryParse(record.Y, out val);
-                            int.TryParse(record.YVel, out speed);
-                            double.TryParse(record.YAcc, out acc);
-                            double.TryParse(record.YDeAcc, out dec);
-                        }
-                        else if (axisType.Contains("Z"))
-                        {
-                            double.TryParse(record.Z, out val);
-                            int.TryParse(record.ZVel, out speed);
-                            double.TryParse(record.ZAcc, out acc);
-                            double.TryParse(record.ZDeAcc, out dec);
-                        }
-
-                        if (existing != null)
-                        {
-                            existing.Value = val;
-                            existing.Speed = speed;
-                            existing.Acceleration = acc;
-                            existing.Deceleration = dec;
-                        }
-                        else
-                        {
-                            servo.ConfiguredPositions.Add(new AxisPosition
-                            {
-                                Name = record.Position,
-                                Value = val,
-                                Speed = speed,
-                                Acceleration = acc,
-                                Deceleration = dec
-                            });
-                        }
-                    }
-                }
-
-                MachineConfiguration.SaveServos(_dataDirectory, servoList);
-            }
-            catch
-            {
-                // Fail-safe
-            }
-        }
-
-        private string GetGantryJsonRecipePath(string moduleName)
-        {
-            string fileName = "Gantry_" + moduleName.Trim() + ".json";
-            return Path.Combine(_dataDirectory, fileName);
-        }
-
-        private string GetGantryCsvRecipePath(string moduleName)
-        {
-            string cleanModule = moduleName.Trim();
-
-            string file1 = Path.Combine(_dataDirectory, cleanModule + "Receipe_Param.csv");
-            if (File.Exists(file1)) return file1;
-
-            string file2 = Path.Combine(_dataDirectory, "Receipe_Param_" + cleanModule + ".csv");
-            if (File.Exists(file2)) return file2;
-
-            string file3 = Path.Combine(_dataDirectory, cleanModule + "_Receipe_Param.csv");
-            if (File.Exists(file3)) return file3;
-
-            string file4 = Path.Combine(_dataDirectory, "Receipe_Param.csv");
-            if (File.Exists(file4)) return file4;
-
-            return file1;
-        }
-
-
-        private static string ReadAxisName(XElement axisNode)
-        {
-            string nodeName = axisNode.Name.LocalName.Trim();
-            if (nodeName.Equals("AxisName", StringComparison.OrdinalIgnoreCase))
-            {
-                return axisNode.Value.Trim();
-            }
-
-            var axisNameElement = axisNode.Element("AxisName");
-            if (axisNameElement != null && !string.IsNullOrWhiteSpace(axisNameElement.Value))
-            {
-                return axisNameElement.Value.Trim();
-            }
-
-            return nodeName;
-        }
-
-        private static bool TryReadHomingSpeed(XElement axisNode, out double speed)
-        {
-            speed = 0;
-            var element = axisNode.Element("HomingSpeed");
-            if (element == null || string.IsNullOrWhiteSpace(element.Value))
-            {
-                return false;
-            }
-
-            return double.TryParse(element.Value.Trim(), out speed);
         }
 
         private static List<string[]> ReadCsvRows(string path)

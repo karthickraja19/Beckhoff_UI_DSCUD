@@ -8,7 +8,8 @@ namespace Master.Configuration.Model
 {
     /// <summary>
     /// One entry of Vacuums.json: the library's VacuumProperties, property for property. As with
-    /// the cylinders, the sensor and output names are PLC variable names under PlcIoGvl.
+    /// the cylinders, Id is the PLC's vacuumdata index and the sensor and output names are
+    /// Data\Config.csv points, used only for the labels.
     /// </summary>
     public class VacuumConfiguration
     {

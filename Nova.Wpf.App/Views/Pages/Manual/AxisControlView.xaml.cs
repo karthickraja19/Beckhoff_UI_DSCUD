@@ -28,5 +28,10 @@ namespace Nova.Wpf.App.Views.Pages.Manual
 
         private void Jog_MouseLeave(object sender, MouseEventArgs e)
             => Vm?.JogStopCommand.Execute(null);
+
+        private void Button_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+
+        }
     }
 }

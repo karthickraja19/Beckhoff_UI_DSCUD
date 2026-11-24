@@ -76,6 +76,30 @@ namespace Master.Repository
             return shift;
         }
 
+        private string _shiftTable;
+
+        /// <summary>
+        /// The table holding the shift times: [Shift] (Master_Teal_db_Schema.sql), or [ShiftMasterData]
+        /// in a database made for V3. Looked up once. Without the right name the current shift is
+        /// null, and no run / down / idle time, shift status or OEE is recorded.
+        /// </summary>
+        private string ShiftTable()
+        {
+            if (_shiftTable != null)
+                return _shiftTable;
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            using (SqlCommand command = new SqlCommand(
+                "SELECT CASE WHEN OBJECT_ID(N'[TEAL_Master].[dbo].[Shift]', N'U') IS NOT NULL THEN N'Shift' ELSE N'ShiftMasterData' END",
+                connection))
+            {
+                connection.Open();
+                _shiftTable = (string)command.ExecuteScalar();
+            }
+
+            return _shiftTable;
+        }
+
         public List<Shift> GetShiftMasterData()
         {
             if (_cache.Contains("MasterShiftData"))
@@ -84,7 +108,7 @@ namespace Master.Repository
             }
 
             List<Shift> list = new List<Shift>();
-            string cmdText = "SELECT Shift, StartTime, EndTime FROM [TEAL_Master].[dbo].[ShiftMasterData]";
+            string cmdText = "SELECT Shift, StartTime, EndTime FROM [TEAL_Master].[dbo].[" + ShiftTable() + "]";
             using (SqlConnection sqlConnection = new SqlConnection(_connectionString))
             using (SqlCommand cmd = new SqlCommand(cmdText, sqlConnection))
             {
@@ -107,9 +131,9 @@ namespace Master.Repository
 
         public void UpdateShiftMasterData(string shiftName, DateTime startTime, DateTime endTime)
         {
-            string query = @"Update [TEAL_Master].[dbo].[ShiftMasterData] 
+            string query = @"Update [TEAL_Master].[dbo].[" + ShiftTable() + @"]
                              SET [StartTime] = @StartTime,
-                             [EndTime] = @EndTime 
+                             [EndTime] = @EndTime
                              WHERE [Shift] = @Shift";
 
             using (SqlConnection connection = new SqlConnection(_connectionString))
@@ -189,6 +213,41 @@ namespace Master.Repository
             }
 
             return healthDataList;
+        }
+
+        public List<HealthData> GetHealthDataBetween(DateTime start, DateTime end)
+        {
+            var list = new List<HealthData>();
+            string query = @"SELECT [Date], [Shift], [HealthCategory], [StartTime], [EndTime], [TotalTime]
+                             FROM [TEAL_Master].[dbo].[HealthData]
+                             WHERE [StartTime] < @End AND [EndTime] > @Start
+                             ORDER BY [StartTime]";
+
+            using (SqlConnection connection = new SqlConnection(_connectionString))
+            using (SqlCommand command = new SqlCommand(query, connection))
+            {
+                command.Parameters.Add("@Start", SqlDbType.DateTime).Value = start;
+                command.Parameters.Add("@End", SqlDbType.DateTime).Value = end;
+
+                connection.Open();
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        list.Add(new HealthData
+                        {
+                            Date = reader.IsDBNull(0) ? DateTime.MinValue : reader.GetDateTime(0),
+                            Shift = reader.IsDBNull(1) ? null : reader.GetString(1),
+                            HealthCategory = reader.IsDBNull(2) ? null : reader.GetString(2),
+                            StartTime = reader.IsDBNull(3) ? DateTime.MinValue : reader.GetDateTime(3),
+                            EndTime = reader.IsDBNull(4) ? DateTime.MinValue : reader.GetDateTime(4),
+                            TotalTime = reader.IsDBNull(5) ? 0.0 : reader.GetDouble(5)
+                        });
+                    }
+                }
+            }
+
+            return list;
         }
 
         public void AddProductionData(ProductionData productionData)
@@ -835,10 +894,10 @@ namespace Master.Repository
 
             string query = @"
                     SELECT COUNT(*)
-                    FROM [TEAL_Master].[dbo].[ProductData]
-                    WHERE Time >= @StartTime
-                      AND Time < @EndTime
-                      AND Tossing = 0";
+                    FROM [TEAL_Master].[dbo].[ProductionData]
+                    WHERE ProductionTime >= @StartTime
+                      AND ProductionTime < @EndTime
+                      AND ProductionStatus = 1";
 
             try
             {
@@ -866,10 +925,10 @@ namespace Master.Repository
 
             string query = @"
                             SELECT COUNT(*)
-                            FROM [TEAL_Master].[dbo].[ProductData]
-                            WHERE Time >= @StartTime
-                              AND Time < @EndTime
-                              AND Tossing = 1";
+                            FROM [TEAL_Master].[dbo].[ProductionData]
+                            WHERE ProductionTime >= @StartTime
+                              AND ProductionTime < @EndTime
+                              AND ProductionStatus = 0";
 
             try
             {

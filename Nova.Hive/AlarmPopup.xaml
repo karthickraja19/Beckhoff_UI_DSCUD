@@ -1,7 +1,8 @@
 <Window x:Class="Nova.Hive.AlarmPopup"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:loc="clr-namespace:Nova.Wpf.UI.Localization;assembly=Nova.Wpf.UI"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Dialog"
+        Title="{loc:Tr Txt_Dialog}"
         Width="470"
         SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
@@ -59,16 +60,17 @@
 
     <Border BorderBrush="#B0B0B0" BorderThickness="1" CornerRadius="6">
         <StackPanel>
-            <!-- Title bar. The Close button dismisses the pop-up without a badge (nothing is
-                 sent to HIVE); Confirm + badge is still the way to acknowledge the alarm. -->
+            <!-- Title bar. The X is shown only when App.config AlarmPopupClosable is true;
+                 otherwise the pop-up only goes away with Confirm and a badge swipe. -->
             <Border Background="#ECECEC" CornerRadius="6,6,0,0" Padding="10,8">
                 <Grid>
-                    <TextBlock Text="Dialog" FontWeight="Bold" Foreground="#3C3C3C" HorizontalAlignment="Center" />
-                    <Button x:Name="CloseWindowButton" Content="&#x2715;" ToolTip="Close window"
+                    <TextBlock Text="{loc:Tr Txt_Dialog}" FontWeight="Bold" Foreground="#3C3C3C" HorizontalAlignment="Center" />
+                    <Button Content="&#x2715;"
+                            Visibility="{Binding CloseButtonVisibility, RelativeSource={RelativeSource AncestorType=Window}}"
                             HorizontalAlignment="Right" VerticalAlignment="Center"
-                            Width="26" Height="22" Padding="0" FontSize="12" FontWeight="Bold"
-                            Background="Transparent" Foreground="#3C3C3C" BorderThickness="0"
-                            Cursor="Hand" Click="CloseWindowButton_Click" />
+                            Width="24" Height="22" Padding="0" FontSize="13" FontWeight="Bold"
+                            Foreground="#3C3C3C" Background="Transparent" BorderThickness="0"
+                            Cursor="Hand" Click="CloseButton_Click" />
                 </Grid>
             </Border>
 
@@ -88,22 +90,22 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Start Time:" Style="{StaticResource FieldLabel}" />
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="{loc:Tr Txt_StartTime}" Style="{StaticResource FieldLabel}" />
                     <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource ValueBox}">
                         <TextBlock x:Name="StartTimeText" HorizontalAlignment="Center" />
                     </Border>
 
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Error Code:" Style="{StaticResource FieldLabel}" />
+                    <TextBlock Grid.Row="1" Grid.Column="0" Text="{loc:Tr Txt_ErrorCode}" Style="{StaticResource FieldLabel}" />
                     <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource ValueBox}">
                         <TextBlock x:Name="ErrorCodeText" HorizontalAlignment="Center" />
                     </Border>
 
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Error Msg:" Style="{StaticResource FieldLabel}" />
+                    <TextBlock Grid.Row="2" Grid.Column="0" Text="{loc:Tr Txt_ErrorMsg}" Style="{StaticResource FieldLabel}" />
                     <Border Grid.Row="2" Grid.Column="1" Style="{StaticResource ValueBox}">
                         <TextBlock x:Name="ErrorMessageText" HorizontalAlignment="Center" />
                     </Border>
 
-                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Error Detail:" Style="{StaticResource FieldLabel}" />
+                    <TextBlock Grid.Row="3" Grid.Column="0" Text="{loc:Tr Txt_ErrorDetail}" Style="{StaticResource FieldLabel}" />
                     <Border Grid.Row="3" Grid.Column="1" Style="{StaticResource ValueBox}">
                         <TextBlock x:Name="ErrorDetailText" TextWrapping="Wrap" MinHeight="36" />
                     </Border>
@@ -116,18 +118,25 @@
                         <Border BorderBrush="White" BorderThickness="1" CornerRadius="6" Margin="0,9,0,0" />
 
                         <!-- "Options" sits on the top edge of the frame. -->
-                        <TextBlock Text="Options" Foreground="#5B4441" Background="#EE9490"
+                        <TextBlock Text="{loc:Tr Txt_Options}" Foreground="#5B4441" Background="#EE9490"
                                    Padding="5,0" Margin="12,0,0,0"
                                    HorizontalAlignment="Left" VerticalAlignment="Top" />
 
                         <StackPanel Margin="13,27,13,13">
-                            <ComboBox x:Name="RepairActionBox" DisplayMemberPath="Label" Padding="6,4" Margin="0,0,0,10" />
+                            <ComboBox x:Name="RepairActionBox" Padding="6,4" Margin="0,0,0,10">
+                                <!-- Repair actions in the selected language; the code sent to HIVE is unchanged. -->
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{loc:TrBinding Label}"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
                             <Grid>
                                 <TextBox x:Name="ChangeDetailBox" MinHeight="70" Padding="6,4"
                                          TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"
                                          TextChanged="ChangeDetailBox_TextChanged" />
                                 <!-- The grey placeholder the slide draws in the empty box. -->
-                                <TextBlock x:Name="ChangeDetailHint" Text="&lt;Change error detail&gt;"
+                                <TextBlock x:Name="ChangeDetailHint" Text="{loc:Tr Txt_ChangeErrorDetail}"
                                            Foreground="#9A9A9A" Margin="8,6,0,0"
                                            HorizontalAlignment="Left" VerticalAlignment="Top"
                                            IsHitTestVisible="False" />
@@ -136,9 +145,9 @@
                     </Grid>
 
                     <Grid Grid.Row="5" Grid.ColumnSpan="2" Margin="0,18,0,0">
-                        <Button x:Name="MuteButton" Content="Mute" HorizontalAlignment="Left"
+                        <Button x:Name="MuteButton" Content="{loc:Tr Txt_Mute}" HorizontalAlignment="Left"
                                 Style="{StaticResource DialogButton}" Click="MuteButton_Click" />
-                        <Button x:Name="ConfirmButton" Content="Confirm" HorizontalAlignment="Right"
+                        <Button x:Name="ConfirmButton" Content="{loc:Tr Txt_Confirm}" HorizontalAlignment="Right"
                                 Style="{StaticResource DialogButton}" Click="ConfirmButton_Click" />
                     </Grid>
                 </Grid>

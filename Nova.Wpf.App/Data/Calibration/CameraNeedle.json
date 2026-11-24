@@ -1,0 +1,108 @@
+{
+  "Stations": [
+    {
+      "Station": 1,
+      "Taught": false,
+      "Glue": [
+        { "Name": "glue1", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue2", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue3", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue4", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue5", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue6", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue7", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue8", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue9", "X": 0.0, "Y": 0.0 }
+      ],
+      "Vision": [
+        { "Name": "vision1", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision2", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision3", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision4", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision5", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision6", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision7", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision8", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision9", "X": 0.0, "Y": 0.0 }
+      ]
+    },
+    {
+      "Station": 2,
+      "Taught": false,
+      "Glue": [
+        { "Name": "glue1", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue2", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue3", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue4", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue5", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue6", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue7", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue8", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue9", "X": 0.0, "Y": 0.0 }
+      ],
+      "Vision": [
+        { "Name": "vision1", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision2", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision3", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision4", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision5", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision6", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision7", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision8", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision9", "X": 0.0, "Y": 0.0 }
+      ]
+    },
+    {
+      "Station": 3,
+      "Taught": false,
+      "Glue": [
+        { "Name": "glue1", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue2", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue3", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue4", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue5", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue6", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue7", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue8", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue9", "X": 0.0, "Y": 0.0 }
+      ],
+      "Vision": [
+        { "Name": "vision1", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision2", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision3", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision4", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision5", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision6", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision7", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision8", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision9", "X": 0.0, "Y": 0.0 }
+      ]
+    },
+    {
+      "Station": 4,
+      "Taught": false,
+      "Glue": [
+        { "Name": "glue1", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue2", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue3", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue4", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue5", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue6", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue7", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue8", "X": 0.0, "Y": 0.0 },
+        { "Name": "glue9", "X": 0.0, "Y": 0.0 }
+      ],
+      "Vision": [
+        { "Name": "vision1", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision2", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision3", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision4", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision5", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision6", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision7", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision8", "X": 0.0, "Y": 0.0 },
+        { "Name": "vision9", "X": 0.0, "Y": 0.0 }
+      ]
+    }
+  ]
+}
