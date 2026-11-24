@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -43,8 +43,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CardManager.cs" />
-    <Compile Include="DeviceObjects.cs" />
+    <Compile Include="Loaders\CardManager.cs" />
+    <Compile Include="Loaders\DeviceObjects.cs" />
     <Compile Include="Enum\ESensor.cs" />
     <Compile Include="MachineConfiguration.cs" />
     <Compile Include="Enum\Cards.cs" />
@@ -57,12 +57,12 @@
     <Compile Include="Model\NetworkDeviceConfiguration.cs" />
     <Compile Include="Model\RobotConfiguration.cs" />
     <Compile Include="Model\VisionConfiguration.cs" />
-    <Compile Include="PdcaObject.cs" />
-    <Compile Include="RobotObjects.cs" />
-    <Compile Include="ScannerObjects.cs" />
-    <Compile Include="CCDObjects.cs" />
-    <Compile Include="CylinderObjects.cs" />
-    <Compile Include="DIDO.cs" />
+    <Compile Include="Loaders\PdcaObject.cs" />
+    <Compile Include="Loaders\RobotObjects.cs" />
+    <Compile Include="Loaders\ScannerObjects.cs" />
+    <Compile Include="Loaders\CCDObjects.cs" />
+    <Compile Include="Loaders\CylinderObjects.cs" />
+    <Compile Include="Loaders\DIDO.cs" />
     <Compile Include="Enum\Analog_Input.cs" />
     <Compile Include="Enum\Scanners.cs" />
     <Compile Include="Enum\EOutput.cs" />
@@ -83,9 +83,9 @@
     <Compile Include="Model\StepperConfiguration.cs" />
     <Compile Include="Model\VacuumConfiguration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ServoObjects.cs" />
-    <Compile Include="StepperObjects.cs" />
-    <Compile Include="VacuumObjects.cs" />
+    <Compile Include="Loaders\ServoObjects.cs" />
+    <Compile Include="Loaders\StepperObjects.cs" />
+    <Compile Include="Loaders\VacuumObjects.cs" />
   </ItemGroup>
   <ItemGroup>
     <!-- Same version as the rest of the solution. The old HintPath (..\References\Newtonsoft.Json.dll) did not exist. -->

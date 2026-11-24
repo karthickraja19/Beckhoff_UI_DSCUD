@@ -30,9 +30,9 @@
     <PackageReference Include="System.Text.Json" Version="10.0.7" />
   </ItemGroup>
   <ItemGroup>
-    <!-- The MES WebAPI client (Core\Comm\MesClient.cs). -->
+    <!-- The MES WebAPI client (Services\Comm\MesClient.cs). -->
     <Reference Include="System.Net.Http" />
-    <!-- The unit image zip for Insight (Services\UnitImagePackager.cs). -->
+    <!-- The unit image zip for Insight (Services\Hive\UnitImagePackager.cs). -->
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
   </ItemGroup>
