@@ -20,4 +20,7 @@ namespace Nova.ViewModels.Common
     public sealed class ShowLoginMessage
     {
     }
+    public sealed class ShowAudioShellMessage
+    {
+    }
 }

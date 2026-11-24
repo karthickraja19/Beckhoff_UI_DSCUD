@@ -8,7 +8,7 @@ using Nova.ViewModels.Common;
 
 namespace Nova.ViewModels.Shells
 {
-    public partial class MainWindowViewModel : ViewModelBase, IRecipient<ShowLoginMessage>
+    public partial class MainWindowViewModel : ViewModelBase, IRecipient<ShowLoginMessage> , IRecipient<ShowAudioShellMessage>
     {
         private readonly IAppSession _session;
         private readonly AuthShellViewModel _authShell;
@@ -53,7 +53,7 @@ namespace Nova.ViewModels.Shells
             // The Audio GUI is available before login, so the shell - not the login
             // screen - is what the window opens on. The login screen is now a detour
             // reached from the access-level chip, not the gate in front of everything.
-            WeakReferenceMessenger.Default.Register(this);
+            WeakReferenceMessenger.Default.RegisterAll(this);
             ShowShell();
         }
 
@@ -66,6 +66,10 @@ namespace Nova.ViewModels.Shells
             CurrentView = _authShell;
         }
 
+        public void Receive(ShowAudioShellMessage message)
+        {
+            ShowShell();
+        }
         private void OnSessionPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(IAppSession.IsLoggedIn))

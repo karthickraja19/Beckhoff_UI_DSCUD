@@ -1,10 +1,11 @@
-using System;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using Nova.Abstractions.Data;
 using Nova.Abstractions.Services;
 using Nova.ViewModels.Common;
+using System;
+using System.Threading.Tasks;
 
 namespace Nova.ViewModels.Auth
 {
@@ -259,8 +260,8 @@ namespace Nova.ViewModels.Auth
         [RelayCommand]
         private void CancelVerification()
         {
-            if (!IsAwaitingVerification)
-                return;
+            //if (!IsAwaitingVerification)
+            //    return;
 
             string name = _pending == null ? string.Empty : _pending.Name;
 
@@ -272,6 +273,9 @@ namespace Nova.ViewModels.Auth
 
             if (_log != null)
                 _log.Logout(name, 3, "second approval not provided");
+
+
+            WeakReferenceMessenger.Default.Send(new ShowAudioShellMessage());
         }
 
         private static string Describe(AccessLevel level)
