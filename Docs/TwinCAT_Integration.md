@@ -97,7 +97,7 @@ Save, a station box, the station's **Taught** flag, and the PLC's Start / Abort 
 | Tab | File in `Data\Calibration` | Columns | PLC teach table (`Calibration.Teach`) | E_Calibration |
 |---|---|---|---|---|
 | 9-Point | `NinePoint.json` | one row per station: X, Y (the start position; the PLC makes the other 8 from the pitch) | `GVL_CalTeach.aNinePoint[station]` : `ST_TeachNinePoint` | 1 |
-| 5-Axis | `FiveAxis.json` | per station, rows A-0 .. A-20 and C-0 .. C-20: A, C, X, Y, Z | `GVL_CalTeach.aFiveAxis[station].aPoint[row]` : `ST_TeachFiveAxisPoint` | 2 |
+| 5-Axis | `FiveAxisTranslation.json`, `FiveAxisRotation.json` | stations 1 and 2: translation point1 .. point9 (X, Y), rotation point10 .. point34 (A, C, X, Y, Z) | not written to the PLC (HMI-owned) | - |
 | Camera Needle | `CameraNeedle.json` | per station, points 1..9: glue X / Y and vision X / Y | `GVL_CalTeach.aCameraNeedle[station].aGlue[n]` / `.aVision[n]` : `ST_TeachXY` | 4 |
 | Needle Module | `NeedleModule.json` | one row per station: X, Y, Z | `GVL_CalTeach.aNeedleModule[station]` : `ST_TeachNeedleModule` | 3 |
 
@@ -111,7 +111,24 @@ Save, a station box, the station's **Taught** flag, and the PLC's Start / Abort 
 - The teach tables are written only on Save. They are persistent in the PLC, so they are
   not sent again when the PLC comes back - and a table already in the PLC is not replaced
   by the file's values until someone saves.
-- **Start** writes `GVL_Calibration.nSelect` and `nStation`, then pulses `bStart` (200 ms).
+- **5 axis is not run by the PLC's manager.** The HMI runs it itself (`Master.Sequences\FiveAxisCalibration`,
+  with its own Start / Stop, no pause; SOP "Kinematic calibration SOP", slides 4 to 12). The PLC's `FB_Cal_FiveAxis`
+  is not used for it; the 5 axis tables (translation point1..9, rotation point10..34, stations 1 and 2) are HMI-only
+  files (`FiveAxisTranslation.json`, `FiveAxisRotation.json`) and are not written to the PLC.
+  - **Moves**: the five axes move together as one G-code block in the CNC channel's MDI mode
+    (`GVL_Channel_Interface.CNCData.Ch[n].UiToPlc`: `bMDIMode` rising edge, `sMDIProgram` = `G90 G01 X1=.. Y1=.. Z1=.. B1=.. C1=.. F..`,
+    `bCycleStart` rising edge; done when `PlcToUi.bCycleRunning` has been TRUE and is FALSE, `bErrorState` = error), then each
+    axis's `stAxisCmdStatus[n].rActPosACS` must be within `InPositionTolerance` of its target. Stop pulses `bCycleStop` and `bReset`.
+    Symbol map: `Cnc.Members.MdiModeRequest / MdiProgram / CycleStart / CycleStop / MdiModeActive`. **PLC TODO to confirm**: that the
+    channel runs an MDI block while the machine is in MANUAL (the Calibration section holds manual mode), the axis names in the CNC
+    channel (the block uses `X1`, `Y1`, `Z1`, `B1`, `C1`; `Seq_NC_Program.nc` itself uses `Y1`, `B1`, `C1`, `X2`, `Z2`), and that no work offset is active (the position check reads ACS).
+  - **Vision**: `C5A,index` (1 to 34) over TCP to `127.0.0.1:8000` (`Five-Axis Calibration.xlsx`); the answer carries the 49 dots' pixels.
+    The protocol sheet names no command terminator: `VisionTerminator` in the settings is empty.
+  - **Settings** `Data\Calibration\FiveAxisSettings.json` (copied to the data folder only if missing - copy it by hand to a machine that has
+    the old folder): `PlateSpacingMm`, `ImageWidth` and `ImageHeight` have no source: they are edited on the 5-Axis tab (Setup row) and Start refuses while they are 0. `CncMode` "Auto" runs the block as a one-line `.nc` file (`AutoProgramFile`) in Auto mode instead of MDI; the PLC today only uses Auto mode inside AUTO_RUNNING with `Seq_NC_Program.nc` and M-codes, and its V.E. variables are disabled (`VE_VAR_ENABLED` FALSE).
+  - **Result** `Data\Calibration\FiveAxisResult_Station{n}.json`: K, D, M_hand_eye, Y_C0, rx, ry, X_A, Z_A, Lx, Lz, E per validation image,
+    E max / average and warnings. The SOP gives no limit for E. Nothing is written to the PLC or to the CNC kinematics.
+- **Start** (the other calibrations) writes `GVL_Calibration.nSelect` and `nStation`, then pulses `bStart` (200 ms).
   `FB_CalibrationManager` decides whether it runs (machine in MANUAL or AUTO_RUNNING;
   nine point on stations 2 and 3 needs `aMaintenance[station]`) and reports `bBusy`,
   `bDone`, `bError`, `nStep` and `sMessage`, which the tab shows. **Abort** and **Reset**

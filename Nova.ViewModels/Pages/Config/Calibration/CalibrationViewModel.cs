@@ -11,8 +11,8 @@ using Nova.ViewModels.Common;
 namespace Nova.ViewModels.Pages.Calibration
 {
     /// <summary>
-    /// The Config page's Calibration section: one tab per calibration (9 point, 5 axis,
-    /// camera needle, needle module), each the table of its taught positions, then the
+    /// The Config page's Calibration section: one tab per table of taught positions (9 point,
+    /// 5 axis translation, 5 axis rotation, camera needle, needle module), then the
     /// Camera and Robot tabs (V3's calibration screens) with the devices' connection state.
     /// </summary>
     /// <remarks>
@@ -55,9 +55,17 @@ namespace Nova.ViewModels.Pages.Calibration
             Tabs = new ObservableCollection<TabItemViewModel>();
             foreach (CalibrationTable table in new CalibrationTable[]
                      {
-                         new NinePointTable(), new FiveAxisTable(), new CameraNeedleTable(), new NeedleModuleTable()
+                         new NinePointTable(), null, new CameraNeedleTable(), new NeedleModuleTable()
                      })
             {
+                if (table == null)
+                {
+                    // 5 axis: translation and rotation on one tab, one Start / Stop for the one sequence.
+                    var fiveAxis = new FiveAxisViewModel(calibration, dialog);
+                    Tabs.Add(new TabItemViewModel(fiveAxis.Title, fiveAxis.Icon, fiveAxis));
+                    continue;
+                }
+
                 Tabs.Add(new TabItemViewModel(table.Title, table.Icon, new CalibrationTableViewModel(table, calibration, dialog)));
             }
 

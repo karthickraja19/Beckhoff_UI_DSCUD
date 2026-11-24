@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Machine sequences the HMI runs itself, as opposed to the PLC's: today only the 5 axis
+       calibration (FiveAxisCalibration). Everything else stays in TwinCAT.
+       Same layout as Nova.Alarm (SDK-style, net472, C# 7.3, Teal.Library.Log for the log files). -->
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <AssemblyName>Master.Sequences</AssemblyName>
+    <RootNamespace>Master.Sequences</RootNamespace>
+    <!-- Properties\AssemblyInfo.cs is kept; the SDK must not generate a second one. -->
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- FiveAxisTeach (the taught table the sequence reads) and IAxis (the axes it moves). -->
+    <ProjectReference Include="..\Nova.Abstractions\Nova.Abstractions.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- The SOP (Kinematic calibration SOP, steps 1.4 to 4.3) is written as OpenCV calls (calibrateCamera, solvePnP,
+         estimateAffine3D, Rodrigues, RQDecomp3x3, solve): these are the same calls. The packages are in ..\packages
+         (restored once with internet). -->
+    <PackageReference Include="OpenCvSharp4" Version="4.11.0.20250507" />
+    <PackageReference Include="OpenCvSharp4.runtime.win" Version="4.11.0.20250507" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Teal.Library.Contracts">
+      <HintPath>..\References\Beckhoff\Teal.Library.Contracts.dll</HintPath>
+    </Reference>
+    <Reference Include="Teal.Library.Log">
+      <HintPath>..\References\Beckhoff\Teal.Library.Log.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>

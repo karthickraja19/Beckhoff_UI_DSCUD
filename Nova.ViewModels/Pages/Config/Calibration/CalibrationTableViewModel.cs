@@ -1,6 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -47,9 +48,13 @@ namespace Nova.ViewModels.Pages.Calibration
         private bool _loadingRows;
         private bool _revertingStation;
 
-        public CalibrationTableViewModel(CalibrationTable table, ICalibrationService service, IDialogService dialog)
+        private readonly string _title;
+
+        /// <param name="title">What the dialogs call this calibration; the table's own title when null (the 5 axis tab shows two tables under one name).</param>
+        public CalibrationTableViewModel(CalibrationTable table, ICalibrationService service, IDialogService dialog, string title = null)
         {
             _table = table ?? throw new ArgumentNullException(nameof(table));
+            _title = title;
             _service = service ?? throw new ArgumentNullException(nameof(service));
             _dialog = dialog ?? throw new ArgumentNullException(nameof(dialog));
 
@@ -59,10 +64,17 @@ namespace Nova.ViewModels.Pages.Calibration
             _service.StatusChanged += OnStatusChanged;
 
             LoadData();
+            LoadSetup();
             ShowStatus();
         }
 
-        public string Title => _table.Title;
+        public string Title => _title ?? _table.Title;
+
+        /// <summary>The calibration this table belongs to.</summary>
+        public CalibrationKind Kind => _table.Kind;
+
+        /// <summary>What the table is called in its own heading.</summary>
+        public string TableTitle => _table.Title;
 
         public string Icon => _table.Icon;
 
@@ -262,7 +274,10 @@ namespace Nova.ViewModels.Pages.Calibration
             if (!TakeRows(SelectedStation.Number))
                 return;
 
-            if (!_dialog.Confirm("Save the " + Title + " positions and write them to the PLC?", Title))
+            string question = _table.WritesToPlc
+                ? "Save the " + Title + " positions and write them to the PLC?"
+                : "Save the " + Title + " positions?";
+            if (!_dialog.Confirm(question, Title))
                 return;
 
             try
@@ -278,6 +293,13 @@ namespace Nova.ViewModels.Pages.Calibration
 
             IsEditing = false;
             LoadData();
+
+            // The HMI owns these tables (5 axis): the file is all there is to save.
+            if (!_table.WritesToPlc)
+            {
+                _dialog.ShowInfo("Saved.", Title);
+                return;
+            }
 
             if (!_service.CanWrite(_table.Kind))
             {
@@ -302,6 +324,34 @@ namespace Nova.ViewModels.Pages.Calibration
             CancelEdit();
         }
 
+        /// <summary>
+        /// For a tab that saves several tables together: takes the rows on screen into the table
+        /// and says so; false, with the reason shown, when a cell is not a number.
+        /// </summary>
+        public bool CommitEdit()
+        {
+            return SelectedStation == null || TakeRows(SelectedStation.Number);
+        }
+
+        /// <summary>Writes the table's file (after <see cref="CommitEdit"/>). Throws when it cannot be written.</summary>
+        public void WriteFile()
+        {
+            _table.Save(_service);
+        }
+
+        /// <summary>Locks the table again and shows the file as it was saved.</summary>
+        public void FinishEdit()
+        {
+            IsEditing = false;
+            LoadData();
+        }
+
+        /// <summary>Unlocks the table, as Edit does.</summary>
+        public void BeginEdit()
+        {
+            Edit();
+        }
+
         /// <summary>Leaving the tab abandons the edit: relock and reload from the file.</summary>
         public void CancelEdit()
         {
@@ -312,6 +362,80 @@ namespace Nova.ViewModels.Pages.Calibration
             LoadData();
         }
 
+
+        // ==================================================================
+        // 5 axis setup: the plate and the camera image (FiveAxisSettings.json)
+        // ==================================================================
+
+        /// <summary>The setup fields are locked while the calibration runs.</summary>
+        public bool CanEditSetup => !IsBusy;
+
+        /// <summary>True on the 5-Axis tabs: they show the plate spacing and image size to edit.</summary>
+        public bool HasSetup => _table.Kind == CalibrationKind.FiveAxis;
+
+        [ObservableProperty]
+        private string _plateSpacingText = string.Empty;
+
+        [ObservableProperty]
+        private string _imageWidthText = string.Empty;
+
+        [ObservableProperty]
+        private string _imageHeightText = string.Empty;
+
+        private void LoadSetup()
+        {
+            if (!HasSetup)
+                return;
+
+            try
+            {
+                FiveAxisSetup setup = _service.LoadFiveAxisSetup();
+                PlateSpacingText = setup.PlateSpacingMm > 0 ? setup.PlateSpacingMm.ToString(CultureInfo.CurrentCulture) : string.Empty;
+                ImageWidthText = setup.ImageWidth > 0 ? setup.ImageWidth.ToString(CultureInfo.CurrentCulture) : string.Empty;
+                ImageHeightText = setup.ImageHeight > 0 ? setup.ImageHeight.ToString(CultureInfo.CurrentCulture) : string.Empty;
+            }
+            catch (Exception ex)
+            {
+                LoadError = ex.Message;
+            }
+        }
+
+        [RelayCommand]
+        private void SaveSetup()
+        {
+            double spacing;
+            int width, height;
+            if (!TryNumber(PlateSpacingText, out spacing) || spacing <= 0)
+            {
+                _dialog.ShowError("The plate spacing must be a number above 0 (mm).", Title);
+                return;
+            }
+            if (!int.TryParse(ImageWidthText.Trim(), NumberStyles.Integer, CultureInfo.CurrentCulture, out width) || width <= 0
+                || !int.TryParse(ImageHeightText.Trim(), NumberStyles.Integer, CultureInfo.CurrentCulture, out height) || height <= 0)
+            {
+                _dialog.ShowError("The image width and height must be whole numbers above 0 (pixels).", Title);
+                return;
+            }
+
+            try
+            {
+                _service.SaveFiveAxisSetup(new FiveAxisSetup { PlateSpacingMm = spacing, ImageWidth = width, ImageHeight = height });
+            }
+            catch (Exception ex)
+            {
+                _dialog.ShowError("The setup could not be saved: " + ex.Message, Title);
+                return;
+            }
+
+            _dialog.ShowInfo("Setup saved.", Title);
+        }
+
+        private static bool TryNumber(string text, out double value)
+        {
+            text = (text ?? string.Empty).Trim();
+            return double.TryParse(text, NumberStyles.Float, CultureInfo.CurrentCulture, out value)
+                || double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out value);
+        }
 
         // ==================================================================
         // Running the calibration (the PLC's calibration manager)
@@ -329,11 +453,14 @@ namespace Nova.ViewModels.Pages.Calibration
         private bool _isLive;
 
         [ObservableProperty]
-        [NotifyPropertyChangedFor(nameof(CanStart))]
+        [NotifyPropertyChangedFor(nameof(CanStart), nameof(CanEditSetup))]
         private bool _isBusy;
 
         /// <summary>The PLC is there, nothing runs, and the table is saved.</summary>
-        public bool CanStart => _service.CanRun && IsLive && !IsBusy && !IsEditing && SelectedStation != null;
+        public bool CanStart => _service.CanRun(_table.Kind) && IsLive && !IsBusy && !IsEditing && SelectedStation != null;
+
+        /// <summary>The PLC's calibrations are aborted; the 5 axis one, which the HMI runs, is stopped.</summary>
+        public string StopText => _table.Kind == CalibrationKind.FiveAxis ? "Stop" : "Abort";
 
         [RelayCommand]
         private async Task Start()
@@ -351,13 +478,13 @@ namespace Nova.ViewModels.Pages.Calibration
         [RelayCommand]
         private Task Abort()
         {
-            return Send(() => _service.AbortAsync());
+            return Send(() => _service.AbortAsync(_table.Kind));
         }
 
         [RelayCommand]
         private Task Reset()
         {
-            return Send(() => _service.ResetAsync());
+            return Send(() => _service.ResetAsync(_table.Kind));
         }
 
         private async Task Send(Func<Task> command)
@@ -378,6 +505,8 @@ namespace Nova.ViewModels.Pages.Calibration
             if (_following == null)
                 _following = _service.FollowStatus();
 
+            // The other 5-Axis tab may have saved the setup since this one was last shown.
+            LoadSetup();
             ShowStatus();
         }
 
@@ -400,20 +529,22 @@ namespace Nova.ViewModels.Pages.Calibration
 
         private void ShowStatus()
         {
-            if (!_service.CanRun)
+            if (!_service.CanRun(_table.Kind))
             {
                 IsLive = false;
                 IsBusy = false;
                 StatusKind = "Offline";
-                StatusText = _service.CannotRunReason;
+                StatusText = _service.CannotRunReason(_table.Kind);
                 return;
             }
 
             CalibrationStatus status = _service.Status ?? CalibrationStatus.NotLive;
             IsLive = status.IsLive;
-            IsBusy = status.IsLive && status.IsBusy;
 
-            if (!status.IsLive)
+            // A calibration that is under way can still be stopped when the PLC link drops.
+            IsBusy = status.IsBusy;
+
+            if (!status.IsLive && !status.IsBusy)
             {
                 StatusKind = "Offline";
                 StatusText = string.IsNullOrEmpty(status.NotLiveReason) ? "Waiting for the PLC." : status.NotLiveReason;
@@ -421,7 +552,6 @@ namespace Nova.ViewModels.Pages.Calibration
             }
 
             StatusKind = status.IsBusy ? "Running" : status.IsError ? "Error" : status.IsDone ? "Done" : "Idle";
-
             string what = status.Calibration >= 1
                 ? NameOf(status.Calibration) + ", Station " + status.Station + (status.IsBusy ? ", step " + status.Step : string.Empty)
                 : string.Empty;

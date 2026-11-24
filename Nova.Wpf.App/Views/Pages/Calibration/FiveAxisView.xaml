@@ -1,0 +1,186 @@
+<UserControl x:Class="Nova.Wpf.App.Views.Pages.Calibration.FiveAxisView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:loc="clr-namespace:Nova.Wpf.UI.Localization;assembly=Nova.Wpf.UI"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             xmlns:hc="https://handyorg.github.io/handycontrol"
+             xmlns:common="clr-namespace:Nova.Wpf.App.Views.Common"
+             Background="Transparent">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
+
+        <!-- Flat value cell: plain text until Edit mode. DynamicGridHelper looks this
+             key up for every value column and binds IsReadOnly to the grid's DataContext. -->
+        <Style x:Key="ValueCell" TargetType="TextBox">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Height" Value="22"/>
+            <Setter Property="Margin" Value="4,0,4,0"/>
+            <Setter Property="Padding" Value="3,0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+            <Setter Property="FontSize" Value="{DynamicResource Nova.FontSize.Body}"/>
+            <Setter Property="FontFamily" Value="Consolas, Cascadia Mono, monospace"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+            <Setter Property="IsReadOnly" Value="True"/>
+            <Style.Triggers>
+                <Trigger Property="IsReadOnly" Value="False">
+                    <Setter Property="Background" Value="{DynamicResource RegionBrush}"/>
+                    <Setter Property="BorderThickness" Value="1"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <!-- One card: the 5 axis calibration is one sequence over two tables, so it has one
+         Edit / Save, one station box and one Start / Stop. The translation and rotation
+         tables sit side by side under them. -->
+    <Border Style="{StaticResource Nova.Card}" Margin="{DynamicResource Nova.Card.Gap}">
+        <DockPanel>
+            <!-- Title, Edit / Cancel / Save (both tables) -->
+            <Grid DockPanel.Dock="Top" Margin="2,0,2,10">
+                <TextBlock Text="{Binding Title}" Style="{StaticResource Nova.SectionTitle}"/>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Style="{StaticResource Nova.ButtonOutline}"
+                            Command="{Binding EditCommand}" IsEnabled="{Binding CanEdit}">
+                        <StackPanel Orientation="Horizontal">
+                            <iconPacks:PackIconLucide Kind="Pencil" Width="13" Height="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="{loc:Tr Txt_Edit}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource Nova.ButtonOutline}" Margin="8,0,0,0" Content="Cancel"
+                            Command="{Binding CancelCommand}" IsEnabled="{Binding IsEditing}"/>
+                    <Button Style="{StaticResource Nova.ButtonPrimary}" Margin="8,0,0,0"
+                            Command="{Binding SaveCommand}" IsEnabled="{Binding IsEditing}">
+                        <StackPanel Orientation="Horizontal">
+                            <iconPacks:PackIconLucide Kind="Save" Width="13" Height="13" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="{loc:Tr Txt_Save}" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- Station, Taught, and the one Start / Stop / Reset -->
+            <Grid DockPanel.Dock="Top" Margin="2,0,2,10">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="Station" VerticalAlignment="Center" Margin="0,0,8,0"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
+                               FontSize="{DynamicResource Nova.FontSize.Caption}"/>
+                    <ComboBox Width="150" VerticalContentAlignment="Center"
+                              ItemsSource="{Binding Run.Stations}"
+                              SelectedItem="{Binding SelectedStation, Mode=TwoWay}"
+                              DisplayMemberPath="Name"/>
+                    <CheckBox Content="Taught" Margin="16,0,0,0" VerticalAlignment="Center"
+                              IsChecked="{Binding SelectedTaught, Mode=TwoWay}"
+                              IsEnabled="{Binding IsEditing}"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Style="{StaticResource Nova.ButtonSuccess}" Content="Start"
+                            Command="{Binding Run.StartCommand}" IsEnabled="{Binding Run.CanStart}"/>
+                    <Button Style="{StaticResource Nova.ButtonDanger}" Margin="8,0,0,0" Content="{Binding Run.StopText}"
+                            Command="{Binding Run.AbortCommand}" IsEnabled="{Binding Run.IsBusy}"/>
+                    <Button Style="{StaticResource Nova.ButtonOutline}" Margin="8,0,0,0" Content="Reset"
+                            Command="{Binding Run.ResetCommand}" IsEnabled="{Binding Run.IsLive}"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Setup: the plate's dot spacing and the camera image size (Data\Calibration\FiveAxisSettings.json) -->
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="2,0,2,10"
+                        DataContext="{Binding Run}"
+                        IsEnabled="{Binding CanEditSetup}">
+                <TextBlock Text="Setup" VerticalAlignment="Center" Margin="0,0,12,0"
+                           Foreground="{DynamicResource SecondaryTextBrush}"
+                           FontSize="{DynamicResource Nova.FontSize.Caption}"/>
+                <TextBlock Text="Plate spacing (mm)" VerticalAlignment="Center" Margin="0,0,6,0"
+                           Foreground="{DynamicResource SecondaryTextBrush}"
+                           FontSize="{DynamicResource Nova.FontSize.Caption}"/>
+                <TextBox Width="80" VerticalContentAlignment="Center" Text="{Binding PlateSpacingText, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBlock Text="Image width (px)" VerticalAlignment="Center" Margin="16,0,6,0"
+                           Foreground="{DynamicResource SecondaryTextBrush}"
+                           FontSize="{DynamicResource Nova.FontSize.Caption}"/>
+                <TextBox Width="80" VerticalContentAlignment="Center" Text="{Binding ImageWidthText, UpdateSourceTrigger=PropertyChanged}"/>
+                <TextBlock Text="Image height (px)" VerticalAlignment="Center" Margin="16,0,6,0"
+                           Foreground="{DynamicResource SecondaryTextBrush}"
+                           FontSize="{DynamicResource Nova.FontSize.Caption}"/>
+                <TextBox Width="80" VerticalContentAlignment="Center" Text="{Binding ImageHeightText, UpdateSourceTrigger=PropertyChanged}"/>
+                <Button Style="{StaticResource Nova.ButtonOutline}" Margin="16,0,0,0" Content="Save setup"
+                        Command="{Binding SaveSetupCommand}"/>
+            </StackPanel>
+
+            <!-- What the calibration reports -->
+            <TextBlock DockPanel.Dock="Bottom" Margin="2,10,2,0" TextWrapping="Wrap"
+                       FontSize="{DynamicResource Nova.FontSize.Caption}"
+                       DataContext="{Binding Run}"
+                       Text="{Binding StatusText}">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding StatusKind}" Value="Running">
+                                <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding StatusKind}" Value="Done">
+                                <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding StatusKind}" Value="Error">
+                                <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+
+            <!-- A file could not be read -->
+            <TextBlock DockPanel.Dock="Top" Margin="2,0,2,10" TextWrapping="Wrap"
+                       Foreground="{DynamicResource DangerBrush}"
+                       Text="{Binding Translation.LoadError}"
+                       Visibility="{Binding Translation.HasLoadError, Converter={StaticResource BoolToVisibility}}"/>
+            <TextBlock DockPanel.Dock="Top" Margin="2,0,2,10" TextWrapping="Wrap"
+                       Foreground="{DynamicResource DangerBrush}"
+                       Text="{Binding Rotation.LoadError}"
+                       Visibility="{Binding Rotation.HasLoadError, Converter={StaticResource BoolToVisibility}}"/>
+
+            <!-- Translation (point1..9) and rotation (point10..34) -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="3*"/>
+                </Grid.ColumnDefinitions>
+
+                <DockPanel Grid.Column="0">
+                    <TextBlock DockPanel.Dock="Top" Margin="2,0,2,6" Text="Translation (point1 - point9)"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
+                               FontSize="{DynamicResource Nova.FontSize.Caption}"/>
+                    <DataGrid DataContext="{Binding Translation}"
+                              Style="{StaticResource Nova.DataGrid}"
+                              CanUserSortColumns="False"
+                              AutoGenerateColumns="False"
+                              ItemsSource="{Binding Rows}"
+                              SelectedItem="{Binding SelectedRow, Mode=TwoWay}"
+                              common:DynamicGridHelper.ColumnsSource="{Binding Columns}"
+                              hc:DataGridAttach.CanUnselectAllWithBlankArea="True"/>
+                </DockPanel>
+
+                <DockPanel Grid.Column="2">
+                    <TextBlock DockPanel.Dock="Top" Margin="2,0,2,6" Text="Rotation (point10 - point34)"
+                               Foreground="{DynamicResource SecondaryTextBrush}"
+                               FontSize="{DynamicResource Nova.FontSize.Caption}"/>
+                    <DataGrid DataContext="{Binding Rotation}"
+                              Style="{StaticResource Nova.DataGrid}"
+                              CanUserSortColumns="False"
+                              AutoGenerateColumns="False"
+                              ItemsSource="{Binding Rows}"
+                              SelectedItem="{Binding SelectedRow, Mode=TwoWay}"
+                              common:DynamicGridHelper.ColumnsSource="{Binding Columns}"
+                              hc:DataGridAttach.CanUnselectAllWithBlankArea="True"/>
+                </DockPanel>
+            </Grid>
+        </DockPanel>
+    </Border>
+</UserControl>

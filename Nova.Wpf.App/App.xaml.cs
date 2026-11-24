@@ -778,12 +778,18 @@ namespace Nova.Wpf.App
 
             // The Config page's Calibration section: the HMI keeps the taught positions of every
             // calibration (Data\Calibration\*.json) and writes them into the PLC's teach tables;
-            // the PLC's calibration manager runs each calibration on Start.
-            services.AddSingleton<ICalibrationService>(new TwincatCalibrationService(
+            // the PLC's calibration manager runs each calibration on Start - except the 5 axis
+            // calibration, which the HMI runs itself (Master.Sequences\FiveAxisCalibration) on the
+            // machine's servo and CNC axes, with its own Start / Pause / Resume / Stop.
+            services.AddSingleton(sp => new TwincatCalibrationService(
                 plc,
                 subscriptions,
                 plcMap.Calibration,
-                dataDirectory));
+                dataDirectory,
+                sp.GetRequiredService<IAxisService>(),
+                sp.GetRequiredService<ICncAxisProvider>(),
+                plcMap.Cnc));
+            services.AddSingleton<ICalibrationService>(sp => sp.GetRequiredService<TwincatCalibrationService>());
 
             // Calibration > Static & Dynamic: the PLC's Static_Seq / Dynamic_Seq (GVL_StaticDynamic). The
             // HMI picks the mode, camera and iteration count and presses Start / End / Stop.
@@ -1517,6 +1523,9 @@ namespace Nova.Wpf.App
                 foreach (var stepper in stepperService.GetAllSteppers().OfType<TwincatStepperAdapter>())
                     stepper.StopOnExit();
             }
+
+            // A 5 axis calibration under way is stopped, its axes halted, before the PLC link goes.
+            _serviceProvider.GetService<TwincatCalibrationService>()?.StopOnExit();
 
             // The machine is not left in manual mode by an HMI closed on the Manual tab.
             _serviceProvider.GetService<TwincatMachineOrchestrator>()?.ReleaseManualModeOnExit();

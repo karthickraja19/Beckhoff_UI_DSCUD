@@ -1,0 +1,35 @@
+{
+  "VisionIp": "127.0.0.1",
+  "VisionPort": 8000,
+  "VisionTerminator": "",
+  "VisionTimeoutMs": 15000,
+  "VisionRetries": 2,
+
+  "PlateSpacingMm": 0,
+  "ImageWidth": 0,
+  "ImageHeight": 0,
+
+  "Z0": null,
+  "A0": null,
+  "C0": null,
+
+  "CncMode": "MDI",
+  "AutoProgramFile": "",
+
+  "FeedMmPerMin": 1000,
+  "SettleMs": 500,
+  "MoveTimeoutMs": 60000,
+  "InPositionTolerance": 0.05,
+
+  "AxisX": "X1",
+  "AxisY": "Y1",
+  "AxisZ": "Z1",
+  "AxisA": "A",
+  "AxisC": "R",
+
+  "GCodeX": "X1",
+  "GCodeY": "Y1",
+  "GCodeZ": "Z1",
+  "GCodeA": "B1",
+  "GCodeC": "C1"
+}

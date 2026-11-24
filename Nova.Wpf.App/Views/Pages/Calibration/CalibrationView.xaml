@@ -33,6 +33,9 @@
                 <DataTemplate DataType="{x:Type calibrationVm:CalibrationTableViewModel}">
                     <local:CalibrationTableView/>
                 </DataTemplate>
+                <DataTemplate DataType="{x:Type calibrationVm:FiveAxisViewModel}">
+                    <local:FiveAxisView/>
+                </DataTemplate>
                 <DataTemplate DataType="{x:Type calibrationVm:CalibrationDeviceViewModel}">
                     <local:CalibrationDeviceView/>
                 </DataTemplate>

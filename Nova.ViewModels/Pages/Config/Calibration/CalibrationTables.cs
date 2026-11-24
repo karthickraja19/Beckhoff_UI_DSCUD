@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -25,6 +25,9 @@ namespace Nova.ViewModels.Pages.Calibration
         /// station box picks which; false when every station is a row of the one table.
         /// </summary>
         public abstract bool OneTablePerStation { get; }
+
+        /// <summary>False for a calibration the HMI owns and runs itself (5 axis): its tables are saved to the file only, not written to the PLC.</summary>
+        public virtual bool WritesToPlc => true;
 
         public abstract IReadOnlyList<DynamicColumnSchema> Columns { get; }
 
@@ -191,19 +194,86 @@ namespace Nova.ViewModels.Pages.Calibration
         }
     }
 
-    /// <summary>5 axis calibration: per station, a row per taught angle (A-0 .. A-20, C-0 .. C-20) with A, C, X, Y, Z.</summary>
-    public sealed class FiveAxisTable : CalibrationTable
+    /// <summary>
+    /// 5 axis calibration, translation table: per station (1 and 2), point1 .. point9 with the
+    /// X / Y to move to. The rotation table is <see cref="FiveAxisRotationTable"/>.
+    /// </summary>
+    public sealed class FiveAxisTranslationTable : CalibrationTable
     {
-        private List<FiveAxisTeach> _stations = new List<FiveAxisTeach>();
+        private List<FiveAxisTranslation> _stations = new List<FiveAxisTranslation>();
 
-        public override string Title => "5-Axis Calibration";
+        public override string Title => "5-Axis Translation";
         public override string Icon => "Move";
         public override CalibrationKind Kind => CalibrationKind.FiveAxis;
         public override bool OneTablePerStation => true;
+        public override bool WritesToPlc => false;
 
         public override IReadOnlyList<DynamicColumnSchema> Columns { get; } = new[]
         {
-            NameColumn("Axis Name"),
+            NameColumn("Point"),
+            ValueColumn("X", "X"),
+            ValueColumn("Y", "Y")
+        };
+
+        public override IReadOnlyList<int> Stations => _stations.Select(s => s.Station).ToList();
+
+        public override void Load(ICalibrationService service) => _stations = service.LoadFiveAxisTranslation().ToList();
+
+        public override void Save(ICalibrationService service) => service.SaveFiveAxisTranslation(_stations);
+
+        public override bool GetTaught(int station) => _stations.Any(s => s.Station == station && s.Taught);
+
+        public override void SetTaught(int station, bool taught)
+        {
+            foreach (FiveAxisTranslation s in _stations.Where(s => s.Station == station))
+                s.Taught = taught;
+        }
+
+        public override List<Dictionary<string, string>> Rows(int station)
+        {
+            FiveAxisTranslation teach = _stations.FirstOrDefault(s => s.Station == station);
+            if (teach == null)
+                return new List<Dictionary<string, string>>();
+
+            return teach.Points.Select(p => new Dictionary<string, string>
+            {
+                { NameKey, p.Name },
+                { "X", Text(p.X) },
+                { "Y", Text(p.Y) }
+            }).ToList();
+        }
+
+        public override void Apply(int station, IReadOnlyList<Dictionary<string, string>> rows)
+        {
+            FiveAxisTranslation teach = _stations.FirstOrDefault(s => s.Station == station);
+            if (teach == null)
+                return;
+
+            for (int i = 0; i < teach.Points.Count && i < rows.Count; i++)
+            {
+                teach.Points[i].X = Number(rows[i], "X");
+                teach.Points[i].Y = Number(rows[i], "Y");
+            }
+        }
+    }
+
+    /// <summary>
+    /// 5 axis calibration, rotation table: per station (1 and 2), point10 .. point34 with the
+    /// A / C / X / Y / Z to move to.
+    /// </summary>
+    public sealed class FiveAxisRotationTable : CalibrationTable
+    {
+        private List<FiveAxisRotation> _stations = new List<FiveAxisRotation>();
+
+        public override string Title => "5-Axis Rotation";
+        public override string Icon => "Move";
+        public override CalibrationKind Kind => CalibrationKind.FiveAxis;
+        public override bool OneTablePerStation => true;
+        public override bool WritesToPlc => false;
+
+        public override IReadOnlyList<DynamicColumnSchema> Columns { get; } = new[]
+        {
+            NameColumn("Point"),
             ValueColumn("A", "A"),
             ValueColumn("C", "C"),
             ValueColumn("X", "X"),
@@ -213,21 +283,21 @@ namespace Nova.ViewModels.Pages.Calibration
 
         public override IReadOnlyList<int> Stations => _stations.Select(s => s.Station).ToList();
 
-        public override void Load(ICalibrationService service) => _stations = service.LoadFiveAxis().ToList();
+        public override void Load(ICalibrationService service) => _stations = service.LoadFiveAxisRotation().ToList();
 
-        public override void Save(ICalibrationService service) => service.SaveFiveAxis(_stations);
+        public override void Save(ICalibrationService service) => service.SaveFiveAxisRotation(_stations);
 
         public override bool GetTaught(int station) => _stations.Any(s => s.Station == station && s.Taught);
 
         public override void SetTaught(int station, bool taught)
         {
-            foreach (FiveAxisTeach s in _stations.Where(s => s.Station == station))
+            foreach (FiveAxisRotation s in _stations.Where(s => s.Station == station))
                 s.Taught = taught;
         }
 
         public override List<Dictionary<string, string>> Rows(int station)
         {
-            FiveAxisTeach teach = _stations.FirstOrDefault(s => s.Station == station);
+            FiveAxisRotation teach = _stations.FirstOrDefault(s => s.Station == station);
             if (teach == null)
                 return new List<Dictionary<string, string>>();
 
@@ -244,7 +314,7 @@ namespace Nova.ViewModels.Pages.Calibration
 
         public override void Apply(int station, IReadOnlyList<Dictionary<string, string>> rows)
         {
-            FiveAxisTeach teach = _stations.FirstOrDefault(s => s.Station == station);
+            FiveAxisRotation teach = _stations.FirstOrDefault(s => s.Station == station);
             if (teach == null)
                 return;
 

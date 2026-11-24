@@ -1,10 +1,13 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Master.Sequences;
+using Master.Sequences.FiveAxis;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Nova.Abstractions.Services;
 using Nova.Alarm;
 using Nova.Wpf.App.Services.Twincat.Mapping;
@@ -23,7 +26,6 @@ namespace Nova.Wpf.App.Services.Twincat
     /// follow each other with no padding, and every array indexed by station from 1:
     /// <code>
     /// aNinePoint    : ST_TeachNinePoint     bTaught, rX, rY                              17 bytes
-    /// aFiveAxis     : ST_TeachFiveAxis      bTaught, aPoint[1..n] OF (rA, rC, rX, rY, rZ)  1 + n x 40
     /// aCameraNeedle : ST_TeachCameraNeedle  bTaught, aGlue[1..9] OF (rX, rY), aVision[1..9] 289
     /// aNeedleModule : ST_TeachNeedleModule  bTaught, rX, rY, rZ                           25
     /// </code>
@@ -37,6 +39,11 @@ namespace Nova.Wpf.App.Services.Twincat
     /// edge of Start; Abort and Reset are rising edges too. Each is held TRUE for 200 ms.
     /// Its status is followed with ADS notifications only while the section is on screen;
     /// its message, a STRING, is read once each time one of the followed values changes.
+    ///
+    /// The 5 axis calibration is the exception: the HMI runs it itself
+    /// (Master.Sequences\FiveAxisCalibration): Start starts it, Stop stops it, and it needs
+    /// neither the manager nor its symbols. While it runs, or shows a result that Reset has
+    /// not cleared, <see cref="Status"/> is its status; otherwise the manager's.
     /// </remarks>
     public sealed class TwincatCalibrationService : ICalibrationService
     {
@@ -44,7 +51,6 @@ namespace Nova.Wpf.App.Services.Twincat
 
         private const int Stations = 4;             // GVL_Calibration.MAX_STATIONS: the stations of a file that does not exist yet
         private const int NinePointSize = 1 + 2 * 8;
-        private const int FiveAxisPointSize = 5 * 8;
         private const int CameraNeedlePoints = 9;
         private const int CameraNeedleSize = 1 + 2 * CameraNeedlePoints * 2 * 8;
         private const int NeedleModuleSize = 1 + 3 * 8;
@@ -59,21 +65,35 @@ namespace Nova.Wpf.App.Services.Twincat
         private readonly object _fileGate = new object();
         private readonly object _statusGate = new object();
 
+        private readonly FiveAxisCalibration _fiveAxis;
+        private readonly TwincatFiveAxisMotion _fiveAxisMotion;
+
         private CalibrationStatus _status = CalibrationStatus.NotLive;
         private int _followers;
         private int _refreshQueued;
 
         public TwincatCalibrationService(
-            TwincatPlcConnection plc, PlcSubscriptions subscriptions, CalibrationSymbols map, string dataDirectory)
+            TwincatPlcConnection plc, PlcSubscriptions subscriptions, CalibrationSymbols map, string dataDirectory,
+            IAxisService axes, ICncAxisProvider cncAxes, CncSymbols cnc)
         {
             _plc = plc ?? throw new ArgumentNullException(nameof(plc));
             _subscriptions = subscriptions ?? throw new ArgumentNullException(nameof(subscriptions));
             _manager = (map != null ? map.Manager : null) ?? new CalibrationManagerSymbols();
             _teach = (map != null ? map.Teach : null) ?? new CalibrationTeachSymbols();
             _directory = Path.Combine(dataDirectory ?? string.Empty, Folder);
+            _fiveAxisMotion = new TwincatFiveAxisMotion(plc, cnc);
+            _fiveAxis = new FiveAxisCalibration(axes, cncAxes, _fiveAxisMotion);
+            _fiveAxis.ResultReady += (sender, result) => SaveFiveAxisResult(result);
 
             _subscriptions.ValueChanged += OnValueChanged;
             _subscriptions.LiveChanged += (sender, e) => QueueRefresh();
+            _fiveAxis.Changed += (sender, e) => StatusChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        /// <summary>Stops the 5 axis calibration; the application is closing.</summary>
+        public void StopOnExit()
+        {
+            _fiveAxis.StopAndWait();
         }
 
         // ==================================================================
@@ -95,13 +115,63 @@ namespace Nova.Wpf.App.Services.Twincat
             return Read("NeedleModule.json", s => new NeedleModuleTeach { Station = s }, t => t.Station, (t, s) => t.Station = s);
         }
 
-        public IReadOnlyList<FiveAxisTeach> LoadFiveAxis()
+        // 5 axis: stations 1 and 2 only. Each has a translation table (point1 .. point9: X, Y)
+        // and a rotation table (point10 .. point34: A, C, X, Y, Z), each in its own file so
+        // saving one tab never overwrites the other's values.
+        private const int FiveAxisStations = 2;
+        private const int TranslationRows = 9;
+        private const int RotationRows = 25;
+
+        public IReadOnlyList<FiveAxisTranslation> LoadFiveAxisTranslation()
         {
-            List<FiveAxisTeach> stations = Read("FiveAxis.json", DefaultFiveAxis, t => t.Station, (t, s) => t.Station = s);
-            foreach (FiveAxisTeach station in stations)
-                station.Points = station.Points ?? new List<FiveAxisTeachPoint>();
+            List<FiveAxisTranslation> stations = FiveAxisOnly(
+                Read("FiveAxisTranslation.json", s => new FiveAxisTranslation { Station = s }, t => t.Station, (t, s) => t.Station = s),
+                s => new FiveAxisTranslation { Station = s },
+                t => t.Station);
+
+            foreach (FiveAxisTranslation station in stations)
+                station.Points = Rows(station.Points, TranslationRows, 1, () => new FiveAxisTranslationPoint(), (p, name) => p.Name = name);
 
             return stations;
+        }
+
+        public IReadOnlyList<FiveAxisRotation> LoadFiveAxisRotation()
+        {
+            List<FiveAxisRotation> stations = FiveAxisOnly(
+                Read("FiveAxisRotation.json", s => new FiveAxisRotation { Station = s }, t => t.Station, (t, s) => t.Station = s),
+                s => new FiveAxisRotation { Station = s },
+                t => t.Station);
+
+            foreach (FiveAxisRotation station in stations)
+                station.Points = Rows(station.Points, RotationRows, TranslationRows + 1, () => new FiveAxisRotationPoint(), (p, name) => p.Name = name);
+
+            return stations;
+        }
+
+        /// <summary>Exactly stations 1 and 2, in that order: a station the file lacks is empty, any other is dropped.</summary>
+        private static List<T> FiveAxisOnly<T>(List<T> stored, Func<int, T> empty, Func<T, int> stationOf)
+            where T : class
+        {
+            var result = new List<T>();
+            for (int station = 1; station <= FiveAxisStations; station++)
+                result.Add(stored.FirstOrDefault(t => stationOf(t) == station) ?? empty(station));
+
+            return result;
+        }
+
+        /// <summary>Exactly <paramref name="count"/> rows named point{first} ..; rows the file lacks are zeros, extra rows are dropped.</summary>
+        private static List<T> Rows<T>(List<T> stored, int count, int first, Func<T> create, Action<T, string> setName)
+            where T : class
+        {
+            var rows = new List<T>(count);
+            for (int i = 0; i < count; i++)
+            {
+                T row = stored != null && i < stored.Count && stored[i] != null ? stored[i] : create();
+                setName(row, "point" + (first + i));
+                rows.Add(row);
+            }
+
+            return rows;
         }
 
         public IReadOnlyList<CameraNeedleTeach> LoadCameraNeedle()
@@ -121,9 +191,14 @@ namespace Nova.Wpf.App.Services.Twincat
             Write("NinePoint.json", stations);
         }
 
-        public void SaveFiveAxis(IReadOnlyList<FiveAxisTeach> stations)
+        public void SaveFiveAxisTranslation(IReadOnlyList<FiveAxisTranslation> stations)
         {
-            Write("FiveAxis.json", stations);
+            Write("FiveAxisTranslation.json", stations);
+        }
+
+        public void SaveFiveAxisRotation(IReadOnlyList<FiveAxisRotation> stations)
+        {
+            Write("FiveAxisRotation.json", stations);
         }
 
         public void SaveCameraNeedle(IReadOnlyList<CameraNeedleTeach> stations)
@@ -134,18 +209,6 @@ namespace Nova.Wpf.App.Services.Twincat
         public void SaveNeedleModule(IReadOnlyList<NeedleModuleTeach> stations)
         {
             Write("NeedleModule.json", stations);
-        }
-
-        /// <summary>The sheet's standard sweep: A-0 .. A-20 with C 0, then C-0 .. C-20 with A 0.</summary>
-        private static FiveAxisTeach DefaultFiveAxis(int station)
-        {
-            var teach = new FiveAxisTeach { Station = station };
-            for (int angle = 0; angle <= 20; angle += 5)
-                teach.Points.Add(new FiveAxisTeachPoint { Name = "A-" + angle, A = angle });
-            for (int angle = 0; angle <= 20; angle += 5)
-                teach.Points.Add(new FiveAxisTeachPoint { Name = "C-" + angle, C = angle });
-
-            return teach;
         }
 
         /// <summary>Exactly the nine points the PLC holds, named glue1..glue9 / vision1..vision9 where the file gives no name.</summary>
@@ -258,7 +321,7 @@ namespace Nova.Wpf.App.Services.Twincat
             switch (kind)
             {
                 case CalibrationKind.NinePoint: return _teach.NinePoint;
-                case CalibrationKind.FiveAxis: return _teach.FiveAxis;
+                // 5 axis is not written to the PLC: the HMI owns its tables and runs the sequence.
                 case CalibrationKind.CameraNeedle: return _teach.CameraNeedle;
                 case CalibrationKind.NeedleModule: return _teach.NeedleModule;
                 default: return null;
@@ -313,28 +376,6 @@ namespace Nova.Wpf.App.Services.Twincat
                     }
                     break;
 
-                case CalibrationKind.FiveAxis:
-                    int rows = (recordSize.Value - 1) / FiveAxisPointSize;
-                    if (rows < 1 || recordSize.Value != 1 + rows * FiveAxisPointSize)
-                    {
-                        throw new InvalidOperationException(table + "[1] is " + recordSize.Value
-                            + " bytes in the PLC, which is not bTaught and rows of (rA, rC, rX, rY, rZ). The PLC type and the HMI must be changed together.");
-                    }
-
-                    foreach (FiveAxisTeach s in LoadFiveAxis())
-                    {
-                        if (s.Points.Count > rows)
-                        {
-                            throw new InvalidOperationException("station " + s.Station + " has " + s.Points.Count
-                                + " 5 axis rows; the PLC holds " + rows + ".");
-                        }
-
-                        var values = new List<double>();
-                        foreach (FiveAxisTeachPoint p in s.Points)
-                            values.AddRange(new[] { p.A, p.C, p.X, p.Y, p.Z });
-                        records.Add(Record(s.Station, recordSize.Value, s.Taught, values.ToArray()));
-                    }
-                    break;
             }
 
             if (records.Count == 0)
@@ -430,20 +471,51 @@ namespace Nova.Wpf.App.Services.Twincat
         // The calibration manager
         // ==================================================================
 
-        public bool CanRun => PlcSymbolMap.Has(_manager.Select) && PlcSymbolMap.Has(_manager.Station) && PlcSymbolMap.Has(_manager.Start);
+        private bool ManagerMapped => PlcSymbolMap.Has(_manager.Select) && PlcSymbolMap.Has(_manager.Station) && PlcSymbolMap.Has(_manager.Start);
 
-        public string CannotRunReason => CanRun
-            ? string.Empty
-            : "Calibration.Manager (Select, Station, Start) is blank in Data\\" + PlcSymbolMap.FileName + ": the PLC has no calibration manager.";
+        public bool CanRun(CalibrationKind kind)
+        {
+            return kind == CalibrationKind.FiveAxis ? _fiveAxisMotion.IsAvailable : ManagerMapped;
+        }
+
+        public string CannotRunReason(CalibrationKind kind)
+        {
+            if (kind == CalibrationKind.FiveAxis)
+                return _fiveAxisMotion.UnavailableReason;
+
+            return CanRun(kind)
+                ? string.Empty
+                : "Calibration.Manager (Select, Station, Start) is blank in Data\\" + PlcSymbolMap.FileName + ": the PLC has no calibration manager.";
+        }
 
         public CalibrationStatus Status
         {
             get
             {
+                CalibrationStatus plc;
                 lock (_statusGate)
                 {
-                    return _status;
+                    plc = _status;
                 }
+
+                // The 5 axis calibration's status while it runs, and its result until Reset -
+                // but never over a calibration the PLC is running.
+                bool fiveAxisHasStatus = _fiveAxis.IsRunning || _fiveAxis.Message.Length > 0;
+                if (fiveAxisHasStatus && (_fiveAxis.IsRunning || !(plc.IsLive && plc.IsBusy)))
+                {
+                    return new CalibrationStatus
+                    {
+                        IsLive = _subscriptions.IsLive,
+                        NotLiveReason = _subscriptions.IsLive ? string.Empty : (_subscriptions.NotLiveReason ?? "PLC not connected"),
+                        IsBusy = _fiveAxis.IsRunning,
+                        IsDone = _fiveAxis.IsDone,
+                        IsError = _fiveAxis.IsError,
+                        Calibration = (int)CalibrationKind.FiveAxis,
+                        Message = _fiveAxis.Message
+                    };
+                }
+
+                return plc;
             }
         }
 
@@ -476,25 +548,154 @@ namespace Nova.Wpf.App.Services.Twincat
 
         public Task StartAsync(CalibrationKind kind, int station)
         {
-            if (!CanRun)
-                return Task.FromException(new InvalidOperationException(CannotRunReason));
+            if (!CanRun(kind))
+                return Task.FromException(new InvalidOperationException(CannotRunReason(kind)));
+
+            if (kind == CalibrationKind.FiveAxis)
+                return Task.Run(() => StartFiveAxis(station));
+
+            if (_fiveAxis.IsRunning)
+                return Task.FromException(new InvalidOperationException("The 5 axis calibration is running. Stop it first."));
 
             return Task.Run(() =>
             {
                 RequireLive();
+
+                // The last 5 axis result is old news once the PLC starts one of its own.
+                _fiveAxis.Reset();
+
                 _plc.WriteSymbol(_manager.Select.Trim(), (short)kind);
                 _plc.WriteSymbol(_manager.Station.Trim(), (short)station);
                 Pulse(_manager.Start);
             });
         }
 
-        public Task AbortAsync()
+        /// <summary>Start button of the 5-Axis tab: runs Master.Sequences' FiveAxisCalibration on the station's saved table.</summary>
+        private void StartFiveAxis(int station)
         {
+            RequireLive();
+
+            FiveAxisTranslation translation = LoadFiveAxisTranslation().FirstOrDefault(s => s.Station == station);
+            FiveAxisRotation rotation = LoadFiveAxisRotation().FirstOrDefault(s => s.Station == station);
+            if (translation == null || rotation == null)
+                throw new InvalidOperationException("The 5 axis calibration has stations 1 and 2 only, not " + station + ".");
+
+            _fiveAxis.Settings = LoadFiveAxisSettings();
+            _fiveAxis.Start(new FiveAxisTeach
+            {
+                Station = station,
+                Translation = translation.Points,
+                Rotation = rotation.Points
+            });
+        }
+
+        /// <summary>Data\Calibration\FiveAxisSettings.json: plate pitch, image size, vision address, feed, axis names. Missing = defaults, which Start refuses.</summary>
+        private FiveAxisSettings LoadFiveAxisSettings()
+        {
+            string path = Path.Combine(_directory, "FiveAxisSettings.json");
+            lock (_fileGate)
+            {
+                if (!File.Exists(path))
+                    return new FiveAxisSettings();
+
+                try
+                {
+                    return JsonConvert.DeserializeObject<FiveAxisSettings>(File.ReadAllText(path)) ?? new FiveAxisSettings();
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException(path + " could not be read: " + ex.Message, ex);
+                }
+            }
+        }
+
+        public FiveAxisSetup LoadFiveAxisSetup()
+        {
+            FiveAxisSettings settings = LoadFiveAxisSettings();
+            return new FiveAxisSetup
+            {
+                PlateSpacingMm = settings.PlateSpacingMm,
+                ImageWidth = settings.ImageWidth,
+                ImageHeight = settings.ImageHeight,
+            };
+        }
+
+        /// <summary>Writes the three values into FiveAxisSettings.json; every other setting in the file stays as it is.</summary>
+        public void SaveFiveAxisSetup(FiveAxisSetup setup)
+        {
+            if (setup == null)
+                throw new ArgumentNullException(nameof(setup));
+
+            string path = Path.Combine(_directory, "FiveAxisSettings.json");
+            lock (_fileGate)
+            {
+                JObject json;
+                if (File.Exists(path))
+                {
+                    try
+                    {
+                        json = JObject.Parse(File.ReadAllText(path));
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new InvalidOperationException(path + " could not be read: " + ex.Message, ex);
+                    }
+                }
+                else
+                {
+                    json = JObject.FromObject(new FiveAxisSettings());
+                }
+
+                json["PlateSpacingMm"] = setup.PlateSpacingMm;
+                json["ImageWidth"] = setup.ImageWidth;
+                json["ImageHeight"] = setup.ImageHeight;
+
+                Directory.CreateDirectory(_directory);
+                string temporary = path + ".tmp";
+                File.WriteAllText(temporary, json.ToString(Formatting.Indented));
+                if (File.Exists(path))
+                    File.Delete(path);
+                File.Move(temporary, path);
+            }
+        }
+
+        /// <summary>The finished run's numbers, FiveAxisResult_Station{n}.json: K, D, hand-eye, the seven kinematic values, E per image.</summary>
+        private void SaveFiveAxisResult(FiveAxisResult result)
+        {
+            string path = Path.Combine(_directory, "FiveAxisResult_Station" + result.Station + ".json");
+            string json = JsonConvert.SerializeObject(result, Formatting.Indented);
+
+            lock (_fileGate)
+            {
+                Directory.CreateDirectory(_directory);
+                string temporary = path + ".tmp";
+                File.WriteAllText(temporary, json);
+                if (File.Exists(path))
+                    File.Delete(path);
+                File.Move(temporary, path);
+            }
+
+            Logger.WriteLog(LogType.Info, "FiveAxis", "Result", "Saved " + path + ".", string.Empty);
+        }
+
+        public Task AbortAsync(CalibrationKind kind)
+        {
+            // Stop button: whichever tab asks, a running 5 axis calibration is what gets stopped.
+            if (_fiveAxis.IsRunning)
+                return Task.Run(() => _fiveAxis.Stop());
+
+            if (kind == CalibrationKind.FiveAxis)
+                return Task.CompletedTask;
+
             return PulseAsync(_manager.Abort, "Abort");
         }
 
-        public Task ResetAsync()
+        public Task ResetAsync(CalibrationKind kind)
         {
+            _fiveAxis.Reset();
+            if (kind == CalibrationKind.FiveAxis)
+                return Task.CompletedTask;
+
             return PulseAsync(_manager.Reset, "Reset");
         }
 
@@ -651,3 +852,4 @@ namespace Nova.Wpf.App.Services.Twincat
         }
     }
 }
+

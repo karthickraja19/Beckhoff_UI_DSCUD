@@ -1,0 +1,106 @@
+{
+    "Stations":  [
+                     {
+                         "Station":  1,
+                         "Taught":  false,
+                         "Points":  [
+                                        {
+                                            "Name":  "point1",
+                                            "X":  0,
+                                            "Y":  0
+                                        },
+                                        {
+                                            "Name":  "point2",
+                                            "X":  0,
+                                            "Y":  0
+                                        },
+                                        {
+                                            "Name":  "point3",
+                                            "X":  0,
+                                            "Y":  0
+                                        },
+                                        {
+                                            "Name":  "point4",
+                                            "X":  0,
+                                            "Y":  0
+                                        },
+                                        {
+                                            "Name":  "point5",
+                                            "X":  0,
+                                            "Y":  0
+                                        },
+                                        {
+                                            "Name":  "point6",
+                                            "X":  0,
+                                            "Y":  0
+                                        },
+                                        {
+                                            "Name":  "point7",
+                                            "X":  0,
+                                            "Y":  0
+                                        },
+                                        {
+                                            "Name":  "point8",
+                                            "X":  0,
+                                            "Y":  0
+                                        },
+                                        {
+                                            "Name":  "point9",
+                                            "X":  0,
+                                            "Y":  0
+                                        }
+                                    ]
+                     },
+                     {
+                         "Station":  2,
+                         "Taught":  false,
+                         "Points":  [
+                                        {
+                                            "Name":  "point1",
+                                            "X":  0,
+                                            "Y":  0
+                                        },
+                                        {
+                                            "Name":  "point2",
+                                            "X":  0,
+                                            "Y":  0
+                                        },
+                                        {
+                                            "Name":  "point3",
+                                            "X":  0,
+                                            "Y":  0
+                                        },
+                                        {
+                                            "Name":  "point4",
+                                            "X":  0,
+                                            "Y":  0
+                                        },
+                                        {
+                                            "Name":  "point5",
+                                            "X":  0,
+                                            "Y":  0
+                                        },
+                                        {
+                                            "Name":  "point6",
+                                            "X":  0,
+                                            "Y":  0
+                                        },
+                                        {
+                                            "Name":  "point7",
+                                            "X":  0,
+                                            "Y":  0
+                                        },
+                                        {
+                                            "Name":  "point8",
+                                            "X":  0,
+                                            "Y":  0
+                                        },
+                                        {
+                                            "Name":  "point9",
+                                            "X":  0,
+                                            "Y":  0
+                                        }
+                                    ]
+                     }
+                 ]
+}

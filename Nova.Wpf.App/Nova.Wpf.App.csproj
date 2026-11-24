@@ -54,6 +54,8 @@
     <ProjectReference Include="..\Nova.Hive\Nova.Hive.csproj" />
     <!-- Scheduled housekeeping (Quartz): CSV clean-up, shift status / OEE, database purge. -->
     <ProjectReference Include="..\Master.Scheduler\Master.Scheduler.csproj" />
+    <!-- Sequences the HMI runs itself: the 5 axis calibration. -->
+    <ProjectReference Include="..\Master.Sequences\Master.Sequences.csproj" />
     <ProjectReference Include="..\Master.SharedUtilities\Master.SharedUtilities.csproj" />
   </ItemGroup>
   <ItemGroup>

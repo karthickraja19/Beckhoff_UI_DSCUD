@@ -256,6 +256,26 @@ namespace Nova.Wpf.App.Services.Twincat.Mapping
 
             add("Cnc.AxisEnable", Cnc.AxisEnable);
 
+            // The members the 5 axis calibration's G-code moves use, for each mapped channel.
+            foreach (var channel in Cnc.Channels ?? new Dictionary<string, CncChannelSymbols>())
+            {
+                if (channel.Value == null || channel.Value.PlcChannel < 1)
+                    continue;
+
+                var members = new[]
+                {
+                    new KeyValuePair<string, string>("MdiModeRequest", Cnc.Members.MdiModeRequest),
+                    new KeyValuePair<string, string>("MdiProgram", Cnc.Members.MdiProgram),
+                    new KeyValuePair<string, string>("CycleStart", Cnc.Members.CycleStart),
+                    new KeyValuePair<string, string>("CycleStop", Cnc.Members.CycleStop),
+                    new KeyValuePair<string, string>("MdiModeActive", Cnc.Members.MdiModeActive),
+                    new KeyValuePair<string, string>("CycleRunning", Cnc.Members.CycleRunning),
+                    new KeyValuePair<string, string>("ErrorState", Cnc.Members.ErrorState),
+                };
+                foreach (KeyValuePair<string, string> member in members)
+                    add("Cnc.Members." + member.Key + " (channel " + channel.Key + ")", Cnc.PathOf(channel.Value.PlcChannel, member.Value));
+            }
+
             add("Process.GlueAlertLevel", Process.GlueAlertLevel);
             add("Process.GlueBuzzerMute", Process.GlueBuzzerMute);
             add("Process.PictureDispensingStop", Process.PictureDispensingStop);
@@ -644,7 +664,19 @@ namespace Nova.Wpf.App.Services.Twincat.Mapping
         public string JogInchingValue { get; set; } = string.Empty;     // UDINT, 1 = 0.001 mm
         public string Reset { get; set; } = string.Empty;               // BOOL, rising edge
 
+        // HMI to PLC: the MDI block the 5 axis calibration moves with (Master.Sequences, TwincatFiveAxisMotion)
+        public string MdiModeRequest { get; set; } = string.Empty;      // BOOL, rising edge selects MDI mode
+        public string MdiProgram { get; set; } = string.Empty;          // STRING(299): the G-code block
+        public string CycleStart { get; set; } = string.Empty;          // BOOL, rising edge starts the block
+        public string CycleStop { get; set; } = string.Empty;           // BOOL, rising edge
+
+        // HMI to PLC: Auto mode (FiveAxisSettings.CncMode = "Auto"): the channel runs the .nc program in ProgramPath
+        public string AutoModeRequest { get; set; } = string.Empty;     // BOOL, rising edge selects Auto mode
+        public string ProgramPath { get; set; } = string.Empty;         // STRING(299): the program to run
+
         // PLC to HMI
+        public string AutoModeActive { get; set; } = string.Empty;      // BOOL
+        public string MdiModeActive { get; set; } = string.Empty;       // BOOL
         public string JogModeActive { get; set; } = string.Empty;       // BOOL
         public string ErrorState { get; set; } = string.Empty;          // BOOL
         public string CycleRunning { get; set; } = string.Empty;        // BOOL

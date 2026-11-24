@@ -181,7 +181,7 @@
     // persistent data and answers with SaveDone or SaveError.
     "Teach": {
       "NinePoint": "GVL_CalTeach.aNinePoint",              // ST_TeachNinePoint: bTaught, rX, rY
-      "FiveAxis": "GVL_CalTeach.aFiveAxis",                // ST_TeachFiveAxis: bTaught, aPoint[n] OF (rA, rC, rX, rY, rZ)
+      "FiveAxis": "",                                      // not used: the 5 axis tables are HMI-only (Master.Sequences)
       "CameraNeedle": "GVL_CalTeach.aCameraNeedle",        // ST_TeachCameraNeedle: bTaught, aGlue[1..9], aVision[1..9] OF (rX, rY)
       "NeedleModule": "GVL_CalTeach.aNeedleModule",        // ST_TeachNeedleModule: bTaught, rX, rY, rZ
       "Save": "GVL_CalTeach.bSave",
@@ -282,6 +282,23 @@
       "JogSpeed": "UiToPlc.nJogUserDefinedSpeed",
       "JogInchingValue": "UiToPlc.nJogInchingValue",
       "Reset": "UiToPlc.bReset",
+      // 5 axis calibration (Master.Sequences\FiveAxisCalibration): each pose is one G-code block in MDI mode.
+      // FB_WriteCNCData takes bMDIMode / bCycleStart / bCycleStop on a rising edge into PLCMachineMode[ch].MDI /
+      // .Start / .Stop and copies sMDIProgram (STRING(299)) to .MDIString; PRG_CNCChannelHandler passes those to
+      // HLI3_CNCChannel as bModeMDI / bStateStart / sMDIString (its bCmd* inputs are FALSE on purpose: the in/out
+      // flags are used). NEVER RUN: PLC TODO - confirm the channel runs an MDI block on that Start while the machine
+      // is in MANUAL (the Calibration section holds manual mode), and the axis names in the block
+      // (Data\Calibration\FiveAxisSettings.json: GCodeX .. GCodeC).
+      "MdiModeRequest": "UiToPlc.bMDIMode",
+      "MdiProgram": "UiToPlc.sMDIProgram",
+      "CycleStart": "UiToPlc.bCycleStart",
+      "CycleStop": "UiToPlc.bCycleStop",
+      "MdiModeActive": "PlcToUi.bMDIModeEnabled",
+      // Auto mode alternative (FiveAxisSettings.CncMode = "Auto"): sProgramPath + bAutoMode + bCycleStart, as the PLC's own
+      // Dispensing_Stn_A_Auto runs Seq_NC_Program.nc. NEVER RUN.
+      "AutoModeRequest": "UiToPlc.bAutoMode",
+      "ProgramPath": "UiToPlc.sProgramPath",
+      "AutoModeActive": "PlcToUi.bAutoModeEnabled",
       "JogModeActive": "PlcToUi.bJogModeEnabled",
       "ErrorState": "PlcToUi.bErrorState",
       "CycleRunning": "PlcToUi.bCycleRunning",
