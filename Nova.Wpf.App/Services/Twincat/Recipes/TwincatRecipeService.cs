@@ -532,6 +532,7 @@ namespace Nova.Wpf.App.Services.Twincat
             }
 
             string difference = null;
+            string firstDifference = null;   // logged after the lock, as nothing is logged under it
             int attempt;
             lock (_plc.SyncRoot)
             {
@@ -550,13 +551,16 @@ namespace Nova.Wpf.App.Services.Twincat
                         break;
                     }
 
-                    if (attempt < TableAttempts)
-                    {
-                        Logger.WriteLog(LogType.Error, "PLC", "Recipe",
-                            table.Symbol + " (" + table.Description + ") read back differently from what was just written: "
-                            + difference + ". Writing it again.", string.Empty);
-                    }
+                    if (firstDifference == null)
+                        firstDifference = difference;
                 }
+            }
+
+            if (firstDifference != null)
+            {
+                Logger.WriteLog(LogType.Error, "PLC", "Recipe",
+                    table.Symbol + " (" + table.Description + ") read back differently from what was just written: "
+                    + firstDifference + ". It was written again.", string.Empty);
             }
 
             if (difference != null)
@@ -720,9 +724,29 @@ namespace Nova.Wpf.App.Services.Twincat
             return value.ToString("R", CultureInfo.InvariantCulture);
         }
 
+        /// <summary>
+        /// Queues <see cref="Recheck"/> after <see cref="RecheckDelay"/>. Dropped if the PLC has
+        /// left Run since the write: a table a restart re-initialised is not the PLC changing it,
+        /// and the return to Run writes it again anyway.
+        /// </summary>
         private void ScheduleRecheck(string symbol)
         {
-            Task.Delay(RecheckDelay).ContinueWith(_ => QueueWrite(() => Recheck(symbol)), TaskScheduler.Default);
+            int generation;
+            lock (_sync)
+            {
+                generation = _liveGeneration;
+            }
+
+            Task.Delay(RecheckDelay).ContinueWith(_ =>
+            {
+                lock (_sync)
+                {
+                    if (generation != _liveGeneration || !_subscriptions.IsLive)
+                        return;
+                }
+
+                QueueWrite(() => Recheck(symbol, generation));
+            }, TaskScheduler.Default);
         }
 
         /// <summary>
@@ -730,12 +754,12 @@ namespace Nova.Wpf.App.Services.Twincat
         /// last thing the HMI sent to it. Only logs: a table the PLC changed is not written
         /// again, so the PLC's doing shows in the log instead of being covered up.
         /// </summary>
-        private void Recheck(string symbol)
+        private void Recheck(string symbol, int generation)
         {
             RecipeTable table;
             lock (_sync)
             {
-                if (!_sent.TryGetValue(symbol, out table))
+                if (generation != _liveGeneration || !_subscriptions.IsLive || !_sent.TryGetValue(symbol, out table))
                     return;
             }
 
