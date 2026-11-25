@@ -38,11 +38,26 @@ namespace Nova.Wpf.App.Services.Twincat
     /// rVel, rAcc and rDec are the position's Value, Speed, Acceleration and Deceleration.
     /// The module's gantry is its PlcGantry in Gantry.json; a module without one is not written.
     ///
-    /// bLoaded is cleared first, so a sequence never drives from a half-written recipe, then
-    /// Step and Name go over in one write each, then nPosUsed and nAxisUsed, then bLoaded.
-    /// The rows and axes the table does not use are zeroed, so nothing of a longer recipe
+    /// A table is written whole (<see cref="WriteTable"/>), the same way for a gantry and a
+    /// CNC channel, under the PLC lock: bLoaded is cleared first, so a sequence never drives
+    /// from a half-written recipe, then Step and Name go over in one write each, then nPosUsed
+    /// and nAxisUsed. All four are then read back and compared byte for byte with what was
+    /// sent; only when they match is bLoaded set TRUE. A table that reads back differently is
+    /// written once more, and if it still differs bLoaded is left FALSE and the write fails,
+    /// naming the first cell that differs (Step[row, axis].member, read and sent) and how many
+    /// do. The rows and axes the table does not use are zeroed, so nothing of a longer recipe
     /// written before is left behind. MAX_POS and MAX_AXES are taken from the sizes the PLC
     /// declares Name and Step with, so a bigger PLC table needs no change here.
+    ///
+    /// A few seconds after each successful write the table is read once more and compared
+    /// with the last thing the HMI sent to it (<see cref="Recheck"/>): one read, not a poll.
+    /// A difference, or bLoaded FALSE, is logged as an error - something in the PLC changed
+    /// or re-initialised the table after the HMI wrote it - and the table is not written
+    /// again, so the log shows the PLC's doing rather than hiding it.
+    ///
+    /// Each FB_Recipe belongs to one recipe: a gantry module (PlcGantry) or a CNC channel
+    /// (Cnc.Channels.n.RecipeGantry). A table that two of them map to is never written: they
+    /// would overwrite each other, the last writer winning.
     ///
     /// A robot recipe row (Data\RobotRecipe.json) that names a "PlcMember" goes to that member
     /// of every configured robot, RobotGVL.Robots[Id].{PlcMember} (symbol map: Recipe.Robot,
@@ -57,12 +72,15 @@ namespace Nova.Wpf.App.Services.Twincat
     /// is where the station's sequence reads them from. Row = position; the column of each
     /// axis is its number in the channel (Cnc.AxisIndex). Only rPos carries a value; rVel,
     /// rAcc and rDec are the map's TaughtVelocity, because the PLC takes speed 0 as "not
-    /// taught" and the feed itself is in the CNC program.
+    /// taught" and the feed itself is in the CNC program. So a CNC cell reads
+    /// (position, TaughtVelocity, TaughtVelocity, TaughtVelocity) - 0, 1, 1, 1 for a position
+    /// of 0 - and the columns past the channel's last axis number are zeros.
     ///
     /// The PLC does not keep the recipe over a restart, so every mapped gantry, the robot
     /// values and every mapped CNC channel are written again each time the PLC comes back to
-    /// Run; the Recipe page writes a gantry, the robot values or a CNC channel on Save. The writes are made one at a time, in
-    /// order, on a worker thread.
+    /// Run; one that fails then is tried again twice, 5 s apart, while the PLC stays in Run.
+    /// The Recipe page writes a gantry, the robot values or a CNC channel on Save. The writes
+    /// are made one at a time, in order, on a worker thread.
     /// </remarks>
     public sealed class TwincatRecipeService : IPlcRecipeService
     {
@@ -70,8 +88,16 @@ namespace Nova.Wpf.App.Services.Twincat
         private const int NameLength = 30;                       // STRING(30)
         private const int NameSize = NameLength + 1;             // and its terminating 0
 
+        private const int TableAttempts = 2;                     // a table that reads back differently is written once more
+        private const int StartupAttempts = 3;                   // the writes made when the PLC comes back
+        private static readonly TimeSpan StartupRetryDelay = TimeSpan.FromSeconds(5);
+        private static readonly TimeSpan RecheckDelay = TimeSpan.FromSeconds(3);
+
         /// <summary>The axes in E_Servo order: X_AXIS = 1 ... R_AXIS = 4.</summary>
         private static readonly string[] AxisColumns = { "X", "Y", "Z", "R" };
+
+        /// <summary>ST_AxisMove's members, in order.</summary>
+        private static readonly string[] MoveMembers = { "rPos", "rVel", "rAcc", "rDec" };
 
         private static readonly Encoding PlcText = Encoding.GetEncoding(1252);
 
@@ -92,6 +118,10 @@ namespace Nova.Wpf.App.Services.Twincat
 
         private Task _writes = Task.CompletedTask;   // the PLC writes waiting to be made, in order
         private bool _wasLive;
+        private int _liveGeneration;                 // counts the PLC's returns to Run; a retry from an earlier one is dropped
+
+        /// <summary>The last table written to each FB_Recipe, by its symbol: what <see cref="Recheck"/> compares with.</summary>
+        private readonly Dictionary<string, RecipeTable> _sent = new Dictionary<string, RecipeTable>(StringComparer.OrdinalIgnoreCase);
 
         public TwincatRecipeService(
             TwincatPlcConnection plc, PlcSubscriptions subscriptions, IRecipeService recipes, string recipeSymbol,
@@ -131,7 +161,7 @@ namespace Nova.Wpf.App.Services.Twincat
             if (string.IsNullOrWhiteSpace(moduleName))
                 return Task.FromException(new ArgumentException("Module name is required.", nameof(moduleName)));
 
-            return QueueWrite(() => WriteGantry(moduleName));
+            return QueueWrite(() => WriteTable(GantryTable(moduleName)));
         }
 
         public Task WriteRobotRecipeAsync()
@@ -150,12 +180,24 @@ namespace Nova.Wpf.App.Services.Twincat
             if (string.IsNullOrWhiteSpace(channelName))
                 return Task.FromException(new ArgumentException("Channel name is required.", nameof(channelName)));
 
-            return QueueWrite(() => WriteCnc(CncChannel(channelName)));
+            return QueueWrite(() => WriteTable(CncTable(CncChannel(channelName))));
+        }
+
+        // ==================================================================
+        // When the PLC comes back to Run
+        // ==================================================================
+
+        /// <summary>One recipe written when the PLC comes back, named for the log.</summary>
+        private sealed class RecipeJob
+        {
+            public string Name;
+            public Action Write;
         }
 
         /// <summary>Raised on the ADS or a worker thread: only queues the writes.</summary>
         private void OnLiveChanged(object sender, EventArgs e)
         {
+            int generation;
             lock (_sync)
             {
                 bool live = _subscriptions.IsLive;
@@ -163,63 +205,142 @@ namespace Nova.Wpf.App.Services.Twincat
                 _wasLive = live;
                 if (!cameBack)
                     return;
+
+                generation = ++_liveGeneration;
             }
 
-            QueueWrite(WriteAll);
+            QueueWrite(() => RunJobs(StartupJobs(), generation, 1));
         }
 
-        private void WriteAll()
+        /// <summary>Everything the PLC loses over a restart: every mapped gantry, the robot values, every mapped CNC channel.</summary>
+        private List<RecipeJob> StartupJobs()
         {
+            var jobs = new List<RecipeJob>();
+
             if (IsAvailable)
-                WriteAllGantries();
+            {
+                foreach (string module in _recipes.GetGantryModules())
+                {
+                    if (_recipes.GetGantryModuleDefinition(module).PlcGantry < 1)
+                    {
+                        Logger.WriteLog(LogType.Info, "PLC", "Recipe",
+                            module + " has no PlcGantry in Gantry.json - its recipe is not written to the PLC.", string.Empty);
+                        continue;
+                    }
+
+                    string name = module;
+                    jobs.Add(new RecipeJob { Name = name + " recipe", Write = () => WriteTable(GantryTable(name)) });
+                }
+            }
 
             if (_robotSymbol.Length > 0)
-            {
-                try
-                {
-                    WriteRobotValues();
-                }
-                catch (Exception ex)
-                {
-                    Logger.WriteLog(LogType.Error, "PLC", "Recipe",
-                        "The robot recipe could not be written to the PLC: " + ex.Message, ex.ToString());
-                }
-            }
+                jobs.Add(new RecipeJob { Name = "robot recipe", Write = WriteRobotValues });
 
             if (HasCncRecipes)
-                WriteAllCnc();
-        }
-
-        private void WriteAllGantries()
-        {
-            foreach (string module in _recipes.GetGantryModules())
             {
-                if (_recipes.GetGantryModuleDefinition(module).PlcGantry < 1)
-                {
-                    Logger.WriteLog(LogType.Info, "PLC", "Recipe",
-                        module + " has no PlcGantry in Gantry.json - its recipe is not written to the PLC.", string.Empty);
-                    continue;
-                }
-
+                IReadOnlyList<CncChannelRecipe> channels = null;
                 try
                 {
-                    WriteGantry(module);
+                    channels = _recipes.LoadCncRecipe();
                 }
                 catch (Exception ex)
                 {
                     Logger.WriteLog(LogType.Error, "PLC", "Recipe",
-                        "The " + module + " recipe could not be written to the PLC: " + ex.Message, ex.ToString());
+                        "The CNC recipe could not be read: " + ex.Message, ex.ToString());
+                }
+
+                foreach (CncChannelRecipe channel in channels ?? new CncChannelRecipe[0])
+                {
+                    if (channel.PlcChannel < 1)
+                    {
+                        Logger.WriteLog(LogType.Info, "PLC", "Recipe",
+                            channel.Name + " has no PlcChannel in CncRecipe.json - its positions are not written to the PLC.", string.Empty);
+                        continue;
+                    }
+
+                    string name = channel.Name;
+                    jobs.Add(new RecipeJob { Name = name + " CNC recipe", Write = () => WriteTable(CncTable(CncChannel(name))) });
                 }
             }
+
+            return jobs;
+        }
+
+        /// <summary>
+        /// Runs the jobs, each on its own. Those that fail are tried again after
+        /// <see cref="StartupRetryDelay"/>, up to <see cref="StartupAttempts"/> times in all, as
+        /// long as the PLC is still in the Run it came back to - a later return writes
+        /// everything anyway. Each attempt reads the files again.
+        /// </summary>
+        private void RunJobs(List<RecipeJob> jobs, int generation, int attempt)
+        {
+            var failed = new List<RecipeJob>();
+            foreach (RecipeJob job in jobs)
+            {
+                try
+                {
+                    job.Write();
+                }
+                catch (Exception ex)
+                {
+                    failed.Add(job);
+                    string next = attempt < StartupAttempts
+                        ? " (attempt " + attempt + " of " + StartupAttempts + "; tried again in " + StartupRetryDelay.TotalSeconds + " s)"
+                        : " (attempt " + attempt + " of " + StartupAttempts + "; written again the next time the PLC comes back to Run, or on Save)";
+                    Logger.WriteLog(LogType.Error, "PLC", "Recipe",
+                        "The " + job.Name + " could not be written to the PLC" + next + ": " + ex.Message, ex.ToString());
+                }
+            }
+
+            if (failed.Count == 0 || attempt >= StartupAttempts)
+                return;
+
+            Task.Delay(StartupRetryDelay).ContinueWith(_ =>
+            {
+                lock (_sync)
+                {
+                    if (generation != _liveGeneration || !_subscriptions.IsLive)
+                        return;
+                }
+
+                QueueWrite(() => RunJobs(failed, generation, attempt + 1));
+            }, TaskScheduler.Default);
         }
 
         // ==================================================================
-        // One gantry
+        // A recipe table (FB_Recipe), gantry or CNC
         // ==================================================================
 
-        private void WriteGantry(string moduleName)
+        /// <summary>One FB_Recipe's contents as they are sent, laid out as the PLC lays them out.</summary>
+        private sealed class RecipeTable
         {
-            int gantry = _recipes.GetGantryModuleDefinition(moduleName).PlcGantry;
+            public string Description;          // "the UCLoadingGantry recipe", for the log and errors
+            public int Index;                   // n of Recipe[n]
+            public string Symbol;               // Recipe[n]
+            public int MaxAxes;                 // MAX_AXES, the second dimension of Step
+            public string[] AxisLabels;         // per column, null where unused
+            public List<string> RowNames;       // per row used
+            public byte[] Step;                 // MAX_POS x MAX_AXES x ST_AxisMove
+            public byte[] Names;                // MAX_POS x STRING(30)
+            public short PosUsed;
+            public short AxisUsed;
+
+            public string RowLabel(int row)
+            {
+                return row < RowNames.Count ? "'" + RowNames[row] + "'" : "unused row";
+            }
+
+            public string AxisLabel(int axis)
+            {
+                return axis < AxisLabels.Length && AxisLabels[axis] != null ? AxisLabels[axis] : "unused axis";
+            }
+        }
+
+        /// <summary>The gantry module's recipe table, from Gantry.json and Servos.json as they are now.</summary>
+        private RecipeTable GantryTable(string moduleName)
+        {
+            GantryModuleDefinition definition = _recipes.GetGantryModuleDefinition(moduleName);
+            int gantry = definition.PlcGantry;
             if (gantry < 1)
                 throw new InvalidOperationException(moduleName + " is not mapped to a PLC gantry. Set its \"PlcGantry\" (the PLC's E_Recipe number, 1-8) in Data\\Gantry.json.");
 
@@ -232,7 +353,6 @@ namespace Nova.Wpf.App.Services.Twincat
             ReadTableSize(recipe, out maxPositions, out maxAxes);
 
             // The module's servos (Gantry.json) by their E_Servo column: the axis Type.
-            GantryModuleDefinition definition = _recipes.GetGantryModuleDefinition(moduleName);
             var axisOf = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             foreach (GantryAxisDefinition axis in definition.Axes)
             {
@@ -254,11 +374,14 @@ namespace Nova.Wpf.App.Services.Twincat
             if (axesUsed > maxAxes)
                 throw new InvalidOperationException("the " + moduleName + " recipe has " + axesUsed + " axes; the PLC holds " + maxAxes + " (MAX_AXES).");
 
-            var step = new byte[maxPositions * maxAxes * AxisMoveSize];
-            var names = new byte[maxPositions * NameSize];
+            var table = NewTable("the " + moduleName + " recipe", gantry, recipe, maxPositions, maxAxes, (short)rows.Count, (short)axesUsed);
+            foreach (var axis in axisOf)
+                table.AxisLabels[axis.Value - 1] = AxisColumns[axis.Value - 1] + " " + axis.Key;
+
             for (int row = 0; row < rows.Count; row++)
             {
-                PutName(names, row * NameSize, rows[row].Name);
+                table.RowNames.Add(rows[row].Name);
+                PutName(table.Names, row * NameSize, rows[row].Name);
 
                 foreach (var axis in axisOf)
                 {
@@ -267,25 +390,106 @@ namespace Nova.Wpf.App.Services.Twincat
                         continue;   // the servo has no such position: sent as zeros, not taught
 
                     int offset = (row * maxAxes + (axis.Value - 1)) * AxisMoveSize;   // Step[row, axis], the axis index the faster
-                    PutReal(step, offset, move.Value);
-                    PutReal(step, offset + 8, move.Speed);
-                    PutReal(step, offset + 16, move.Acceleration);
-                    PutReal(step, offset + 24, move.Deceleration);
+                    PutReal(table.Step, offset, move.Value);
+                    PutReal(table.Step, offset + 8, move.Speed);
+                    PutReal(table.Step, offset + 16, move.Acceleration);
+                    PutReal(table.Step, offset + 24, move.Deceleration);
                 }
             }
 
-            lock (_plc.SyncRoot)
+            return table;
+        }
+
+        private CncChannelRecipe CncChannel(string channelName)
+        {
+            CncChannelRecipe channel = _recipes.LoadCncRecipe()
+                .FirstOrDefault(c => string.Equals((c.Name ?? string.Empty).Trim(), channelName.Trim(), StringComparison.OrdinalIgnoreCase));
+            if (channel == null)
+                throw new InvalidOperationException("the CNC recipe has no channel '" + channelName + "'.");
+
+            return channel;
+        }
+
+        /// <summary>The CNC channel's recipe table, from CncRecipe.json and the symbol map.</summary>
+        private RecipeTable CncTable(CncChannelRecipe channel)
+        {
+            CncChannelSymbols map = channel.PlcChannel >= 1 ? _cnc.ChannelMap(channel.PlcChannel) : null;
+            if (map == null || map.RecipeGantry < 1)
             {
-                _plc.WriteSymbol(recipe + ".bLoaded", false);
-                _plc.WriteBytes(recipe + ".Step", step);
-                _plc.WriteBytes(recipe + ".Name", names);
-                _plc.WriteSymbol(recipe + ".nPosUsed", (short)rows.Count);
-                _plc.WriteSymbol(recipe + ".nAxisUsed", (short)axesUsed);
-                _plc.WriteSymbol(recipe + ".bLoaded", true);
+                throw new InvalidOperationException(channel.Name + " has no recipe table in the PLC. Give its \"PlcChannel\" (Data\\CncRecipe.json) "
+                    + "a RecipeGantry under Cnc.Channels in Data\\" + PlcSymbolMap.FileName + ".");
             }
 
-            Logger.WriteLog(LogType.Info, "PLC", "Recipe",
-                "The " + moduleName + " recipe (" + rows.Count + " positions, " + axesUsed + " axes) was written to " + recipe + ".", string.Empty);
+            if (!_plc.IsConnected)
+                throw new InvalidOperationException("the PLC at " + _plc.Address + " is not reachable or not in Run");
+
+            string recipe = _recipeSymbol + "[" + map.RecipeGantry + "]";
+            List<CncPositionRecipe> rows = channel.Positions ?? new List<CncPositionRecipe>();
+            if (rows.Count == 0)
+                throw new InvalidOperationException("the " + channel.Name + " CNC recipe has no positions.");
+
+            // The column of each axis is its number in the channel.
+            var columns = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            foreach (string axis in CncChannelRecipe.AxisNames)
+            {
+                int index;
+                if (_cnc.AxisIndex != null && _cnc.AxisIndex.TryGetValue(axis, out index) && index >= 1)
+                    columns[axis] = index;
+            }
+
+            if (columns.Count == 0)
+                throw new InvalidOperationException("no CNC axis has a number (Cnc.AxisIndex in Data\\" + PlcSymbolMap.FileName + ").");
+
+            int axesUsed = columns.Values.Max();
+            int maxPositions;
+            int maxAxes;
+            ReadTableSize(recipe, out maxPositions, out maxAxes);
+            if (rows.Count > maxPositions)
+                throw new InvalidOperationException("the " + channel.Name + " CNC recipe has " + rows.Count + " positions; the PLC holds " + maxPositions + " (MAX_POS).");
+            if (axesUsed > maxAxes)
+                throw new InvalidOperationException("the CNC axes are numbered up to " + axesUsed + "; the PLC's recipe holds " + maxAxes + " (MAX_AXES).");
+
+            var table = NewTable("the " + channel.Name + " CNC recipe", map.RecipeGantry, recipe, maxPositions, maxAxes, (short)rows.Count, (short)axesUsed);
+            foreach (var column in columns)
+                table.AxisLabels[column.Value - 1] = column.Key;
+
+            double taught = _cnc.TaughtVelocity > 0 ? _cnc.TaughtVelocity : 1.0;
+            for (int row = 0; row < rows.Count; row++)
+            {
+                table.RowNames.Add(rows[row].Name);
+                PutName(table.Names, row * NameSize, rows[row].Name);
+                foreach (var column in columns)
+                {
+                    double value;
+                    if (rows[row].Values == null || !rows[row].Values.TryGetValue(column.Key, out value))
+                        continue;   // sent as zeros: not taught
+
+                    int offset = (row * maxAxes + (column.Value - 1)) * AxisMoveSize;   // Step[row, axis]
+                    PutReal(table.Step, offset, value);
+                    PutReal(table.Step, offset + 8, taught);
+                    PutReal(table.Step, offset + 16, taught);
+                    PutReal(table.Step, offset + 24, taught);
+                }
+            }
+
+            return table;
+        }
+
+        private static RecipeTable NewTable(string description, int index, string symbol, int maxPositions, int maxAxes, short posUsed, short axisUsed)
+        {
+            return new RecipeTable
+            {
+                Description = description,
+                Index = index,
+                Symbol = symbol,
+                MaxAxes = maxAxes,
+                AxisLabels = new string[maxAxes],
+                RowNames = new List<string>(),
+                Step = new byte[maxPositions * maxAxes * AxisMoveSize],
+                Names = new byte[maxPositions * NameSize],
+                PosUsed = posUsed,
+                AxisUsed = axisUsed,
+            };
         }
 
         /// <summary>
@@ -307,6 +511,266 @@ namespace Nova.Wpf.App.Services.Twincat
             {
                 throw new InvalidOperationException(recipe + ".Name (" + nameBytes + " bytes) and .Step (" + stepBytes
                     + " bytes) are not ARRAY OF STRING(30) and ARRAY[pos, axis] OF ST_AxisMove (4 x LREAL).");
+            }
+        }
+
+        /// <summary>
+        /// Writes the table, reads it back and sets bLoaded only when what the PLC holds is what
+        /// was sent; a table that reads back differently is written once more. All under the
+        /// PLC lock, so no other HMI call comes between. Throws, with bLoaded left FALSE, when
+        /// it still differs.
+        /// </summary>
+        private void WriteTable(RecipeTable table)
+        {
+            CheckSoleOwner(table);
+
+            // Until this write has been read back, the table holds nothing the HMI vouches
+            // for: a check queued by an earlier write must not compare with it.
+            lock (_sync)
+            {
+                _sent.Remove(table.Symbol);
+            }
+
+            string difference = null;
+            int attempt;
+            lock (_plc.SyncRoot)
+            {
+                for (attempt = 1; attempt <= TableAttempts; attempt++)
+                {
+                    _plc.WriteSymbol(table.Symbol + ".bLoaded", false);
+                    _plc.WriteBytes(table.Symbol + ".Step", table.Step);
+                    _plc.WriteBytes(table.Symbol + ".Name", table.Names);
+                    _plc.WriteSymbol(table.Symbol + ".nPosUsed", table.PosUsed);
+                    _plc.WriteSymbol(table.Symbol + ".nAxisUsed", table.AxisUsed);
+
+                    difference = Difference(table);
+                    if (difference == null)
+                    {
+                        _plc.WriteSymbol(table.Symbol + ".bLoaded", true);
+                        break;
+                    }
+
+                    if (attempt < TableAttempts)
+                    {
+                        Logger.WriteLog(LogType.Error, "PLC", "Recipe",
+                            table.Symbol + " (" + table.Description + ") read back differently from what was just written: "
+                            + difference + ". Writing it again.", string.Empty);
+                    }
+                }
+            }
+
+            if (difference != null)
+            {
+                throw new InvalidOperationException(table.Symbol + " (" + table.Description + ") read back differently from what was written, "
+                    + TableAttempts + " times: " + difference + ". bLoaded was left FALSE, so the PLC sequences do not drive from it.");
+            }
+
+            lock (_sync)
+            {
+                _sent[table.Symbol] = table;
+            }
+
+            Logger.WriteLog(LogType.Info, "PLC", "Recipe",
+                table.Symbol + " holds " + table.Description + " (" + table.PosUsed + " positions, " + table.AxisUsed + " axes): written and read back unchanged"
+                + (attempt > 1 ? " at the second attempt." : "."), string.Empty);
+
+            ScheduleRecheck(table.Symbol);
+        }
+
+        /// <summary>
+        /// Refuses a table that another recipe maps to as well - a gantry module and a CNC
+        /// channel, or two of either - since each would overwrite the other.
+        /// </summary>
+        private void CheckSoleOwner(RecipeTable table)
+        {
+            var owners = new List<string>();
+            foreach (string module in _recipes.GetGantryModules())
+            {
+                if (_recipes.GetGantryModuleDefinition(module).PlcGantry == table.Index)
+                    owners.Add("gantry module " + module + " (PlcGantry in Data\\Gantry.json)");
+            }
+
+            if (HasCncRecipes)
+            {
+                IReadOnlyList<CncChannelRecipe> channels;
+                try
+                {
+                    channels = _recipes.LoadCncRecipe();
+                }
+                catch (Exception)
+                {
+                    channels = new CncChannelRecipe[0];   // the CNC write itself reports an unreadable file
+                }
+
+                foreach (CncChannelRecipe channel in channels)
+                {
+                    CncChannelSymbols map = channel.PlcChannel >= 1 ? _cnc.ChannelMap(channel.PlcChannel) : null;
+                    if (map != null && map.RecipeGantry == table.Index)
+                        owners.Add("CNC " + channel.Name + " (Cnc.Channels." + channel.PlcChannel + ".RecipeGantry in Data\\" + PlcSymbolMap.FileName + ")");
+                }
+            }
+
+            if (owners.Count > 1)
+            {
+                throw new InvalidOperationException(table.Symbol + " is the recipe table of " + string.Join(" and of ", owners)
+                    + ": they would overwrite each other. Give each its own table.");
+            }
+        }
+
+        /// <summary>
+        /// What the PLC holds against what the table sent, or null when they are the same.
+        /// Names the first Step cell that differs (with its member, read and sent value) and
+        /// how many do, the first Name, and nPosUsed / nAxisUsed.
+        /// </summary>
+        private string Difference(RecipeTable table)
+        {
+            byte[] step = _plc.ReadBytes(table.Symbol + ".Step", table.Step.Length);
+            byte[] names = _plc.ReadBytes(table.Symbol + ".Name", table.Names.Length);
+            long posUsed = Convert.ToInt64(_plc.ReadSymbol(table.Symbol + ".nPosUsed"), CultureInfo.InvariantCulture);
+            long axisUsed = Convert.ToInt64(_plc.ReadSymbol(table.Symbol + ".nAxisUsed"), CultureInfo.InvariantCulture);
+
+            var differences = new List<string>();
+            string stepDifference = StepDifference(table, step);
+            if (stepDifference != null)
+                differences.Add(stepDifference);
+
+            string nameDifference = NameDifference(table, names);
+            if (nameDifference != null)
+                differences.Add(nameDifference);
+
+            if (posUsed != table.PosUsed)
+                differences.Add("nPosUsed reads " + posUsed + ", sent " + table.PosUsed);
+            if (axisUsed != table.AxisUsed)
+                differences.Add("nAxisUsed reads " + axisUsed + ", sent " + table.AxisUsed);
+
+            return differences.Count == 0 ? null : string.Join("; ", differences);
+        }
+
+        private static string StepDifference(RecipeTable table, byte[] read)
+        {
+            int cells = table.Step.Length / AxisMoveSize;
+            int differing = 0;
+            string first = null;
+            for (int cell = 0; cell < cells; cell++)
+            {
+                int offset = cell * AxisMoveSize;
+                if (SameBytes(table.Step, read, offset, AxisMoveSize))
+                    continue;
+
+                differing++;
+                if (first != null)
+                    continue;
+
+                int member = 0;
+                while (member < MoveMembers.Length - 1 && SameBytes(table.Step, read, offset + member * sizeof(double), sizeof(double)))
+                    member++;
+
+                int at = offset + member * sizeof(double);
+                int row = cell / table.MaxAxes;
+                int axis = cell % table.MaxAxes;
+                first = "Step[" + (row + 1) + ", " + (axis + 1) + "]." + MoveMembers[member]
+                    + " (" + table.RowLabel(row) + ", " + table.AxisLabel(axis) + ") reads " + Number(BitConverter.ToDouble(read, at))
+                    + ", sent " + Number(BitConverter.ToDouble(table.Step, at));
+            }
+
+            return differing == 0 ? null : first + " - " + differing + " of " + cells + " Step cells differ";
+        }
+
+        private static string NameDifference(RecipeTable table, byte[] read)
+        {
+            int rows = table.Names.Length / NameSize;
+            int differing = 0;
+            string first = null;
+            for (int row = 0; row < rows; row++)
+            {
+                int offset = row * NameSize;
+                if (SameBytes(table.Names, read, offset, NameSize))
+                    continue;
+
+                differing++;
+                if (first == null)
+                    first = "Name[" + (row + 1) + "] reads '" + Text(read, offset) + "', sent '" + Text(table.Names, offset) + "'";
+            }
+
+            return differing == 0 ? null : first + " - " + differing + " of " + rows + " names differ";
+        }
+
+        private static bool SameBytes(byte[] a, byte[] b, int offset, int count)
+        {
+            for (int i = offset; i < offset + count; i++)
+            {
+                if (a[i] != b[i])
+                    return false;
+            }
+
+            return true;
+        }
+
+        private static string Text(byte[] buffer, int offset)
+        {
+            int length = 0;
+            while (length < NameLength && buffer[offset + length] != 0)
+                length++;
+
+            return PlcText.GetString(buffer, offset, length);
+        }
+
+        private static string Number(double value)
+        {
+            return value.ToString("R", CultureInfo.InvariantCulture);
+        }
+
+        private void ScheduleRecheck(string symbol)
+        {
+            Task.Delay(RecheckDelay).ContinueWith(_ => QueueWrite(() => Recheck(symbol)), TaskScheduler.Default);
+        }
+
+        /// <summary>
+        /// Reads the table once, a few seconds after it was written, and compares it with the
+        /// last thing the HMI sent to it. Only logs: a table the PLC changed is not written
+        /// again, so the PLC's doing shows in the log instead of being covered up.
+        /// </summary>
+        private void Recheck(string symbol)
+        {
+            RecipeTable table;
+            lock (_sync)
+            {
+                if (!_sent.TryGetValue(symbol, out table))
+                    return;
+            }
+
+            try
+            {
+                if (!_plc.IsConnected)
+                    return;   // the PLC writes everything again when it comes back
+
+                string difference;
+                bool loaded;
+                lock (_plc.SyncRoot)
+                {
+                    difference = Difference(table);
+                    loaded = Convert.ToBoolean(_plc.ReadSymbol(symbol + ".bLoaded"), CultureInfo.InvariantCulture);
+                }
+
+                if (!loaded)
+                    difference = (difference == null ? string.Empty : difference + "; ") + "bLoaded is FALSE";
+
+                if (difference == null)
+                {
+                    Logger.WriteLog(LogType.Info, "PLC", "Recipe",
+                        symbol + " (" + table.Description + ") still holds what was written " + RecheckDelay.TotalSeconds + " s after.", string.Empty);
+                    return;
+                }
+
+                Logger.WriteLog(LogType.Error, "PLC", "Recipe",
+                    symbol + " (" + table.Description + ") read back unchanged when it was written, but within " + RecheckDelay.TotalSeconds
+                    + " s the PLC holds something else: " + difference + ". Something in the PLC changes or re-initialises the recipe table; "
+                    + "the HMI did not write it again.", string.Empty);
+            }
+            catch (Exception ex)
+            {
+                Logger.WriteLog(LogType.Error, "PLC", "Recipe",
+                    symbol + " (" + table.Description + ") could not be read back for its check: " + ex.Message, ex.ToString());
             }
         }
 
@@ -471,125 +935,8 @@ namespace Nova.Wpf.App.Services.Twincat
         }
 
         // ==================================================================
-        // The CNC channels
+        // Helpers
         // ==================================================================
-
-        private void WriteAllCnc()
-        {
-            IReadOnlyList<CncChannelRecipe> channels;
-            try
-            {
-                channels = _recipes.LoadCncRecipe();
-            }
-            catch (Exception ex)
-            {
-                Logger.WriteLog(LogType.Error, "PLC", "Recipe",
-                    "The CNC recipe could not be read: " + ex.Message, ex.ToString());
-                return;
-            }
-
-            foreach (CncChannelRecipe channel in channels)
-            {
-                if (channel.PlcChannel < 1)
-                {
-                    Logger.WriteLog(LogType.Info, "PLC", "Recipe",
-                        channel.Name + " has no PlcChannel in CncRecipe.json - its positions are not written to the PLC.", string.Empty);
-                    continue;
-                }
-
-                try
-                {
-                    WriteCnc(channel);
-                }
-                catch (Exception ex)
-                {
-                    Logger.WriteLog(LogType.Error, "PLC", "Recipe",
-                        "The " + channel.Name + " CNC recipe could not be written to the PLC: " + ex.Message, ex.ToString());
-                }
-            }
-        }
-
-        private CncChannelRecipe CncChannel(string channelName)
-        {
-            CncChannelRecipe channel = _recipes.LoadCncRecipe()
-                .FirstOrDefault(c => string.Equals((c.Name ?? string.Empty).Trim(), channelName.Trim(), StringComparison.OrdinalIgnoreCase));
-            if (channel == null)
-                throw new InvalidOperationException("the CNC recipe has no channel '" + channelName + "'.");
-
-            return channel;
-        }
-
-        private void WriteCnc(CncChannelRecipe channel)
-        {
-            CncChannelSymbols map = channel.PlcChannel >= 1 ? _cnc.ChannelMap(channel.PlcChannel) : null;
-            if (map == null || map.RecipeGantry < 1)
-            {
-                throw new InvalidOperationException(channel.Name + " has no recipe table in the PLC. Give its \"PlcChannel\" (Data\\CncRecipe.json) "
-                    + "a RecipeGantry under Cnc.Channels in Data\\" + PlcSymbolMap.FileName + ".");
-            }
-
-            if (!_plc.IsConnected)
-                throw new InvalidOperationException("the PLC at " + _plc.Address + " is not reachable or not in Run");
-
-            string recipe = _recipeSymbol + "[" + map.RecipeGantry + "]";
-            List<CncPositionRecipe> rows = channel.Positions ?? new List<CncPositionRecipe>();
-            if (rows.Count == 0)
-                throw new InvalidOperationException("the " + channel.Name + " CNC recipe has no positions.");
-
-            // The column of each axis is its number in the channel.
-            var columns = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-            foreach (string axis in CncChannelRecipe.AxisNames)
-            {
-                int index;
-                if (_cnc.AxisIndex != null && _cnc.AxisIndex.TryGetValue(axis, out index) && index >= 1)
-                    columns[axis] = index;
-            }
-
-            if (columns.Count == 0)
-                throw new InvalidOperationException("no CNC axis has a number (Cnc.AxisIndex in Data\\" + PlcSymbolMap.FileName + ").");
-
-            int axesUsed = columns.Values.Max();
-            int maxPositions;
-            int maxAxes;
-            ReadTableSize(recipe, out maxPositions, out maxAxes);
-            if (rows.Count > maxPositions)
-                throw new InvalidOperationException("the " + channel.Name + " CNC recipe has " + rows.Count + " positions; the PLC holds " + maxPositions + " (MAX_POS).");
-            if (axesUsed > maxAxes)
-                throw new InvalidOperationException("the CNC axes are numbered up to " + axesUsed + "; the PLC's recipe holds " + maxAxes + " (MAX_AXES).");
-
-            double taught = _cnc.TaughtVelocity > 0 ? _cnc.TaughtVelocity : 1.0;
-            var step = new byte[maxPositions * maxAxes * AxisMoveSize];
-            var names = new byte[maxPositions * NameSize];
-            for (int row = 0; row < rows.Count; row++)
-            {
-                PutName(names, row * NameSize, rows[row].Name);
-                foreach (var column in columns)
-                {
-                    double value;
-                    if (rows[row].Values == null || !rows[row].Values.TryGetValue(column.Key, out value))
-                        continue;   // sent as zeros: not taught
-
-                    int offset = (row * maxAxes + (column.Value - 1)) * AxisMoveSize;   // Step[row, axis]
-                    PutReal(step, offset, value);
-                    PutReal(step, offset + 8, taught);
-                    PutReal(step, offset + 16, taught);
-                    PutReal(step, offset + 24, taught);
-                }
-            }
-
-            lock (_plc.SyncRoot)
-            {
-                _plc.WriteSymbol(recipe + ".bLoaded", false);
-                _plc.WriteBytes(recipe + ".Step", step);
-                _plc.WriteBytes(recipe + ".Name", names);
-                _plc.WriteSymbol(recipe + ".nPosUsed", (short)rows.Count);
-                _plc.WriteSymbol(recipe + ".nAxisUsed", (short)axesUsed);
-                _plc.WriteSymbol(recipe + ".bLoaded", true);
-            }
-
-            Logger.WriteLog(LogType.Info, "PLC", "Recipe",
-                "The " + channel.Name + " CNC recipe (" + rows.Count + " positions) was written to " + recipe + ".", string.Empty);
-        }
 
         private static string Cell(Dictionary<string, string> row, string key)
         {

@@ -234,6 +234,13 @@ Each is marked `PLC TODO` beside its entry in `PlcSymbols.json`.
   `GVL_Inputs.Inputs` / `GVL_Outputs.Outputs` (`E_Input` / `E_Outputs` order), counted
   from the card's `IOFirstIndex`. Config.csv
   lists 208 inputs and 160 outputs; the PLC arrays hold 225 and 188.
+- **Recipe tables.** Every write of a `Recipe[n]` is read back before `bLoaded` is set,
+  and read once more 3 s later. The Running Log's "holds ... written and read back
+  unchanged" and "still holds what was written" lines say the table is as sent; "read back
+  differently" means the ADS write did not land, and "within 3 s the PLC holds something
+  else" means the PLC changed or re-initialised the table after the HMI wrote it - look
+  there for `FB_Recipe` / `FB_RecipeMapping` code that clears `Step` or `bLoaded`. A CNC
+  table's cells read (position, 1, 1, 1) and its columns past axis 7 zeros, by design.
 - **CNC positions.** `Load_Pos` copies `Recipe[4].Step[position, axis]` into V.E.
   variables as `(axis - 1) * 10 + position`, but `Seq_NC_Program.nc` reads `V.E.VALUE[1..3]`
   as three axes of one position. One of the two has to change in the PLC.
