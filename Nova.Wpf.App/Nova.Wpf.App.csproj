@@ -115,7 +115,7 @@
     <!-- Machine profile, recipes and settings, deployed next to the exe as the shipped defaults:
          the app copies each one App.config TealDataDirectory (C:\TEAL\Data) lacks into it at
          startup, and reads and saves only there. -->
-    <None Update="Data\**\*.json;Data\**\*.xml;Data\**\*.csv;Data\**\*.txt" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Data\**\*.json;Data\**\*.xml;Data\**\*.csv;Data\**\*.txt;Data\**\*.xlsx" CopyToOutputDirectory="PreserveNewest" />
     <!-- Same as V3: the recipe and settings JSON the screens edit are re-copied on every build. -->
     <None Update="Data\Settings\*.json;Data\Gantry*.json;Data\RobotRecipe.json;Data\CncRecipe.json" CopyToOutputDirectory="Always" />
     <!-- Except the station profile and the files below: the app only copies a default into

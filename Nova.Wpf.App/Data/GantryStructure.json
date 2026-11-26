@@ -1,0 +1,65 @@
+{
+  "Gantry": [
+    {
+      "Name": "PNPGantry",
+      "Axes": [
+        {
+          "Name": "X_Axis_Gantry_Servo",
+          "Type": "X",
+          "SafePositionPriority": 4
+        },
+        {
+          "Name": "Y_Axis_Gantry_Servo",
+          "Type": "Y",
+          "SafePositionPriority": 3
+        },
+        {
+          "Name": "Suction_Nozzle_1_Z_Axis_Servo",
+          "Type": "Z",
+          "SafePositionPriority": 2
+        },
+        {
+          "Name": "Suction_Nozzle_2_Z_Axis_Servo",
+          "Type": "Z",
+          "SafePositionPriority": 1
+        },
+        {
+          "Name": "Suction_Nozzle_3_Z_Axis_Servo",
+          "Type": "Z",
+          "SafePositionPriority": 1
+        },
+        {
+          "Name": "Suction_Nozzle_4_Z_Axis_Servo",
+          "Type": "Z",
+          "SafePositionPriority": 1
+        }
+      ]
+    },
+    {
+      "Name": "ReInspectionModule",
+      "Axes": [
+        {
+          "Name": "X_Axis_Tray_Lifter_Gantry_Servo",
+          "Type": "X",
+          "SafePositionPriority": 1
+        },
+        {
+          "Name": "CCD3_Y_Axis_Transfer_Module_Servo",
+          "Type": "Y",
+          "SafePositionPriority": 1
+        },
+        {
+          "Name": "Pre_inspection_X_Axis_Servo",
+          "Type": "X",
+          "SafePositionPriority": 1
+        },
+        {
+          "Name": "Pre_inspection_Y_Axis_Servo",
+          "Type": "Y",
+          "SafePositionPriority": 1
+        }
+      ]
+    }
+  ]
+}
+ 

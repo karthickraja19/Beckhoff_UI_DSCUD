@@ -4,8 +4,8 @@ using System.Collections.Generic;
 namespace Nova.Abstractions.Data.Models
 {
     /// <summary>
-    /// A named position of a gantry module, as V3 keeps it: the position taught on each of
-    /// the module's servos (Servos.json ConfiguredPositions with that name).
+    /// A named position of a gantry: a row of its recipe file ({Name}.xlsx or {Name}.csv in
+    /// the data folder), with the move of each of its servos.
     /// </summary>
     public sealed class GantryPosition
     {
@@ -41,7 +41,7 @@ namespace Nova.Abstractions.Data.Models
         /// <summary>The servo's EnumName, which is also its axis ComponentId.</summary>
         public string Name { get; set; } = string.Empty;
 
-        /// <summary>"X", "Y", "Z" or "R".</summary>
+        /// <summary>"X", "Y", "Z" or "R" (Gantry.json); blank when Gantry.json does not give one.</summary>
         public string Type { get; set; } = string.Empty;
 
         public int MovementPriority { get; set; }
@@ -106,7 +106,11 @@ namespace Nova.Abstractions.Data.Models
     {
         public string ModuleName { get; set; } = string.Empty;
 
-        /// <summary>The module's axes as Gantry.json lists them (one per type; the table's column groups in this order).</summary>
+        /// <summary>
+        /// The gantry's axes: the servos its recipe file's column groups name, in that order,
+        /// which is the PLC's axis number (E_Servo) 1, 2, ... Type and priorities come from
+        /// Gantry.json's Axes where it lists the servo; otherwise Type is blank (no jog button).
+        /// </summary>
         public IReadOnlyList<GantryAxisDefinition> Axes { get; set; } = Array.Empty<GantryAxisDefinition>();
 
         /// <summary>The axes' names in the order they move to a position (MovementPriority; 0 last).</summary>

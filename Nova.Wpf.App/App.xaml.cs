@@ -201,6 +201,7 @@ namespace Nova.Wpf.App
                 _serviceProvider.GetRequiredService<AuditResultWatcher>().Start();
                 _serviceProvider.GetRequiredService<PlcUnitDoneWatcher>().Start();
 
+
                 // Slide 39's five-minute idle sign-out for Levels 2 and 3. Started
                 // after the window exists: it watches InputManager, which needs a
                 // running dispatcher.

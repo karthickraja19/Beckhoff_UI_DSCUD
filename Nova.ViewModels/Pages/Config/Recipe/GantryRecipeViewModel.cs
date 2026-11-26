@@ -14,15 +14,15 @@ using Nova.Abstractions.Services;
 namespace Nova.ViewModels.Pages.Recipe
 {
     /// <summary>
-    /// "Gantry" tab of the Recipe screen, working as V3's gantry recipe does. A gantry module
-    /// (Data\Gantry.json) is a set of servos, each with a type (X, Y, Z, R) and the order it
-    /// moves in. The table has a row per position taught on the module's servos (their
-    /// ConfiguredPositions in Data\Servos.json) and a column group per servo - Position,
-    /// Speed, Acc, Dec. Move drives each servo to its own value, in MovementPriority order
-    /// (SafePositionPriority for a "safe" position); Teach takes each servo's live position;
-    /// Save writes the groups back to the servos and then the module's recipe to the PLC
-    /// (IPlcRecipeService). Below the table: single-axis servo motion, a jog pad driving
-    /// the module's X, Y, Z and R servos, and loadcells.
+    /// "Gantry" tab of the Recipe screen. A gantry (Data\Gantry.json: Name, PlcGantry) has its
+    /// recipe in its own file in the data folder, {Name}.xlsx or {Name}.csv: a row per
+    /// position and a column group per servo - Position, Speed, Acc, Dec. Gantry.json's
+    /// optional Axes give a servo its type (X, Y, Z, R: its jog button) and the order it
+    /// moves in. Move drives each servo to its own value, in MovementPriority order
+    /// (SafePositionPriority for a "safe" position; column order where none is given); Teach
+    /// takes each servo's live position; Save writes the file and then the gantry's recipe
+    /// to the PLC (IPlcRecipeService). Below the table: single-axis servo motion, a jog pad
+    /// driving the gantry's X, Y, Z and R servos, and loadcells.
     /// </summary>
     public partial class GantryRecipeViewModel : ObservableObject, Nova.ViewModels.Common.IEditableTab, Nova.ViewModels.Common.IActivatableTab
     {
@@ -276,7 +276,7 @@ namespace Nova.ViewModels.Pages.Recipe
             var doc = _recipeService.LoadGantryRecipeDynamic(module);
             if (doc != null && doc.HasMissingColumnSchema && !string.IsNullOrWhiteSpace(doc.MissingSchemaMessage))
             {
-                _dialogService.ShowWarning(doc.MissingSchemaMessage, "Column Schema Warning");
+                _dialogService.ShowWarning(doc.MissingSchemaMessage, "Recipe file");
             }
 
             bool columnsMatch = doc != null

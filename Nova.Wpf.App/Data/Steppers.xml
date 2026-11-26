@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Steppers>
+	<Stepper MotorName="LiftingStepper0" AxisEnabled="true"  />
+	<Stepper MotorName="LiftingStepper1" AxisEnabled="true"  />
+	<Stepper MotorName="LiftingStepper2" AxisEnabled="true"  />
+	<Stepper MotorName="LiftingStepper3" AxisEnabled="true"  />
+	<Stepper MotorName="LoadingConveyor" AxisEnabled="false"  />
+	<Stepper MotorName="WorkingConveyor" AxisEnabled="false"  />
+	<Stepper MotorName="UnloadingConveyor" AxisEnabled="false"  />
+</Steppers>

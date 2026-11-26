@@ -1,8 +1,32 @@
 {
   "Stations": [
-    { "Station": 1, "Taught": false, "X": 0.0, "Y": 0.0, "Z": 0.0 },
-    { "Station": 2, "Taught": false, "X": 0.0, "Y": 0.0, "Z": 0.0 },
-    { "Station": 3, "Taught": false, "X": 0.0, "Y": 0.0, "Z": 0.0 },
-    { "Station": 4, "Taught": false, "X": 0.0, "Y": 0.0, "Z": 0.0 }
+    {
+      "Station": 1,
+      "Taught": true,
+      "X": 0.0,
+      "Y": 0.0,
+      "Z": 0.0
+    },
+    {
+      "Station": 2,
+      "Taught": false,
+      "X": 56.0,
+      "Y": 0.0,
+      "Z": 0.0
+    },
+    {
+      "Station": 3,
+      "Taught": true,
+      "X": 0.0,
+      "Y": 0.0,
+      "Z": 0.0
+    },
+    {
+      "Station": 4,
+      "Taught": false,
+      "X": 0.0,
+      "Y": 0.0,
+      "Z": 0.0
+    }
   ]
 }

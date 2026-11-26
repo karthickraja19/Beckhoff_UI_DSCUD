@@ -1,0 +1,22 @@
+{
+  "Title": "AE Limits (Production)",
+  "PropertyValidation": [
+    { "Key": "SerialNo", "Title": "S.NO", "IsReadOnly": true, "IsIdentifier": true, "DataType": "Text", "ValidationEnabled": true },
+    { "Key": "Parameter", "Title": "PARAMETER", "IsReadOnly": true, "IsIdentifier": false, "DataType": "Text", "ValidationEnabled": true },
+    { "Key": "Min", "Title": "MINIMUM LIMIT", "IsReadOnly": false, "IsIdentifier": false, "DataType": "Numeric", "ValidationEnabled": true },
+    { "Key": "Max", "Title": "MAXIMUM LIMIT", "IsReadOnly": false, "IsIdentifier": false, "DataType": "Numeric", "ValidationEnabled": true },
+    { "Key": "Unit", "Title": "UNIT", "IsReadOnly": false, "IsIdentifier": false, "DataType": "Text", "ValidationEnabled": true }
+  ],
+  "Properties": [
+    { "SerialNo": "1", "Parameter": "Active_Energy_cummulative", "Min": "-0.50", "Max": "1.20", "Unit": "mm" },
+    { "SerialNo": "2", "Parameter": "Active_energy_current_unit", "Min": "0.00", "Max": "50.00", "Unit": "N" },
+    { "SerialNo": "3", "Parameter": "Angle_sp_weight_I", "Min": "-10.00", "Max": "10.00", "Unit": "deg" },
+    { "SerialNo": "4", "Parameter": "Angle_sp_weight_P", "Min": "0.00", "Max": "100.00", "Unit": "%" },
+    { "SerialNo": "5", "Parameter": "Arm_Length", "Min": "0.00", "Max": "350.00", "Unit": "mm" },
+    { "SerialNo": "6", "Parameter": "Displacement_Limit", "Min": "-1.50", "Max": "2.50", "Unit": "mm" },
+    { "SerialNo": "7", "Parameter": "Peak_Force_Limit", "Min": "5.00", "Max": "25.00", "Unit": "N" }
+  ],
+  "Groups": [],
+  "RecipeValidation": [],
+  "Recipe": []
+}

@@ -1,4 +1,4 @@
-[
+﻿[
   {
     "Site": "ITKS",
     "Project": "H37",
@@ -9,7 +9,7 @@
     "SoftwareType": "Main",
     "CardUid": "123456",
     "Function": "Apple AME",
-    "Organization": "Apple"
+    "Organization": 3
   },
   {
     "Site": "ITKS",
@@ -21,7 +21,7 @@
     "SoftwareType": "Main",
     "CardUid": "123",
     "Function": "ICT DFx",
-    "Organization": "CM"
+    "Organization": 2
   },
   {
     "Site": "ITKS",
@@ -33,7 +33,7 @@
     "SoftwareType": "Main",
     "CardUid": "1001",
     "Function": "Production",
-    "Organization": "CM"
+    "Organization": 2
   },
   {
     "Site": "ITKS",
@@ -45,7 +45,7 @@
     "SoftwareType": "Main",
     "CardUid": "3001",
     "Function": "SI Commissioning",
-    "Organization": "SI"
+    "Organization": 1
   },
   {
     "Site": "ITKS",
@@ -57,7 +57,7 @@
     "SoftwareType": "Main",
     "CardUid": "3002",
     "Function": "ICT DFx",
-    "Organization": "CM"
+    "Organization": 2
   },
   {
     "Site": "ITKS",
@@ -69,7 +69,18 @@
     "SoftwareType": "Main",
     "CardUid": "0067026379",
     "Function": "ICT DFx",
-    "Organization": "CM"
+    "Organization": 2
+  },
+  {
+    "Site": "ITKS",
+    "Project": "H37",
+    "StationId": "FT200",
+    "TerminalName": "ITKS_E03-4FT-01B_1_STATION59",
+    "Name": "muthu",
+    "AccessLevel": 3,
+    "SoftwareType": "Main",
+    "CardUid": "4027526925",
+    "Function": "ICT DFx",
+    "Organization": 2
   }
-
 ]

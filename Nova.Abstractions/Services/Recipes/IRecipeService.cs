@@ -13,8 +13,9 @@ namespace Nova.Abstractions.Services
         IReadOnlyDictionary<string, double> GetAxisSpeedLimits();
 
         /// <summary>
-        /// A module's positions, as V3 builds them: every position name taught on any of its
-        /// servos (Servos.json ConfiguredPositions), in first-seen order, with each servo's move.
+        /// A gantry's positions, from its recipe file in the data folder ({Name}.xlsx, or
+        /// {Name}.csv): one per row in the file's order, with each servo's move. Throws when
+        /// the gantry has no readable file.
         /// </summary>
         IReadOnlyList<GantryPosition> LoadGantryPositions(string moduleName);
 
@@ -26,7 +27,7 @@ namespace Nova.Abstractions.Services
         IReadOnlyList<RobotPointRecord> LoadRobotRecipe();
         DynamicTableDocument LoadRobotRecipeDynamic();
 
-        /// <summary>Writes the table back into the servos' ConfiguredPositions in Servos.json.</summary>
+        /// <summary>Writes the table back into the gantry's recipe file ({Name}.xlsx or {Name}.csv).</summary>
         RecipeSaveResult SaveGantryRecipeDynamic(string moduleName, DynamicTableDocument document);
         RecipeSaveResult SaveRobotRecipe(IReadOnlyList<RobotPointRecord> rows);
         RecipeSaveResult SaveRobotRecipeDynamic(DynamicTableDocument document);

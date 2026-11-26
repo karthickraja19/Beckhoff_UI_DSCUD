@@ -1,0 +1,30 @@
+﻿[
+  {
+    "Id": "0",
+    "Name": "Green_1",
+    "ColourCode": "Green",
+    "Colour": "Green_1",
+    "Value": "800"
+  },
+  {
+    "Id": "1",
+    "Name": "Green_2",
+    "ColourCode": "Green",
+    "Colour": "Green_2",
+    "Value": "800"
+  },
+  {
+    "Id": "2",
+    "Name": "Green_3",
+    "ColourCode": "Green",
+    "Colour": "Green_3",
+    "Value": "800"
+  },
+  {
+    "Id": "3",
+    "Name": "Green_4",
+    "ColourCode": "Green",
+    "Colour": "Green_4",
+    "Value": "800"
+  }
+]

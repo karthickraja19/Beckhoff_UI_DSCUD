@@ -234,6 +234,28 @@ Each is marked `PLC TODO` beside its entry in `PlcSymbols.json`.
   `GVL_Inputs.Inputs` / `GVL_Outputs.Outputs` (`E_Input` / `E_Outputs` order), counted
   from the card's `IOFirstIndex`. Config.csv
   lists 208 inputs and 160 outputs; the PLC arrays hold 225 and 188.
+- **Recipe tables.** Every write of a `Recipe[n]` is read back before `bLoaded` is set,
+  and read once more 3 s later. The Running Log's "holds ... written and read back
+  unchanged" and "still holds what was written" lines say the table is as sent; "read back
+  differently" means the ADS write did not land, and "within 3 s the PLC holds something
+  else" means the PLC changed or re-initialised the table after the HMI wrote it - look
+  there for `FB_Recipe` / `FB_RecipeMapping` code that clears `Step` or `bLoaded`. A CNC
+  table's cells read (position, 1, 1, 1) and its columns past axis 7 zeros, by design.
+- **Gantry recipe layout.** A gantry's recipe is `{Name}.xlsx` (or `{Name}.csv`) in the
+  data folder, `Name` and `PlcGantry` from `Gantry.json`: row 1 a servo name over each
+  group of four columns (Value, Speed, Acceleration, Deceleration), the positions from
+  row 3. It goes over as `FB_Recipe`'s comment says: row = position, numbered as
+  `E_Servo_Pos_Loading` / `E_Servo_Pos_Unloading` (`Safe_Pos` = 1, `Pick_Pos` = 2,
+  `Place_Pos_Station_1` = 3, `Place_Pos_Station_2` = 4), column = axis, numbered as
+  `E_Servo` (X = 1, Z = 2 on every gantry). Position p of the file's axis a is
+  `Step[p, a]`, `Name[p]` the position, `nPosUsed` = positions, `nAxisUsed` = axes, every
+  other cell zero. The file's column groups must therefore be in `E_Servo` order and its
+  rows in `E_Servo_Pos_*` order. A servo named in two gantries' files is refused. Speed 0
+  is "not taught": `FUN_AuxServoMoveToPos` then waits for ever, with no alarm. PLC TODO
+  (`DSCUD_Twincat\DSCUD3_1`, 2026-11-26): the enums are now one row per position, but
+  `Loading_Gantry_Auto` / `Unloading_Gantry_Auto` still name the old members
+  (`Z_Axis_Safe_Pos`, `X_Axis_Pick_Pos`, `X_Axis_NG_Place_Pos` ...), so the project does
+  not build until they use `Safe_Pos`, `Pick_Pos`, `Place_Pos_Station_1/2`.
 - **CNC positions.** `Load_Pos` copies `Recipe[4].Step[position, axis]` into V.E.
   variables as `(axis - 1) * 10 + position`, but `Seq_NC_Program.nc` reads `V.E.VALUE[1..3]`
   as three axes of one position. One of the two has to change in the PLC.

@@ -1,0 +1,18 @@
+﻿[
+  {
+    "Name": "COM5",
+    "BaudRate": "9600",
+    "DataBits": "8",
+    "Parity": "Odd",
+    "StopBits": "One",
+    "Handshake": "None"
+  },
+  {
+    "Name": "COM7",
+    "BaudRate": "9600",
+    "DataBits": "8",
+    "Parity": "None",
+    "StopBits": "One",
+    "Handshake": "None"
+  }
+]

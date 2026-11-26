@@ -1,0 +1,62 @@
+﻿[
+  {
+    "Colour": "White",
+    "OptId": "1",
+    "CameraId": "A"
+  },
+  {
+    "Colour": "Black",
+    "OptId": "2",
+    "CameraId": "A"
+  },
+  {
+    "Colour": "Green",
+    "OptId": "3",
+    "CameraId": "A"
+  },
+  {
+    "Colour": "White",
+    "OptId": "43434",
+    "CameraId": "A"
+  },
+  {
+    "Colour": "Black",
+    "OptId": "5",
+    "CameraId": "A"
+  },
+  {
+    "Colour": "Green",
+    "OptId": "6",
+    "CameraId": "A"
+  },
+  {
+    "Colour": "White",
+    "OptId": "7",
+    "CameraId": "A"
+  },
+  {
+    "Colour": "Black",
+    "OptId": "8",
+    "CameraId": "A"
+  },
+  {
+    "Colour": "Green",
+    "OptId": "9",
+    "CameraId": "A"
+  },
+  {
+    "Colour": "White",
+    "OptId": "10",
+    "CameraId": "A"
+  },
+  {
+    "Colour": "White",
+    "OptId": "11",
+    "CameraId": "A"
+  },
+  {
+    "Colour": "Black",
+    "OptId": "12",
+    "CameraId": "A"
+  }
+]

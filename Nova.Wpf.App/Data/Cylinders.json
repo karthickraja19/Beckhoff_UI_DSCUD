@@ -1,99 +1,8 @@
 [
   {
-    "EnumName": "TC_UC_Ent_Stopper_Cyl",
-    "Name": "Transfer Conveyor UC Entry Stopper Cylinder",
-    "Id": 1,
-    "ExtendOutput": "TC_UC_Ent_Stop_Up",
-    "RetractOutput": "TC_UC_Ent_Stop_Dn",
-    "ExtendSenses": [
-      "TC_UC_Ent_Stop_Up"
-    ],
-    "RetractSenses": [
-      "TC_UC_Ent_Stop_Dn"
-    ]
-  },
-  {
-    "EnumName": "TC_UC_Scan_Stopper_Cyl",
-    "Name": "Transfer Conveyor UC Scanning Stopper Cylinder",
-    "Id": 2,
-    "ExtendOutput": "TC_UC_Scan_Stop_Up",
-    "RetractOutput": "TC_UC_Scan_Stop_Dn",
-    "ExtendSenses": [
-      "TC_UC_Scan_Stop_Up"
-    ],
-    "RetractSenses": [
-      "TC_UC_Scan_Stop_Dn"
-    ]
-  },
-  {
-    "EnumName": "TC_UC_Ld_Stopper_Cyl",
-    "Name": "Transfer Conveyor UC Loading Stopper Cylinder",
-    "Id": 3,
-    "ExtendOutput": "TC_UC_Ld_Stop_Up",
-    "RetractOutput": "TC_UC_Ld_Stop_Dn",
-    "ExtendSenses": [
-      "TC_UC_Ld_Stop_Up"
-    ],
-    "RetractSenses": [
-      "TC_UC_Ld_Stop_Dn"
-    ]
-  },
-  {
-    "EnumName": "TC_Int_Stopper1_Cyl",
-    "Name": "Transfer Conveyor Intermediate Stopper 1 Cylinder (entry)",
-    "Id": 4,
-    "ExtendOutput": "TC_Int_Stop1_Up",
-    "RetractOutput": "TC_Int_Stop1_Dn",
-    "ExtendSenses": [
-      "TC_Int_Ent_Stop_Up"
-    ],
-    "RetractSenses": [
-      "TC_Int_Ent_Stop_Dn"
-    ]
-  },
-  {
-    "EnumName": "TC_Int_Stopper2_Cyl",
-    "Name": "Transfer Conveyor Intermediate Stopper 2 Cylinder",
-    "Id": 5,
-    "ExtendOutput": "TC_Int_Stop2_Up",
-    "RetractOutput": "TC_Int_Stop2_Dn",
-    "ExtendSenses": [
-      "TC_Int_Stop_Up"
-    ],
-    "RetractSenses": [
-      "TC_Int_Stop_Dn"
-    ]
-  },
-  {
-    "EnumName": "TC_UC_Ld_Lifter_Cyl",
-    "Name": "Transfer Conveyor UC Loading Lifter Cylinder",
-    "Id": 6,
-    "ExtendOutput": "TC_UC_Ld_Lift_Up",
-    "RetractOutput": "TC_UC_Ld_Lift_Dn",
-    "ExtendSenses": [
-      "TC_UC_Ld_Lift_Up"
-    ],
-    "RetractSenses": [
-      "TC_UC_Ld_Lift_Dn"
-    ]
-  },
-  {
-    "EnumName": "TC_UC_Unld_Lifter_Cyl",
-    "Name": "Transfer Conveyor UC Unloading Lifter Cylinder",
-    "Id": 7,
-    "ExtendOutput": "TC_UC_Unld_Lift_Up",
-    "RetractOutput": "TC_UC_Unld_Lift_Dn",
-    "ExtendSenses": [
-      "TC_UC_Unld_Lift_Up"
-    ],
-    "RetractSenses": [
-      "TC_UC_Unld_Lift_Dwn"
-    ]
-  },
-  {
-    "EnumName": "BFC_Stopper1_Cyl",
+    "EnumName": "BFC_Stopper_1",
     "Name": "Backflow Conveyor Stopper 1 Cylinder",
-    "Id": 8,
+    "Id": 1,
     "ExtendOutput": "BFC_Stop1_Up",
     "RetractOutput": "BFC_Stop1_Dn",
     "ExtendSenses": [
@@ -104,9 +13,9 @@
     ]
   },
   {
-    "EnumName": "BFC_Stopper2_Cyl",
+    "EnumName": "BFC_Stopper_2",
     "Name": "Backflow Conveyor Stopper 2 Cylinder",
-    "Id": 9,
+    "Id": 2,
     "ExtendOutput": "BFC_Stop2_Up",
     "RetractOutput": "BFC_Stop2_Dn",
     "ExtendSenses": [
@@ -117,37 +26,130 @@
     ]
   },
   {
-    "EnumName": "UC_Ld_Lifter_Hold_Cyl",
+    "EnumName": "TC_UC_Entry_Stopper",
+    "Name": "Transfer Conveyor UC Entry Stopper Cylinder",
+    "Id": 3,
+    "ExtendOutput": "TC_UC_Ent_Stop_Up",
+    "RetractOutput": "TC_UC_Ent_Stop_Dn",
+    "ExtendSenses": [
+      "TC_UC_Ent_Stop_Up"
+    ],
+    "RetractSenses": [
+      "TC_UC_Ent_Stop_Dn"
+    ]
+  },
+  {
+    "EnumName": "TC_UC_Scanning_Stopper",
+    "Name": "Transfer Conveyor UC Scanning Stopper Cylinder",
+    "Id": 4,
+    "ExtendOutput": "TC_UC_Scan_Stop_Up",
+    "RetractOutput": "TC_UC_Scan_Stop_Dn",
+    "ExtendSenses": [
+      "TC_UC_Scan_Stop_Up"
+    ],
+    "RetractSenses": [
+      "TC_UC_Scan_Stop_Dn"
+    ]
+  },
+  {
+    "EnumName": "TC_UC_Loading_Stopper",
+    "Name": "Transfer Conveyor UC Loading Stopper Cylinder",
+    "Id": 5,
+    "ExtendOutput": "TC_UC_Ld_Stop_Up",
+    "RetractOutput": "TC_UC_Ld_Stop_Dn",
+    "ExtendSenses": [
+      "TC_UC_Ld_Stop_Up"
+    ],
+    "RetractSenses": [
+      "TC_UC_Ld_Stop_Dn"
+    ]
+  },
+  {
+    "EnumName": "TC_Intermediate_Stopper_1",
+    "Name": "Transfer Conveyor Intermediate Stopper 1 Cylinder (entry)",
+    "Id": 6,
+    "ExtendOutput": "TC_Int_Stop1_Up",
+    "RetractOutput": "TC_Int_Stop1_Dn",
+    "ExtendSenses": [
+      "TC_Int_Ent_Stop_Up"
+    ],
+    "RetractSenses": [
+      "TC_Int_Ent_Stop_Dn"
+    ]
+  },
+  {
+    "EnumName": "TC_Intermediate_Stopper_2",
+    "Name": "Transfer Conveyor Intermediate Stopper 2 Cylinder",
+    "Id": 7,
+    "ExtendOutput": "TC_Int_Stop2_Up",
+    "RetractOutput": "TC_Int_Stop2_Dn",
+    "ExtendSenses": [
+      "TC_Int_Stop_Up"
+    ],
+    "RetractSenses": [
+      "TC_Int_Stop_Dn"
+    ]
+  },
+  {
+    "EnumName": "TC_UC_Loading_Lifter",
+    "Name": "Transfer Conveyor UC Loading Lifter Cylinder",
+    "Id": 8,
+    "ExtendOutput": "TC_UC_Ld_Lift_Up",
+    "RetractOutput": "TC_UC_Ld_Lift_Dn",
+    "ExtendSenses": [
+      "TC_UC_Ld_Lift_Up"
+    ],
+    "RetractSenses": [
+      "TC_UC_Ld_Lift_Dn"
+    ]
+  },
+  {
+    "EnumName": "TC_UC_Unloading_Lifter",
+    "Name": "Transfer Conveyor UC Unloading Lifter Cylinder",
+    "Id": 9,
+    "ExtendOutput": "TC_UC_Unld_Lift_Up",
+    "RetractOutput": "TC_UC_Unld_Lift_Dn",
+    "ExtendSenses": [
+      "TC_UC_Unld_Lift_Up"
+    ],
+    "RetractSenses": [
+      "TC_UC_Unld_Lift_Dwn"
+    ]
+  },
+
+
+  {
+    "EnumName": "UC_Loading_Lifter_Holding_Cylinder",
     "Name": "UC Loading Lifter Holding Cylinder",
     "Id": 10,
     "ExtendOutput": "UC_Ld_Lift_Hold_Cyl_Fwd",
     "RetractOutput": "UC_Ld_Lift_Hold_Cyl_Rev",
     "ExtendSenses": [
-      "UC_Ld_Lift_Hold_Cyl1_Fwd",
-      "UC_Ld_Lift_Hold_Cyl2_Fwd"
+      "UC_Ld_Lift_Hold_Cyl1_Fwd"
+  
     ],
     "RetractSenses": [
-      "UC_Ld_Lift_Hold_Cyl1_Rev",
-      "UC_Ld_Lift_Hold_Cyl2_Rev"
+      "UC_Ld_Lift_Hold_Cyl1_Rev"
+   
     ]
   },
   {
-    "EnumName": "UC_Unld_Lifter_Hold_Cyl",
+    "EnumName": "UC_Unloading_Lifter_Holding_Cylinder",
     "Name": "UC Unloading Lifter Holding Cylinder",
     "Id": 11,
     "ExtendOutput": "UC_Unld_Lift_Hold_Cyl_Fwd",
     "RetractOutput": "UC_Unld_Lift_Hold_Cyl_Rev",
     "ExtendSenses": [
-      "UC_Unld_Lift_Hold_Cyl1_Fwd",
-      "UC_Unld_Lift_Hold_Cyl2_Fwd"
+      "UC_Ld_Lift_Hold_Cyl2_Fwd"
+   
     ],
     "RetractSenses": [
-      "UC_Unld_Lift_Hold_Cyl1_Rev",
-      "UC_Unld_Lift_Hold_Cyl2_Rev"
+      "UC_Ld_Lift_Hold_Cyl2_Rev"
+     
     ]
   },
   {
-    "EnumName": "UC_Ld_Gripper_Cyl",
+    "EnumName": "UC_Loading_Gripper_Cylinder",
     "Name": "UC Loading Gripper Cylinder",
     "Id": 12,
     "ExtendOutput": "UC_Ld_Grip_Cyl_Up",
@@ -160,7 +162,7 @@
     ]
   },
   {
-    "EnumName": "UC_Unld_Gripper_Cyl",
+    "EnumName": "UC_Unloading_Gripper_Cylinder",
     "Name": "UC Unloading Gripper Cylinder",
     "Id": 13,
     "ExtendOutput": "UC_Unld_Grip_Cyl_Up",
@@ -173,61 +175,37 @@
     ]
   },
   {
-    "EnumName": "Glue_Weigh_Cover_Cyl",
-    "Name": "Glue Weighing Module Cover Cylinder",
-    "Id": 14,
-    "ExtendOutput": "Glue_Weigh_Mod_Cov_Cyl_Up",
-    "RetractOutput": "Glue_Weigh_Mod_Cov_Cyl_Dn",
-    "ExtendSenses": [
-      "AWM_Cov_Cyl_Up"
-    ],
-    "RetractSenses": [
-      "AWM_Cov_Cyl_Dn"
-    ]
-  },
-  {
-    "EnumName": "NG_Stopper_Cyl",
-    "Name": "NG Stopper Cylinder",
-    "Id": 15,
-    "ExtendOutput": "NG_Stop_Cyl_Up",
-    "RetractOutput": "NG_Stop_Cyl_Dn",
-    "ExtendSenses": [
-      "NG_Stop_Cyl_Up"
-    ],
-    "RetractSenses": [
-      "NG_Stop_Cyl_Dn"
-    ]
-  },
-  {
-    "EnumName": "Stn1_Wiping_Cyl1",
+    "EnumName": "Stn1_Wiping_Module_Cylinder_1",
     "Name": "Station 1 Wiping Module Cylinder 1",
-    "Id": 16,
+    "Id": 14,
     "ExtendOutput": "Stn1_Wip_Mod_Cyl1_Up",
     "RetractOutput": "Stn1_Wip_Mod_Cyl1_Dn",
     "ExtendSenses": [
-      "Stn1_Wip_Mod_Cyl1_Up_Reserved"
+      "Stn1_Wip_Mod_Cyl1_Up"
     ],
     "RetractSenses": [
-      "Stn1_Wip_Mod_Cyl1_Dn_Reserved"
+      "Stn1_Wip_Mod_Cyl1_Dn"
     ]
   },
+
+
   {
-    "EnumName": "Stn1_Wiping_Cyl2",
+    "EnumName": "Stn1_Wiping_Module_Cylinder_2",
     "Name": "Station 1 Wiping Module Cylinder 2",
-    "Id": 17,
+    "Id": 15,
     "ExtendOutput": "Stn1_Wip_Mod_Cyl2_Up",
     "RetractOutput": "Stn1_Wip_Mod_Cyl2_Dn",
     "ExtendSenses": [
-      "Stn1_Wip_Mod_Cyl2_Up_Reserved"
+      "Stn1_Wip_Mod_Cyl2_Up"
     ],
     "RetractSenses": [
-      "Stn1_Wip_Mod_Cyl2_Dn_Reserved"
+      "Stn1_Wip_Mod_Cyl2_Dn"
     ]
   },
   {
-    "EnumName": "Stn1_Maint_Door_Cyl",
+    "EnumName": "Stn1_Maintenance_Door_Cylinder",
     "Name": "Station 1 Maintenance Door Cylinder",
-    "Id": 18,
+    "Id": 16,
     "ExtendOutput": "Stn1_Maint_Dr_Cyl_Up",
     "RetractOutput": "Stn1_Maint_Dr_Cyl_Dn",
     "ExtendSenses": [
@@ -237,23 +215,11 @@
       "Stn1_Maint_Dr_Cyl_Dn"
     ]
   },
+
   {
-    "EnumName": "Stn1_Disp_Lock_Cyl",
-    "Name": "Station 1 Dispenser Locking Cylinder",
-    "Id": 19,
-    "ExtendOutput": "Stn1_Disp_Lock_Cyl_Up",
-    "RetractOutput": "Stn1_Disp_Lock_Cyl_Dn",
-    "ExtendSenses": [
-      "Stn1_Disp_Lock_Cyl_Up"
-    ],
-    "RetractSenses": [
-      "Stn1_Disp_Lock_Cyl_Dn"
-    ]
-  },
-  {
-    "EnumName": "Stn1_Glue_Disp_Cyl",
+    "EnumName": "Stn1_Glue_Dispenser_Cylinder",
     "Name": "Station 1 Glue Dispenser Cylinder",
-    "Id": 20,
+    "Id": 17,
     "ExtendOutput": "Stn1_Glue_Disp_Cyl_Up",
     "RetractOutput": "Stn1_Glue_Disp_Cyl_Dn",
     "ExtendSenses": [
@@ -264,9 +230,22 @@
     ]
   },
   {
-    "EnumName": "Stn2_Wiping_Cyl1",
+    "EnumName": "Stn1_Dispenser_Locking_Cylinder",
+    "Name": "Station 1 Dispenser Locking Cylinder",
+    "Id": 18,
+    "ExtendOutput": "Stn1_Disp_Lock_Cyl_Up",
+    "RetractOutput": "Stn1_Disp_Lock_Cyl_Dn",
+    "ExtendSenses": [
+      "Stn1_Disp_Lock_Cyl_Up"
+    ],
+    "RetractSenses": [
+      "Stn1_Disp_Lock_Cyl_Dn"
+    ]
+  },
+  {
+    "EnumName": "Stn2_Wiping_Module_Cylinder_1",
     "Name": "Station 2 Wiping Module Cylinder 1",
-    "Id": 21,
+    "Id": 19,
     "ExtendOutput": "Stn2_Wip_Mod_Cyl1_Up",
     "RetractOutput": "Stn2_Wip_Mod_Cyl1_Dn",
     "ExtendSenses": [
@@ -277,9 +256,9 @@
     ]
   },
   {
-    "EnumName": "Stn2_Wiping_Cyl2",
+    "EnumName": "Stn2_Wiping_Module_Cylinder_2",
     "Name": "Station 2 Wiping Module Cylinder 2",
-    "Id": 22,
+    "Id": 20,
     "ExtendOutput": "Stn2_Wip_Mod_Cyl2_Up",
     "RetractOutput": "Stn2_Wip_Mod_Cyl2_Dn",
     "ExtendSenses": [
@@ -290,9 +269,9 @@
     ]
   },
   {
-    "EnumName": "Stn2_Maint_Door_Cyl",
+    "EnumName": "Stn2_Maintenance_Door_Cylinder",
     "Name": "Station 2 Maintenance Door Cylinder",
-    "Id": 23,
+    "Id": 21,
     "ExtendOutput": "Stn2_Maint_Dr_Cyl_Up",
     "RetractOutput": "Stn2_Maint_Dr_Cyl_Dn",
     "ExtendSenses": [
@@ -303,9 +282,22 @@
     ]
   },
   {
-    "EnumName": "Stn2_Disp_Lock_Cyl",
+    "EnumName": "Stn2_Glue_Dispenser_Cylinder",
+    "Name": "Station 2 Glue Dispenser Cylinder",
+    "Id": 22,
+    "ExtendOutput": "Stn2_Glue_Disp_Cyl_Up",
+    "RetractOutput": "Stn2_Glue_Disp_Cyl_Dn",
+    "ExtendSenses": [
+      "Stn2_Glue_Disp_Cyl_Up"
+    ],
+    "RetractSenses": [
+      "Stn2_Glue_Disp_Cyl_Dn"
+    ]
+  },
+  {
+    "EnumName": "Stn2_Dispenser_Locking_Cylinder",
     "Name": "Station 2 Dispenser Locking Cylinder",
-    "Id": 24,
+    "Id": 23,
     "ExtendOutput": "Stn2_Disp_Lock_Cyl_Up",
     "RetractOutput": "Stn2_Disp_Lock_Cyl_Dn",
     "ExtendSenses": [
@@ -315,17 +307,19 @@
       "Stn2_Disp_Lock_Cyl_Dn"
     ]
   },
+
   {
-    "EnumName": "Stn2_Glue_Disp_Cyl",
-    "Name": "Station 2 Glue Dispenser Cylinder",
-    "Id": 25,
-    "ExtendOutput": "Stn2_Glue_Disp_Cyl_Up",
-    "RetractOutput": "Stn2_Glue_Disp_Cyl_Dn",
+    "EnumName": "NG_Stopper_Cylinder",
+    "Name": "NG Stopper Cylinder",
+    "Id": 24,
+    "ExtendOutput": "NG_Stop_Cyl_Up",
+    "RetractOutput": "NG_Stop_Cyl_Dn",
     "ExtendSenses": [
-      "Stn2_Glue_Disp_Cyl_Up"
+      "NG_Stop_Cyl_Up"
     ],
     "RetractSenses": [
-      "Stn2_Glue_Disp_Cyl_Dn"
+      "NG_Stop_Cyl_Dn"
     ]
   }
+
 ]
