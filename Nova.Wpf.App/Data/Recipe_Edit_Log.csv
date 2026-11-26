@@ -1,0 +1,20 @@
+﻿Timestamp,User,Mode,SourceFile,Row,Column,OldValue,NewValue
+2026-10-27 12:05:39,Unknown,Unknown,RobotRecipe.json,Speed,Value,70,10
+2026-11-13 17:08:02,Unknown,Unknown,AxisParameters.json,0,HOMING SPEED,10,100
+2026-11-13 17:08:53,Unknown,Unknown,AxisParameters.json,0,PITCH,10,100
+2026-11-13 22:28:23,Unknown,Unknown,Servos.json (PressingModule),Pressing,PressingModule_XAxis Speed,0,100
+2026-11-13 22:29:20,Unknown,Unknown,Servos.json (PressingModule),Pressing,PressingModule_XAxis Acc,0,68
+2026-11-14 16:48:44,Unknown,Unknown,Servos.json (PressingModule),Pressing,PressingModule_XAxis Dec,0,100
+2026-11-14 16:50:35,Unknown,Unknown,Servos.json (PressingModule),Pressing,PressingModule_ZAxis Speed,0,100
+2026-11-14 16:55:13,Unknown,Unknown,Servos.json (PressingModule),Pressing,PressingModule_ZAxis Acc,0,99
+2026-11-14 17:02:31,Unknown,Unknown,Servos.json (PressingModule),Pressing,PressingModule_ZAxis Dec,0,12
+2026-11-14 17:04:41,Unknown,Unknown,Servos.json (PressingModule),Pressing,PressingModule_XAxis Speed,100,999
+2026-11-14 17:05:34,Unknown,Unknown,AxisParameters.json,0,HOMING SPEED,100,10
+2026-11-14 17:06:04,Unknown,Unknown,AxisParameters.json,0,PITCH,100,10
+2026-11-15 11:18:49,Unknown,Unknown,Servos.json,PressingModule_XAxis,VELOCITY,10,100
+2026-11-15 11:19:29,Unknown,Unknown,Servos.json,PressingModule_XAxis,NEGATIVE LIMIT,0,10
+2026-11-15 11:49:03,Unknown,Unknown,Servos.json,PressingModule_XAxis,VELOCITY,100,10
+2026-11-15 11:49:53,Unknown,Unknown,Servos.json,PressingModule_XAxis,PULSE,998,100
+2026-11-15 11:50:44,Unknown,Unknown,Servos.json (PressingModule),Pressing,PressingModule_ZAxis Dec,12,100
+2026-11-15 11:50:58,Unknown,Unknown,Servos.json (PressingModule),SafePosition,PressingModule_ZAxis Dec,0,10
+2026-11-25 12:50:44,Unknown,Unknown,Servos.json (UCLoadingGantry),Pressing,UC_Loading_Z_Axis_Gantry_Servo Acc,10,100

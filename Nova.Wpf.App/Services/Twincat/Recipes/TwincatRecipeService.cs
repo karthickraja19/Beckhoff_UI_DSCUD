@@ -16,11 +16,9 @@ namespace Nova.Wpf.App.Services.Twincat
     /// <see cref="IPlcRecipeService"/> over the PLC's recipe block, FB_RecipeMapping
     /// (symbol map: Recipe.Gantry, e.g. MAIN.recipe.Recipe): one FB_Recipe per gantry
     /// (E_Recipe), which the PLC sequences drive every taught move from
-    /// (FUN_AuxServoMoveToPos). A gantry module's recipe is kept as V3 keeps it: the module's
-    /// servos are listed in Data\Gantry.json, and its positions are the ConfiguredPositions
-    /// of those servos in Data\Servos.json. In the PLC's table a row is a position (name
-    /// order as <see cref="IRecipeService.LoadGantryPositions"/> gives them) and a column a
-    /// servo, by its Type in Gantry.json.
+    /// (FUN_AuxServoMoveToPos). A gantry's recipe is its file in the data folder,
+    /// {Name}.xlsx or {Name}.csv (Name and PlcGantry from Data\Gantry.json): a group of four
+    /// columns per servo (Value, Speed, Acceleration, Deceleration) and a row per position.
     /// </summary>
     /// <remarks>
     /// FB_Recipe, as the PLC declares it:
@@ -31,12 +29,18 @@ namespace Nova.Wpf.App.Services.Twincat
     /// nAxisUsed : INT;    // axes written
     /// bLoaded   : BOOL;   // written LAST: until TRUE the sequences do not move
     /// </code>
-    /// The axis number is E_Servo (X_AXIS = 1, Y_AXIS = 2, Z_AXIS = 3, R_AXIS = 4), local to
-    /// the gantry: the servo whose Type is X is always axis 1 whichever gantry it is. An axis
-    /// the module does not have, between two it has, and a servo that has no position of a
-    /// row's name, are sent as zeros - speed 0, which the PLC takes as "not taught". rPos,
-    /// rVel, rAcc and rDec are the position's Value, Speed, Acceleration and Deceleration.
-    /// The module's gantry is its PlcGantry in Gantry.json; a module without one is not written.
+    /// The axis number is E_Servo, local to the gantry (UC_Loading_Servo_X_Axis = 1,
+    /// UC_Loading_Servo_Z_Axis = 2, and the same for every gantry): the recipe file's first
+    /// column group is axis 1, the second axis 2, and so on, so the file's servo order must
+    /// be E_Servo's. The row number is the position's row in the file (row 3 = 1), which is
+    /// the sequences' E_Servo_Pos_Loading / E_Servo_Pos_Unloading (Safe_Pos = 1, Pick_Pos = 2,
+    /// Place_Pos_Station_1 = 3, Place_Pos_Station_2 = 4), so the file's row order must be
+    /// theirs. Position p of axis a is Step[p, a], Name[p] the position's name, nPosUsed the
+    /// number of positions and nAxisUsed the number of axes; every other cell is zero (speed
+    /// 0, which the PLC takes as "not taught"). rPos,
+    /// rVel, rAcc and rDec are the Value, Speed, Acceleration and Deceleration. A gantry
+    /// without a PlcGantry is not written, and one whose file names a servo another gantry's
+    /// file names too is refused.
     ///
     /// A table is written whole (<see cref="WriteTable"/>), the same way for a gantry and a
     /// CNC channel, under the PLC lock: bLoaded is cleared first, so a sequence never drives
@@ -92,9 +96,6 @@ namespace Nova.Wpf.App.Services.Twincat
         private const int StartupAttempts = 3;                   // the writes made when the PLC comes back
         private static readonly TimeSpan StartupRetryDelay = TimeSpan.FromSeconds(5);
         private static readonly TimeSpan RecheckDelay = TimeSpan.FromSeconds(3);
-
-        /// <summary>The axes in E_Servo order: X_AXIS = 1 ... R_AXIS = 4.</summary>
-        private static readonly string[] AxisColumns = { "X", "Y", "Z", "R" };
 
         /// <summary>ST_AxisMove's members, in order.</summary>
         private static readonly string[] MoveMembers = { "rPos", "rVel", "rAcc", "rDec" };
@@ -347,49 +348,53 @@ namespace Nova.Wpf.App.Services.Twincat
             if (!_plc.IsConnected)
                 throw new InvalidOperationException("the PLC at " + _plc.Address + " is not reachable or not in Run");
 
+            // The recipe file's column groups, in order, are the gantry's axes 1..N (E_Servo).
+            List<string> axes = definition.Axes.Select(a => a.Name).ToList();
+            IReadOnlyList<GantryPosition> positions = _recipes.LoadGantryPositions(moduleName);
+            int axisCount = axes.Count;
+
+            if (positions.Count == 0)
+                throw new InvalidOperationException("the " + moduleName + " recipe file has no positions (column A from row 3 is empty).");
+            if (axisCount == 0)
+                throw new InvalidOperationException("the " + moduleName + " recipe file names no servo in row 1.");
+            CheckServosNotShared(moduleName, axes);
+
             string recipe = _recipeSymbol + "[" + gantry + "]";
             int maxPositions;
             int maxAxes;
             ReadTableSize(recipe, out maxPositions, out maxAxes);
+            return GantryLayout(moduleName, gantry, recipe, axes, positions, maxPositions, maxAxes);
+        }
 
-            // The module's servos (Gantry.json) by their E_Servo column: the axis Type.
-            var axisOf = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-            foreach (GantryAxisDefinition axis in definition.Axes)
+        /// <summary>The gantry's table as the PLC lays it out (see the class remarks); no PLC access.</summary>
+        private static RecipeTable GantryLayout(string moduleName, int gantry, string recipe, List<string> axes,
+            IReadOnlyList<GantryPosition> positions, int maxPositions, int maxAxes)
+        {
+            int axisCount = axes.Count;
+            if (axisCount > maxAxes)
+                throw new InvalidOperationException("the " + moduleName + " recipe has " + axisCount + " axes; the PLC holds " + maxAxes + " (MAX_AXES).");
+            if (positions.Count > maxPositions)
+                throw new InvalidOperationException("the " + moduleName + " recipe has " + positions.Count + " positions; the PLC holds " + maxPositions + " (MAX_POS).");
+
+            var table = NewTable("the " + moduleName + " recipe", gantry, recipe, maxPositions, maxAxes, (short)positions.Count, (short)axisCount);
+            for (int a = 0; a < axisCount; a++)
+                table.AxisLabels[a] = "axis " + (a + 1) + " " + axes[a];
+
+            // Row = position, as E_Servo_Pos_* numbers them (Safe_Pos = 1, Pick_Pos = 2, ...);
+            // column = axis, as E_Servo numbers them (X = 1, Z = 2): Step[p, a].
+            for (int p = 0; p < positions.Count; p++)
             {
-                int index = Array.IndexOf(AxisColumns, axis.Type) + 1;
-                if (index >= 1)
-                    axisOf[axis.Name] = index;
-            }
+                string name = positions[p].Name ?? string.Empty;
+                table.RowNames.Add(name);
+                PutName(table.Names, p * NameSize, name);
 
-            // nAxisUsed: up to the last axis the module has.
-            int axesUsed = axisOf.Count > 0 ? axisOf.Values.Max() : 0;
-            IReadOnlyList<GantryPosition> rows = _recipes.LoadGantryPositions(moduleName);
-
-            if (rows.Count == 0)
-                throw new InvalidOperationException("the " + moduleName + " recipe has no positions (no ConfiguredPositions on its servos in Data\\Servos.json).");
-            if (axesUsed == 0)
-                throw new InvalidOperationException(moduleName + " has no X, Y, Z or R axis in Data\\Gantry.json.");
-            if (rows.Count > maxPositions)
-                throw new InvalidOperationException("the " + moduleName + " recipe has " + rows.Count + " positions; the PLC holds " + maxPositions + " (MAX_POS).");
-            if (axesUsed > maxAxes)
-                throw new InvalidOperationException("the " + moduleName + " recipe has " + axesUsed + " axes; the PLC holds " + maxAxes + " (MAX_AXES).");
-
-            var table = NewTable("the " + moduleName + " recipe", gantry, recipe, maxPositions, maxAxes, (short)rows.Count, (short)axesUsed);
-            foreach (var axis in axisOf)
-                table.AxisLabels[axis.Value - 1] = AxisColumns[axis.Value - 1] + " " + axis.Key;
-
-            for (int row = 0; row < rows.Count; row++)
-            {
-                table.RowNames.Add(rows[row].Name);
-                PutName(table.Names, row * NameSize, rows[row].Name);
-
-                foreach (var axis in axisOf)
+                for (int a = 0; a < axisCount; a++)
                 {
                     GantryAxisMove move;
-                    if (rows[row].Axes == null || !rows[row].Axes.TryGetValue(axis.Key, out move) || move == null)
-                        continue;   // the servo has no such position: sent as zeros, not taught
+                    if (positions[p].Axes == null || !positions[p].Axes.TryGetValue(axes[a], out move) || move == null)
+                        continue;   // sent as zeros: not taught
 
-                    int offset = (row * maxAxes + (axis.Value - 1)) * AxisMoveSize;   // Step[row, axis], the axis index the faster
+                    int offset = (p * maxAxes + a) * AxisMoveSize;   // Step[row, axis], the axis index the faster
                     PutReal(table.Step, offset, move.Value);
                     PutReal(table.Step, offset + 8, move.Speed);
                     PutReal(table.Step, offset + 16, move.Acceleration);
@@ -398,6 +403,29 @@ namespace Nova.Wpf.App.Services.Twincat
             }
 
             return table;
+        }
+
+        /// <summary>
+        /// Refuses a gantry whose recipe file names a servo another gantry's file names too: one
+        /// of the two files is wrong, and the PLC would move that servo from both recipes.
+        /// </summary>
+        private void CheckServosNotShared(string moduleName, IReadOnlyList<string> axes)
+        {
+            foreach (string other in _recipes.GetGantryModules())
+            {
+                if (string.Equals(other.Trim(), moduleName.Trim(), StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                List<string> shared = _recipes.GetGantryModuleDefinition(other).Axes
+                    .Select(a => a.Name)
+                    .Where(name => axes.Any(axis => string.Equals(axis, name, StringComparison.OrdinalIgnoreCase)))
+                    .ToList();
+                if (shared.Count > 0)
+                {
+                    throw new InvalidOperationException("the " + moduleName + " recipe names " + string.Join(", ", shared) + ", which the "
+                        + other + " recipe names too. Correct the recipe file that names the wrong servo; neither is written to the PLC until then.");
+                }
+            }
         }
 
         private CncChannelRecipe CncChannel(string channelName)

@@ -1,0 +1,4 @@
+Scanner,Robot,Vision,OPT
+Scanner1,,CCD1,COM5
+Scanner2,,CCD2,COM8
+,,CCD3,

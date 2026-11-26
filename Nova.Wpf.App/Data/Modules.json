@@ -1,0 +1,12 @@
+﻿[
+  {
+    "Name": "Loading Conveyor",
+    "Components": {
+      "Servos": [ "Servo_X1" , ""],
+      "Steppers": [],
+      "Cylinders": [],
+      "Vacuums": []
+    }
+  }
+
+]

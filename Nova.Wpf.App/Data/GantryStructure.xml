@@ -1,0 +1,31 @@
+<GantryModule>
+	<Select></Select>
+	<PressingModule>
+		<MovementPriority>
+			<Value>Servo_X1</Value>
+			<Value>Servo_Z1</Value>
+		</MovementPriority>
+		<SafePosition_Priority>
+			<Value>Servo_X1</Value>
+			<Value>Servo_Z1</Value>
+		</SafePosition_Priority>
+	</PressingModule>
+	<InspectionModule>
+		<MovementPriority>
+			<Value>Servo_X1</Value>
+			<Value>Servo_Y1</Value>
+		</MovementPriority>
+		<SafePosition_Priority>
+			<Value>Servo_X1</Value>
+			<Value>Servo_Y1</Value>
+		</SafePosition_Priority>
+	</InspectionModule>
+	<BTHGantry>
+		<MovementPriority>
+			<Value>Servo_X1</Value>
+		</MovementPriority>
+		<SafePosition_Priority>
+			<Value>Servo_X1</Value>
+		</SafePosition_Priority>
+	</BTHGantry>
+</GantryModule>

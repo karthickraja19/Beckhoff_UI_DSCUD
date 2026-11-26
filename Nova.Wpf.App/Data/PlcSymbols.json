@@ -181,7 +181,7 @@
     // persistent data and answers with SaveDone or SaveError.
     "Teach": {
       "NinePoint": "GVL_CalTeach.aNinePoint",              // ST_TeachNinePoint: bTaught, rX, rY
-      "FiveAxis": "",                                      // not used: the 5 axis tables are HMI-only (Master.Sequences)
+      "FiveAxis": "GVL_CalTeach.aFiveAxis",                // ST_TeachFiveAxis: bTaught, aPoint[n] OF (rA, rC, rX, rY, rZ)
       "CameraNeedle": "GVL_CalTeach.aCameraNeedle",        // ST_TeachCameraNeedle: bTaught, aGlue[1..9], aVision[1..9] OF (rX, rY)
       "NeedleModule": "GVL_CalTeach.aNeedleModule",        // ST_TeachNeedleModule: bTaught, rX, rY, rZ
       "Save": "GVL_CalTeach.bSave",
@@ -282,23 +282,6 @@
       "JogSpeed": "UiToPlc.nJogUserDefinedSpeed",
       "JogInchingValue": "UiToPlc.nJogInchingValue",
       "Reset": "UiToPlc.bReset",
-      // 5 axis calibration (Master.Sequences\FiveAxisCalibration): each pose is one G-code block in MDI mode.
-      // FB_WriteCNCData takes bMDIMode / bCycleStart / bCycleStop on a rising edge into PLCMachineMode[ch].MDI /
-      // .Start / .Stop and copies sMDIProgram (STRING(299)) to .MDIString; PRG_CNCChannelHandler passes those to
-      // HLI3_CNCChannel as bModeMDI / bStateStart / sMDIString (its bCmd* inputs are FALSE on purpose: the in/out
-      // flags are used). NEVER RUN: PLC TODO - confirm the channel runs an MDI block on that Start while the machine
-      // is in MANUAL (the Calibration section holds manual mode), and the axis names in the block
-      // (Data\Calibration\FiveAxisSettings.json: GCodeX .. GCodeC).
-      "MdiModeRequest": "UiToPlc.bMDIMode",
-      "MdiProgram": "UiToPlc.sMDIProgram",
-      "CycleStart": "UiToPlc.bCycleStart",
-      "CycleStop": "UiToPlc.bCycleStop",
-      "MdiModeActive": "PlcToUi.bMDIModeEnabled",
-      // Auto mode alternative (FiveAxisSettings.CncMode = "Auto"): sProgramPath + bAutoMode + bCycleStart, as the PLC's own
-      // Dispensing_Stn_A_Auto runs Seq_NC_Program.nc. NEVER RUN.
-      "AutoModeRequest": "UiToPlc.bAutoMode",
-      "ProgramPath": "UiToPlc.sProgramPath",
-      "AutoModeActive": "PlcToUi.bAutoModeEnabled",
       "JogModeActive": "PlcToUi.bJogModeEnabled",
       "ErrorState": "PlcToUi.bErrorState",
       "CycleRunning": "PlcToUi.bCycleRunning",
@@ -337,6 +320,7 @@
     "HmiDisplayTypes": {
       "Servo": "SERVO_SD_HMI_DISPLAY",
       "IoStepper": "ST_STEPPER_STATUS",
+      "AxisStepper": "typeStepperEL7062FBStatus",
       "Cylinder": "typeCylFBIn",
       "Vacuum": "typeVacFB",
       "Vision": "typeVisionFBstatus",
@@ -991,14 +975,9 @@
   // ---------------------------------------------------------------------------------
   // SENSOR DISABLE  (HMI -> PLC)  -  Home > Sensor Connection Dashboard
   // ---------------------------------------------------------------------------------
-  // The PLC's ARRAY OF BOOL that disables the sensors: one element per Master.Configuration
-  // ESensor member, in the enum's order (a sensor's "Input" in Data\Settings\Sensors.json is
-  // the ESensor / EInput member name). The HMI writes TRUE to disable, FALSE to enable.
-  // FirstIndex is the array's lower bound in the PLC: 0 for ARRAY[0..n], 1 for ARRAY[1..n].
-  // Example:   "Array": "GVL_HMI.abSensorDisable", "FirstIndex": 0
-  // PLC TODO: the PLC has no sensor disable array yet; blank = no sensor can be disabled.
+  // The BOOL that disables a non-critical sensor, by the sensor's Id in
+  // Data\Settings\Sensors.json:   "CC1-1": "GVL_HMI.bDisable_CC1_UC_Ent"
+  // PLC TODO: the PLC has no per-sensor disable bits yet.
   "SensorDisable": {
-    "Array": "",
-    "FirstIndex": 0
   }
 }

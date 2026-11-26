@@ -85,10 +85,11 @@ namespace Master.Configuration
         public static readonly string[] GantryAxisTypes = { "X", "Y", "Z", "R" };
 
         /// <summary>
-        /// Reports where Gantry.json does not describe the machine: an axis that is not a servo
-        /// in Servos.json, an axis type other than X, Y, Z or R, or two axes of the same type in
-        /// one module (the PLC's recipe has one column per type). A machine without gantries
-        /// has no Gantry.json, so a missing file is not a problem.
+        /// Reports where Gantry.json does not describe the machine. A gantry's servos are its
+        /// recipe file's ({Name}.xlsx or .csv); Axes is optional and only gives the jog type and
+        /// move order of the servos it lists, so only what it does list is checked: an axis that
+        /// is not a servo in Servos.json, a type other than X, Y, Z or R, or two axes of the same
+        /// type. A machine without gantries has no Gantry.json, so a missing file is not a problem.
         /// </summary>
         private static void CheckGantry(List<ServoConfiguration> servos, List<string> problems)
         {
@@ -106,10 +107,7 @@ namespace Master.Configuration
             {
                 string name = string.IsNullOrWhiteSpace(module?.Name) ? "(a module with no Name)" : module.Name;
                 if (module?.Axes == null || module.Axes.Count == 0)
-                {
-                    problems.Add("Data\\" + GantryFile + ": " + name + " has no axes.");
                     continue;
-                }
 
                 List<string> unknown = module.Axes
                     .Where(a => a == null || !servos.Any(s => s != null && string.Equals(s.EnumName, a.Name, StringComparison.OrdinalIgnoreCase)))
@@ -127,7 +125,7 @@ namespace Master.Configuration
                     .ToList();
                 if (badType.Count > 0)
                 {
-                    problems.Add("Data\\" + GantryFile + ": " + name + " has axes whose Type is not X, Y, Z or R, so they are left out: "
+                    problems.Add("Data\\" + GantryFile + ": " + name + " has axes whose Type is not X, Y, Z or R, so they have no jog button: "
                         + string.Join(", ", badType) + ".");
                 }
 
@@ -140,7 +138,7 @@ namespace Master.Configuration
                 if (repeated.Count > 0)
                 {
                     problems.Add("Data\\" + GantryFile + ": " + name + " has more than one axis of type " + string.Join(", ", repeated)
-                        + ", so only the first usable one of each is used.");
+                        + ", so only the first of each has a jog button.");
                 }
             }
         }
@@ -168,7 +166,7 @@ namespace Master.Configuration
 
         /// <summary>
         /// The gantry modules and the servos each is made of (Gantry.json), or null when there
-        /// is no such file or it cannot be read. A module's recipe is its servos' ConfiguredPositions.
+        /// is no such file or it cannot be read. A gantry's recipe is its own file, {Name}.xlsx or {Name}.csv.
         /// </summary>
         public static GantryRoot LoadGantry(string dataDirectory)
         {

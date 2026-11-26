@@ -89,15 +89,15 @@ namespace Nova.Core.Services
 
 
         // ==================================================================
-        // Gantry recipe, the V3 way
+        // Gantry recipe
         //
-        // Data\Gantry.json lists the gantry modules and the servos each is made of (with its
-        // type, X/Y/Z/R, and the order it moves in). A module's recipe is not a file of its
-        // own: it is the positions taught on its servos, each servo's ConfiguredPositions in
-        // Data\Servos.json. The table has a row per position name found on any of the
-        // module's servos (first-seen order) and a group of four columns per servo:
-        // {servo}_Value, {servo}_Speed, {servo}_Acc, {servo}_Dec. Save writes each group
-        // back into its servo's position of that name, adding it if the servo has none.
+        // Data\Gantry.json lists the gantries: each one's Name and PlcGantry (the PLC's
+        // E_Recipe number), and optionally its Axes with each servo's Type (X, Y, Z, R: the
+        // jog button that drives it) and move order. A gantry's recipe is its own file in the
+        // data folder, named after it: {Name}.xlsx, or {Name}.csv (GantryRecipeFile). Its
+        // column groups are the gantry's servos, in the order the PLC numbers its axes
+        // (E_Servo of that gantry); its rows are the positions. The Gantry tab shows that file
+        // and Save writes the edited values back into it.
         // ==================================================================
 
         /// <summary>The modules of Gantry.json, named; an empty list when there is no such file.</summary>
@@ -115,35 +115,27 @@ namespace Nova.Core.Services
             return ReadGantryModules().FirstOrDefault(g => string.Equals(g.Name.Trim(), wanted, StringComparison.OrdinalIgnoreCase));
         }
 
-        /// <summary>
-        /// The module's usable axes, in Gantry.json's order: a servo of Servos.json, typed X,
-        /// Y, Z or R, and the first such axis of each type (MachineConfiguration.Load reports
-        /// the rest at startup). The name is the servo's EnumName, its axis ComponentId.
-        /// </summary>
-        private static List<GantryAxisDefinition> UsableAxes(GantryConfiguration module, List<ServoConfiguration> servos)
+        /// <summary>The gantry's recipe file as it is now, or null with the reason when it has none or it cannot be read.</summary>
+        private GantryRecipeTable ReadGantryFile(string moduleName, out string problem)
         {
-            var axes = new List<GantryAxisDefinition>();
-            foreach (var axis in module?.Axes ?? new List<_Axis>())
+            problem = null;
+            string name = (moduleName ?? string.Empty).Trim();
+            string path = GantryRecipeFile.Find(_dataDirectory, name);
+            if (path == null)
             {
-                string type = (axis?.Type ?? string.Empty).Trim().ToUpperInvariant();
-                var servo = axis == null || string.IsNullOrWhiteSpace(axis.Name) ? null : FindServo(servos, axis.Name.Trim());
-                if (servo == null
-                    || !MachineConfiguration.GantryAxisTypes.Contains(type)
-                    || axes.Any(a => a.Type == type))
-                {
-                    continue;
-                }
-
-                axes.Add(new GantryAxisDefinition
-                {
-                    Name = string.IsNullOrWhiteSpace(servo.EnumName) ? axis.Name.Trim() : servo.EnumName,
-                    Type = type,
-                    MovementPriority = axis.MovementPriority,
-                    SafePositionPriority = axis.SafePositionPriority,
-                });
+                problem = "There is no recipe file for " + name + ": " + GantryRecipeFile.Expected(_dataDirectory, name) + ".";
+                return null;
             }
 
-            return axes;
+            try
+            {
+                return GantryRecipeFile.Read(path);
+            }
+            catch (Exception ex) when (ex is IOException || ex is InvalidDataException || ex is UnauthorizedAccessException || ex is System.Xml.XmlException)
+            {
+                problem = "The recipe of " + name + " cannot be read from " + path + ": " + ex.Message;
+                return null;
+            }
         }
 
         /// <summary>Axis names by priority: 1 first, 0 (not given) after the numbered ones, ties in file order.</summary>
@@ -162,6 +154,13 @@ namespace Nova.Core.Services
             return ReadGantryModules().Select(g => g.Name.Trim()).ToList();
         }
 
+        /// <summary>
+        /// The gantry's axes are the servos its recipe file heads its column groups with, in
+        /// that order (the PLC's axis numbers). A servo Gantry.json also lists under Axes takes
+        /// its Type and priorities from there; one it does not list has no Type (no jog
+        /// button) and moves in column order. Without a readable file the axes are the ones
+        /// Gantry.json lists, so the jog pad still works.
+        /// </summary>
         public GantryModuleDefinition GetGantryModuleDefinition(string moduleName)
         {
             if (string.IsNullOrWhiteSpace(moduleName))
@@ -170,7 +169,29 @@ namespace Nova.Core.Services
             }
 
             var module = FindGantryModule(moduleName);
-            var axes = UsableAxes(module, MachineConfiguration.ReadServos(_dataDirectory) ?? new List<ServoConfiguration>());
+            var listed = (module?.Axes ?? new List<_Axis>()).Where(a => a != null && !string.IsNullOrWhiteSpace(a.Name)).ToList();
+            GantryRecipeTable file = ReadGantryFile(moduleName, out _);
+            IEnumerable<string> names = file != null ? file.Axes : listed.Select(a => a.Name.Trim());
+
+            var axes = new List<GantryAxisDefinition>();
+            foreach (string name in names)
+            {
+                _Axis given = listed.FirstOrDefault(a => string.Equals(a.Name.Trim(), name, StringComparison.OrdinalIgnoreCase));
+                string type = (given?.Type ?? string.Empty).Trim().ToUpperInvariant();
+                if (!MachineConfiguration.GantryAxisTypes.Contains(type) || axes.Any(a => a.Type == type))
+                {
+                    type = string.Empty;
+                }
+
+                axes.Add(new GantryAxisDefinition
+                {
+                    Name = name,
+                    Type = type,
+                    MovementPriority = given?.MovementPriority ?? 0,
+                    SafePositionPriority = given?.SafePositionPriority ?? 0,
+                });
+            }
+
             return new GantryModuleDefinition
             {
                 ModuleName = moduleName.Trim(),
@@ -181,51 +202,16 @@ namespace Nova.Core.Services
             };
         }
 
-        /// <summary>The servo of Servos.json an axis names: by EnumName, else by Name (as V3 matches).</summary>
-        private static ServoConfiguration FindServo(List<ServoConfiguration> servos, string axisName)
-        {
-            return servos.FirstOrDefault(s => s != null && string.Equals(s.EnumName, axisName, StringComparison.OrdinalIgnoreCase))
-                ?? servos.FirstOrDefault(s => s != null && string.Equals(s.Name, axisName, StringComparison.OrdinalIgnoreCase));
-        }
-
+        /// <summary>The positions of the gantry's recipe file, in its row order. Throws when it has no readable file.</summary>
         public IReadOnlyList<GantryPosition> LoadGantryPositions(string moduleName)
         {
-            var definition = GetGantryModuleDefinition(moduleName);
-            var servos = MachineConfiguration.ReadServos(_dataDirectory) ?? new List<ServoConfiguration>();
-
-            var positions = new List<GantryPosition>();
-            foreach (var axis in definition.Axes)
+            GantryRecipeTable file = ReadGantryFile(moduleName, out string problem);
+            if (file == null)
             {
-                var servo = FindServo(servos, axis.Name);
-                foreach (var taught in servo?.ConfiguredPositions ?? new List<AxisPosition>())
-                {
-                    string name = (taught?.Name ?? string.Empty).Trim();
-                    if (name.Length == 0)
-                    {
-                        continue;
-                    }
-
-                    var position = positions.FirstOrDefault(p => string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase));
-                    if (position == null)
-                    {
-                        position = new GantryPosition { Name = name };
-                        positions.Add(position);
-                    }
-
-                    if (!position.Axes.ContainsKey(axis.Name))
-                    {
-                        position.Axes[axis.Name] = new GantryAxisMove
-                        {
-                            Value = taught.Value,
-                            Speed = taught.Speed,
-                            Acceleration = taught.Acceleration,
-                            Deceleration = taught.Deceleration,
-                        };
-                    }
-                }
+                throw new InvalidOperationException(problem);
             }
 
-            return positions;
+            return file.Positions;
         }
 
         private static List<DynamicColumnSchema> GantryColumns(GantryModuleDefinition definition)
@@ -248,6 +234,45 @@ namespace Nova.Core.Services
 
         private static string Format(double value) => value.ToString("0.###", CultureInfo.InvariantCulture);
 
+        /// <summary>
+        /// What is wrong with the gantry's servos, for the warning the tab shows: a column group
+        /// headed by a name that is not a servo in Servos.json, and a servo another gantry's
+        /// recipe file has too (the PLC write refuses that, as the two would fight over it).
+        /// </summary>
+        private List<string> GantryAxisProblems(string moduleName, IReadOnlyList<string> axes)
+        {
+            var problems = new List<string>();
+            var servos = MachineConfiguration.ReadServos(_dataDirectory) ?? new List<ServoConfiguration>();
+            List<string> unknown = axes
+                .Where(a => !servos.Any(s => s != null && string.Equals(s.EnumName, a, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+            if (unknown.Count > 0)
+            {
+                problems.Add("Not a servo in Data\\" + MachineConfiguration.ServosFile + " (no EnumName of that name), so it cannot be jogged or moved: "
+                    + string.Join(", ", unknown) + ".");
+            }
+
+            foreach (string other in GetGantryModules())
+            {
+                if (string.Equals(other, moduleName.Trim(), StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                GantryRecipeTable otherFile = ReadGantryFile(other, out _);
+                List<string> shared = otherFile == null
+                    ? new List<string>()
+                    : axes.Where(a => otherFile.Axes.Any(o => string.Equals(o, a, StringComparison.OrdinalIgnoreCase))).ToList();
+                if (shared.Count > 0)
+                {
+                    problems.Add(string.Join(", ", shared) + " is also in the recipe of " + other + " (" + Path.GetFileName(otherFile.Path)
+                        + "). One of the two files names the wrong servo; neither recipe is written to the PLC until it is corrected.");
+                }
+            }
+
+            return problems;
+        }
+
         public DynamicTableDocument LoadGantryRecipeDynamic(string moduleName)
         {
             if (string.IsNullOrWhiteSpace(moduleName))
@@ -256,8 +281,19 @@ namespace Nova.Core.Services
             }
 
             var definition = GetGantryModuleDefinition(moduleName);
+            GantryRecipeTable file = ReadGantryFile(moduleName, out string problem);
+            var warnings = new List<string>();
+            if (file == null)
+            {
+                warnings.Add(problem);
+            }
+            else
+            {
+                warnings.AddRange(GantryAxisProblems(moduleName, file.Axes));
+            }
+
             var rows = new List<Dictionary<string, string>>();
-            foreach (var position in LoadGantryPositions(moduleName))
+            foreach (var position in file?.Positions ?? new List<GantryPosition>())
             {
                 var row = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
                 {
@@ -266,7 +302,6 @@ namespace Nova.Core.Services
 
                 foreach (var axis in definition.Axes)
                 {
-                    // A servo that does not have this position yet shows zeros; Save adds it.
                     position.Axes.TryGetValue(axis.Name, out var move);
                     move = move ?? new GantryAxisMove();
                     row[GantryRecipeColumns.Value(axis.Name)] = Format(move.Value);
@@ -283,9 +318,16 @@ namespace Nova.Core.Services
                 Title = moduleName.Trim(),
                 Columns = GantryColumns(definition),
                 Rows = rows,
+                HasMissingColumnSchema = warnings.Count > 0,
+                MissingSchemaMessage = string.Join(Environment.NewLine + Environment.NewLine, warnings),
             };
         }
 
+        /// <summary>
+        /// Writes the table into the gantry's recipe file: every row's values, in the file's
+        /// own column groups. Checked whole first, so a bad cell saves nothing; a file that
+        /// cannot be replaced (open in Excel) saves nothing either and says so.
+        /// </summary>
         public RecipeSaveResult SaveGantryRecipeDynamic(string moduleName, DynamicTableDocument document)
         {
             if (string.IsNullOrWhiteSpace(moduleName))
@@ -298,22 +340,16 @@ namespace Nova.Core.Services
                 throw new ArgumentNullException(nameof(document));
             }
 
-            var definition = GetGantryModuleDefinition(moduleName);
-            if (definition.Axes.Count == 0)
+            GantryRecipeTable file = ReadGantryFile(moduleName, out string problem);
+            if (file == null)
             {
-                throw new InvalidOperationException(moduleName + " has no axes in Data\\" + MachineConfiguration.GantryFile + ".");
-            }
-
-            var servos = MachineConfiguration.ReadServos(_dataDirectory);
-            if (servos == null || servos.Count == 0)
-            {
-                throw new InvalidOperationException("Data\\" + MachineConfiguration.ServosFile + " is missing or cannot be read.");
+                throw new InvalidOperationException(problem + " Nothing was saved.");
             }
 
             var oldDoc = LoadGantryRecipeDynamic(moduleName);
 
             // Every cell is checked before anything changes, so a bad cell saves nothing.
-            var parsed = new List<KeyValuePair<string, Dictionary<string, GantryAxisMove>>>();
+            var positions = new List<GantryPosition>();
             foreach (var row in document.Rows)
             {
                 string name = Cell(row, GantryRecipeColumns.Position);
@@ -322,86 +358,82 @@ namespace Nova.Core.Services
                     continue;
                 }
 
-                var moves = new Dictionary<string, GantryAxisMove>(StringComparer.OrdinalIgnoreCase);
-                foreach (var axis in definition.Axes)
+                var position = new GantryPosition { Name = name };
+                foreach (string axis in file.Axes)
                 {
-                    moves[axis.Name] = new GantryAxisMove
+                    position.Axes[axis] = new GantryAxisMove
                     {
-                        Value = GantryNumber(name, row, GantryRecipeColumns.Value(axis.Name)),
-                        Speed = GantryNumber(name, row, GantryRecipeColumns.Speed(axis.Name)),
-                        Acceleration = GantryNumber(name, row, GantryRecipeColumns.Acc(axis.Name)),
-                        Deceleration = GantryNumber(name, row, GantryRecipeColumns.Dec(axis.Name)),
+                        Value = GantryNumber(name, row, GantryRecipeColumns.Value(axis)),
+                        Speed = GantryNumber(name, row, GantryRecipeColumns.Speed(axis)),
+                        Acceleration = GantryNumber(name, row, GantryRecipeColumns.Acc(axis)),
+                        Deceleration = GantryNumber(name, row, GantryRecipeColumns.Dec(axis)),
                     };
                 }
 
-                parsed.Add(new KeyValuePair<string, Dictionary<string, GantryAxisMove>>(name, moves));
+                positions.Add(position);
             }
 
-            bool modified = false;
-            var missingServos = new List<string>();
-            foreach (var axis in definition.Axes)
-            {
-                var servo = FindServo(servos, axis.Name);
-                if (servo == null)
-                {
-                    missingServos.Add(axis.Name);
-                    continue;
-                }
-
-                if (servo.ConfiguredPositions == null)
-                {
-                    servo.ConfiguredPositions = new List<AxisPosition>();
-                }
-
-                foreach (var entry in parsed)
-                {
-                    var move = entry.Value[axis.Name];
-                    var existing = servo.ConfiguredPositions.FirstOrDefault(p => string.Equals((p?.Name ?? string.Empty).Trim(), entry.Key, StringComparison.OrdinalIgnoreCase));
-                    if (existing == null)
-                    {
-                        servo.ConfiguredPositions.Add(new AxisPosition
-                        {
-                            Name = entry.Key,
-                            Value = move.Value,
-                            Speed = move.Speed,
-                            Acceleration = move.Acceleration,
-                            Deceleration = move.Deceleration,
-                        });
-                        modified = true;
-                    }
-                    else if (existing.Value != move.Value || existing.Speed != move.Speed
-                        || existing.Acceleration != move.Acceleration || existing.Deceleration != move.Deceleration)
-                    {
-                        existing.Value = move.Value;
-                        existing.Speed = move.Speed;
-                        existing.Acceleration = move.Acceleration;
-                        existing.Deceleration = move.Deceleration;
-                        modified = true;
-                    }
-                }
-            }
-
-            if (missingServos.Count > 0)
-            {
-                throw new InvalidOperationException(moduleName + " names axes that are not servos in Data\\" + MachineConfiguration.ServosFile
-                    + ": " + string.Join(", ", missingServos) + ". Nothing was saved.");
-            }
-
-            if (!modified)
+            if (!GantryChanged(file, positions))
             {
                 return RecipeSaveResult.NoChanges("No data modified !");
             }
 
-            MachineConfiguration.SaveServos(_dataDirectory, servos);
+            string fileName = Path.GetFileName(file.Path);
+            try
+            {
+                GantryRecipeFile.Write(file.Path, file.Axes, positions);
+            }
+            catch (InvalidDataException ex)
+            {
+                throw new InvalidOperationException(ex.Message, ex);
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+            {
+                throw new InvalidOperationException(fileName + " could not be written (" + ex.Message + "). If it is open in Excel, close it and Save again. Nothing was saved.", ex);
+            }
+
             RecipeChanged?.Invoke(this, EventArgs.Empty);
 
             var columns = oldDoc.Columns;
             string[] headers = columns.Select(c => c.Title).ToArray();
             var oldRowArray = oldDoc.Rows.Select(r => columns.Select(c => r.TryGetValue(c.Key, out var val) ? val : string.Empty).ToArray()).ToList();
             var newRowArray = document.Rows.Select(r => columns.Select(c => r.TryGetValue(c.Key, out var val) ? val : string.Empty).ToArray()).ToList();
-            AppendEditLog(MachineConfiguration.ServosFile + " (" + moduleName.Trim() + ")", headers, oldRowArray, newRowArray);
+            AppendEditLog(fileName + " (" + moduleName.Trim() + ")", headers, oldRowArray, newRowArray);
 
-            return RecipeSaveResult.Saved("Data saved successfully !");
+            return RecipeSaveResult.Saved("Data saved successfully to " + fileName + " !");
+        }
+
+        /// <summary>True when the positions differ from the file's: a name, an order, a count or a value.</summary>
+        private static bool GantryChanged(GantryRecipeTable file, List<GantryPosition> positions)
+        {
+            if (file.Positions.Count != positions.Count)
+            {
+                return true;
+            }
+
+            for (int p = 0; p < positions.Count; p++)
+            {
+                GantryPosition before = file.Positions[p];
+                GantryPosition after = positions[p];
+                if (!string.Equals(before.Name, after.Name, StringComparison.Ordinal))
+                {
+                    return true;
+                }
+
+                foreach (string axis in file.Axes)
+                {
+                    before.Axes.TryGetValue(axis, out var a);
+                    after.Axes.TryGetValue(axis, out var b);
+                    a = a ?? new GantryAxisMove();
+                    b = b ?? new GantryAxisMove();
+                    if (a.Value != b.Value || a.Speed != b.Speed || a.Acceleration != b.Acceleration || a.Deceleration != b.Deceleration)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         private static string Cell(Dictionary<string, string> row, string key)

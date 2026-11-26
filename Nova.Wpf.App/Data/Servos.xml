@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Servos>
+	<Servo MotorName="AMAX1"/>
+	<Servo MotorName="X_Axis_Gantry_Servo"/>
+	<Servo MotorName="Y_Axis_Gantry_Servo"/>
+	<Servo MotorName="Suction_Nozzle_1_Z_Axis_Servo"/>
+	<Servo MotorName="Suction_Nozzle_2_Z_Axis_Servo"/>
+	<Servo MotorName="Suction_Nozzle_3_Z_Axis_Servo"/>
+	<Servo MotorName="Suction_Nozzle_4_Z_Axis_Servo"/>
+	<Servo MotorName="X_Axis_Tray_Lifter_Gantry_Servo"/>
+	<Servo MotorName="CCD3_Y_Axis_Transfer_Module_Servo"/>
+</Servos>

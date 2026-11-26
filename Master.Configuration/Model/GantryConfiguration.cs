@@ -3,9 +3,9 @@
 namespace Master.Configuration.Model
 {
     /// <summary>
-    /// One gantry module of Gantry.json (as in Odyssey.Master_V3): the servos it is made of.
-    /// Its recipe is the positions taught on those servos - each servo's ConfiguredPositions
-    /// in Servos.json - one row per position name.
+    /// One gantry of Gantry.json: its Name and the PLC gantry its recipe goes to. Its recipe
+    /// is the file {Name}.xlsx (or {Name}.csv) in the data folder, whose column groups name
+    /// its servos. Axes is optional: the Type (jog button) and move order of the servos it lists.
     /// </summary>
     public class GantryConfiguration
     {
@@ -26,7 +26,7 @@ namespace Master.Configuration.Model
         /// <summary>The servo's EnumName in Servos.json.</summary>
         public string Name { get; set; }
 
-        /// <summary>X, Y, Z or R: the jog button that drives it and its axis (E_Servo) in the PLC's recipe.</summary>
+        /// <summary>X, Y, Z or R: the jog button that drives it. (Its axis number in the PLC's recipe is its column group in the recipe file.)</summary>
         public string Type { get; set; }
 
         /// <summary>Order the axis moves in when a position is moved to (1 first; 0 = after the numbered ones).</summary>
