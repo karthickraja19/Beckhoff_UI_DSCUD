@@ -75,7 +75,9 @@ namespace Nova.Core.Services
         /// <summary>Reads the file. Throws <see cref="InvalidDataException"/> naming the cell for a layout or number it cannot use.</summary>
         public static GantryRecipeTable Read(string path)
         {
+        
             Dictionary<long, string> cells = IsXlsx(path) ? ReadXlsxCells(path) : ReadCsvCells(path);
+
             return Parse(path, cells);
         }
 

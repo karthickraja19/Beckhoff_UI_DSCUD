@@ -162,10 +162,10 @@
                     <StackPanel Orientation="Horizontal">
                         <iconPacks:PackIconLucide Kind="Move" Style="{StaticResource CardHeaderIcon}"/>
                         <TextBlock Style="{StaticResource CardHeaderText}"
-                                   Text="{loc:TrBinding SelectedAxis, StringFormat='{}{0} Motion'}"/>
-                    </StackPanel>
+                                   Text="{loc:TrBinding SelectedAxis, StringFormat='{}{0} Motion'}"/>                        
+                    </StackPanel>                     
 
-                    <Grid>
+                        <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="12"/>

@@ -128,7 +128,8 @@ namespace Nova.ViewModels.Pages.Audio
             var labels = new List<string>();
             for (int offset = 6; offset >= 1; offset--)
                 labels.Add("T-" + offset + " (" + now.Date.AddDays(-offset).ToString("MM/dd") + ")");
-            labels.Add("T (" + now.ToString("yyMMdd") + ")");
+            //labels.Add("T (" + now.ToString("yyMMdd") + ")");
+            labels.Add("T (" + now.ToString("MM/dd") + ")");
 
             StateChangeXAxes = new[]
             {

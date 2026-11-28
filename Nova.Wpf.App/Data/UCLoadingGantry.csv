@@ -1,0 +1,6 @@
+﻿Positions,UC_Loading_X_Axis_Gantry,,,,UC_Loading_Z_Axis_Gantry_Servo,,,
+,Value,Speed,Acceleration,Deceleration,Value,Speed,Acceleration,Deceleration
+Safe_Pos,13,26,5,1,10,10,10,10
+Pick_Pos,13,9,78,20,-100,10,100,10
+Place_Pos_Station_1,10,13,10,20,-100,10,100,10
+Place_Pos_Station_2,15,12,16,20,-100,10,100,10
