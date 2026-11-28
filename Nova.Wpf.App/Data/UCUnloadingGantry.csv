@@ -1,0 +1,7 @@
+﻿Positions,UC_Unloading_X_Axis_Gantry,,,,UC_Unloading_Z_Axis_Gantry,,,
+,Value,Speed,Acceleration,Deceleration,Value,Speed,Acceleration,Deceleration
+Safe_Pos,10,20,43,44,65,76,87,90
+Place_Pos,55,65,77,78,45,65,77,88
+Pick_Pos_Station_1,12,45,77,99,77,21,87,31
+Pick_Pos_Station_2,22,55,87,43,98,88,77,66
+NG_Place_Pos,21,43,65,77,80,89,23,12
